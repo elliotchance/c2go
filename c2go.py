@@ -12,6 +12,12 @@ function_defs = {
     '__maskrune': ('uint32', ('__darwin_ct_rune_t', 'uint32')),
 }
 
+function_subs = {
+    # stdio
+    'printf': 'fmt.Printf',
+    'scanf': 'fmt.Scanf',
+}
+
 def is_keyword(w):
     return w in ('char', 'long', 'struct', 'void')
 
@@ -194,14 +200,21 @@ def render_expression(node):
 
         func_def = function_defs[func_name]
 
-        if func_name == 'printf':
-            func_name = 'fmt.Printf'
+        if func_name in function_subs:
+            func_name = function_subs[func_name]
 
         args = []
         i = 0
         for arg in children[1:]:
             e = render_expression(arg)
-            args.append(cast(e[0], e[1], func_def[1][i]))
+
+            if i > len(func_def[1]) - 1:
+                # This means the argument is one of the varargs so we don't know
+                # what type it needs to be cast to.
+                args.append(e[0])
+            else:
+                args.append(cast(e[0], e[1], func_def[1][i]))
+
             i += 1
 
         return '%s(%s)' % (func_name, ', '.join(args)), func_def[0]
@@ -377,15 +390,8 @@ def render(out, node, indent=0, return_type=None):
 
     if node.kind.name == 'DECL_STMT':
         tokens = [t.spelling for t in node.get_tokens()]
-        #print(tokens)
-        print_line(out, 'var %s %s' % (tokens[2], tokens[1]), indent)
+        print_line(out, 'var %s %s' % (tokens[1], tokens[0]), indent)
         return
-
-    # if node.kind.name == 'TYPE_REF':
-    #     tokens = [t.spelling for t in node.get_tokens()]
-    #     print(tokens)
-    #     #print_line('var ' + ' '.join(tokens[1:-2]), indent)
-    #     return
 
     if node.kind.name == 'VAR_DECL':
         tokens = [t.spelling for t in node.get_tokens()]
@@ -403,9 +409,6 @@ def render(out, node, indent=0, return_type=None):
     if node.kind.name == 'ENUM_DECL':
         print_line(out, '// enum', indent)
         return
-
-    # print_line(out, '// ' + ' '.join([t.spelling for t in node.get_tokens()]), indent)
-    # return
 
     raise Exception(node.kind)
 
