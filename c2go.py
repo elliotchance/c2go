@@ -307,7 +307,7 @@ def render(out, node, indent=0, return_type=None):
             render(out, c, indent, return_type)
         return
 
-    if node.kind.name == 'IF_STMT' or node.kind.name == 'WHILE_STMT':
+    if node.kind.name == 'IF_STMT':
         children = list(node.get_children())
 
         e = render_expression(children[0])
@@ -323,10 +323,23 @@ def render(out, node, indent=0, return_type=None):
 
         return
 
+    if node.kind.name == 'WHILE_STMT':
+        children = list(node.get_children())
+
+        e = render_expression(children[0])
+        print_line(out, 'for %s {' % cast(e[0], e[1], 'bool'), indent)
+
+        render(out, children[1], indent + 1, return_type)
+
+        print_line(out, '}', indent)
+
+        return
+
     if node.kind.name == 'UNARY_OPERATOR':
         variable, operator = [t.spelling for t in list(node.get_tokens())[0:2]]
         if operator == '++':
-            print_line(out, '%s = string(%s[1:])' % (variable, variable), indent)
+            print_line(out, '%s += 1' % variable, indent)
+            #print_line(out, '%s = string(%s[1:])' % (variable, variable), indent)
             return
 
         print_line(out, '%s%s' % (operator, variable), indent)
