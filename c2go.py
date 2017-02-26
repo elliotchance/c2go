@@ -3,6 +3,7 @@ import clang.cindex
 import pprint
 import re
 import subprocess
+import StringIO
 
 function_defs = {
     '__istype': ('uint32', ('__darwin_ct_rune_t', 'uint32')),
@@ -17,6 +18,12 @@ function_subs = {
     'printf': 'fmt.Printf',
     'scanf': 'fmt.Scanf',
 }
+
+imports = ["fmt"]
+
+def add_import(import_name):
+    if import_name not in imports:
+        imports.append(import_name)
 
 def is_keyword(w):
     return w in ('char', 'long', 'struct', 'void')
@@ -174,9 +181,19 @@ def render_expression(node):
         #     raise Exception('To many children!')
 
         e = render_expression(children[0])
-        return ''.join(e[0]), e[1]
+        name = e[0]
 
-    if node.kind.name == 'CHARACTER_LITERAL' or node.kind.name == 'STRING_LITERAL':
+        if name == 'argc':
+            name = 'len(os.Args)'
+            add_import("os")
+        elif name == 'argv':
+            name = 'os.Args'
+            add_import("os")
+
+        return name, e[1]
+
+    if node.kind.name == 'CHARACTER_LITERAL' or \
+        node.kind.name == 'STRING_LITERAL':
         return list(node.get_tokens())[0].spelling, 'const char*'
 
     if node.kind.name == 'INTEGER_LITERAL':
@@ -188,10 +205,7 @@ def render_expression(node):
 
     if node.kind.name == 'PAREN_EXPR':
         e = render_expression(list(node.get_children())[0])
-        try:
-            return '(%s)' % e[0], e[1]
-        except TypeError:
-            return '// PAREN_EXPR: %s' % ''.join([t.spelling for t in node.get_tokens()]), 'unknown'
+        return '(%s)' % e[0], e[1]
 
     if node.kind.name == 'DECL_REF_EXPR':
         return node.spelling, node.type.spelling
@@ -223,7 +237,8 @@ def render_expression(node):
 
     if node.kind.name == 'ARRAY_SUBSCRIPT_EXPR':
         children = list(node.get_children())
-        return '%s[%s]' % (render_expression(children[0]), render_expression(children[1])), 'unknown'
+        return '%s[%s]' % (render_expression(children[0])[0],
+            render_expression(children[1])[0]), 'unknown'
 
     if node.kind.name == 'MEMBER_REF_EXPR':
         children = list(node.get_children())
@@ -465,11 +480,19 @@ index = clang.cindex.Index.create()
 tu = index.parse(pp_file_path)
 
 go_file_path = '%s.go' % c_file_path.split('/')[-1][:-2]
-go_out = sys.stdout
+# go_out = sys.stdout
+go_out = StringIO.StringIO()
 #with open(go_file_path, 'w') as go_out:
-print_line(go_out, "package main\n", 0)
-print_line(go_out, 'import "fmt"\n', 0)
+# print_line(go_out, "package main\n", 0)
+#print_line(go_out, 'import ("fmt"; "os")\n', 0)
 render(go_out, tu.cursor)
+
+print("package main\n")
+print("import (")
+for import_name in sorted(imports):
+    print('\t"%s"' % import_name)
+print(")\n")
+print(go_out.getvalue())
 
 # 4. Compile the Go
 #subprocess.call(["go", "run", "functions.go", go_file_path])
