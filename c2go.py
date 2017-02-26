@@ -303,10 +303,15 @@ def render(out, node, indent=0, return_type=None):
             args.append('%s %s' % (a.spelling, resolve_type(a.type.spelling)))
 
         if has_body:
+            return_type = ' ' + node.result_type.spelling
+            if return_type == ' void':
+                return_type = ''
+
             if function_name == 'main':
                 print_line(out, 'func main() {', indent)
             else:
-                print_line(out, 'func %s(%s) %s {' % (function_name, ', '.join(args), node.result_type.spelling), indent)
+                print_line(out, 'func %s(%s)%s {' % (function_name,
+                    ', '.join(args), return_type), indent)
             
             for c in node.get_children():
                 if c.kind.name == 'COMPOUND_STMT':
