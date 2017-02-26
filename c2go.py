@@ -229,27 +229,37 @@ def render_expression(node):
 
     if node.kind.name == 'CSTYLE_CAST_EXPR':
         children = list(node.get_children())
-        #print(node.spelling, len(list(node.get_children())), [t.spelling for t in node.get_tokens()])
-        #children = list(node.get_children())
         return render_expression(children[0]), 'unknown'
 
-    if node.kind.name == 'FIELD_DECL':
-        children = list(node.get_children())
+    if node.kind.name == 'FIELD_DECL' or node.kind.name == 'VAR_DECL':
         type = resolve_type(node.type.spelling)
         name = node.spelling
 
-        return '%s %s' % (name, type), 'unknown'
+        prefix = ''
+        if node.kind.name == 'VAR_DECL':
+            prefix = 'var '
+
+        suffix = ''
+        children = list(node.get_children())
+
+        # We must check the position of the child is at the end. Otherwise a
+        # child can refer to another expression like the size of the data type.
+        if len(children) > 0 and children[0].extent.end.column == node.extent.end.column:
+            suffix = ' = %s' % render_expression(children[0])[0]
+
+        return '%s%s %s%s' % (prefix, name, type, suffix), 'unknown'
 
     if node.kind.name == 'PARM_DECL':
         return resolve_type(node.type.spelling), 'unknown'
 
-    return node.kind.name
+    return node.kind.name, 'unknown'
 
     #raise Exception('render_expression: %s' % node.kind)
 
 def print_children(node):
+    print(len(list(node.get_children())))
     for child in node.get_children():
-        print(render_expression(child))
+        print(child.kind.name, render_expression(child))
 
 def render(out, node, indent=0, return_type=None):
     if node.kind.name == 'TRANSLATION_UNIT':
@@ -389,8 +399,7 @@ def render(out, node, indent=0, return_type=None):
         return
 
     if node.kind.name == 'DECL_STMT':
-        tokens = [t.spelling for t in node.get_tokens()]
-        print_line(out, 'var %s %s' % (tokens[1], tokens[0]), indent)
+        print_line(out, render_expression(list(node.get_children())[0])[0], indent)
         return
 
     if node.kind.name == 'VAR_DECL':
