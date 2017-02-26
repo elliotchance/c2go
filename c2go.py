@@ -133,13 +133,18 @@ def render_expression(node):
             return '// CONDITIONAL_OPERATOR: %s' % ''.join([t.spelling for t in node.get_tokens()]), 'unknown'
 
     if node.kind.name == 'UNARY_OPERATOR':
+        # print(children[2].kind.name)
+
         expr_start = list(node.get_children())[0].extent.start.column
-        operator = ''
+        operator = None
         for t in node.get_tokens():
             if t.extent.start.column >= expr_start:
                 break
 
-            operator += t.spelling
+            operator = t.spelling
+
+        if operator is None:
+            operator = '++'
 
         expr = render_expression(list(node.get_children())[0])
 
@@ -150,13 +155,10 @@ def render_expression(node):
             if expr[1] == 'const char *':
                 return '%s[0]' % expr[0], 'char'
 
-            try:
-                return '*%s' % expr[0], 'int'
-            except TypeError:
-                return '/* */', 'unknown'
+            return '*%s' % expr[0], 'int'
 
-        # if operator == '++':
-        #     return '%s = string(%s[1:])' % (expr[0], expr[0]), expr[1]
+        if operator == '++':
+            return '%s += 1' % expr[0], expr[1]
 
         if operator == '~':
             operator = '^'
@@ -257,9 +259,9 @@ def render_expression(node):
     #raise Exception('render_expression: %s' % node.kind)
 
 def print_children(node):
-    print(len(list(node.get_children())))
+    print(len(list(node.get_children())), [t.spelling for t in node.get_tokens()])
     for child in node.get_children():
-        print(child.kind.name, render_expression(child))
+        print(child.kind.name, render_expression(child), [t.spelling for t in child.get_tokens()])
 
 def render(out, node, indent=0, return_type=None):
     if node.kind.name == 'TRANSLATION_UNIT':
@@ -335,6 +337,22 @@ def render(out, node, indent=0, return_type=None):
 
         return
 
+    if node.kind.name == 'FOR_STMT':
+        children = list(node.get_children())
+
+        a, b, c = [render_expression(e)[0] for e in children[:3]]
+        print_line(out, 'for %s; %s; %s {' % (a, b, c), indent)
+
+        render(out, children[3], indent + 1, return_type)
+
+        print_line(out, '}', indent)
+
+        return
+
+    if node.kind.name == 'BREAK_STMT':
+        print_line(out, 'break', indent)
+        return
+
     if node.kind.name == 'UNARY_OPERATOR':
         variable, operator = [t.spelling for t in list(node.get_tokens())[0:2]]
         if operator == '++':
@@ -408,7 +426,8 @@ def render(out, node, indent=0, return_type=None):
         return
 
     if node.kind.name == 'DECL_STMT':
-        print_line(out, render_expression(list(node.get_children())[0])[0], indent)
+        for child in node.get_children():
+            print_line(out, render_expression(child)[0], indent)
         return
 
     if node.kind.name == 'VAR_DECL':
