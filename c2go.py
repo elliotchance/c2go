@@ -308,23 +308,19 @@ def render(out, node, indent=0, return_type=None):
         return
 
     if node.kind.name == 'IF_STMT' or node.kind.name == 'WHILE_STMT':
-        for c in node.get_children():
-            if c.kind.name != 'COMPOUND_STMT':
-                e = render_expression(c)
-                print_line(out, 'if %s {' % cast(e[0], e[1], 'bool'), indent)
-                break
+        children = list(node.get_children())
 
-        found = False
-        for c in node.get_children():
-            if c.kind.name == 'COMPOUND_STMT':
-                render(out, c, indent + 1, return_type)
-                found = True
-                break
+        e = render_expression(children[0])
+        print_line(out, 'if %s {' % cast(e[0], e[1], 'bool'), indent)
 
-        if not found:
-            render(out, list(node.get_children())[-1], indent + 1, return_type)
+        render(out, children[1], indent + 1, return_type)
+
+        if len(children) > 2:
+            print_line(out, '} else {', indent)
+            render(out, children[2], indent + 1, return_type)
 
         print_line(out, '}', indent)
+
         return
 
     if node.kind.name == 'UNARY_OPERATOR':
