@@ -85,6 +85,9 @@ def resolve_type(s):
     if re.match('char \\[\\d+\\]', s):
         return '[]byte'
 
+    if re.match('int \\[\\d+\\]', s):
+        return s[4:] + 'int'
+
     if s[:7] == 'struct ':
         return resolve_type(s[8:])
 
