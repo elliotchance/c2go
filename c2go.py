@@ -34,8 +34,11 @@ def is_identifier(w):
 def resolve_type(s):
     s = s.strip()
 
-    if s == 'const char *':
+    if s == 'const char *' or s == 'const char*' or s == 'char *' or s == 'const char *restrict':
         return 'string'
+
+    if s == 'float':
+        return 'float32'
 
     if s == 'void *':
         return 'interface{}'
@@ -82,16 +85,21 @@ def resolve_type(s):
     if s == 'long int':
         return 'int32'
 
+    if re.match('unsigned char \\[\\d+\\]', s):
+        return s[14:] + 'byte'
+
     if re.match('char \\[\\d+\\]', s):
-        return '[]byte'
+        return s[5:] + 'byte'
 
     if re.match('int \\[\\d+\\]', s):
         return s[4:] + 'int'
 
     if s[:7] == 'struct ':
-        return resolve_type(s[8:])
+        return resolve_type(s[7:])
 
-    return "interface{}"
+    if '(*)' in s or s == '__sFILEX *' or s == 'fpos_t':
+        return "interface{}"
+
     return s
 
     raise Exception('Cannot resolve type "%s"' % s)
@@ -195,8 +203,7 @@ def render_expression(node):
 
         return name, e[1]
 
-    if node.kind.name == 'CHARACTER_LITERAL' or \
-        node.kind.name == 'STRING_LITERAL':
+    if node.kind.name in ('CHARACTER_LITERAL', 'STRING_LITERAL', 'FLOATING_LITERAL'):
         return list(node.get_tokens())[0].spelling, 'const char*'
 
     if node.kind.name == 'INTEGER_LITERAL':
@@ -245,7 +252,7 @@ def render_expression(node):
 
     if node.kind.name == 'MEMBER_REF_EXPR':
         children = list(node.get_children())
-        return '%s.%s' % (render_expression(children[0]), list(node.get_tokens())[-2].spelling), 'unknown'
+        return '%s.%s' % (render_expression(children[0])[0], list(node.get_tokens())[-2].spelling), 'unknown'
 
     if node.kind.name == 'CSTYLE_CAST_EXPR':
         children = list(node.get_children())
@@ -265,7 +272,8 @@ def render_expression(node):
         # We must check the position of the child is at the end. Otherwise a
         # child can refer to another expression like the size of the data type.
         if len(children) > 0 and children[0].extent.end.column == node.extent.end.column:
-            suffix = ' = %s' % render_expression(children[0])[0]
+            e = render_expression(children[0])
+            suffix = ' = %s' % cast(e[0], e[1], type)
 
         return '%s%s %s%s' % (prefix, name, type, suffix), 'unknown'
 
