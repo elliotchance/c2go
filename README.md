@@ -104,3 +104,13 @@ contain some output.
 
 The test suite is run with
 [run-tests.sh](https://github.com/elliotchance/c2go/blob/master/run-tests.sh).
+
+# Contributing
+
+As I said it is just a proof of concept (sorry for all the hacky Python).
+
+Contributing is done with pull requests. If you're looking for where to start I
+can suggesting
+[finding a simple C program](http://www.programmingsimplified.com/c-program-examples)
+(like the other examples) that does not successful translate to Go and fixing up
+the Python so that it does.
