@@ -1,3 +1,4 @@
+os: osx
 osx_image: xcode8.2
 
 sudo: required
