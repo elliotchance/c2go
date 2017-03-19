@@ -1,12 +1,15 @@
+sudo: required
+
+language: cpp
+
 os: osx
 osx_image: xcode8.2
-
-sudo: required
 
 compiler:
   - clang
 
 install:
+  - sudo brew install llvm --with-clang --with-python --with-lld
   - sudo pip install clang
 
 script:
