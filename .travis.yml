@@ -3,5 +3,8 @@ language: cpp
 compiler:
   - clang
 
+install:
+  - pip install clang
+
 script: 
   - bash run-tests.sh
