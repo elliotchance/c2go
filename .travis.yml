@@ -1,10 +1,11 @@
 language: cpp
+sudo: true
 
 compiler:
   - clang
 
 install:
-  - pip install clang
+  - sudo pip install clang
 
 script: 
   - bash run-tests.sh
