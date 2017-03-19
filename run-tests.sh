@@ -11,6 +11,6 @@ for TEST in $(ls -1 tests); do
 
     diff /tmp/1.txt /tmp/2.txt
     if [ $? != 0 ]; then
-        exit
+        exit 1
     fi
 done
