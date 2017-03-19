@@ -9,7 +9,7 @@ compiler:
   - clang
 
 install:
-  - sudo brew install llvm --with-clang --with-python --with-lld
+  - brew install llvm --with-clang --with-python --with-lld
   - sudo pip install clang
 
 script:
