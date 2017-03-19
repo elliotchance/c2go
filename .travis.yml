@@ -6,9 +6,10 @@ compiler:
   - clang
 
 install:
-  - apt-get update
-  - apt-get install libclang-dev
+  - sudo apt-get update
+  - sudo apt-get install libclang-dev
   - sudo pip install clang
 
-script: 
+script:
+  - clang --version
   - bash run-tests.sh
