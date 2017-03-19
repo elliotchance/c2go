@@ -4,4 +4,4 @@ compiler:
   - clang
 
 script: 
-  - ./run-tests.sh
+  - bash run-tests.sh
