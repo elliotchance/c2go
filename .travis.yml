@@ -1,4 +1,4 @@
-language: cpp
+osx_image: xcode7.3
 
 sudo: required
 
@@ -6,8 +6,6 @@ compiler:
   - clang
 
 install:
-  - sudo apt-get update
-  - sudo apt-get install libclang-dev
   - sudo pip install clang
 
 script:
