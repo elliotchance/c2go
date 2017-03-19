@@ -1,5 +1,6 @@
 language: cpp
-sudo: true
+
+sudo: required
 
 compiler:
   - clang
