@@ -1,9 +1,12 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import sys
 import clang.cindex
 import pprint
 import re
 import subprocess
-import StringIO
+import io
 
 function_defs = {
     '__istype': ('uint32', ('__darwin_ct_rune_t', 'uint32')),
@@ -488,7 +491,7 @@ c_file_path = sys.argv[1]
 pp = subprocess.Popen(["clang", "-E", c_file_path], stdout=subprocess.PIPE).communicate()[0]
 
 pp_file_path = 'pp.c'
-with open(pp_file_path, 'w') as pp_out:
+with open(pp_file_path, 'wb') as pp_out:
     pp_out.write(pp)
 
 # 3. Parse C and output Go
@@ -497,7 +500,7 @@ tu = index.parse(pp_file_path)
 
 go_file_path = '%s.go' % c_file_path.split('/')[-1][:-2]
 # go_out = sys.stdout
-go_out = StringIO.StringIO()
+go_out = io.StringIO()
 #with open(go_file_path, 'w') as go_out:
 # print_line(go_out, "package main\n", 0)
 #print_line(go_out, 'import ("fmt"; "os")\n', 0)
