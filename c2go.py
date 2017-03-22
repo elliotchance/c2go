@@ -6,7 +6,10 @@ import clang.cindex
 import pprint
 import re
 import subprocess
-import io
+try:
+    import StringIO as io
+except ImportError:
+    import io
 
 function_defs = {
     '__istype': ('uint32', ('__darwin_ct_rune_t', 'uint32')),
