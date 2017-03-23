@@ -25,40 +25,40 @@ regex = {
     'AlwaysInlineAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> always_inline",
     'AsmLabelAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \"(?P<function>.+)\"",
     'AvailabilityAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<os>\w+) (?P<version>[\d.]+) (?P<unknown1>[\d.]+) (?P<unknown2>[\d.]+) (?P<unknown3>\".*?\"|\w+) (?P<unknown4>\".*?\"|\w+)",
-    'TranslationUnitDecl': r'^ (?P<address>[0-9a-fx]+)',
-    'IntegerLiteral': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*)\' (?P<value>\d+)',
-    'TypedefDecl': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.+?)> (?P<position2><invalid sloc>|[^ ]+)(?P<tags>.*?) (?P<name>\w+) \'(?P<type>.*?)\'(?P<type2>:\'.*?\')?',
-    'BuiltinType': r'^ (?P<address>[0-9a-fx]+) \'(?P<name>.*)\'',
-    'ReturnStmt': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>',
-    'StringLiteral': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*)\' (?P<value>.*)',
-    'ImplicitCastExpr': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*)\' <(?P<kind>.*)>',
-    'DeclRefExpr': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*?)\' (?P<unknown>.*)',
-    'CallExpr': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*?)\'',
-    'ParenExpr': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*?)\'',
-    'CompoundStmt': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>',
-    'IfStmt': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>',
-    'FunctionDecl': r'^ (?P<address>[0-9a-fx]+) (?P<prev>prev [0-9a-fx]+)? ?<(?P<position1>.*)> (?P<position2>[^ ]+)(?P<tags1> implicit)?(?P<tags2> used)? (?P<name>\w+) \'(?P<type>.*)\'(?P<tags3> extern)?',
-    'ParmVarDecl': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<position2>.+) \'(?P<type>.*?)\'(?P<type2>:\'.*?\')?',
-    'FormatAttr': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<tags> Implicit)? (?P<function>\w+) (?P<unknown1>\d+) (?P<unknown2>\d+)',
-    'RecordType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\'',
-    'Record': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\'',
-    'PointerType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\'',
-    'Typedef': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\'',
-    'ConstantArrayType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<size>\d+)',
-    'RecordDecl': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<position2>[^ ]+) (?P<type>.+)',
-    'FieldDecl': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<position2>[^ ]+) (?P<type>.+)',
-    'ElaboratedType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<tags>.+)',
-    'TypedefType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<tags>.+)',
-    'VarDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<position2>[^ ]+) (?P<name>.+) '(?P<type>.+)'(?P<tags>.*)",
-    'DeprecatedAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \"(?P<message1>.*?)\" \"(?P<message2>.*?)\"",
     'BinaryOperator': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' '(?P<operator>.*?)'",
-    'MemberExpr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' lvalue ->(?P<name>\w+) (?P<address2>[0-9a-fx]+)",
-    'CStyleCastExpr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' <(?P<kind>.*)>",
-    'CharacterLiteral': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' (?P<value>\d+)",
-    'UnaryOperator': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)'(?P<tags1> lvalue)?(?P<tags2> prefix)?(?P<tags3> postfix)? '(?P<operator>.*?)'",
-    'DeclStmt': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>",
-    'ForStmt': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>",
     'BreakStmt': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>",
+    'BuiltinType': r'^ (?P<address>[0-9a-fx]+) \'(?P<name>.*)\'',
+    'CallExpr': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*?)\'',
+    'CharacterLiteral': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' (?P<value>\d+)",
+    'CompoundStmt': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>',
+    'ConstantArrayType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<size>\d+)',
+    'CStyleCastExpr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' <(?P<kind>.*)>",
+    'DeclRefExpr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' (lvalue (?P<kind>\w+)|Function) (?P<address2>[0-9a-fx]+) '(?P<name>.*?)' '(?P<type2>.*?)'",
+    'DeclStmt': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>",
+    'DeprecatedAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \"(?P<message1>.*?)\" \"(?P<message2>.*?)\"",
+    'ElaboratedType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<tags>.+)',
+    'FieldDecl': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<position2>[^ ]+) (?P<type>.+)',
+    'FormatAttr': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<tags> Implicit)? (?P<function>\w+) (?P<unknown1>\d+) (?P<unknown2>\d+)',
+    'ForStmt': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>",
+    'FunctionDecl': r"^ (?P<address>[0-9a-fx]+) (?P<prev>prev [0-9a-fx]+)? ?<(?P<position1>.*)> (?P<position2>[^ ]+)(?P<tags1> implicit)?(?P<tags2> used)? (?P<name>\w+) '(?P<type>.*)'(?P<tags3> extern)?",
+    'IfStmt': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>',
+    'ImplicitCastExpr': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*)\' <(?P<kind>.*)>',
+    'IntegerLiteral': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*)\' (?P<value>\d+)',
+    'MemberExpr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' lvalue ->(?P<name>\w+) (?P<address2>[0-9a-fx]+)",
+    'ParenExpr': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*?)\'',
+    'ParmVarDecl': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<position2>.+) \'(?P<type>.*?)\'(?P<type2>:\'.*?\')?',
+    'PointerType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\'',
+    'Record': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\'',
+    'RecordDecl': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<position2>[^ ]+) (?P<type>.+)',
+    'RecordType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\'',
+    'ReturnStmt': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>',
+    'StringLiteral': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*)\'(?P<tags> lvalue)? (?P<value>.*)',
+    'TranslationUnitDecl': r'^ (?P<address>[0-9a-fx]+)',
+    'Typedef': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\'',
+    'TypedefDecl': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.+?)> (?P<position2><invalid sloc>|[^ ]+)(?P<tags>.*?) (?P<name>\w+) \'(?P<type>.*?)\'(?P<type2>:\'.*?\')?',
+    'TypedefType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<tags>.+)',
+    'UnaryOperator': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)'(?P<tags1> lvalue)?(?P<tags2> prefix)?(?P<tags3> postfix)? '(?P<operator>.*?)'",
+    'VarDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<position2>[^ ]+) (?P<name>.+) '(?P<type>.+)'(?P<tags>.*)",
 }
 
 def build_tree(nodes, depth):
@@ -108,16 +108,20 @@ def convert_lines_to_nodes(lines):
             print("Can not understand line '%s'" % line)
             sys.exit(1)
 
+        node_type = indent_and_type.group(2)
+        # if node_type == 'DeclRefExpr':
+        #     print(line[offset:])
+
         offset = len(indent_and_type.group(0))
         try:
-            result = re.search(regex[indent_and_type.group(2)], line[offset:])
+            result = re.search(regex[node_type], line[offset:])
         except KeyError:
-            print("There is no regex for '%s'." % indent_and_type.group(2))
+            print("There is no regex for '%s'." % node_type)
             print("I will print out all the lines so a regex can be created:\n")
 
             for line in lines:
                 s = re.search(r'^([|\- `]*)(\w+)', line)
-                if s is not None and indent_and_type.group(2) == s.group(2):
+                if s is not None and node_type == s.group(2):
                     print(line[offset:])
 
             sys.exit(1)
@@ -128,7 +132,7 @@ def convert_lines_to_nodes(lines):
 
         node = result.groupdict()
 
-        node['node'] = indent_and_type.group(2)
+        node['node'] = node_type
 
         indent_level = len(indent_and_type.group(1)) / 2
         nodes.append([indent_level, node])

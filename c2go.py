@@ -34,7 +34,8 @@ def is_identifier(w):
 def resolve_type(s):
     s = s.strip()
 
-    if s == 'const char *' or s == 'const char*' or s == 'char *' or s == 'const char *restrict':
+    if s == 'const char *' or s == 'const char*' or s == 'char *' or \
+        s == 'const char *restrict' or s == 'const char *__restrict':
         return 'string'
 
     if s == 'float':
@@ -100,7 +101,7 @@ def resolve_type(s):
     if '(*)' in s or s == '__sFILEX *' or s == 'fpos_t':
         return "interface{}"
 
-    return s
+    # return s
 
     raise Exception('Cannot resolve type "%s"' % s)
 
@@ -151,8 +152,6 @@ def render_expression(node):
             return '// CONDITIONAL_OPERATOR: %s' % ''.join([t.spelling for t in node.get_tokens()]), 'unknown'
 
     if node['node'] == 'UNARY_OPERATOR':
-        # print(children[2].kind.name)
-
         expr_start = list(node.get_children())[0].extent.start.column
         operator = None
         for t in node.get_tokens():
@@ -203,8 +202,8 @@ def render_expression(node):
 
         return name, e[1]
 
-    if node['node'] in ('CHARACTER_LITERAL', 'STRING_LITERAL', 'FLOATING_LITERAL'):
-        return list(node.get_tokens())[0].spelling, 'const char*'
+    if node['node'] in ('CHARACTER_LITERAL', 'StringLiteral', 'FLOATING_LITERAL'):
+        return node['value'], 'const char*'
 
     if node['node'] == 'INTEGER_LITERAL':
         literal = list(node.get_tokens())[0].spelling
@@ -218,7 +217,7 @@ def render_expression(node):
         return '(%s)' % e[0], e[1]
 
     if node['node'] == 'DeclRefExpr':
-        return node['unknown'], node['type']
+        return node['name'], node['type']
 
     if node['node'] == 'ImplicitCastExpr':
         return render_expression(node['children'][0])
@@ -283,9 +282,9 @@ def render_expression(node):
     if node['node'] == 'PARM_DECL':
         return resolve_type(node.type.spelling), 'unknown'
 
-    return node['node'], 'unknown'
+    # return node['node'], 'unknown'
 
-    #raise Exception('render_expression: %s' % node.kind)
+    raise Exception('render_expression: %s' % node['node'])
 
 def print_children(node):
     print(len(list(node.get_children())), [t.spelling for t in node.get_tokens()])
@@ -315,8 +314,6 @@ def render(out, node, indent=0, return_type=None):
             for c in node['children']:
                 if c['node'] == 'CompoundStmt':
                     has_body = True
-            # print(function_name)
-            # print(json.dumps(node['children']))
 
         args = []
         # for a in get_function_params(node):
@@ -339,7 +336,7 @@ def render(out, node, indent=0, return_type=None):
 
             print_line(out, '}\n', indent)
 
-    #     function_defs[node.spelling] = (node.result_type.spelling, [a.type.spelling for a in node.get_arguments()])
+        function_defs[node['name']] = (node['type'], [a['type'] for a in get_function_params(node)])
 
         return
 
