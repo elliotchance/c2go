@@ -1,9 +1,9 @@
 import sys
-import clang.cindex
 import pprint
 import re
 import subprocess
 import StringIO
+import json
 
 function_defs = {
     '__istype': ('uint32', ('__darwin_ct_rune_t', 'uint32')),
@@ -127,7 +127,7 @@ def print_line(out, line, indent):
     out.write('%s%s\n' % ('\t' * indent, line))
 
 def render_expression(node):
-    if node.kind.name == 'BINARY_OPERATOR':
+    if node['node'] == 'BINARY_OPERATOR':
         end_of_left = list(node.get_children())[0].extent.end.column
         operator = None
         for t in node.get_tokens():
@@ -143,14 +143,14 @@ def render_expression(node):
 
         return '%s %s %s' % (left, operator, right), return_type
 
-    if node.kind.name == 'CONDITIONAL_OPERATOR':
+    if node['node'] == 'CONDITIONAL_OPERATOR':
         a, b, c = [render_expression(t) for t in list(node.get_children())]
         try:
             return '__ternary(%s, %s, %s)' % (cast(a[0], 'bool'), b[0], c[0]), b[1]
         except TypeError:
             return '// CONDITIONAL_OPERATOR: %s' % ''.join([t.spelling for t in node.get_tokens()]), 'unknown'
 
-    if node.kind.name == 'UNARY_OPERATOR':
+    if node['node'] == 'UNARY_OPERATOR':
         # print(children[2].kind.name)
 
         expr_start = list(node.get_children())[0].extent.start.column
@@ -183,7 +183,7 @@ def render_expression(node):
 
         return '%s%s' % (operator, expr[0]), expr[1]
 
-    if node.kind.name == 'UNEXPOSED_EXPR':
+    if node['node'] == 'UNEXPOSED_EXPR':
         children = list(node.get_children())
         if len(children) < 1:
             return '// UNEXPOSED_EXPR: %s' % ''.join([t.spelling for t in node.get_tokens()]), 'unknown'
@@ -203,25 +203,28 @@ def render_expression(node):
 
         return name, e[1]
 
-    if node.kind.name in ('CHARACTER_LITERAL', 'STRING_LITERAL', 'FLOATING_LITERAL'):
+    if node['node'] in ('CHARACTER_LITERAL', 'STRING_LITERAL', 'FLOATING_LITERAL'):
         return list(node.get_tokens())[0].spelling, 'const char*'
 
-    if node.kind.name == 'INTEGER_LITERAL':
+    if node['node'] == 'INTEGER_LITERAL':
         literal = list(node.get_tokens())[0].spelling
         if literal[-1] == 'L':
             literal = '%s(%s)' % (resolve_type('long'), literal[:-1])
 
         return literal, 'int'
 
-    if node.kind.name == 'PAREN_EXPR':
+    if node['node'] == 'PAREN_EXPR':
         e = render_expression(list(node.get_children())[0])
         return '(%s)' % e[0], e[1]
 
-    if node.kind.name == 'DECL_REF_EXPR':
-        return node.spelling, node.type.spelling
+    if node['node'] == 'DeclRefExpr':
+        return node['unknown'], node['type']
 
-    if node.kind.name == 'CALL_EXPR':
-        children = list(node.get_children())
+    if node['node'] == 'ImplicitCastExpr':
+        return render_expression(node['children'][0])
+
+    if node['node'] == 'CallExpr':
+        children = node['children']
         func_name = render_expression(children[0])[0]
 
         func_def = function_defs[func_name]
@@ -245,25 +248,25 @@ def render_expression(node):
 
         return '%s(%s)' % (func_name, ', '.join(args)), func_def[0]
 
-    if node.kind.name == 'ARRAY_SUBSCRIPT_EXPR':
+    if node['node'] == 'ARRAY_SUBSCRIPT_EXPR':
         children = list(node.get_children())
         return '%s[%s]' % (render_expression(children[0])[0],
             render_expression(children[1])[0]), 'unknown'
 
-    if node.kind.name == 'MEMBER_REF_EXPR':
+    if node['node'] == 'MEMBER_REF_EXPR':
         children = list(node.get_children())
         return '%s.%s' % (render_expression(children[0])[0], list(node.get_tokens())[-2].spelling), 'unknown'
 
-    if node.kind.name == 'CSTYLE_CAST_EXPR':
+    if node['node'] == 'CSTYLE_CAST_EXPR':
         children = list(node.get_children())
         return render_expression(children[0]), 'unknown'
 
-    if node.kind.name == 'FIELD_DECL' or node.kind.name == 'VAR_DECL':
+    if node['node'] == 'FIELD_DECL' or node['node'] == 'VAR_DECL':
         type = resolve_type(node.type.spelling)
         name = node.spelling
 
         prefix = ''
-        if node.kind.name == 'VAR_DECL':
+        if node['node'] == 'VAR_DECL':
             prefix = 'var '
 
         suffix = ''
@@ -277,10 +280,10 @@ def render_expression(node):
 
         return '%s%s %s%s' % (prefix, name, type, suffix), 'unknown'
 
-    if node.kind.name == 'PARM_DECL':
+    if node['node'] == 'PARM_DECL':
         return resolve_type(node.type.spelling), 'unknown'
 
-    return node.kind.name, 'unknown'
+    return node['node'], 'unknown'
 
     #raise Exception('render_expression: %s' % node.kind)
 
@@ -289,29 +292,38 @@ def print_children(node):
     for child in node.get_children():
         print(child.kind.name, render_expression(child), [t.spelling for t in child.get_tokens()])
 
+def get_function_params(nodes):
+    if 'children' not in nodes:
+        return []
+
+    return [n for n in nodes['children'] if n['node'] == 'ParmVarDecl']
+
 def render(out, node, indent=0, return_type=None):
-    if node.kind.name == 'TRANSLATION_UNIT':
-        for c in node.get_children():
+    if node['node'] == 'TranslationUnitDecl':
+        for c in node['children']:
             render(out, c, indent, return_type)
         return
 
-    if node.kind.name == 'FUNCTION_DECL':
-        function_name = node.spelling
+    if node['node'] == 'FunctionDecl':
+        function_name = node['name']
 
         if function_name in ('__istype', '__isctype', '__wcwidth', '__sputc'):
             return
 
         has_body = False
-        for c in node.get_children():
-            if c.kind.name == 'COMPOUND_STMT':
-                has_body = True
+        if 'children' in node:
+            for c in node['children']:
+                if c['node'] == 'CompoundStmt':
+                    has_body = True
+            # print(function_name)
+            # print(json.dumps(node['children']))
 
         args = []
-        for a in node.get_arguments():
-            args.append('%s %s' % (a.spelling, resolve_type(a.type.spelling)))
+        # for a in get_function_params(node):
+        #     args.append('%s %s' % (a['name'], resolve_type(a['type'])))
 
         if has_body:
-            return_type = ' ' + node.result_type.spelling
+            return_type = ' ' + node['type']
             if return_type == ' void':
                 return_type = ''
 
@@ -321,82 +333,82 @@ def render(out, node, indent=0, return_type=None):
                 print_line(out, 'func %s(%s)%s {' % (function_name,
                     ', '.join(args), return_type), indent)
             
-            for c in node.get_children():
-                if c.kind.name == 'COMPOUND_STMT':
-                    render(out, c, indent + 1, node.result_type.spelling)
+            for c in node['children']:
+                if c['node'] == 'CompoundStmt':
+                    render(out, c, indent + 1, node['type'])
 
             print_line(out, '}\n', indent)
 
-        function_defs[node.spelling] = (node.result_type.spelling, [a.type.spelling for a in node.get_arguments()])
+    #     function_defs[node.spelling] = (node.result_type.spelling, [a.type.spelling for a in node.get_arguments()])
 
         return
 
-    if node.kind.name == 'PARM_DECL':
-        print_line(out, node.spelling, indent)
-        return
+    # if node['node'] == 'PARM_DECL':
+    #     print_line(out, node.spelling, indent)
+    #     return
 
-    if node.kind.name == 'COMPOUND_STMT':
-        for c in node.get_children():
+    if node['node'] == 'CompoundStmt':
+        for c in node['children']:
             render(out, c, indent, return_type)
         return
 
-    if node.kind.name == 'IF_STMT':
-        children = list(node.get_children())
+    # if node['node'] == 'IF_STMT':
+    #     children = list(node.get_children())
 
-        e = render_expression(children[0])
-        print_line(out, 'if %s {' % cast(e[0], e[1], 'bool'), indent)
+    #     e = render_expression(children[0])
+    #     print_line(out, 'if %s {' % cast(e[0], e[1], 'bool'), indent)
 
-        render(out, children[1], indent + 1, return_type)
+    #     render(out, children[1], indent + 1, return_type)
 
-        if len(children) > 2:
-            print_line(out, '} else {', indent)
-            render(out, children[2], indent + 1, return_type)
+    #     if len(children) > 2:
+    #         print_line(out, '} else {', indent)
+    #         render(out, children[2], indent + 1, return_type)
 
-        print_line(out, '}', indent)
+    #     print_line(out, '}', indent)
 
-        return
+        # return
 
-    if node.kind.name == 'WHILE_STMT':
-        children = list(node.get_children())
+    # if node['node'] == 'WHILE_STMT':
+    #     children = list(node.get_children())
 
-        e = render_expression(children[0])
-        print_line(out, 'for %s {' % cast(e[0], e[1], 'bool'), indent)
+    #     e = render_expression(children[0])
+    #     print_line(out, 'for %s {' % cast(e[0], e[1], 'bool'), indent)
 
-        render(out, children[1], indent + 1, return_type)
+    #     render(out, children[1], indent + 1, return_type)
 
-        print_line(out, '}', indent)
+    #     print_line(out, '}', indent)
 
-        return
+    #     return
 
-    if node.kind.name == 'FOR_STMT':
-        children = list(node.get_children())
+    # if node['node'] == 'FOR_STMT':
+    #     children = list(node.get_children())
 
-        a, b, c = [render_expression(e)[0] for e in children[:3]]
-        print_line(out, 'for %s; %s; %s {' % (a, b, c), indent)
+    #     a, b, c = [render_expression(e)[0] for e in children[:3]]
+    #     print_line(out, 'for %s; %s; %s {' % (a, b, c), indent)
 
-        render(out, children[3], indent + 1, return_type)
+    #     render(out, children[3], indent + 1, return_type)
 
-        print_line(out, '}', indent)
+    #     print_line(out, '}', indent)
 
-        return
+    #     return
 
-    if node.kind.name == 'BREAK_STMT':
-        print_line(out, 'break', indent)
-        return
+    # if node['node'] == 'BREAK_STMT':
+    #     print_line(out, 'break', indent)
+    #     return
 
-    if node.kind.name == 'UNARY_OPERATOR':
-        variable, operator = [t.spelling for t in list(node.get_tokens())[0:2]]
-        if operator == '++':
-            print_line(out, '%s += 1' % variable, indent)
-            #print_line(out, '%s = string(%s[1:])' % (variable, variable), indent)
-            return
+    # if node['node'] == 'UNARY_OPERATOR':
+    #     variable, operator = [t.spelling for t in list(node.get_tokens())[0:2]]
+    #     if operator == '++':
+    #         print_line(out, '%s += 1' % variable, indent)
+    #         #print_line(out, '%s = string(%s[1:])' % (variable, variable), indent)
+    #         return
 
-        print_line(out, '%s%s' % (operator, variable), indent)
-        return
+    #     print_line(out, '%s%s' % (operator, variable), indent)
+    #     return
 
-        #raise Exception('UNARY_OPERATOR: %s' % operator)
+    #     #raise Exception('UNARY_OPERATOR: %s' % operator)
 
-    if node.kind.name == 'RETURN_STMT':
+    if node['node'] == 'ReturnStmt':
         # try:
         #     e = render_expression(list(node.get_children())[0])
         #     print_line(out, 'return %s' % cast(e[0], e[1], return_type), indent)
@@ -405,11 +417,15 @@ def render(out, node, indent=0, return_type=None):
         
         return
 
-    if node.kind.name in ('BINARY_OPERATOR', 'INTEGER_LITERAL', 'CALL_EXPR'):
+    if node['node'] in ('BINARY_OPERATOR', 'INTEGER_LITERAL', 'CallExpr'):
         print_line(out, render_expression(node)[0], indent)
         return
 
-    if node.kind.name == 'TYPEDEF_DECL':
+    if node['node'] == 'TypedefDecl':
+        print_line(out, "type %s %s\n" % (node['type'], node['name']), indent)
+        # print(node)
+        return
+
         tokens = [t.spelling for t in node.get_tokens()]
         if len(list(node.get_children())) == 0:
             print_line(out, "type %s %s\n" % (tokens[-2], resolve_type(' '.join(tokens[1:-2]))), indent)
@@ -418,67 +434,70 @@ def render(out, node, indent=0, return_type=None):
 
         return
 
-    if node.kind.name == 'UNION_DECL' or node.kind.name == 'STRUCT_DECL':
-        tokens = [t.spelling for t in node.get_tokens()]
-
-        struct_name = tokens[-1]
-        start_at = 2
-        if struct_name == ';':
-            struct_name = tokens[1]
-            start_at = 3
-
-        if struct_name in ('__darwin_pthread_handler_rec', '_opaque_pthread_t',
-            '_RuneEntry', '_RuneRange', '_RuneCharClass', '_RuneLocale'):
-            return
-
-        print_line(out, "type %s struct {" % struct_name, indent)
-
-        for attribute in node.get_children():
-            print_line(out, render_expression(attribute)[0], indent + 1)
-            # print(struct_name, render_expression(attribute))
-
-        # name = ''
-        # type = ''
-        # for token in tokens[start_at:-2]:
-        #     if token == ';':
-        #         print_line(out, '%s %s' % (name, resolve_type(type)), indent + 1)
-        #         type = ''
-        #     elif is_identifier(token):
-        #         name = token
-        #     else:
-        #         type += ' ' + token
-
-        print_line(out, "}\n", indent)
+    if node['node'] == 'RecordDecl':
         return
 
-    if node.kind.name == 'UNEXPOSED_DECL':
-        tokens = [t.spelling for t in node.get_tokens()]
-        print_line(out, '// ' + ' '.join(tokens[1:-2]), indent)
-        return
+    #if node['node'] == 'UNION_DECL' or node['node'] == 'STRUCT_DECL':
+    #     tokens = [t.spelling for t in node.get_tokens()]
 
-    if node.kind.name == 'DECL_STMT':
-        for child in node.get_children():
-            print_line(out, render_expression(child)[0], indent)
-        return
+    #     struct_name = tokens[-1]
+    #     start_at = 2
+    #     if struct_name == ';':
+    #         struct_name = tokens[1]
+    #         start_at = 3
 
-    if node.kind.name == 'VAR_DECL':
-        tokens = [t.spelling for t in node.get_tokens()]
-        if tokens[0] == 'extern':
-            return
+    #     if struct_name in ('__darwin_pthread_handler_rec', '_opaque_pthread_t',
+    #         '_RuneEntry', '_RuneRange', '_RuneCharClass', '_RuneLocale'):
+    #         return
 
-        children = list(node.get_children())
-        if len(children) > 0:
-            print_line(out, 'var %s %s = %s\n' % (tokens[2], tokens[1], render_expression(children[0])[0]), indent)
-        else:
-            print_line(out, 'var %s %s\n' % (tokens[2], tokens[1]), indent)
+    #     print_line(out, "type %s struct {" % struct_name, indent)
+
+    #     for attribute in node.get_children():
+    #         print_line(out, render_expression(attribute)[0], indent + 1)
+    #         # print(struct_name, render_expression(attribute))
+
+    #     # name = ''
+    #     # type = ''
+    #     # for token in tokens[start_at:-2]:
+    #     #     if token == ';':
+    #     #         print_line(out, '%s %s' % (name, resolve_type(type)), indent + 1)
+    #     #         type = ''
+    #     #     elif is_identifier(token):
+    #     #         name = token
+    #     #     else:
+    #     #         type += ' ' + token
+
+    #     print_line(out, "}\n", indent)
+    #     return
+
+    # if node['node'] == 'UNEXPOSED_DECL':
+    #     tokens = [t.spelling for t in node.get_tokens()]
+    #     print_line(out, '// ' + ' '.join(tokens[1:-2]), indent)
+    #     return
+
+    # if node['node'] == 'DECL_STMT':
+    #     for child in node.get_children():
+    #         print_line(out, render_expression(child)[0], indent)
+    #     return
+
+    if node['node'] == 'VarDecl':
+    #     tokens = [t.spelling for t in node.get_tokens()]
+    #     if tokens[0] == 'extern':
+    #         return
+
+    #     children = list(node.get_children())
+    #     if len(children) > 0:
+    #         print_line(out, 'var %s %s = %s\n' % (tokens[2], tokens[1], render_expression(children[0])[0]), indent)
+    #     else:
+    #         print_line(out, 'var %s %s\n' % (tokens[2], tokens[1]), indent)
         
         return
 
-    if node.kind.name == 'ENUM_DECL':
-        print_line(out, '// enum', indent)
-        return
+    # if node['node'] == 'ENUM_DECL':
+    #     print_line(out, '// enum', indent)
+    #     return
 
-    raise Exception(node.kind)
+    raise Exception(node['node'])
 
 # 1. Compile it first (checking for errors)
 c_file_path = sys.argv[1]
@@ -491,24 +510,33 @@ pp_file_path = 'pp.c'
 with open(pp_file_path, 'w') as pp_out:
     pp_out.write(pp)
 
-# 3. Parse C and output Go
-index = clang.cindex.Index.create()
-tu = index.parse(pp_file_path)
+# 3. Generate JSON from AST
+ast_pp = subprocess.Popen(["clang", "-Xclang", "-ast-dump", "-fsyntax-only", pp_file_path], stdout=subprocess.PIPE)
+pp = subprocess.Popen(["python", "ast2json.py"], stdin=ast_pp.stdout, stdout=subprocess.PIPE).communicate()[0]
 
-go_file_path = '%s.go' % c_file_path.split('/')[-1][:-2]
-# go_out = sys.stdout
-go_out = StringIO.StringIO()
-#with open(go_file_path, 'w') as go_out:
-# print_line(go_out, "package main\n", 0)
-#print_line(go_out, 'import ("fmt"; "os")\n', 0)
-render(go_out, tu.cursor)
+json_file_path = 'pp.json'
+with open(json_file_path, 'w') as json_out:
+    json_out.write(pp)
 
-print("package main\n")
-print("import (")
-for import_name in sorted(imports):
-    print('\t"%s"' % import_name)
-print(")\n")
-print(go_out.getvalue())
+with open(json_file_path, 'r') as json_in:
+    # 3. Parse C and output Go
+    # index = clang.cindex.Index.create()
+    # tu = index.parse(pp_file_path)
 
-# 4. Compile the Go
-#subprocess.call(["go", "run", "functions.go", go_file_path])
+    go_file_path = '%s.go' % c_file_path.split('/')[-1][:-2]
+    # go_out = sys.stdout
+    go_out = StringIO.StringIO()
+    #with open(go_file_path, 'w') as go_out:
+    # print_line(go_out, "package main\n", 0)
+    #print_line(go_out, 'import ("fmt"; "os")\n', 0)
+    render(go_out, json.loads(json_in.read())[0])
+
+    print("package main\n")
+    print("import (")
+    for import_name in sorted(imports):
+        print('\t"%s"' % import_name)
+    print(")\n")
+    print(go_out.getvalue())
+
+    # 4. Compile the Go
+    #subprocess.call(["go", "run", "functions.go", go_file_path])
