@@ -50,6 +50,7 @@ regex = {
     'IntegerLiteral': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*)\' (?P<value>.+)',
     'MallocAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>",
     'MemberExpr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' (?P<tags>.*?)(?P<name>\w+) (?P<address2>[0-9a-fx]+)",
+    'ModeAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<name>.+)",
     'NoThrowAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>",
     'ParenExpr': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*?)\'',
     'ParmVarDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<position2>.+?)(?P<name> \w+)? '(?P<type>.*?)'(?P<type2>:'.*?')?",
