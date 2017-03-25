@@ -11,4 +11,5 @@ compiler:
 
 script:
   - clang --version
+  - lsvirtualenv -l
   - bash run-tests.sh
