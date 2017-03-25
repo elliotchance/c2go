@@ -411,6 +411,13 @@ def render(out, node, indent=0, return_type=None):
 
         return
 
+    if node['node'] == 'EnumDecl':
+        return
+
+    if node['node'] == 'FieldDecl':
+        print_line(out, render_expression(node)[0], indent + 1)
+        return
+
     if node['node'] == 'RecordDecl':
         if node['kind'] == 'union':
             return
@@ -418,7 +425,7 @@ def render(out, node, indent=0, return_type=None):
         print_line(out, "type %s %s {" % (node['name'], node['kind']), indent)
         if 'children' in node:
             for c in node['children']:
-                print_line(out, render_expression(c)[0], indent + 1)
+                render(out, c, indent + 1)
         print_line(out, "}\n", indent)
         return
 
