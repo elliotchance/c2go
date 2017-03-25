@@ -38,7 +38,7 @@ regex = {
     'DeclStmt': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>",
     'DeprecatedAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \"(?P<message1>.*?)\"(?P<message2> \".*?\")?",
     'ElaboratedType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<tags>.+)',
-    'EnumConstantDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<position2>[^ ]+) (?P<name>.+) '(?P<type>.+?)'",
+    'EnumConstantDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)? (?P<name>.+) '(?P<type>.+?)'",
     'EnumDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)? (?P<name>.+)",
     'FieldDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)? (?P<tags>.*?)(?P<name>\w+?) '(?P<type>.+?)'",
     'FloatingLiteral': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*)' (?P<value>.+)",
