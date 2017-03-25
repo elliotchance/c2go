@@ -11,5 +11,5 @@ compiler:
 
 script:
   - clang --version
-  - lsvirtualenv -l
+  - virtualenv venv --python=python2.7
   - bash run-tests.sh
