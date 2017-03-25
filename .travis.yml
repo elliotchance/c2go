@@ -8,10 +8,6 @@ osx_image: xcode8.2
 compiler:
   - clang
 
-install:
-  - brew install llvm --with-clang --with-python --with-lld
-  - sudo pip install clang
-
 script:
   - clang --version
   - bash run-tests.sh
