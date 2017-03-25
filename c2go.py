@@ -41,7 +41,7 @@ def resolve_type(s):
     if s == 'float':
         return 'float32'
 
-    if s == 'void *':
+    if s == 'void *' or s == '__darwin_pthread_handler_rec *':
         return 'interface{}'
 
     if s == 'char':
@@ -103,6 +103,9 @@ def resolve_type(s):
 
     if '(*)' in s or s == '__sFILEX *' or s == 'fpos_t':
         return "interface{}"
+
+    if '(' in s:
+        return 'interface{}'
 
     return s
 
@@ -169,27 +172,7 @@ def render_expression(node):
 
         return '%s%s' % (operator, expr[0]), expr[1]
 
-    if node['node'] == 'UNEXPOSED_EXPR':
-        children = list(node.get_children())
-        if len(children) < 1:
-            return '// UNEXPOSED_EXPR: %s' % ''.join([t.spelling for t in node.get_tokens()]), 'unknown'
-
-        # if len(children) > 1:
-        #     raise Exception('To many children!')
-
-        e = render_expression(children[0])
-        name = e[0]
-
-        # if name == 'argc':
-        #     name = 'len(os.Args)'
-        #     add_import("os")
-        # elif name == 'argv':
-        #     name = 'os.Args'
-        #     add_import("os")
-
-        return name, e[1]
-
-    if node['node'] in ('CHARACTER_LITERAL', 'StringLiteral', 'FLOATING_LITERAL'):
+    if node['node'] in ('CHARACTER_LITERAL', 'StringLiteral', 'FloatingLiteral'):
         return node['value'], 'const char*'
 
     if node['node'] == 'IntegerLiteral':
@@ -248,15 +231,15 @@ def render_expression(node):
         return '%s[%s]' % (render_expression(children[0])[0],
             render_expression(children[1])[0]), 'unknown'
 
-    if node['node'] == 'MEMBER_REF_EXPR':
-        children = list(node.get_children())
-        return '%s.%s' % (render_expression(children[0])[0], list(node.get_tokens())[-2].spelling), 'unknown'
+    if node['node'] == 'MemberExpr':
+        children = node['children']
+        return '%s.%s' % (render_expression(children[0])[0], node['name']), children[0]['type']
 
     if node['node'] == 'CSTYLE_CAST_EXPR':
         children = list(node.get_children())
         return render_expression(children[0]), 'unknown'
 
-    if node['node'] == 'FIELD_DECL' or node['node'] == 'VarDecl':
+    if node['node'] == 'FieldDecl' or node['node'] == 'VarDecl':
         type = resolve_type(node['type'])
         name = node['name'].replace('used', '')
 
@@ -265,13 +248,9 @@ def render_expression(node):
             prefix = 'var '
 
         suffix = ''
-        # children = node['children']
-
-        # We must check the position of the child is at the end. Otherwise a
-        # child can refer to another expression like the size of the data type.
-        # if len(children) > 0 and children[0].extent.end.column == node.extent.end.column:
-        #     e = render_expression(children[0])
-        #     suffix = ' = %s' % cast(e[0], e[1], type)
+        if 'children' in node:
+            children = node['children']
+            suffix = ' = %s' % render_expression(children[0])[0]
 
         return '%s%s %s%s' % (prefix, name, type, suffix), 'unknown'
 
@@ -317,7 +296,7 @@ def render(out, node, indent=0, return_type=None):
 
         if has_body:
             return_type = ' ' + node['type']
-            if return_type == ' void':
+            if return_type == ' void ()':
                 return_type = ''
 
             if function_name == 'main':
@@ -345,33 +324,33 @@ def render(out, node, indent=0, return_type=None):
             render(out, c, indent, return_type)
         return
 
-    # if node['node'] == 'IF_STMT':
-    #     children = list(node.get_children())
+    if node['node'] == 'IfStmt':
+        children = node['children']
 
-    #     e = render_expression(children[0])
-    #     print_line(out, 'if %s {' % cast(e[0], e[1], 'bool'), indent)
+        e = render_expression(children[0])
+        print_line(out, 'if %s {' % cast(e[0], e[1], 'bool'), indent)
 
-    #     render(out, children[1], indent + 1, return_type)
+        render(out, children[1], indent + 1, return_type)
 
-    #     if len(children) > 2:
-    #         print_line(out, '} else {', indent)
-    #         render(out, children[2], indent + 1, return_type)
+        if len(children) > 2:
+            print_line(out, '} else {', indent)
+            render(out, children[2], indent + 1, return_type)
 
-    #     print_line(out, '}', indent)
+        print_line(out, '}', indent)
 
-        # return
+        return
 
-    # if node['node'] == 'WHILE_STMT':
-    #     children = list(node.get_children())
+    if node['node'] == 'WhileStmt':
+        children = node['children']
 
-    #     e = render_expression(children[0])
-    #     print_line(out, 'for %s {' % cast(e[0], e[1], 'bool'), indent)
+        e = render_expression(children[0])
+        print_line(out, 'for %s {' % cast(e[0], e[1], 'bool'), indent)
 
-    #     render(out, children[1], indent + 1, return_type)
+        render(out, children[1], indent + 1, return_type)
 
-    #     print_line(out, '}', indent)
+        print_line(out, '}', indent)
 
-    #     return
+        return
 
     if node['node'] == 'ForStmt':
         children = node['children']
@@ -385,21 +364,13 @@ def render(out, node, indent=0, return_type=None):
 
         return
 
-    # if node['node'] == 'BREAK_STMT':
-    #     print_line(out, 'break', indent)
-    #     return
+    if node['node'] == 'BreakStmt':
+        print_line(out, 'break', indent)
+        return
 
-    # if node['node'] == 'UNARY_OPERATOR':
-    #     variable, operator = [t.spelling for t in list(node.get_tokens())[0:2]]
-    #     if operator == '++':
-    #         print_line(out, '%s += 1' % variable, indent)
-    #         #print_line(out, '%s = string(%s[1:])' % (variable, variable), indent)
-    #         return
-
-    #     print_line(out, '%s%s' % (operator, variable), indent)
-    #     return
-
-    #     #raise Exception('UNARY_OPERATOR: %s' % operator)
+    if node['node'] == 'UnaryOperator':
+        print_line(out, render_expression(node)[0], indent)
+        return
 
     if node['node'] == 'ReturnStmt':
         # try:
@@ -410,7 +381,7 @@ def render(out, node, indent=0, return_type=None):
         
         return
 
-    if node['node'] in ('BINARY_OPERATOR', 'INTEGER_LITERAL', 'CallExpr'):
+    if node['node'] in ('BinaryOperator', 'INTEGER_LITERAL', 'CallExpr'):
         print_line(out, render_expression(node)[0], indent)
         return
 
@@ -434,6 +405,14 @@ def render(out, node, indent=0, return_type=None):
         return
 
     if node['node'] == 'RecordDecl':
+        if node['kind'] == 'union':
+            return
+
+        print_line(out, "type %s %s {" % (node['name'], node['kind']), indent)
+        if 'children' in node:
+            for c in node['children']:
+                print_line(out, render_expression(c)[0], indent + 1)
+        print_line(out, "}\n", indent)
         return
 
     #if node['node'] == 'UNION_DECL' or node['node'] == 'STRUCT_DECL':
