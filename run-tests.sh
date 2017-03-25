@@ -19,7 +19,7 @@ for TEST in $(ls -1 tests); do
     diff /tmp/1.txt /tmp/2.txt
     if [ $? != 0 ]; then
         echo "=== out.go"
-        cat out.go
+        cat --number out.go
         exit 1
     fi
 done
