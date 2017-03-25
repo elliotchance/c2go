@@ -1,0 +1,13 @@
+sudo: required
+
+language: cpp
+
+os: osx
+osx_image: xcode8.2
+
+compiler:
+  - clang
+
+script:
+  - clang --version
+  - bash run-tests.sh
