@@ -65,7 +65,7 @@ regex = {
     'TypedefDecl': r"(?P<address>[0-9a-fx]+) <(?P<position>.+?)> (?P<position2><invalid sloc>|0x[0-9a-f]+)?(?P<tags>.*?)(?P<name>\w+) '(?P<type>.*?)'(?P<type2>:'.*?')?",
     'TypedefType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<tags>.+)',
     'UnaryOperator': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)'(?P<tags1> lvalue)?(?P<tags2> prefix)?(?P<tags3> postfix)? '(?P<operator>.*?)'",
-    'VarDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<position2>[^ ]+) (?P<name>.+) '(?P<type>.+?)'.*?(?P<tags>.*)",
+    'VarDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)? (?P<name>.+) '(?P<type>.+?)'(?P<type2>:'.*?')?(?P<tags>.*)",
     'WhileStmt': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>",
 }
 
