@@ -23,6 +23,7 @@ import json
 
 regex = {
     'AlwaysInlineAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> always_inline",
+    'ArraySubscriptExpr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' (?P<tags>.*)",
     'AsmLabelAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \"(?P<function>.+)\"",
     'AvailabilityAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<os>\w+) (?P<version>[\d.]+) (?P<unknown1>[\d.]+) (?P<unknown2>[\d.]+) (?P<unknown3>\".*?\"|\w+) (?P<unknown4>\".*?\"|\w+)",
     'BinaryOperator': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' '(?P<operator>.*?)'",
@@ -38,15 +39,16 @@ regex = {
     'DeprecatedAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \"(?P<message1>.*?)\" \"(?P<message2>.*?)\"",
     'ElaboratedType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<tags>.+)',
     'FieldDecl': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<position2>[^ ]+) (?P<type>.+)',
+    'FloatingLiteral': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*)' (?P<value>.+)",
     'FormatAttr': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<tags> Implicit)? (?P<function>\w+) (?P<unknown1>\d+) (?P<unknown2>\d+)',
     'ForStmt': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>",
     'FunctionDecl': r"^ (?P<address>[0-9a-fx]+) (?P<prev>prev [0-9a-fx]+)? ?<(?P<position1>.*)> (?P<position2>[^ ]+)(?P<tags1> implicit)?(?P<tags2> used)? (?P<name>\w+) '(?P<type>.*)'(?P<tags3> extern)?",
     'IfStmt': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>',
     'ImplicitCastExpr': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*)\' <(?P<kind>.*)>',
-    'IntegerLiteral': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*)\' (?P<value>\d+)',
-    'MemberExpr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' lvalue ->(?P<name>\w+) (?P<address2>[0-9a-fx]+)",
+    'IntegerLiteral': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*)\' (?P<value>.+)',
+    'MemberExpr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' (?P<tags>.*?)(?P<name>\w+) (?P<address2>[0-9a-fx]+)",
     'ParenExpr': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*?)\'',
-    'ParmVarDecl': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<position2>.+) \'(?P<type>.*?)\'(?P<type2>:\'.*?\')?',
+    'ParmVarDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<position2>.+?)(?P<name> \w+)? '(?P<type>.*?)'(?P<type2>:'.*?')?",
     'PointerType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\'',
     'Record': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\'',
     'RecordDecl': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<position2>[^ ]+) (?P<type>.+)',
@@ -59,6 +61,7 @@ regex = {
     'TypedefType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<tags>.+)',
     'UnaryOperator': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)'(?P<tags1> lvalue)?(?P<tags2> prefix)?(?P<tags3> postfix)? '(?P<operator>.*?)'",
     'VarDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<position2>[^ ]+) (?P<name>.+) '(?P<type>.+)'(?P<tags>.*)",
+    'WhileStmt': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>",
 }
 
 def build_tree(nodes, depth):

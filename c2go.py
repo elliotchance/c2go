@@ -56,7 +56,7 @@ def resolve_type(s):
     if s == 'int' or s == '__darwin_ct_rune_t':
         return s
 
-    if s == 'long':
+    if s == 'long' or s == '__mbstate_t' or s == '__builtin_va_list':
         return 'int64'
 
     if s == 'long long':
@@ -86,6 +86,9 @@ def resolve_type(s):
     if s == 'long int':
         return 'int32'
 
+    if s == '__int128':
+        return 'int64'
+
     if re.match('unsigned char \\[\\d+\\]', s):
         return s[14:] + 'byte'
 
@@ -101,9 +104,9 @@ def resolve_type(s):
     if '(*)' in s or s == '__sFILEX *' or s == 'fpos_t':
         return "interface{}"
 
-    # return s
+    return s
 
-    raise Exception('Cannot resolve type "%s"' % s)
+    # raise Exception('Cannot resolve type "%s"' % s)
 
 def cast(expr, from_type, to_type):
     from_type = resolve_type(from_type)
@@ -128,15 +131,9 @@ def print_line(out, line, indent):
     out.write('%s%s\n' % ('\t' * indent, line))
 
 def render_expression(node):
-    if node['node'] == 'BINARY_OPERATOR':
-        end_of_left = list(node.get_children())[0].extent.end.column
-        operator = None
-        for t in node.get_tokens():
-            if t.extent.start.column >= end_of_left:
-                operator = t.spelling
-                break
-
-        left, right = [render_expression(t)[0] for t in list(node.get_children())]
+    if node['node'] == 'BinaryOperator':
+        operator = node['operator']
+        left, right = [render_expression(t)[0] for t in node['children']]
 
         return_type = 'bool'
         if operator == '|' or operator == '&':
@@ -151,19 +148,9 @@ def render_expression(node):
         except TypeError:
             return '// CONDITIONAL_OPERATOR: %s' % ''.join([t.spelling for t in node.get_tokens()]), 'unknown'
 
-    if node['node'] == 'UNARY_OPERATOR':
-        expr_start = list(node.get_children())[0].extent.start.column
-        operator = None
-        for t in node.get_tokens():
-            if t.extent.start.column >= expr_start:
-                break
-
-            operator = t.spelling
-
-        if operator is None:
-            operator = '++'
-
-        expr = render_expression(list(node.get_children())[0])
+    if node['node'] == 'UnaryOperator':
+        operator = node['operator']
+        expr = render_expression(node['children'][0])
 
         if operator == '!':
             return '%s(%s)' % ('__not_%s' % expr[1], expr[0]), expr[1]
@@ -193,20 +180,20 @@ def render_expression(node):
         e = render_expression(children[0])
         name = e[0]
 
-        if name == 'argc':
-            name = 'len(os.Args)'
-            add_import("os")
-        elif name == 'argv':
-            name = 'os.Args'
-            add_import("os")
+        # if name == 'argc':
+        #     name = 'len(os.Args)'
+        #     add_import("os")
+        # elif name == 'argv':
+        #     name = 'os.Args'
+        #     add_import("os")
 
         return name, e[1]
 
     if node['node'] in ('CHARACTER_LITERAL', 'StringLiteral', 'FLOATING_LITERAL'):
         return node['value'], 'const char*'
 
-    if node['node'] == 'INTEGER_LITERAL':
-        literal = list(node.get_tokens())[0].spelling
+    if node['node'] == 'IntegerLiteral':
+        literal = node['value']
         if literal[-1] == 'L':
             literal = '%s(%s)' % (resolve_type('long'), literal[:-1])
 
@@ -217,7 +204,16 @@ def render_expression(node):
         return '(%s)' % e[0], e[1]
 
     if node['node'] == 'DeclRefExpr':
-        return node['name'], node['type']
+        name = node['name']
+
+        if name == 'argc':
+            name = 'len(os.Args)'
+            add_import("os")
+        elif name == 'argv':
+            name = 'os.Args'
+            add_import("os")
+
+        return name, node['type']
 
     if node['node'] == 'ImplicitCastExpr':
         return render_expression(node['children'][0])
@@ -247,8 +243,8 @@ def render_expression(node):
 
         return '%s(%s)' % (func_name, ', '.join(args)), func_def[0]
 
-    if node['node'] == 'ARRAY_SUBSCRIPT_EXPR':
-        children = list(node.get_children())
+    if node['node'] == 'ArraySubscriptExpr':
+        children = node['children']
         return '%s[%s]' % (render_expression(children[0])[0],
             render_expression(children[1])[0]), 'unknown'
 
@@ -260,22 +256,22 @@ def render_expression(node):
         children = list(node.get_children())
         return render_expression(children[0]), 'unknown'
 
-    if node['node'] == 'FIELD_DECL' or node['node'] == 'VAR_DECL':
-        type = resolve_type(node.type.spelling)
-        name = node.spelling
+    if node['node'] == 'FIELD_DECL' or node['node'] == 'VarDecl':
+        type = resolve_type(node['type'])
+        name = node['name'].replace('used', '')
 
         prefix = ''
-        if node['node'] == 'VAR_DECL':
+        if node['node'] == 'VarDecl':
             prefix = 'var '
 
         suffix = ''
-        children = list(node.get_children())
+        # children = node['children']
 
         # We must check the position of the child is at the end. Otherwise a
         # child can refer to another expression like the size of the data type.
-        if len(children) > 0 and children[0].extent.end.column == node.extent.end.column:
-            e = render_expression(children[0])
-            suffix = ' = %s' % cast(e[0], e[1], type)
+        # if len(children) > 0 and children[0].extent.end.column == node.extent.end.column:
+        #     e = render_expression(children[0])
+        #     suffix = ' = %s' % cast(e[0], e[1], type)
 
         return '%s%s %s%s' % (prefix, name, type, suffix), 'unknown'
 
@@ -316,8 +312,8 @@ def render(out, node, indent=0, return_type=None):
                     has_body = True
 
         args = []
-        # for a in get_function_params(node):
-        #     args.append('%s %s' % (a['name'], resolve_type(a['type'])))
+        for a in get_function_params(node):
+            args.append('%s %s' % (a['name'], resolve_type(a['type'])))
 
         if has_body:
             return_type = ' ' + node['type']
@@ -377,17 +373,17 @@ def render(out, node, indent=0, return_type=None):
 
     #     return
 
-    # if node['node'] == 'FOR_STMT':
-    #     children = list(node.get_children())
+    if node['node'] == 'ForStmt':
+        children = node['children']
 
-    #     a, b, c = [render_expression(e)[0] for e in children[:3]]
-    #     print_line(out, 'for %s; %s; %s {' % (a, b, c), indent)
+        a, b, c = [render_expression(e)[0] for e in children[:3]]
+        print_line(out, 'for %s; %s; %s {' % (a, b, c), indent)
 
-    #     render(out, children[3], indent + 1, return_type)
+        render(out, children[3], indent + 1, return_type)
 
-    #     print_line(out, '}', indent)
+        print_line(out, '}', indent)
 
-    #     return
+        return
 
     # if node['node'] == 'BREAK_STMT':
     #     print_line(out, 'break', indent)
@@ -419,7 +415,13 @@ def render(out, node, indent=0, return_type=None):
         return
 
     if node['node'] == 'TypedefDecl':
-        print_line(out, "type %s %s\n" % (node['type'], node['name']), indent)
+        # FIXME: All of the logic here is just to avoid errors, it needs to be
+        # fixed up.
+        if 'struct' in node['type'] or 'union' in node['type']:
+            return
+        node['type'] = node['type'].replace('unsigned', '')
+
+        print_line(out, "type %s %s\n" % (node['name'], resolve_type(node['type'])), indent)
         # print(node)
         return
 
@@ -472,10 +474,10 @@ def render(out, node, indent=0, return_type=None):
     #     print_line(out, '// ' + ' '.join(tokens[1:-2]), indent)
     #     return
 
-    # if node['node'] == 'DECL_STMT':
-    #     for child in node.get_children():
-    #         print_line(out, render_expression(child)[0], indent)
-    #     return
+    if node['node'] == 'DeclStmt':
+        for child in node['children']:
+            print_line(out, render_expression(child)[0], indent)
+        return
 
     if node['node'] == 'VarDecl':
     #     tokens = [t.spelling for t in node.get_tokens()]
