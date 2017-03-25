@@ -511,10 +511,16 @@ with open(json_file_path, 'r') as json_in:
     go_file_path = '%s.go' % c_file_path.split('/')[-1][:-2]
     # go_out = sys.stdout
     go_out = io.StringIO()
-    #with open(go_file_path, 'w') as go_out:
-    # print_line(go_out, "package main\n", 0)
-    #print_line(go_out, 'import ("fmt"; "os")\n', 0)
-    render(go_out, json.loads(json_in.read())[0])
+    all_json = json_in.read()
+
+    try:
+        l = json.loads(all_json)
+    except ValueError as e:
+        # This occurs if the JSON cannot be parsed
+        print(all_json)
+        raise e
+
+    render(go_out, l[0])
 
     print("package main\n")
     print("import (")
