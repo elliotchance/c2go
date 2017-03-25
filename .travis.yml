@@ -11,5 +11,4 @@ compiler:
 
 script:
   - clang --version
-  - clang -Xclang -ast-dump -fsyntax-only tests/argv.c | python ast2json.py
   - bash run-tests.sh
