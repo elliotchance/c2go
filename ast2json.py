@@ -51,7 +51,7 @@ regex = {
     'ParmVarDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<position2>.+?)(?P<name> \w+)? '(?P<type>.*?)'(?P<type2>:'.*?')?",
     'PointerType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\'',
     'Record': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\'',
-    'RecordDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<position2>[^ ]+) (?P<kind>struct|union) (?P<name>\w+)",
+    'RecordDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<position2>[^ ]+ )?(?P<kind>struct|union) (?P<name>\w*)( definition)?",
     'RecordType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\'',
     'ReturnStmt': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>',
     'StringLiteral': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*)\'(?P<tags> lvalue)? (?P<value>.*)',
