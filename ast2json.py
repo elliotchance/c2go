@@ -53,7 +53,7 @@ regex = {
     'ModeAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<name>.+)",
     'NoThrowAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>",
     'ParenExpr': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*?)\'',
-    'ParmVarDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<position2>.+?)(?P<name> \w+)? '(?P<type>.*?)'(?P<type2>:'.*?')?",
+    'ParmVarDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> .+?)?(?P<name> \w+)? '(?P<type>.*?)'(?P<type2>:'.*?')?",
     'PointerType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\'',
     'Record': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\'',
     'RecordDecl': r"^ (?P<address>[0-9a-fx]+) (?P<prev>prev 0x[0-9a-f]+ )?<(?P<position>.*)> (?P<position2>[^ ]+ )?(?P<kind>struct|union) (?P<name>\w*)( definition)?",
