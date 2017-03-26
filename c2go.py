@@ -36,7 +36,14 @@ function_subs = {
     'asin': 'math.Asin',
     'atan': 'math.Atan',
     'atan2': 'math.Atan2',
+    'ceil': 'math.Ceil',
     'cos': 'math.Cos',
+    'cosh': 'math.Cosh',
+    'exp': 'math.Exp',
+    'fabs': 'math.Abs',
+    'floor': 'math.Floor',
+    'fmod': 'math.Mod',
+    'log': 'math.Log',
 
     # stdio
     'printf': 'fmt.Printf',
