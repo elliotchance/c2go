@@ -13,7 +13,7 @@ function run_test {
     fi
 
     # Compile with clang
-    clang $TEST
+    clang -lm $TEST
     if [ $? != 0 ]; then
         exit 1
     fi

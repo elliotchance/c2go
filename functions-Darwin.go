@@ -6,7 +6,6 @@ import (
 
 // FIXME: These are wrong.
 type __mbstate_t int64
-type __builtin_va_list int64
 type fpos_t int64
 
 type _RuneLocale struct {

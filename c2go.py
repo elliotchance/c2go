@@ -7,6 +7,7 @@ import re
 import subprocess
 import json
 import os
+import platform
 
 try:
     import StringIO as io
@@ -84,7 +85,10 @@ simple_resolve_types = {
     'FILE': 'int64',
 }
 
-types_already_defined = set()
+types_already_defined = set([
+    # Linux specific
+    '_LIB_VERSION_TYPE'
+])
 
 imports = ["fmt"]
 
@@ -124,6 +128,13 @@ def resolve_type(s):
         else:
             return s[7:]
 
+    # Enums are by name.
+    if s[:5] == 'enum ':
+        if s[-1] == '*':
+            return '*' + s[5:-2]
+        else:
+            return s[5:]
+
     # I have no idea how to handle this yet.
     if 'anonymous union' in s:
         return 'interface{}'
@@ -140,6 +151,9 @@ def resolve_type(s):
     # replaced with a type that certainly wont work until we can fix this
     # properly.
     search = re.search(r"[\w ]+\(\*.*?\)\(.*\)", s)
+    if search:
+        return 'interface{}'
+    search = re.search(r"[\w ]+ \(.*\)", s)
     if search:
         return 'interface{}'
 
@@ -311,8 +325,6 @@ def render_expression(node):
         a, b = render_expression(node['children'][0])
         return '(%s)' % a, b
 
-    # return node['node'], 'unknown6'
-
     raise Exception('render_expression: %s' % node['node'])
 
 def get_function_params(nodes):
@@ -376,10 +388,6 @@ def render(out, node, function_name, indent=0, return_type=None):
             [a['type'] for a in get_function_params(node)])
 
         return
-
-    # if node['node'] == 'PARM_DECL':
-    #     print_line(out, node.spelling, indent)
-    #     return
 
     if node['node'] == 'CompoundStmt':
         for c in node['children']:
@@ -449,18 +457,22 @@ def render(out, node, function_name, indent=0, return_type=None):
         return
 
     if node['node'] == 'TypedefDecl':
-        types_already_defined.add(node['name'].strip())
+        name = node['name'].strip()
+        if name in types_already_defined:
+            return
+
+        types_already_defined.add(name)
 
         # FIXME: All of the logic here is just to avoid errors, it needs to be
         # fixed up.
         if 'struct' in node['type'] or 'union' in node['type']:
             return
         node['type'] = node['type'].replace('unsigned', '')
-        if node['name'] in ('__builtin_va_list', '__qaddr_t', 'definition',
+        if name in ('__builtin_va_list', '__qaddr_t', 'definition',
             '_IO_lock_t', 'va_list', 'fpos_t'):
             return
 
-        print_line(out, "type %s %s\n" % (node['name'], resolve_type(node['type'])), indent)
+        print_line(out, "type %s %s\n" % (name, resolve_type(node['type'])), indent)
 
         return
 
@@ -472,14 +484,20 @@ def render(out, node, function_name, indent=0, return_type=None):
         return
 
     if node['node'] == 'RecordDecl':
+        name = node['name'].strip()
+        if name in types_already_defined:
+            return
+
+        types_already_defined.add(name)
+
         if node['kind'] == 'union':
             return
 
         # FIXME
-        if node['name'] in ('definition', '_IO_FILE'):
+        if name in ('definition', '_IO_FILE'):
             return
 
-        print_line(out, "type %s %s {" % (node['name'], node['kind']), indent)
+        print_line(out, "type %s %s {" % (name, node['kind']), indent)
         if 'children' in node:
             for c in node['children']:
                 render(out, c, function_name, indent + 1)
@@ -492,16 +510,7 @@ def render(out, node, function_name, indent=0, return_type=None):
         return
 
     if node['node'] == 'VarDecl':
-    #     tokens = [t.spelling for t in node.get_tokens()]
-    #     if tokens[0] == 'extern':
-    #         return
-
-    #     children = list(node.get_children())
-    #     if len(children) > 0:
-    #         print_line(out, 'var %s %s = %s\n' % (tokens[2], tokens[1], render_expression(children[0])[0]), indent)
-    #     else:
-    #         print_line(out, 'var %s %s\n' % (tokens[2], tokens[1]), indent)
-        
+        # FIXME?
         return
 
     raise Exception(node['node'])
@@ -544,8 +553,8 @@ with open(json_file_path, 'r') as json_in:
     out_file.write("package main\n\n")
     out_file.write("import (\n")
     for import_name in sorted(imports):
-        if os.path.exists("functions-Darwin-%s.go" % import_name):
-            print("functions-Darwin-%s.go" % import_name)
+        if os.path.exists("functions-%s-%s.go" % (platform.system(), import_name)):
+            print("functions-%s-%s.go" % (platform.system(), import_name))
 
         out_file.write('\t"%s"\n' % import_name)
     out_file.write(")\n\n")
@@ -556,4 +565,4 @@ with open(json_file_path, 'r') as json_in:
 
 print("out.go")
 print("functions.go")
-print("functions-Darwin.go")
+print("functions-%s.go" % platform.system())

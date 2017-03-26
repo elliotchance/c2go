@@ -1,5 +1,8 @@
 package main
 
+// FIXME
+type __builtin_va_list int64
+
 func __bool_to_int(x bool) int {
     if x {
         return 1
