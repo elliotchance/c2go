@@ -1,6 +1,12 @@
 package main
 
-import "unicode"
+import (
+    "unicode"
+)
+
+// FIXME: These are wrong.
+type __mbstate_t int64
+type fpos_t int64
 
 type _RuneLocale struct {
     __runetype [256]uint32
@@ -22,13 +28,13 @@ func __maskrune(_c __darwin_ct_rune_t, _f uint32) uint32 {
 //     return __not_uint32(__not_uint32(__maskrune(_c, _f)))
 // }
 
-func __isctype(_c __darwin_ct_rune_t, _f uint32) __darwin_ct_rune_t {
-    if _c < 0 || _c >= (1 <<8 ) {
-        return 0
-    }
+// func __isctype(_c __darwin_ct_rune_t, _f uint32) __darwin_ct_rune_t {
+//     if _c < 0 || _c >= (1 <<8 ) {
+//         return 0
+//     }
 
-    return __darwin_ct_rune_t(__not_uint32(__not_uint32((_DefaultRuneLocale.__runetype[_c] & _f))))
-}
+//     return __darwin_ct_rune_t(__not_uint32(__not_uint32((_DefaultRuneLocale.__runetype[_c] & _f))))
+// }
 
 func __tolower(c __darwin_ct_rune_t) __darwin_ct_rune_t {
     return __darwin_ct_rune_t(unicode.ToLower(rune(c)))
@@ -37,9 +43,3 @@ func __tolower(c __darwin_ct_rune_t) __darwin_ct_rune_t {
 func __toupper(c __darwin_ct_rune_t) __darwin_ct_rune_t {
     return __darwin_ct_rune_t(unicode.ToUpper(rune(c)))
 }
-
-// stdio
-
-// func printf(format string, ...args interface{}) {
-
-// }

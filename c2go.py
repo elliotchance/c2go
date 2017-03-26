@@ -6,6 +6,8 @@ import pprint
 import re
 import subprocess
 import json
+import os
+import platform
 
 try:
     import StringIO as io
@@ -18,15 +20,99 @@ function_defs = {
     '__tolower': ('__darwin_ct_rune_t', ('__darwin_ct_rune_t',)),
     '__toupper': ('__darwin_ct_rune_t', ('__darwin_ct_rune_t',)),
     '__maskrune': ('uint32', ('__darwin_ct_rune_t', 'uint32')),
+
+    # These are provided by functions-Darwin.go
+    '__builtin_fabs': ('double', ('double',)),
+    '__builtin_fabsf': ('float', ('float',)),
+    '__builtin_fabsl': ('double', ('double',)),
+    '__builtin_inf': ('double', ()),
+    '__builtin_inff': ('float', ()),
+    '__builtin_infl': ('double', ()),
 }
 
 function_subs = {
+    # math.h
+    'acos': 'math.Acos',
+    'asin': 'math.Asin',
+    'atan': 'math.Atan',
+    'atan2': 'math.Atan2',
+    'ceil': 'math.Ceil',
+    'cos': 'math.Cos',
+    'cosh': 'math.Cosh',
+    'exp': 'math.Exp',
+    'fabs': 'math.Abs',
+    'floor': 'math.Floor',
+    'fmod': 'math.Mod',
+    'ldexp': 'math.Ldexp',
+    'log': 'math.Log',
+    'log10': 'math.Log10',
+    'pow': 'math.Pow',
+    'sin': 'math.Sin',
+    'sinh': 'math.Sinh',
+    'sqrt': 'math.Sqrt',
+    'tan': 'math.Tan',
+    'tanh': 'math.Tanh',
+
     # stdio
     'printf': 'fmt.Printf',
     'scanf': 'fmt.Scanf',
 }
 
+# TODO: Some of these are based on assumtions that may not be true for all
+# architectures (like the size of an int). At some point in the future we will
+# need to find out the sizes of some of there and pick the most compatible type.
+# 
+# Please keep them sorted by name.
+simple_resolve_types = {
+    'bool': 'bool',
+    'char *': 'string',
+    'char': 'byte',
+    'char*': 'string',
+    'double': 'float64',
+    'float': 'float32',
+    'int': 'int',
+    'long double': 'float64',
+    'long int': 'int32',
+    'long long': 'int64',
+    'long unsigned int': 'uint32',
+    'long': 'int32',
+    'short': 'int16',
+    'signed char': 'int8',
+    'unsigned char': 'uint8',
+    'unsigned int': 'uint32',
+    'unsigned long long': 'uint64',
+    'unsigned long': 'uint32',
+    'unsigned short': 'uint16',
+    'void *': 'interface{}',
+    'void': '',
+
+    'const char *': 'string',
+
+    # Mac specific
+    '__darwin_ct_rune_t': '__darwin_ct_rune_t',
+
+    # These are special cases that almost certainly don't work. I've put them
+    # here becuase for whatever reason there is no suitable type or we don't
+    # need these platform specific things to be implemented yet.
+    '__builtin_va_list': 'int64',
+    '__darwin_pthread_handler_rec': 'int64',
+    '__int128': 'int64',
+    '__mbstate_t': 'int64',
+    '__sbuf': 'int64',
+    '__sFILEX': 'interface{}',
+    '__va_list_tag': 'interface{}',
+    'FILE': 'int64',
+}
+
+types_already_defined = set([
+    # Linux specific
+    '_LIB_VERSION_TYPE'
+])
+
 imports = ["fmt"]
+
+class NoSuchTypeException(Exception):
+    pass
 
 def add_import(import_name):
     if import_name not in imports:
@@ -39,84 +125,68 @@ def is_identifier(w):
     return not is_keyword(w) and re.match('[_a-zA-Z][_a-zA-Z0-9]*', w)
 
 def resolve_type(s):
-    s = s.strip()
+    # Remove any whitespace or attributes that are not relevant to Go.
+    s = s.replace('const ', '')
+    s = s.replace('*__restrict', '*')
+    s = s.replace('*restrict', '*')
+    s = s.strip(' \t\n\r')
 
-    if s == 'const char *' or s == 'const char*' or s == 'char *' or \
-        s == 'const char *restrict' or s == 'const char *__restrict':
-        return 'string'
-
-    if s == 'float':
-        return 'float32'
-
-    if s == 'void *' or s == '__darwin_pthread_handler_rec *':
-        return 'interface{}'
-
-    if s == 'char':
-        return 'byte'
-
-    if s == 'int *':
-        return '*int'
-
-    if s == 'unsigned long':
-        return 'uint32'
-
-    if s == 'int' or s == '__darwin_ct_rune_t':
+    # If the type is already defined we can proceed with the same name.
+    if s in types_already_defined:
         return s
 
-    if s == 'long' or s == '__mbstate_t' or s == '__builtin_va_list':
-        return 'int64'
+    # The simple resolve types are the types that we know there is an exact Go
+    # equivalent. For example float, int, etc.
+    if s in simple_resolve_types:
+        return simple_resolve_types[s]
 
-    if s == 'long long':
-        return 'int64'
-
-    if s == 'signed char':
-        return 'int8'
-
-    if s == 'unsigned char':
-        return 'uint8'
-
-    if s == 'unsigned char *':
-        return '*uint8'
-
-    if s == 'unsigned short':
-        return 'uint16'
-
-    if s == 'short':
-        return 'int16'
-
-    if s == 'unsigned int' or s == 'long unsigned int':
-        return 'uint32'
-
-    if s == 'unsigned long long':
-        return 'uint64'
-
-    if s == 'long int':
-        return 'int32'
-
-    if s == '__int128':
-        return 'int64'
-
-    if re.match('unsigned char \\[\\d+\\]', s):
-        return s[14:] + 'byte'
-
-    if re.match('char \\[\\d+\\]', s):
-        return s[5:] + 'byte'
-
-    if re.match('int \\[\\d+\\]', s):
-        return s[4:] + 'int'
-
+    # Structures are by name.
     if s[:7] == 'struct ':
-        return resolve_type(s[7:])
+        if s[-1] == '*':
+            return '*' + s[7:-2]
+        else:
+            return s[7:]
 
-    if '(*)' in s or s == '__sFILEX *' or s == 'fpos_t':
-        return "interface{}"
+    # Enums are by name.
+    if s[:5] == 'enum ':
+        if s[-1] == '*':
+            return '*' + s[5:-2]
+        else:
+            return s[5:]
 
-    if '(' in s or '_IO_' in s:
+    # I have no idea how to handle this yet.
+    if 'anonymous union' in s:
         return 'interface{}'
 
-    return s
+    # It may be a pointer of a simple type. For example, float *, int *, etc.
+    try:
+        if re.match(r"[\w ]+\*", s):
+            return '*' + resolve_type(s[:-2].strip())
+    except NoSuchTypeException:
+        # Keep trying the next one.
+        pass
 
-    # raise Exception('Cannot resolve type "%s"' % s)
+    # Function pointers are not yet supported. In th mean time they will be
+    # replaced with a type that certainly wont work until we can fix this
+    # properly.
+    search = re.search(r"[\w ]+\(\*.*?\)\(.*\)", s)
+    if search:
+        return 'interface{}'
+    search = re.search(r"[\w ]+ \(.*\)", s)
+    if search:
+        return 'interface{}'
+
+    try:
+        # It could be an array of fixed length.
+        search = re.search(r"([\w ]+)\[(\d+)\]", s)
+        if search:
+            return '[%s]%s' % (search.group(2), resolve_type(search.group(1)))
+
+    except NoSuchTypeException as e:
+        # Make the nested exception message more contextual.
+        raise NoSuchTypeException(e.message + " (from '%s')" % s)
+
+    raise NoSuchTypeException("'%s'" % s)
 
 def cast(expr, from_type, to_type):
     from_type = resolve_type(from_type)
@@ -125,7 +195,8 @@ def cast(expr, from_type, to_type):
     if from_type == to_type:
         return expr
 
-    types = ('int', 'int64', 'uint32', '__darwin_ct_rune_t', 'byte')
+    types = ('int', 'int64', 'uint32', '__darwin_ct_rune_t', 'byte', 'float32',
+        'float64')
     if from_type in types and to_type == 'bool':
         return '%s != 0' % expr
 
@@ -143,20 +214,20 @@ def print_line(out, line, indent):
 def render_expression(node):
     if node['node'] == 'BinaryOperator':
         operator = node['operator']
-        left, right = [render_expression(t)[0] for t in node['children']]
+
+        left, left_type = render_expression(node['children'][0])
+        right, right_type = render_expression(node['children'][1])
 
         return_type = 'bool'
-        if operator == '|' or operator == '&':
-            return_type = 'int64'
+        if operator in ('|', '&', '+', '-', '*', '/'):
+            # TODO: The left and right type might be different
+            return_type = left_type
+
+        if operator == '&&':
+            left = cast(left, left_type, return_type)
+            right = cast(right, right_type, return_type)
 
         return '%s %s %s' % (left, operator, right), return_type
-
-    if node['node'] == 'CONDITIONAL_OPERATOR':
-        a, b, c = [render_expression(t) for t in list(node.get_children())]
-        try:
-            return '__ternary(%s, %s, %s)' % (cast(a[0], 'bool'), b[0], c[0]), b[1]
-        except TypeError:
-            return '// CONDITIONAL_OPERATOR: %s' % ''.join([t.spelling for t in node.get_tokens()]), 'unknown'
 
     if node['node'] == 'UnaryOperator':
         operator = node['operator']
@@ -179,8 +250,11 @@ def render_expression(node):
 
         return '%s%s' % (operator, expr[0]), expr[1]
 
-    if node['node'] in ('CHARACTER_LITERAL', 'StringLiteral', 'FloatingLiteral'):
-        return node['value'], 'const char*'
+    if node['node'] == 'StringLiteral':
+        return node['value'], 'const char *'
+
+    if node['node'] == 'FloatingLiteral':
+        return node['value'], 'double'
 
     if node['node'] == 'IntegerLiteral':
         literal = node['value']
@@ -188,10 +262,6 @@ def render_expression(node):
             literal = '%s(%s)' % (resolve_type('long'), literal[:-1])
 
         return literal, 'int'
-
-    if node['node'] == 'PAREN_EXPR':
-        e = render_expression(list(node.get_children())[0])
-        return '(%s)' % e[0], e[1]
 
     if node['node'] == 'DeclRefExpr':
         name = node['name']
@@ -216,6 +286,7 @@ def render_expression(node):
 
         if func_name in function_subs:
             func_name = function_subs[func_name]
+            add_import(func_name.split('.')[0])
 
         args = []
         i = 0
@@ -236,19 +307,24 @@ def render_expression(node):
     if node['node'] == 'ArraySubscriptExpr':
         children = node['children']
         return '%s[%s]' % (render_expression(children[0])[0],
-            render_expression(children[1])[0]), 'unknown'
+            render_expression(children[1])[0]), 'unknown1'
 
     if node['node'] == 'MemberExpr':
         children = node['children']
         return '%s.%s' % (render_expression(children[0])[0], node['name']), children[0]['type']
 
-    if node['node'] == 'CSTYLE_CAST_EXPR':
-        children = list(node.get_children())
-        return render_expression(children[0]), 'unknown'
+    if node['node'] == 'CStyleCastExpr':
+        children = node['children']
+        return render_expression(children[0])
 
     if node['node'] == 'FieldDecl' or node['node'] == 'VarDecl':
         type = resolve_type(node['type'])
         name = node['name'].replace('used', '')
+
+        # Go does not allow the name of a variable to be called "type". For the
+        # moment I will rename this to avoid the error.
+        if name == 'type':
+            name = 'type_'
 
         prefix = ''
         if node['node'] == 'VarDecl':
@@ -259,19 +335,16 @@ def render_expression(node):
             children = node['children']
             suffix = ' = %s' % render_expression(children[0])[0]
 
-        return '%s%s %s%s' % (prefix, name, type, suffix), 'unknown'
+        return '%s%s %s%s' % (prefix, name, type, suffix), 'unknown3'
 
-    if node['node'] == 'PARM_DECL':
-        return resolve_type(node.type.spelling), 'unknown'
+    if node['node'] == 'RecordDecl':
+        return '/* RecordDecl */', 'unknown5'
 
-    # return node['node'], 'unknown'
+    if node['node'] == 'ParenExpr':
+        a, b = render_expression(node['children'][0])
+        return '(%s)' % a, b
 
     raise Exception('render_expression: %s' % node['node'])
-
-def print_children(node):
-    print(len(list(node.get_children())), [t.spelling for t in node.get_tokens()])
-    for child in node.get_children():
-        print(child.kind.name, render_expression(child), [t.spelling for t in child.get_tokens()])
 
 def get_function_params(nodes):
     if 'children' not in nodes:
@@ -279,16 +352,30 @@ def get_function_params(nodes):
 
     return [n for n in nodes['children'] if n['node'] == 'ParmVarDecl']
 
-def render(out, node, indent=0, return_type=None):
+def get_function_return_type(f):
+    # The type of the function will be the complete prototype, like:
+    # 
+    #     __inline_isfinitef(float) int
+    #     
+    # will have a type of:
+    #
+    #     int (float)
+    #
+    # The arguments will handle themselves, we only care about the
+    # return type ('int' in this case)
+    return f.split('(')[0].strip()
+
+def render(out, node, function_name, indent=0, return_type=None):
     if node['node'] == 'TranslationUnitDecl':
         for c in node['children']:
-            render(out, c, indent, return_type)
+            render(out, c, function_name, indent, return_type)
         return
 
     if node['node'] == 'FunctionDecl':
-        function_name = node['name']
+        function_name = node['name'].strip()
 
-        if function_name in ('__istype', '__isctype', '__wcwidth', '__sputc'):
+        if function_name in ('__istype', '__isctype', '__wcwidth', '__sputc',
+            '__inline_signbitf', '__inline_signbitd', '__inline_signbitl'):
             return
 
         has_body = False
@@ -302,33 +389,28 @@ def render(out, node, indent=0, return_type=None):
             args.append('%s %s' % (a['name'], resolve_type(a['type'])))
 
         if has_body:
-            return_type = ' ' + node['type']
-            if return_type == ' void ()':
-                return_type = ''
+            return_type = get_function_return_type(node['type'])
 
             if function_name == 'main':
                 print_line(out, 'func main() {', indent)
             else:
-                print_line(out, 'func %s(%s)%s {' % (function_name,
-                    ', '.join(args), return_type), indent)
+                print_line(out, 'func %s(%s) %s {' % (function_name,
+                    ', '.join(args), resolve_type(return_type)), indent)
             
             for c in node['children']:
                 if c['node'] == 'CompoundStmt':
-                    render(out, c, indent + 1, node['type'])
+                    render(out, c, function_name, indent + 1, node['type'])
 
             print_line(out, '}\n', indent)
 
-        function_defs[node['name']] = (node['type'], [a['type'] for a in get_function_params(node)])
+        function_defs[node['name']] = (get_function_return_type(node['type']),
+            [a['type'] for a in get_function_params(node)])
 
         return
 
-    # if node['node'] == 'PARM_DECL':
-    #     print_line(out, node.spelling, indent)
-    #     return
-
     if node['node'] == 'CompoundStmt':
         for c in node['children']:
-            render(out, c, indent, return_type)
+            render(out, c, function_name, indent, return_type)
         return
 
     if node['node'] == 'IfStmt':
@@ -337,11 +419,11 @@ def render(out, node, indent=0, return_type=None):
         e = render_expression(children[0])
         print_line(out, 'if %s {' % cast(e[0], e[1], 'bool'), indent)
 
-        render(out, children[1], indent + 1, return_type)
+        render(out, children[1], function_name, indent + 1, return_type)
 
         if len(children) > 2:
             print_line(out, '} else {', indent)
-            render(out, children[2], indent + 1, return_type)
+            render(out, children[2], function_name, indent + 1, return_type)
 
         print_line(out, '}', indent)
 
@@ -353,7 +435,7 @@ def render(out, node, indent=0, return_type=None):
         e = render_expression(children[0])
         print_line(out, 'for %s {' % cast(e[0], e[1], 'bool'), indent)
 
-        render(out, children[1], indent + 1, return_type)
+        render(out, children[1], function_name, indent + 1, return_type)
 
         print_line(out, '}', indent)
 
@@ -365,7 +447,7 @@ def render(out, node, indent=0, return_type=None):
         a, b, c = [render_expression(e)[0] for e in children[:3]]
         print_line(out, 'for %s; %s; %s {' % (a, b, c), indent)
 
-        render(out, children[3], indent + 1, return_type)
+        render(out, children[3], function_name, indent + 1, return_type)
 
         print_line(out, '}', indent)
 
@@ -380,12 +462,13 @@ def render(out, node, indent=0, return_type=None):
         return
 
     if node['node'] == 'ReturnStmt':
-        # try:
-        #     e = render_expression(list(node.get_children())[0])
-        #     print_line(out, 'return %s' % cast(e[0], e[1], return_type), indent)
-        # except IndexError:
-        print_line(out, 'return', indent)
-        
+        r = 'return'
+
+        if 'children' in node and function_name != 'main':
+            expr, type = render_expression(node['children'][0])
+            r = 'return ' + cast(expr, type, 'int')
+
+        print_line(out, r, indent)
         return
 
     if node['node'] in ('BinaryOperator', 'INTEGER_LITERAL', 'CallExpr'):
@@ -393,24 +476,22 @@ def render(out, node, indent=0, return_type=None):
         return
 
     if node['node'] == 'TypedefDecl':
+        name = node['name'].strip()
+        if name in types_already_defined:
+            return
+
+        types_already_defined.add(name)
+
         # FIXME: All of the logic here is just to avoid errors, it needs to be
         # fixed up.
         if 'struct' in node['type'] or 'union' in node['type']:
             return
         node['type'] = node['type'].replace('unsigned', '')
-        if node['name'] in ('__builtin_va_list', '__qaddr_t', 'definition',
+        if name in ('__builtin_va_list', '__qaddr_t', 'definition',
             '_IO_lock_t', 'va_list', 'fpos_t'):
             return
 
-        print_line(out, "type %s %s\n" % (node['name'], resolve_type(node['type'])), indent)
-        # print(node)
-        return
-
-        # tokens = [t.spelling for t in node.get_tokens()]
-        # if len(list(node.get_children())) == 0:
-        #     print_line(out, "type %s %s\n" % (tokens[-2], resolve_type(' '.join(tokens[1:-2]))), indent)
-        #else:
-        #    print_line(out, "type %s %s\n" % (tokens[-2], render(out, list(node.get_children())[0], indent, return_type)), indent)
+        print_line(out, "type %s %s\n" % (name, resolve_type(node['type'])), indent)
 
         return
 
@@ -422,57 +503,25 @@ def render(out, node, indent=0, return_type=None):
         return
 
     if node['node'] == 'RecordDecl':
+        name = node['name'].strip()
+        if name in types_already_defined:
+            return
+
+        types_already_defined.add(name)
+
         if node['kind'] == 'union':
             return
 
         # FIXME
-        if node['name'] in ('definition', '_IO_FILE'):
+        if name in ('definition', '_IO_FILE'):
             return
 
-        print_line(out, "type %s %s {" % (node['name'], node['kind']), indent)
+        print_line(out, "type %s %s {" % (name, node['kind']), indent)
         if 'children' in node:
             for c in node['children']:
-                render(out, c, indent + 1)
+                render(out, c, function_name, indent + 1)
         print_line(out, "}\n", indent)
         return
-
-    #if node['node'] == 'UNION_DECL' or node['node'] == 'STRUCT_DECL':
-    #     tokens = [t.spelling for t in node.get_tokens()]
-
-    #     struct_name = tokens[-1]
-    #     start_at = 2
-    #     if struct_name == ';':
-    #         struct_name = tokens[1]
-    #         start_at = 3
-
-    #     if struct_name in ('__darwin_pthread_handler_rec', '_opaque_pthread_t',
-    #         '_RuneEntry', '_RuneRange', '_RuneCharClass', '_RuneLocale'):
-    #         return
-
-    #     print_line(out, "type %s struct {" % struct_name, indent)
-
-    #     for attribute in node.get_children():
-    #         print_line(out, render_expression(attribute)[0], indent + 1)
-    #         # print(struct_name, render_expression(attribute))
-
-    #     # name = ''
-    #     # type = ''
-    #     # for token in tokens[start_at:-2]:
-    #     #     if token == ';':
-    #     #         print_line(out, '%s %s' % (name, resolve_type(type)), indent + 1)
-    #     #         type = ''
-    #     #     elif is_identifier(token):
-    #     #         name = token
-    #     #     else:
-    #     #         type += ' ' + token
-
-    #     print_line(out, "}\n", indent)
-    #     return
-
-    # if node['node'] == 'UNEXPOSED_DECL':
-    #     tokens = [t.spelling for t in node.get_tokens()]
-    #     print_line(out, '// ' + ' '.join(tokens[1:-2]), indent)
-    #     return
 
     if node['node'] == 'DeclStmt':
         for child in node['children']:
@@ -480,27 +529,13 @@ def render(out, node, indent=0, return_type=None):
         return
 
     if node['node'] == 'VarDecl':
-    #     tokens = [t.spelling for t in node.get_tokens()]
-    #     if tokens[0] == 'extern':
-    #         return
-
-    #     children = list(node.get_children())
-    #     if len(children) > 0:
-    #         print_line(out, 'var %s %s = %s\n' % (tokens[2], tokens[1], render_expression(children[0])[0]), indent)
-    #     else:
-    #         print_line(out, 'var %s %s\n' % (tokens[2], tokens[1]), indent)
-        
+        # FIXME?
         return
-
-    # if node['node'] == 'ENUM_DECL':
-    #     print_line(out, '// enum', indent)
-    #     return
 
     raise Exception(node['node'])
 
 # 1. Compile it first (checking for errors)
 c_file_path = sys.argv[1]
-#subprocess.call(["clang", c_file_path])
 
 # 2. Preprocess
 pp = subprocess.Popen(["clang", "-E", c_file_path], stdout=subprocess.PIPE).communicate()[0]
@@ -517,13 +552,11 @@ json_file_path = 'pp.json'
 with open(json_file_path, 'w') as json_out:
     json_out.write(pp)
 
+out_file = open('out.go', 'w')
+
 with open(json_file_path, 'r') as json_in:
     # 3. Parse C and output Go
-    # index = clang.cindex.Index.create()
-    # tu = index.parse(pp_file_path)
-
     go_file_path = '%s.go' % c_file_path.split('/')[-1][:-2]
-    # go_out = sys.stdout
     go_out = io.StringIO()
     all_json = json_in.read()
 
@@ -534,14 +567,21 @@ with open(json_file_path, 'r') as json_in:
         print(all_json)
         raise e
 
-    render(go_out, l[0])
+    render(go_out, l[0], function_name=None)
 
-    print("package main\n")
-    print("import (")
+    out_file.write("package main\n\n")
+    out_file.write("import (\n")
     for import_name in sorted(imports):
-        print('\t"%s"' % import_name)
-    print(")\n")
-    print(go_out.getvalue())
+        if os.path.exists("functions-%s-%s.go" % (platform.system(), import_name)):
+            print("functions-%s-%s.go" % (platform.system(), import_name))
+
+        out_file.write('\t"%s"\n' % import_name)
+    out_file.write(")\n\n")
+    out_file.write(go_out.getvalue())
 
     # 4. Compile the Go
     #subprocess.call(["go", "run", "functions.go", go_file_path])
+
+print("out.go")
+print("functions.go")
+print("functions-%s.go" % platform.system())

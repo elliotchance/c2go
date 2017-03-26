@@ -33,13 +33,14 @@ regex = {
     'CharacterLiteral': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' (?P<value>\d+)",
     'CompoundStmt': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>',
     'ConstantArrayType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<size>\d+)',
+    'ConstAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<tags>.*)",
     'CStyleCastExpr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' <(?P<kind>.*)>",
     'DeclRefExpr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)'.*? (lvalue (?P<kind>\w+)|Function) (?P<address2>[0-9a-fx]+) '(?P<name>.*?)' '(?P<type2>.*?)'",
     'DeclStmt': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>",
     'DeprecatedAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \"(?P<message1>.*?)\"(?P<message2> \".*?\")?",
     'ElaboratedType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<tags>.+)',
     'EnumConstantDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)? (?P<name>.+) '(?P<type>.+?)'",
-    'EnumDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)? (?P<name>.+)",
+    'EnumDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)?(?P<name>.*)",
     'FieldDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)? (?P<tags>.*?)(?P<name>\w+?) '(?P<type>.+?)'",
     'FloatingLiteral': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*)' (?P<value>.+)",
     'FormatAttr': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<tags> \w+)? (?P<function>\w+) (?P<unknown1>\d+) (?P<unknown2>\d+)',
@@ -51,6 +52,7 @@ regex = {
     'MallocAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>",
     'MemberExpr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' (?P<tags>.*?)(?P<name>\w+) (?P<address2>[0-9a-fx]+)",
     'ModeAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<name>.+)",
+    'NonNullAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> 1",
     'NoThrowAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>",
     'ParenExpr': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*?)\'',
     'ParmVarDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> .+?)?(?P<name> \w+)? '(?P<type>.*?)'(?P<type2>:'.*?')?",
@@ -117,7 +119,7 @@ def convert_lines_to_nodes(lines):
             sys.exit(1)
 
         node_type = indent_and_type.group(2)
-        # if node_type == 'FieldDecl':
+        # if node_type == 'VarDecl':
         #     print(line[offset:])
 
         offset = len(indent_and_type.group(0))
