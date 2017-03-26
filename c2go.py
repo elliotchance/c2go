@@ -35,6 +35,7 @@ function_subs = {
     'acos': 'math.Acos',
     'asin': 'math.Asin',
     'atan': 'math.Atan',
+    'atan2': 'math.Atan2',
     'cos': 'math.Cos',
 
     # stdio
