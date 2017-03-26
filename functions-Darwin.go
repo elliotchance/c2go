@@ -1,6 +1,14 @@
 package main
 
-import "unicode"
+import (
+    "math"
+    "unicode"
+)
+
+// FIXME: These are wrong.
+type __mbstate_t int64
+type __builtin_va_list int64
+type fpos_t int64
 
 type _RuneLocale struct {
     __runetype [256]uint32
@@ -36,6 +44,48 @@ func __tolower(c __darwin_ct_rune_t) __darwin_ct_rune_t {
 
 func __toupper(c __darwin_ct_rune_t) __darwin_ct_rune_t {
     return __darwin_ct_rune_t(unicode.ToUpper(rune(c)))
+}
+
+// math
+
+func __builtin_fabsf(x float32) float32 {
+    return float32(math.Abs(float64(x)))
+}
+
+func __builtin_fabs(x float64) float64 {
+    return math.Abs(x)
+}
+
+func __builtin_fabsl(x float64) float64 {
+    return math.Abs(x)
+}
+
+func __builtin_inff() float32 {
+    return float32(math.Inf(0))
+}
+
+func __builtin_inf() float64 {
+    return math.Inf(0)
+}
+
+func __builtin_infl() float64 {
+    return math.Inf(0)
+}
+
+func __sincosf_stret(x float32) __float2 {
+    return __float2{0, 0}
+}
+
+func __sincos_stret(x float64) __double2 {
+    return __double2{0, 0}
+}
+
+func __sincospif_stret(x float32) __float2 {
+    return __float2{0, 0}
+}
+
+func __sincospi_stret(x float64) __double2 {
+    return __double2{0, 0}
 }
 
 // stdio

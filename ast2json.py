@@ -33,6 +33,7 @@ regex = {
     'CharacterLiteral': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' (?P<value>\d+)",
     'CompoundStmt': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>',
     'ConstantArrayType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<size>\d+)',
+    'ConstAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<tags>.*)",
     'CStyleCastExpr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' <(?P<kind>.*)>",
     'DeclRefExpr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)'.*? (lvalue (?P<kind>\w+)|Function) (?P<address2>[0-9a-fx]+) '(?P<name>.*?)' '(?P<type2>.*?)'",
     'DeclStmt': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>",
@@ -117,7 +118,7 @@ def convert_lines_to_nodes(lines):
             sys.exit(1)
 
         node_type = indent_and_type.group(2)
-        # if node_type == 'FieldDecl':
+        # if node_type == 'VarDecl':
         #     print(line[offset:])
 
         offset = len(indent_and_type.group(0))
