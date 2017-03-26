@@ -1,8 +1,9 @@
-sudo: required
+os:
+  - linux
+  - osx
 
 language: cpp
 
-os: osx
 osx_image: xcode8.2
 
 compiler:

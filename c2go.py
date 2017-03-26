@@ -111,7 +111,7 @@ def resolve_type(s):
     if '(*)' in s or s == '__sFILEX *' or s == 'fpos_t':
         return "interface{}"
 
-    if '(' in s:
+    if '(' in s or '_IO_' in s:
         return 'interface{}'
 
     return s
@@ -398,27 +398,41 @@ def render(out, node, indent=0, return_type=None):
         if 'struct' in node['type'] or 'union' in node['type']:
             return
         node['type'] = node['type'].replace('unsigned', '')
+        if node['name'] in ('__builtin_va_list', '__qaddr_t', 'definition',
+            '_IO_lock_t', 'va_list', 'fpos_t'):
+            return
 
         print_line(out, "type %s %s\n" % (node['name'], resolve_type(node['type'])), indent)
         # print(node)
         return
 
-        tokens = [t.spelling for t in node.get_tokens()]
-        if len(list(node.get_children())) == 0:
-            print_line(out, "type %s %s\n" % (tokens[-2], resolve_type(' '.join(tokens[1:-2]))), indent)
+        # tokens = [t.spelling for t in node.get_tokens()]
+        # if len(list(node.get_children())) == 0:
+        #     print_line(out, "type %s %s\n" % (tokens[-2], resolve_type(' '.join(tokens[1:-2]))), indent)
         #else:
         #    print_line(out, "type %s %s\n" % (tokens[-2], render(out, list(node.get_children())[0], indent, return_type)), indent)
 
+        return
+
+    if node['node'] == 'EnumDecl':
+        return
+
+    if node['node'] == 'FieldDecl':
+        print_line(out, render_expression(node)[0], indent + 1)
         return
 
     if node['node'] == 'RecordDecl':
         if node['kind'] == 'union':
             return
 
+        # FIXME
+        if node['name'] in ('definition', '_IO_FILE'):
+            return
+
         print_line(out, "type %s %s {" % (node['name'], node['kind']), indent)
         if 'children' in node:
             for c in node['children']:
-                print_line(out, render_expression(c)[0], indent + 1)
+                render(out, c, indent + 1)
         print_line(out, "}\n", indent)
         return
 
@@ -511,10 +525,16 @@ with open(json_file_path, 'r') as json_in:
     go_file_path = '%s.go' % c_file_path.split('/')[-1][:-2]
     # go_out = sys.stdout
     go_out = io.StringIO()
-    #with open(go_file_path, 'w') as go_out:
-    # print_line(go_out, "package main\n", 0)
-    #print_line(go_out, 'import ("fmt"; "os")\n', 0)
-    render(go_out, json.loads(json_in.read())[0])
+    all_json = json_in.read()
+
+    try:
+        l = json.loads(all_json)
+    except ValueError as e:
+        # This occurs if the JSON cannot be parsed
+        print(all_json)
+        raise e
+
+    render(go_out, l[0])
 
     print("package main\n")
     print("import (")
