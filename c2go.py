@@ -43,7 +43,9 @@ function_subs = {
     'fabs': 'math.Abs',
     'floor': 'math.Floor',
     'fmod': 'math.Mod',
+    'ldexp': 'math.Ldexp',
     'log': 'math.Log',
+    'log10': 'math.Log10',
 
     # stdio
     'printf': 'fmt.Printf',
