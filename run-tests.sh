@@ -12,6 +12,7 @@ function run_test {
         exit 1
     fi
 
+    # Compile with clang
     clang $TEST
     if [ $? != 0 ]; then
         exit 1
@@ -19,8 +20,8 @@ function run_test {
     
     (echo "7" | ./a.out some args) > /tmp/1.txt
 
-    python c2go.py $TEST > out.go
-    (echo "7" | go run functions.go functions-$(uname).go out.go some args) > /tmp/2.txt
+    GO_FILES=$(python c2go.py $TEST)
+    (echo "7" | go run $GO_FILES some args) > /tmp/2.txt
 
     diff /tmp/1.txt /tmp/2.txt
     if [ $? != 0 ]; then

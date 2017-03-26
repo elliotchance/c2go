@@ -6,6 +6,7 @@ import pprint
 import re
 import subprocess
 import json
+import os
 
 try:
     import StringIO as io
@@ -314,11 +315,6 @@ def render_expression(node):
 
     raise Exception('render_expression: %s' % node['node'])
 
-def print_children(node):
-    print(len(list(node.get_children())), [t.spelling for t in node.get_tokens()])
-    for child in node.get_children():
-        print(child.kind.name, render_expression(child), [t.spelling for t in child.get_tokens()])
-
 def get_function_params(nodes):
     if 'children' not in nodes:
         return []
@@ -338,10 +334,10 @@ def get_function_return_type(f):
     # return type ('int' in this case)
     return f.split('(')[0].strip()
 
-def render(out, node, indent=0, return_type=None):
+def render(out, node, function_name, indent=0, return_type=None):
     if node['node'] == 'TranslationUnitDecl':
         for c in node['children']:
-            render(out, c, indent, return_type)
+            render(out, c, function_name, indent, return_type)
         return
 
     if node['node'] == 'FunctionDecl':
@@ -372,7 +368,7 @@ def render(out, node, indent=0, return_type=None):
             
             for c in node['children']:
                 if c['node'] == 'CompoundStmt':
-                    render(out, c, indent + 1, node['type'])
+                    render(out, c, function_name, indent + 1, node['type'])
 
             print_line(out, '}\n', indent)
 
@@ -387,7 +383,7 @@ def render(out, node, indent=0, return_type=None):
 
     if node['node'] == 'CompoundStmt':
         for c in node['children']:
-            render(out, c, indent, return_type)
+            render(out, c, function_name, indent, return_type)
         return
 
     if node['node'] == 'IfStmt':
@@ -396,11 +392,11 @@ def render(out, node, indent=0, return_type=None):
         e = render_expression(children[0])
         print_line(out, 'if %s {' % cast(e[0], e[1], 'bool'), indent)
 
-        render(out, children[1], indent + 1, return_type)
+        render(out, children[1], function_name, indent + 1, return_type)
 
         if len(children) > 2:
             print_line(out, '} else {', indent)
-            render(out, children[2], indent + 1, return_type)
+            render(out, children[2], function_name, indent + 1, return_type)
 
         print_line(out, '}', indent)
 
@@ -412,7 +408,7 @@ def render(out, node, indent=0, return_type=None):
         e = render_expression(children[0])
         print_line(out, 'for %s {' % cast(e[0], e[1], 'bool'), indent)
 
-        render(out, children[1], indent + 1, return_type)
+        render(out, children[1], function_name, indent + 1, return_type)
 
         print_line(out, '}', indent)
 
@@ -424,7 +420,7 @@ def render(out, node, indent=0, return_type=None):
         a, b, c = [render_expression(e)[0] for e in children[:3]]
         print_line(out, 'for %s; %s; %s {' % (a, b, c), indent)
 
-        render(out, children[3], indent + 1, return_type)
+        render(out, children[3], function_name, indent + 1, return_type)
 
         print_line(out, '}', indent)
 
@@ -441,8 +437,7 @@ def render(out, node, indent=0, return_type=None):
     if node['node'] == 'ReturnStmt':
         r = 'return'
 
-        # This special return type is for main().
-        if 'children' in node and return_type != 'int ()':
+        if 'children' in node and function_name != 'main':
             expr, type = render_expression(node['children'][0])
             r = 'return ' + cast(expr, type, 'int')
 
@@ -487,43 +482,9 @@ def render(out, node, indent=0, return_type=None):
         print_line(out, "type %s %s {" % (node['name'], node['kind']), indent)
         if 'children' in node:
             for c in node['children']:
-                render(out, c, indent + 1)
+                render(out, c, function_name, indent + 1)
         print_line(out, "}\n", indent)
         return
-
-    #if node['node'] == 'UNION_DECL' or node['node'] == 'STRUCT_DECL':
-    #     tokens = [t.spelling for t in node.get_tokens()]
-
-    #     struct_name = tokens[-1]
-    #     start_at = 2
-    #     if struct_name == ';':
-    #         struct_name = tokens[1]
-    #         start_at = 3
-
-    #     print_line(out, "type %s struct {" % struct_name, indent)
-
-    #     for attribute in node.get_children():
-    #         print_line(out, render_expression(attribute)[0], indent + 1)
-    #         # print(struct_name, render_expression(attribute))
-
-    #     # name = ''
-    #     # type = ''
-    #     # for token in tokens[start_at:-2]:
-    #     #     if token == ';':
-    #     #         print_line(out, '%s %s' % (name, resolve_type(type)), indent + 1)
-    #     #         type = ''
-    #     #     elif is_identifier(token):
-    #     #         name = token
-    #     #     else:
-    #     #         type += ' ' + token
-
-    #     print_line(out, "}\n", indent)
-    #     return
-
-    # if node['node'] == 'UNEXPOSED_DECL':
-    #     tokens = [t.spelling for t in node.get_tokens()]
-    #     print_line(out, '// ' + ' '.join(tokens[1:-2]), indent)
-    #     return
 
     if node['node'] == 'DeclStmt':
         for child in node['children']:
@@ -543,15 +504,10 @@ def render(out, node, indent=0, return_type=None):
         
         return
 
-    # if node['node'] == 'ENUM_DECL':
-    #     print_line(out, '// enum', indent)
-    #     return
-
     raise Exception(node['node'])
 
 # 1. Compile it first (checking for errors)
 c_file_path = sys.argv[1]
-#subprocess.call(["clang", c_file_path])
 
 # 2. Preprocess
 pp = subprocess.Popen(["clang", "-E", c_file_path], stdout=subprocess.PIPE).communicate()[0]
@@ -568,13 +524,11 @@ json_file_path = 'pp.json'
 with open(json_file_path, 'w') as json_out:
     json_out.write(pp)
 
+out_file = open('out.go', 'w')
+
 with open(json_file_path, 'r') as json_in:
     # 3. Parse C and output Go
-    # index = clang.cindex.Index.create()
-    # tu = index.parse(pp_file_path)
-
     go_file_path = '%s.go' % c_file_path.split('/')[-1][:-2]
-    # go_out = sys.stdout
     go_out = io.StringIO()
     all_json = json_in.read()
 
@@ -585,14 +539,21 @@ with open(json_file_path, 'r') as json_in:
         print(all_json)
         raise e
 
-    render(go_out, l[0])
+    render(go_out, l[0], function_name=None)
 
-    print("package main\n")
-    print("import (")
+    out_file.write("package main\n\n")
+    out_file.write("import (\n")
     for import_name in sorted(imports):
-        print('\t"%s"' % import_name)
-    print(")\n")
-    print(go_out.getvalue())
+        if os.path.exists("functions-Darwin-%s.go" % import_name):
+            print("functions-Darwin-%s.go" % import_name)
+
+        out_file.write('\t"%s"\n' % import_name)
+    out_file.write(")\n\n")
+    out_file.write(go_out.getvalue())
 
     # 4. Compile the Go
     #subprocess.call(["go", "run", "functions.go", go_file_path])
+
+print("out.go")
+print("functions.go")
+print("functions-Darwin.go")

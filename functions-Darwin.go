@@ -1,7 +1,6 @@
 package main
 
 import (
-    "math"
     "unicode"
 )
 
@@ -30,13 +29,13 @@ func __maskrune(_c __darwin_ct_rune_t, _f uint32) uint32 {
 //     return __not_uint32(__not_uint32(__maskrune(_c, _f)))
 // }
 
-func __isctype(_c __darwin_ct_rune_t, _f uint32) __darwin_ct_rune_t {
-    if _c < 0 || _c >= (1 <<8 ) {
-        return 0
-    }
+// func __isctype(_c __darwin_ct_rune_t, _f uint32) __darwin_ct_rune_t {
+//     if _c < 0 || _c >= (1 <<8 ) {
+//         return 0
+//     }
 
-    return __darwin_ct_rune_t(__not_uint32(__not_uint32((_DefaultRuneLocale.__runetype[_c] & _f))))
-}
+//     return __darwin_ct_rune_t(__not_uint32(__not_uint32((_DefaultRuneLocale.__runetype[_c] & _f))))
+// }
 
 func __tolower(c __darwin_ct_rune_t) __darwin_ct_rune_t {
     return __darwin_ct_rune_t(unicode.ToLower(rune(c)))
@@ -45,51 +44,3 @@ func __tolower(c __darwin_ct_rune_t) __darwin_ct_rune_t {
 func __toupper(c __darwin_ct_rune_t) __darwin_ct_rune_t {
     return __darwin_ct_rune_t(unicode.ToUpper(rune(c)))
 }
-
-// math
-
-func __builtin_fabsf(x float32) float32 {
-    return float32(math.Abs(float64(x)))
-}
-
-func __builtin_fabs(x float64) float64 {
-    return math.Abs(x)
-}
-
-func __builtin_fabsl(x float64) float64 {
-    return math.Abs(x)
-}
-
-func __builtin_inff() float32 {
-    return float32(math.Inf(0))
-}
-
-func __builtin_inf() float64 {
-    return math.Inf(0)
-}
-
-func __builtin_infl() float64 {
-    return math.Inf(0)
-}
-
-func __sincosf_stret(x float32) __float2 {
-    return __float2{0, 0}
-}
-
-func __sincos_stret(x float64) __double2 {
-    return __double2{0, 0}
-}
-
-func __sincospif_stret(x float32) __float2 {
-    return __float2{0, 0}
-}
-
-func __sincospi_stret(x float64) __double2 {
-    return __double2{0, 0}
-}
-
-// stdio
-
-// func printf(format string, ...args interface{}) {
-
-// }
