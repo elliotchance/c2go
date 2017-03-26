@@ -2,15 +2,13 @@
  
 int main() 
 {
-    int array[100], n, c;
- 
-    printf("Enter the number of elements in array\n");
-    scanf("%d", &n);
- 
-    printf("Enter %d elements\n", n);
- 
-    for ( c = 0 ; c < n ; c++ ) 
-        scanf("%d", &array[c]);
+    int array[3], n, c;
+
+    n = 3;
+
+    array[0] = 5;
+    array[1] = 9;
+    array[2] = -13;
  
     printf("Array elements entered by you are:\n");
  
