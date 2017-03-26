@@ -111,7 +111,7 @@ def resolve_type(s):
     if '(*)' in s or s == '__sFILEX *' or s == 'fpos_t':
         return "interface{}"
 
-    if '(' in s:
+    if '(' in s or '_IO_' in s:
         return 'interface{}'
 
     return s
@@ -398,14 +398,17 @@ def render(out, node, indent=0, return_type=None):
         if 'struct' in node['type'] or 'union' in node['type']:
             return
         node['type'] = node['type'].replace('unsigned', '')
+        if node['name'] in ('__builtin_va_list', '__qaddr_t', 'definition',
+            '_IO_lock_t', 'va_list', 'fpos_t'):
+            return
 
         print_line(out, "type %s %s\n" % (node['name'], resolve_type(node['type'])), indent)
         # print(node)
         return
 
-        tokens = [t.spelling for t in node.get_tokens()]
-        if len(list(node.get_children())) == 0:
-            print_line(out, "type %s %s\n" % (tokens[-2], resolve_type(' '.join(tokens[1:-2]))), indent)
+        # tokens = [t.spelling for t in node.get_tokens()]
+        # if len(list(node.get_children())) == 0:
+        #     print_line(out, "type %s %s\n" % (tokens[-2], resolve_type(' '.join(tokens[1:-2]))), indent)
         #else:
         #    print_line(out, "type %s %s\n" % (tokens[-2], render(out, list(node.get_children())[0], indent, return_type)), indent)
 
@@ -420,6 +423,10 @@ def render(out, node, indent=0, return_type=None):
 
     if node['node'] == 'RecordDecl':
         if node['kind'] == 'union':
+            return
+
+        # FIXME
+        if node['name'] in ('definition', '_IO_FILE'):
             return
 
         print_line(out, "type %s %s {" % (node['name'], node['kind']), indent)

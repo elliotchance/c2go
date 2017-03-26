@@ -1,6 +1,6 @@
 package main
 
-import "unicode"
+// import "unicode"
 
 type _RuneLocale struct {
     __runetype [256]uint32
@@ -26,13 +26,13 @@ func __bool_to_uint32(x bool) int {
     return 0
 }
 
-func __bool_to___darwin_ct_rune_t(x bool) __darwin_ct_rune_t {
-    if x {
-        return 1
-    }
+// func __bool_to___darwin_ct_rune_t(x bool) __darwin_ct_rune_t {
+//     if x {
+//         return 1
+//     }
 
-    return 0
-}
+//     return 0
+// }
 
 func __not_uint32(x uint32) uint32 {
     if x == 0 {
@@ -58,9 +58,9 @@ func __ternary(a bool, b interface{}, c interface{}) interface{} {
     return c
 }
 
-func __maskrune(_c __darwin_ct_rune_t, _f uint32) uint32 {
-    return _DefaultRuneLocale.__runetype[_c & 0xff] & _f;
-}
+// func __maskrune(_c __darwin_ct_rune_t, _f uint32) uint32 {
+//     return _DefaultRuneLocale.__runetype[_c & 0xff] & _f;
+// }
 
 // func __istype(_c __darwin_ct_rune_t, _f uint32) uint32 {
 //     if isascii(int(_c)) != 0 {
@@ -70,21 +70,21 @@ func __maskrune(_c __darwin_ct_rune_t, _f uint32) uint32 {
 //     return __not_uint32(__not_uint32(__maskrune(_c, _f)))
 // }
 
-func __isctype(_c __darwin_ct_rune_t, _f uint32) __darwin_ct_rune_t {
-    if _c < 0 || _c >= (1 <<8 ) {
-        return 0
-    }
+// func __isctype(_c __darwin_ct_rune_t, _f uint32) __darwin_ct_rune_t {
+//     if _c < 0 || _c >= (1 <<8 ) {
+//         return 0
+//     }
 
-    return __darwin_ct_rune_t(__not_uint32(__not_uint32((_DefaultRuneLocale.__runetype[_c] & _f))))
-}
+//     return __darwin_ct_rune_t(__not_uint32(__not_uint32((_DefaultRuneLocale.__runetype[_c] & _f))))
+// }
 
-func __tolower(c __darwin_ct_rune_t) __darwin_ct_rune_t {
-    return __darwin_ct_rune_t(unicode.ToLower(rune(c)))
-}
+// func __tolower(c __darwin_ct_rune_t) __darwin_ct_rune_t {
+//     return __darwin_ct_rune_t(unicode.ToLower(rune(c)))
+// }
 
-func __toupper(c __darwin_ct_rune_t) __darwin_ct_rune_t {
-    return __darwin_ct_rune_t(unicode.ToUpper(rune(c)))
-}
+// func __toupper(c __darwin_ct_rune_t) __darwin_ct_rune_t {
+//     return __darwin_ct_rune_t(unicode.ToUpper(rune(c)))
+// }
 
 // stdio
 
