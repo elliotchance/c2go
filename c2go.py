@@ -46,6 +46,12 @@ function_subs = {
     'ldexp': 'math.Ldexp',
     'log': 'math.Log',
     'log10': 'math.Log10',
+    'pow': 'math.Pow',
+    'sin': 'math.Sin',
+    'sinh': 'math.Sinh',
+    'sqrt': 'math.Sqrt',
+    'tan': 'math.Tan',
+    'tanh': 'math.Tanh',
 
     # stdio
     'printf': 'fmt.Printf',
