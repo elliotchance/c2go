@@ -32,6 +32,9 @@ function_defs = {
 
 function_subs = {
     # math.h
+    'acos': 'math.Acos',
+    'asin': 'math.Asin',
+    'atan': 'math.Atan',
     'cos': 'math.Cos',
 
     # stdio
