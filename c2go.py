@@ -514,7 +514,7 @@ ast_pp = subprocess.Popen(["clang", "-Xclang", "-ast-dump", "-fsyntax-only", pp_
 pp = subprocess.Popen(["python", "ast2json.py"], stdin=ast_pp.stdout, stdout=subprocess.PIPE).communicate()[0]
 
 json_file_path = 'pp.json'
-with open(json_file_path, 'w') as json_out:
+with open(json_file_path, 'wb') as json_out:
     json_out.write(pp)
 
 with open(json_file_path, 'r') as json_in:
