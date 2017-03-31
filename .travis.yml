@@ -11,6 +11,12 @@ python:
 env:
   - CLANG=3.9
 
+matrix:
+  include:
+  - env: CLANG=3.8
+    os: linux
+    python: 3.4
+
 before_install:
   - |
       if [ "$TRAVIS_OS_NAME" = "linux" ]; then
