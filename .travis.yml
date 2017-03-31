@@ -20,7 +20,7 @@ cache:
 before_install:
   # - wget http://releases.llvm.org/3.9.0/clang+llvm-3.9.0-x86_64-apple-darwin.tar.xz
   - wget http://releases.llvm.org/3.9.1/clang+llvm-3.9.1-x86_64-linux-gnu-ubuntu-14.04.tar.xz --directory-prefix=/tmp
-  - tar xpvf /tmp/clang+llvm-3.9.1-x86_64-linux-gnu-ubuntu-14.04.tar.xz -C /tmp
+  - tar xpf /tmp/clang+llvm-3.9.1-x86_64-linux-gnu-ubuntu-14.04.tar.xz -C /tmp
   - export PATH=/tmp//tmp/clang+llvm-3.9.1-x86_64-linux-gnu-ubuntu-14.04/bin:$PATH
   # - |
   #     if [[ -n "$PYENV_VERSION" ]]; then
@@ -29,6 +29,6 @@ before_install:
   #     fi
 
 script:
-  - clang --version
+  - clang-3.9 --version
   - python --version
   - bash run-tests.sh
