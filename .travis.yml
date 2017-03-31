@@ -8,6 +8,9 @@ python:
   - 2.7
   # - 3.4
 
+env:
+  - CLANG=3.9
+
 cache:
   - directories:
     - /tmp
@@ -19,9 +22,10 @@ cache:
 
 before_install:
   # - wget http://releases.llvm.org/3.9.0/clang+llvm-3.9.0-x86_64-apple-darwin.tar.xz
-  - wget http://releases.llvm.org/3.9.1/clang+llvm-3.9.1-x86_64-linux-gnu-ubuntu-14.04.tar.xz --directory-prefix=/tmp
-  - tar xpf /tmp/clang+llvm-3.9.1-x86_64-linux-gnu-ubuntu-14.04.tar.xz -C /tmp
-  - export PATH=/tmp//tmp/clang+llvm-3.9.1-x86_64-linux-gnu-ubuntu-14.04/bin:$PATH
+  - wget http://releases.llvm.org/3.9.1/clang+llvm-$CLANG.0-x86_64-linux-gnu-ubuntu-14.04.tar.xz --directory-prefix=/tmp
+  - tar xpf /tmp/clang+llvm-$CLANG.0-x86_64-linux-gnu-ubuntu-14.04.tar.xz -C /tmp
+  - export PATH=/tmp/clang+llvm-$CLANG.0-x86_64-linux-gnu-ubuntu-14.04/bin:$PATH
+  - ls /tmp/clang+llvm-$CLANG.0-x86_64-linux-gnu-ubuntu-14.04/bin
   # - |
   #     if [[ -n "$PYENV_VERSION" ]]; then
   #       wget https://github.com/praekeltfoundation/travis-pyenv/releases/download/0.3.0/setup-pyenv.sh
@@ -29,6 +33,6 @@ before_install:
   #     fi
 
 script:
-  - clang-3.9 --version
+  - clang-$CLANG --version
   - python --version
   - bash run-tests.sh
