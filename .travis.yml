@@ -6,7 +6,7 @@ language: python
 
 python:
   - 2.7
-  # - 3.4
+  - 3.4
 
 env:
   - CLANG=3.9
@@ -14,10 +14,10 @@ env:
 before_install:
   - wget -O - http://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-  - sudo apt-add-repository "deb http://apt.llvm.org/precise/ llvm-toolchain-precise-3.9 main"
+  - sudo apt-add-repository "deb http://apt.llvm.org/precise/ llvm-toolchain-precise-$CLANG main"
   - sudo apt-get update
   - sudo apt-cache search clang
-  - sudo apt-get -f install clang-3.9 lldb-3.9
+  - sudo apt-get -f install clang-$CLANG lldb-$CLANG
 
 
   # - wget http://releases.llvm.org/3.9.0/clang+llvm-3.9.0-x86_64-apple-darwin.tar.xz
@@ -33,6 +33,4 @@ before_install:
   #     fi
 
 script:
-  - clang-$CLANG --version
-  - python --version
-  - bash run-tests.sh
+  - CLANG_BIN=clang-$CLANG bash run-tests.sh
