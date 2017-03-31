@@ -32,6 +32,7 @@ regex = {
     'CallExpr': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*?)\'',
     'CharacterLiteral': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' (?P<value>\d+)",
     'CompoundStmt': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>',
+    'ConditionalOperator': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*?)\'',
     'ConstantArrayType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<size>\d+)',
     'ConstAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<tags>.*)",
     'CStyleCastExpr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' <(?P<kind>.*)>",
