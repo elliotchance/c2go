@@ -21,8 +21,9 @@ cache:
 #   - clang
 
 before_install:
+  # http://releases.llvm.org/3.9.0/clang+llvm-3.9.0-x86_64-linux-gnu-ubuntu-14.04.tar.xz
   # - wget http://releases.llvm.org/3.9.0/clang+llvm-3.9.0-x86_64-apple-darwin.tar.xz
-  - wget http://releases.llvm.org/3.9.1/clang+llvm-$CLANG.0-x86_64-linux-gnu-ubuntu-14.04.tar.xz --directory-prefix=/tmp
+  - wget -N http://releases.llvm.org/$CLANG.0/clang+llvm-$CLANG.0-x86_64-linux-gnu-ubuntu-14.04.tar.xz --directory-prefix=/tmp
   - tar xpf /tmp/clang+llvm-$CLANG.0-x86_64-linux-gnu-ubuntu-14.04.tar.xz -C /tmp
   - export PATH=/tmp/clang+llvm-$CLANG.0-x86_64-linux-gnu-ubuntu-14.04/bin:$PATH
   - ls /tmp/clang+llvm-$CLANG.0-x86_64-linux-gnu-ubuntu-14.04/bin
