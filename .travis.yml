@@ -16,7 +16,7 @@ before_install:
   - sudo apt-add-repository "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-3.9 main"
   - sudo apt-get update
   - sudo apt-cache search clang
-  - sudo apt-get install clang-3.9 lldb-3.9
+  - sudo apt-get -f install clang-3.9 lldb-3.9
 
 
   # - wget http://releases.llvm.org/3.9.0/clang+llvm-3.9.0-x86_64-apple-darwin.tar.xz
