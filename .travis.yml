@@ -21,8 +21,7 @@ before_install:
   # - wget http://releases.llvm.org/3.9.0/clang+llvm-3.9.0-x86_64-apple-darwin.tar.xz
   - wget http://releases.llvm.org/3.9.1/clang+llvm-3.9.1-x86_64-linux-gnu-ubuntu-14.04.tar.xz --directory-prefix=/tmp
   - tar xpvf /tmp/clang+llvm-3.9.1-x86_64-linux-gnu-ubuntu-14.04.tar.xz -C /tmp
-  - ls /tmp/clang+llvm-3.9.1-x86_64-linux-gnu-ubuntu-14.04
-  - export PATH=/tmp//tmp/clang+llvm-3.9.1-x86_64-linux-gnu-ubuntu-14.04:$PATH
+  - export PATH=/tmp//tmp/clang+llvm-3.9.1-x86_64-linux-gnu-ubuntu-14.04/bin:$PATH
   # - |
   #     if [[ -n "$PYENV_VERSION" ]]; then
   #       wget https://github.com/praekeltfoundation/travis-pyenv/releases/download/0.3.0/setup-pyenv.sh
