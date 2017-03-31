@@ -23,4 +23,9 @@ before_install:
       fi
 
 script:
-  - CLANG_BIN=clang-$CLANG bash run-tests.sh
+  - |
+      if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+        CLANG_BIN=clang-$CLANG bash run-tests.sh
+      else
+        bash run-tests.sh
+      fi
