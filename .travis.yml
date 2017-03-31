@@ -1,6 +1,6 @@
 os:
   - linux
-  - osx
+  # - osx
 
 language: python
 
@@ -13,7 +13,8 @@ env:
 
 before_install:
   - wget -O - http://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-  - sudo apt-add-repository "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-3.9 main"
+  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+  - sudo apt-add-repository "deb http://apt.llvm.org/precise/ llvm-toolchain-precise-3.9 main"
   - sudo apt-get update
   - sudo apt-cache search clang
   - sudo apt-get -f install clang-3.9 lldb-3.9
