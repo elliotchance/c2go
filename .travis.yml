@@ -27,20 +27,14 @@ before_install:
   - |
       if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         wget -O - http://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+        sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y --force-yes
         sudo apt-add-repository "deb http://apt.llvm.org/precise/ llvm-toolchain-precise-$CLANG main"
         sudo apt-get update
         sudo apt-cache search clang
         sudo apt-get -f install clang-$CLANG lldb-$CLANG
-      else
-        brew update
-        brew install python3
-        virtualenv env -p python3
-        source env/bin/activate
       fi
 
 script:
-  - python --version
   - |
       if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         CLANG_BIN=clang-$CLANG bash run-tests.sh
