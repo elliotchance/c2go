@@ -1,23 +1,29 @@
+language: generic
+
 os:
   - linux
   - osx
 
-language: python
-
-python:
-  - 2.7
-  - 3.4
-
 env:
-  - CLANG=3.9
+  - PYENV_VERSION=2.7.13 CLANG=3.9
+  - PYENV_VERSION=3.4.6 CLANG=3.9
 
 matrix:
   include:
-  - env: CLANG=3.8
-    os: linux
-    python: 3.4
+    - env: PYENV_VERSION=3.4.6 CLANG=3.8
+      os: linux
+
+cache:
+  - pip
+  - directories:
+    - $HOME/.pyenv_cache
 
 before_install:
+  - |
+      if [[ -n "$PYENV_VERSION" ]]; then
+        wget https://github.com/praekeltfoundation/travis-pyenv/releases/download/0.3.0/setup-pyenv.sh
+        source setup-pyenv.sh
+      fi
   - |
       if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         wget -O - http://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
@@ -26,9 +32,15 @@ before_install:
         sudo apt-get update
         sudo apt-cache search clang
         sudo apt-get -f install clang-$CLANG lldb-$CLANG
+      else
+        brew update
+        brew install python3
+        virtualenv env -p python3
+        source env/bin/activate
       fi
 
 script:
+  - python --version
   - |
       if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         CLANG_BIN=clang-$CLANG bash run-tests.sh
