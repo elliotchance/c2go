@@ -1,10 +1,11 @@
 #!/bin/bash
 
 CLANG_BIN=${CLANG_BIN:-clang}
-CLANG_VERSION=$(CLANG_BIN --version)
+CLANG_VERSION=$($CLANG_BIN --version)
 
-echo -e "CLANG_BIN=$CLANG_BIN\n"
-echo -e "CLANG_VERSION=$CLANG_VERSION\n"
+echo "CLANG_BIN=$CLANG_BIN"
+echo "CLANG_VERSION=$CLANG_VERSION"
+echo
 
 function run_test {
     export TEST=$1

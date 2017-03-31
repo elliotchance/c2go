@@ -1,6 +1,6 @@
 os:
   - linux
-  # - osx
+  - osx
 
 language: python
 
@@ -12,25 +12,15 @@ env:
   - CLANG=3.9
 
 before_install:
-  - wget -O - http://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-  - sudo apt-add-repository "deb http://apt.llvm.org/precise/ llvm-toolchain-precise-$CLANG main"
-  - sudo apt-get update
-  - sudo apt-cache search clang
-  - sudo apt-get -f install clang-$CLANG lldb-$CLANG
-
-
-  # - wget http://releases.llvm.org/3.9.0/clang+llvm-3.9.0-x86_64-apple-darwin.tar.xz
-  # 
-  # - sudo apt-get install libstdc++6
-  # - wget -N http://releases.llvm.org/$CLANG.0/clang+llvm-$CLANG.0-x86_64-linux-gnu-ubuntu-14.04.tar.xz --directory-prefix=/tmp
-  # - tar xpf /tmp/clang+llvm-$CLANG.0-x86_64-linux-gnu-ubuntu-14.04.tar.xz -C /tmp
-  # - export PATH=/tmp/clang+llvm-$CLANG.0-x86_64-linux-gnu-ubuntu-14.04/bin:$PATH
-  # - |
-  #     if [[ -n "$PYENV_VERSION" ]]; then
-  #       wget https://github.com/praekeltfoundation/travis-pyenv/releases/download/0.3.0/setup-pyenv.sh
-  #       source setup-pyenv.sh
-  #     fi
+  - |
+      if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+        wget -O - http://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+        sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+        sudo apt-add-repository "deb http://apt.llvm.org/precise/ llvm-toolchain-precise-$CLANG main"
+        sudo apt-get update
+        sudo apt-cache search clang
+        sudo apt-get -f install clang-$CLANG lldb-$CLANG
+      fi
 
 script:
   - CLANG_BIN=clang-$CLANG bash run-tests.sh
