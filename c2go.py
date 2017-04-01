@@ -353,6 +353,11 @@ def render_expression(node):
         return '/* RecordDecl */', 'unknown5'
 
     if node['node'] == 'ParenExpr' or node['node'] == 'PredefinedExpr':
+        # I'm not sure what this case is, but it happens with some versions of
+        # clang.
+        if 'children' not in node:
+            return '', 'unknown2'
+
         a, b = render_expression(node['children'][0])
         return '(%s)' % a, b
 
