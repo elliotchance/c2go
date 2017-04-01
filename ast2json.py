@@ -59,7 +59,7 @@ regex = {
     'NonNullAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> 1",
     'NoThrowAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>",
     'ParenExpr': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*?)\'',
-    'ParmVarDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> \w+:[\d:]+)?(?P<used> used)?(?P<name> \w+)? '(?P<type>.*?)'(?P<type2>:'.*?')?",
+    'ParmVarDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+:[\d:]+)?(?P<used> used)?(?P<name> \w+)? '(?P<type>.*?)'(?P<type2>:'.*?')?",
     'PointerType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\'',
     'PredefinedExpr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*)' (?P<kind>.*) (?P<name>.*)",
     'QualType': r"^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<kind>.*)",
@@ -77,6 +77,9 @@ regex = {
     'VarDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)? (?P<name>.+) '(?P<type>.+?)'(?P<type2>:'.*?')?(?P<tags>.*)",
     'WhileStmt': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>",
 }
+
+# ParmVarDecl 0x4167750 <line:56:23> line:493:15 'struct __va_list_tag *':'struct __va_list_tag *'
+# ParmVarDecl 0x2839dd0 </usr/include/_G_config.h:32:20> /usr/include/libio.h:496:58 '__ssize_t':'long'
 
 def build_tree(nodes, depth):
     """Convert an array of nodes, each prefixed with a depth into a tree."""
