@@ -1,14 +1,55 @@
+language: generic
+
+# There is a basic build matrix of 4 jobs that test the latest clang against
+# both operating systems and both majoy versions of Python.
 os:
   - linux
   - osx
 
-language: cpp
+env:
+  - CLANG=3.9 PYENV_VERSION=2.7.13
+  - CLANG=3.9 PYENV_VERSION=3.4.6
 
-osx_image: xcode8.2
+# On top of testing the latest version of clang we also need to test all (most?)
+# of the previous releases. We only test these against linux and python 3
+# becuase the clang version on mac is more stable and we don't want to make the
+# build matrix unnecessarily large.
+matrix:
+  include:
+    - env: CLANG=3.8 PYENV_VERSION=3.4.6
+      os: linux
+    - env: CLANG=3.7 PYENV_VERSION=3.4.6
+      os: linux
+    - env: CLANG=3.6 PYENV_VERSION=3.4.6
+      os: linux
+    - env: CLANG=3.4 PYENV_VERSION=3.4.6
+      os: linux
 
-compiler:
-  - clang
+cache:
+  - pip
+  - directories:
+    - $HOME/.pyenv_cache
+
+before_install:
+  - |
+      if [[ -n "$PYENV_VERSION" ]]; then
+        wget https://github.com/praekeltfoundation/travis-pyenv/releases/download/0.3.0/setup-pyenv.sh
+        source setup-pyenv.sh
+      fi
+  - |
+      if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+        wget -O - http://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+        sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+        sudo apt-add-repository "deb http://apt.llvm.org/precise/ llvm-toolchain-precise-$CLANG main"
+        sudo apt-get update
+        sudo apt-cache search clang
+        sudo apt-get install -f -y --force-yes clang-$CLANG lldb-$CLANG
+      fi
 
 script:
-  - clang --version
-  - bash run-tests.sh
+  - |
+      if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+        CLANG_BIN=clang-$CLANG bash run-tests.sh
+      else
+        bash run-tests.sh
+      fi
