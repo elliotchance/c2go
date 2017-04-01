@@ -62,6 +62,7 @@ regex = {
     'Record': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\'',
     'RecordDecl': r"^ (?P<address>[0-9a-fx]+) (?P<prev>prev 0x[0-9a-f]+ )?<(?P<position>.*)> (?P<position2>[^ ]+ )?(?P<kind>struct|union) (?P<name>\w*)( definition)?",
     'RecordType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\'',
+    'RestrictAttr': r"^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<name>.*)",
     'ReturnStmt': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>',
     'StringLiteral': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*)\'(?P<tags> lvalue)? (?P<value>.*)',
     'TranslationUnitDecl': r'^ (?P<address>[0-9a-fx]+)',
