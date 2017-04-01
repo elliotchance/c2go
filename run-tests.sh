@@ -56,6 +56,6 @@ function run_test {
     diff /tmp/1-stdout.txt /tmp/2-stdout.txt
 }
 
-for TEST in ${@-tests/*.c}; do
+for TEST in ${@-$(find tests -name "*.c")}; do
     run_test $TEST
 done
