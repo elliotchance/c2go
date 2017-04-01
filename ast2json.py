@@ -59,7 +59,7 @@ regex = {
     'NonNullAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> 1",
     'NoThrowAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>",
     'ParenExpr': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*?)\'',
-    'ParmVarDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> col:\d+)?(?P<used> used)?(?P<name> \w+)? '(?P<type>.*?)'(?P<type2>:'.*?')?",
+    'ParmVarDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> \w+:[\d:]+)?(?P<used> used)?(?P<name> \w+)? '(?P<type>.*?)'(?P<type2>:'.*?')?",
     'PointerType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\'',
     'PredefinedExpr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*)' (?P<kind>.*) (?P<name>.*)",
     'QualType': r"^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<kind>.*)",
