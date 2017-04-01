@@ -7,8 +7,8 @@ os:
   - osx
 
 env:
-  - PYENV_VERSION=2.7.13 CLANG=3.9
-  - PYENV_VERSION=3.4.6 CLANG=3.9
+  - CLANG=3.9 PYENV_VERSION=2.7.13
+  - CLANG=3.9 PYENV_VERSION=3.4.6
 
 # On top of testing the latest version of clang we also need to test all (most?)
 # of the previous releases. We only test these against linux and python 3
@@ -16,23 +16,15 @@ env:
 # build matrix unnecessarily large.
 matrix:
   include:
-    - env: PYENV_VERSION=3.4.6 CLANG=3.8
+    - env: CLANG=3.8 PYENV_VERSION=3.4.6
       os: linux
-    - env: PYENV_VERSION=3.4.6 CLANG=3.7
+    - env: CLANG=3.7 PYENV_VERSION=3.4.6
       os: linux
-    - env: PYENV_VERSION=3.4.6 CLANG=3.6
+    - env: CLANG=3.6 PYENV_VERSION=3.4.6
       os: linux
-    - env: PYENV_VERSION=3.4.6 CLANG=3.5
+    - env: CLANG=3.5 PYENV_VERSION=3.4.6
       os: linux
-    - env: PYENV_VERSION=3.4.6 CLANG=3.4
-      os: linux
-    - env: PYENV_VERSION=3.4.6 CLANG=3.3
-      os: linux
-    - env: PYENV_VERSION=3.4.6 CLANG=3.2
-      os: linux
-    - env: PYENV_VERSION=3.4.6 CLANG=3.1
-      os: linux
-    - env: PYENV_VERSION=3.4.6 CLANG=3.0
+    - env: CLANG=3.4 PYENV_VERSION=3.4.6
       os: linux
 
 cache:
@@ -53,7 +45,7 @@ before_install:
         sudo apt-add-repository "deb http://apt.llvm.org/precise/ llvm-toolchain-precise-$CLANG main"
         sudo apt-get update
         sudo apt-cache search clang
-        sudo apt-get install -y --force-yes clang-$CLANG lldb-$CLANG
+        sudo apt-get install -f -y --force-yes clang-$CLANG lldb-$CLANG
       fi
 
 script:
