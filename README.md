@@ -63,6 +63,8 @@ lot missing!) please add it with a pull request.
 
 | Function      | Supported?    | Notes                      |
 | ------------- | ------------- | -------------------------- |
+| **assert.h**  | Yes           |                            |
+| assert        | Yes           | This is actually a macro.  |
 | **math.h**    | Partly        | All of the C99 functions.  |
 | acos          | Yes           |                            |
 | asin          | Yes           |                            |
