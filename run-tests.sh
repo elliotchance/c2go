@@ -2,7 +2,7 @@
 
 CLANG_BIN=${CLANG_BIN:-clang}
 CLANG_VERSION=$($CLANG_BIN --version)
-PYTHON_VERSION=$(python -V)
+PYTHON_VERSION=$(python --version 2>&1 | awk '{print $2}')
 
 echo "CLANG_BIN=$CLANG_BIN"
 echo "CLANG_VERSION=$CLANG_VERSION"
