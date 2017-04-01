@@ -358,7 +358,8 @@ def render_expression(node):
 
     if node['node'] == 'PredefinedExpr':
         if node['name'] == '__PRETTY_FUNCTION__':
-            return '"foo"', 'const char*'
+            # FIXME
+            return '"void print_number(int *)"', 'const char*'
 
         if node['name'] == '__func__':
             # FIXME
