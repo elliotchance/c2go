@@ -35,10 +35,10 @@ func __not_int(x int) int {
     return 0
 }
 
-func __ternary(a bool, b interface{}, c interface{}) interface{} {
+func __ternary(a bool, b, c func () interface{}) interface{} {
     if a {
-        return b
+        return b()
     }
 
-    return c
+    return c()
 }
