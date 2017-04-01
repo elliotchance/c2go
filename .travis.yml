@@ -18,6 +18,22 @@ matrix:
   include:
     - env: PYENV_VERSION=3.4.6 CLANG=3.8
       os: linux
+    - env: PYENV_VERSION=3.4.6 CLANG=3.7
+      os: linux
+    - env: PYENV_VERSION=3.4.6 CLANG=3.6
+      os: linux
+    - env: PYENV_VERSION=3.4.6 CLANG=3.5
+      os: linux
+    - env: PYENV_VERSION=3.4.6 CLANG=3.4
+      os: linux
+    - env: PYENV_VERSION=3.4.6 CLANG=3.3
+      os: linux
+    - env: PYENV_VERSION=3.4.6 CLANG=3.2
+      os: linux
+    - env: PYENV_VERSION=3.4.6 CLANG=3.1
+      os: linux
+    - env: PYENV_VERSION=3.4.6 CLANG=3.0
+      os: linux
 
 cache:
   - pip
