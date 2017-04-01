@@ -28,6 +28,9 @@ function_defs = {
     '__builtin_inf': ('double', ()),
     '__builtin_inff': ('float', ()),
     '__builtin_infl': ('double', ()),
+
+    # assert.h functions-Darwin.go
+    '__builtin_expect': ('int', ('int', 'int'))
 }
 
 function_subs = {
@@ -227,6 +230,9 @@ def render_expression(node):
             left = cast(left, left_type, return_type)
             right = cast(right, right_type, return_type)
 
+        if (operator == '!=' or operator == '==') and right == '(0)':
+            right = 'nil'
+
         return '%s %s %s' % (left, operator, right), return_type
 
     if node['node'] == 'UnaryOperator':
@@ -234,6 +240,9 @@ def render_expression(node):
         expr = render_expression(node['children'][0])
 
         if operator == '!':
+            if expr[1] == 'bool':
+                return '!(%s)' % expr[0], expr[1]
+
             return '%s(%s)' % ('__not_%s' % expr[1], expr[0]), expr[1]
 
         if operator == '*':
@@ -335,6 +344,9 @@ def render_expression(node):
             children = node['children']
             suffix = ' = %s' % render_expression(children[0])[0]
 
+            if suffix == ' = (0)':
+                suffix = ' = nil'
+
         return '%s%s %s%s' % (prefix, name, type, suffix), 'unknown3'
 
     if node['node'] == 'RecordDecl':
@@ -343,6 +355,23 @@ def render_expression(node):
     if node['node'] == 'ParenExpr':
         a, b = render_expression(node['children'][0])
         return '(%s)' % a, b
+
+    if node['node'] == 'PredefinedExpr':
+        if node['name'] == '__PRETTY_FUNCTION__':
+            # FIXME
+            return '"void print_number(int *)"', 'const char*'
+
+        if node['name'] == '__func__':
+            # FIXME
+            return '"%s"' % 'print_number', 'const char*'
+
+        raise Exception('render_expression: unknown PredefinedExpr: %s' % node['name'])
+
+    if node['node'] == 'ConditionalOperator':
+        a = render_expression(node['children'][0])[0]
+        b = render_expression(node['children'][1])[0]
+        c = render_expression(node['children'][2])[0]
+        return '__ternary(%s, func () interface{} { return %s }, func () interface{} { return %s })' % (a, b, c), node['type']
 
     raise Exception('render_expression: %s' % node['node'])
 
@@ -530,6 +559,10 @@ def render(out, node, function_name, indent=0, return_type=None):
 
     if node['node'] == 'VarDecl':
         # FIXME?
+        return
+
+    if node['node'] == 'ParenExpr':
+        print_line(out, render_expression(node)[0], indent)
         return
 
     raise Exception(node['node'])

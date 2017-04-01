@@ -1,6 +1,8 @@
 package main
 
 import (
+    "fmt"
+    "os"
     "unicode"
 )
 
@@ -42,4 +44,15 @@ func __tolower(c __darwin_ct_rune_t) __darwin_ct_rune_t {
 
 func __toupper(c __darwin_ct_rune_t) __darwin_ct_rune_t {
     return __darwin_ct_rune_t(unicode.ToUpper(rune(c)))
+}
+
+func __builtin_expect(a, b int) bool {
+    return a != b
+}
+
+func __assert_rtn(functionName, filePath string, lineNumber int, expression string) bool {
+    fmt.Fprintf(os.Stderr, "Assertion failed: (%s), function %s, file %s, line %d.\n", expression, functionName, filePath, lineNumber)
+    os.Exit(134)
+
+    return true
 }
