@@ -352,14 +352,19 @@ def render_expression(node):
     if node['node'] == 'RecordDecl':
         return '/* RecordDecl */', 'unknown5'
 
-    if node['node'] == 'ParenExpr' or node['node'] == 'PredefinedExpr':
-        # I'm not sure what this case is, but it happens with some versions of
-        # clang.
-        if 'children' not in node:
-            return '', 'unknown2'
-
+    if node['node'] == 'ParenExpr':
         a, b = render_expression(node['children'][0])
         return '(%s)' % a, b
+
+    if node['node'] == 'PredefinedExpr':
+        if node['name'] == '__PRETTY_FUNCTION__':
+            return '"foo"', 'const char*'
+
+        if node['name'] == '__func__':
+            # FIXME
+            return '"%s"' % 'print_number', 'const char*'
+
+        raise Exception('render_expression: unknown PredefinedExpr: %s' % node['name'])
 
     if node['node'] == 'ConditionalOperator':
         a = render_expression(node['children'][0])[0]
