@@ -356,6 +356,13 @@ var nodes = map[string]interface{}{
 		Position: "line:11:7, line:18:7",
 	},
 
+	// NotNullAttr
+	`0x7fa1488273b0 <line:7:4, line:11:4> 1`:
+	ast.NotNullAttr{
+		Address: "0x7fa1488273b0",
+		Position: "line:7:4, line:11:4",
+	},
+
 	// NoThrowAttr
 	`0x7fa1488273a0 <line:7:4, line:11:4>`:
 	ast.NoThrowAttr{
