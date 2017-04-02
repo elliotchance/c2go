@@ -53,6 +53,8 @@ func Parse(line string) interface{} {
 		node = parseFloatingLiteral(line)
 	case "FormatAttr":
 		node = parseFormatAttr(line)
+	case "FunctionProtoType":
+		node = parseFunctionProtoType(line)
 	case "ForStmt":
 		node = parseForStmt(line)
 	case "IfStmt":
@@ -65,6 +67,8 @@ func Parse(line string) interface{} {
 		node = parseNotNullAttr(line)
 	case "PointerType":
 		node = parsePointerType(line)
+	case "QualType":
+		node = parseQualType(line)
 	case "Record":
 		node = parseRecord(line)
 	case "RecordType":

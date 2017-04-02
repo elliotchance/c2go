@@ -22,36 +22,25 @@ import json
 #    before we enough information to really standardise the process.
 
 regex = {
-    'ConstAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<tags>.*)",
-    'EnumConstantDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)? (?P<name>.+) '(?P<type>.+?)'",
-    'EnumDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)?(?P<name>.*)",
+    'RecordDecl':        r"^ (?P<address>[0-9a-fx]+) (?P<prev>prev 0x[0-9a-f]+ )?<(?P<position>.*)> (?P<position2>[^ ]+ )?(?P<kind>struct|union) (?P<name>\w*)( definition)?",
+    'FunctionDecl':      r"^ (?P<address>[0-9a-fx]+) (?P<prev>prev [0-9a-fx]+)? ?<(?P<position1>.*)>(?P<position2> [^ ]+)?(?P<tags> .*)? (?P<name>\w+) '(?P<type>.*)'(?P<tags3> extern)?",
 
-    'PointerType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\'',
-    'Record': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\'',
-    'RecordType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\'',
-    'Typedef': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\'',
-
-    'QualType': r"^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<kind>.*)",
-    'ModeAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<name>.+)",
-
-    'FunctionDecl': r"^ (?P<address>[0-9a-fx]+) (?P<prev>prev [0-9a-fx]+)? ?<(?P<position1>.*)>(?P<position2> [^ ]+)?(?P<tags> .*)? (?P<name>\w+) '(?P<type>.*)'(?P<tags3> extern)?",
-    'FunctionProtoType': r"^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<kind>.*)",
-    'ImplicitCastExpr': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*)\' <(?P<kind>.*)>',
-    'IntegerLiteral': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*)\' (?P<value>.+)',
-    'MemberExpr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' (?P<tags>.*?)(?P<name>\w+) (?P<address2>[0-9a-fx]+)",
-
-    'ParenExpr': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*?)\'',
-    'ParmVarDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+:[\d:]+)?(?P<used> used)?(?P<name> \w+)? '(?P<type>.*?)'(?P<type2>:'.*?')?",
-
-    'PredefinedExpr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*)' (?P<kind>.*) (?P<name>.*)",
-
-    'RecordDecl': r"^ (?P<address>[0-9a-fx]+) (?P<prev>prev 0x[0-9a-f]+ )?<(?P<position>.*)> (?P<position2>[^ ]+ )?(?P<kind>struct|union) (?P<name>\w*)( definition)?",
-    'RestrictAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<name>.*)",
-    'StringLiteral': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*)\'(?P<tags> lvalue)? (?P<value>.*)',
-    'TypedefDecl': r"(?P<address>[0-9a-fx]+) <(?P<position>.+?)> (?P<position2><invalid sloc>|0x[0-9a-f]+)?(?P<tags>.*?)(?P<name>\w+) '(?P<type>.*?)'(?P<type2>:'.*?')?",
-    'TypedefType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<tags>.+)',
-    'UnaryOperator': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)'(?P<tags1> lvalue)?(?P<tags2> prefix)?(?P<tags3> postfix)? '(?P<operator>.*?)'",
-    'VarDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)? (?P<name>.+) '(?P<type>.+?)'(?P<type2>:'.*?')?(?P<tags>.*)",
+    'TypedefType':       r'^ (?P<address>[0-9a-fx]+) '(?P<type>.*)' (?P<tags>.+)',
+    'ConstAttr':         r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<tags>.*)",
+    'EnumConstantDecl':  r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)? (?P<name>.+) '(?P<type>.+?)'",
+    'EnumDecl':          r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)?(?P<name>.*)",
+    'ModeAttr':          r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<name>.+)",
+    'RestrictAttr':      r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<name>.*)",
+    'ImplicitCastExpr':  r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*)' <(?P<kind>.*)>',
+    'IntegerLiteral':    r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*)' (?P<value>.+)',
+    'MemberExpr':        r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' (?P<tags>.*?)(?P<name>\w+) (?P<address2>[0-9a-fx]+)",
+    'ParenExpr':         r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)'',
+    'ParmVarDecl':       r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+:[\d:]+)?(?P<used> used)?(?P<name> \w+)? '(?P<type>.*?)'(?P<type2>:'.*?')?",
+    'PredefinedExpr':    r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*)' (?P<kind>.*) (?P<name>.*)",
+    'StringLiteral':     r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*)'(?P<tags> lvalue)? (?P<value>.*)',
+    'TypedefDecl':       r"^ (?P<address>[0-9a-fx]+) <(?P<position>.+?)> (?P<position2><invalid sloc>|0x[0-9a-f]+)?(?P<tags>.*?)(?P<name>\w+) '(?P<type>.*?)'(?P<type2>:'.*?')?",
+    'UnaryOperator':     r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)'(?P<tags1> lvalue)?(?P<tags2> prefix)?(?P<tags3> postfix)? '(?P<operator>.*?)'",
+    'VarDecl':           r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)? (?P<name>.+) '(?P<type>.+?)'(?P<type2>:'.*?')?(?P<tags>.*)",
 }
 
 # ParmVarDecl 0x4167750 <line:56:23> line:493:15 'struct __va_list_tag *':'struct __va_list_tag *'

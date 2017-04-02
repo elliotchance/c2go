@@ -349,6 +349,14 @@ var nodes = map[string]interface{}{
 		Unknown2: 3,
 	},
 
+	// FunctionProtoType
+	`0x7fa3b88bbb30 'struct _opaque_pthread_t *' foo`:
+	ast.FunctionProtoType{
+		Address: "0x7fa3b88bbb30",
+		Type: "struct _opaque_pthread_t *",
+		Kind: "foo",
+	},
+
 	// ForStmt
 	`0x7f961e018848 <line:9:4, line:10:70>`:
 	ast.ForStmt{
@@ -389,6 +397,14 @@ var nodes = map[string]interface{}{
 	ast.PointerType{
 		Address: "0x7fa3b88bbb30",
 		Type: "struct _opaque_pthread_t *",
+	},
+
+	// QualType
+	`0x7fa3b88bbb31 'struct _opaque_pthread_t *' foo`:
+	ast.QualType{
+		Address: "0x7fa3b88bbb31",
+		Type: "struct _opaque_pthread_t *",
+		Kind: "foo",
 	},
 
 	// Record
