@@ -795,6 +795,35 @@ var nodes = map[string]interface{}{
 		Tags: "sugar",
 	},
 
+	// UnaryOperator
+	`0x7fe0260f50d8 <col:6, col:12> 'int' prefix '--'`:
+	ast.UnaryOperator{
+		Address: "0x7fe0260f50d8",
+		Position: "col:6, col:12",
+		Type: "int",
+		IsLvalue: false,
+		IsPrefix: true,
+		Operator: "--",
+	},
+	`0x7fe0260fb468 <col:11, col:18> 'unsigned char' lvalue prefix '*'`:
+	ast.UnaryOperator{
+		Address: "0x7fe0260fb468",
+		Position: "col:11, col:18",
+		Type: "unsigned char",
+		IsLvalue: true,
+		IsPrefix: true,
+		Operator: "*",
+	},
+	`0x7fe0260fb448 <col:12, col:18> 'unsigned char *' postfix '++'`:
+	ast.UnaryOperator{
+		Address: "0x7fe0260fb448",
+		Position: "col:12, col:18",
+		Type: "unsigned char *",
+		IsLvalue: false,
+		IsPrefix: false,
+		Operator: "++",
+	},
+
 	// WhileStmt
 	`0x7fa1478273a0 <line:7:4, line:11:4>`:
 	ast.MallocAttr{
