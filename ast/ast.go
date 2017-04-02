@@ -39,6 +39,8 @@ func Parse(line string) interface{} {
 		node = parseDeclRefExpr(line)
 	case "DeclStmt":
 		node = parseDeclStmt(line)
+	case "DeprecatedAttr":
+		node = parseDeprecatedAttr(line)
 	default:
 		panic(nodeName)
 	}

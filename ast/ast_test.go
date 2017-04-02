@@ -232,6 +232,15 @@ var nodes = map[string]interface{}{
 		Address: "0x7fb791846e80",
 		Position: "line:11:4, col:31",
 	},
+
+	// DeprecatedAttr
+	`0x7fec4b0ab9c0 <line:180:48, col:63> "This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of tempnam(3), it is highly recommended that you use mkstemp(3) instead." ""`:
+	ast.DeprecatedAttr{
+		Address: "0x7fec4b0ab9c0",
+		Position: "line:180:48, col:63",
+		Message1: "This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of tempnam(3), it is highly recommended that you use mkstemp(3) instead.",
+		Message2: "",
+	},
 }
 
 func TestNodes(t *testing.T) {
