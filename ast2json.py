@@ -22,9 +22,6 @@ import json
 #    before we enough information to really standardise the process.
 
 regex = {
-    'EnumDecl':          r"^ (?P<address>[0-9a-fx]+) ",
-    'ModeAttr':          r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<name>.+)",
-    'RestrictAttr':      r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<name>.*)",
     'ImplicitCastExpr':  r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*)' <(?P<kind>.*)>',
     'IntegerLiteral':    r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*)' (?P<value>.+)',
     'MemberExpr':        r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' (?P<tags>.*?)(?P<name>\w+) (?P<address2>[0-9a-fx]+)",

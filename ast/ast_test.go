@@ -467,6 +467,14 @@ var nodes = map[string]interface{}{
 		Position: "line:11:7, line:18:7",
 	},
 
+	// ModeAttr
+	`0x7f980b858309 <line:11:7, line:18:7> foo`:
+	ast.ModeAttr{
+		Address: "0x7f980b858309",
+		Position: "line:11:7, line:18:7",
+		Name: "foo",
+	},
+
 	// NoThrowAttr
 	`0x7fa1488273a0 <line:7:4, line:11:4>`:
 	ast.NoThrowAttr{
@@ -540,6 +548,14 @@ var nodes = map[string]interface{}{
 	ast.RecordType{
 		Address: "0x7fd3ab84dda0",
 		Type: "struct _opaque_pthread_condattr_t",
+	},
+
+	// RestrictAttr
+	`0x7f980b858305 <line:11:7, line:18:7> foo`:
+	ast.RestrictAttr{
+		Address: "0x7f980b858305",
+		Position: "line:11:7, line:18:7",
+		Name: "foo",
 	},
 
 	// ReturnStmt

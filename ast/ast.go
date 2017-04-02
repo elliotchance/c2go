@@ -69,6 +69,8 @@ func Parse(line string) interface{} {
 		node = parseIfStmt(line)
 	case "MallocAttr":
 		node = parseMallocAttr(line)
+	case "ModeAttr":
+		node = parseModeAttr(line)
 	case "NoThrowAttr":
 		node = parseNoThrowAttr(line)
 	case "NotNullAttr":
@@ -83,6 +85,8 @@ func Parse(line string) interface{} {
 		node = parseRecordDecl(line)
 	case "RecordType":
 		node = parseRecordType(line)
+	case "RestrictAttr":
+		node = parseRestrictAttr(line)
 	case "ReturnStmt":
 		node = parseReturnStmt(line)
 	case "TranslationUnitDecl":
