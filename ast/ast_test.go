@@ -167,6 +167,20 @@ var nodes = map[string]interface{}{
 		Address: "0x7fbd0f8360b8",
 		Position: "line:4:1, line:13:1",
 	},
+
+	// ConstantArrayType
+	`0x7f94ad016a40 'struct __va_list_tag [1]' 1`:
+	ast.ConstantArrayType{
+		Address: "0x7f94ad016a40",
+		Type: "struct __va_list_tag [1]",
+		Size: 1,
+	},
+	`0x7f8c5f059d20 'char [37]' 37`:
+	ast.ConstantArrayType{
+		Address: "0x7f8c5f059d20",
+		Type: "char [37]",
+		Size: 37,
+	},
 }
 
 func TestNodes(t *testing.T) {
