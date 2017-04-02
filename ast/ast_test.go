@@ -349,6 +349,68 @@ var nodes = map[string]interface{}{
 		Unknown2: 3,
 	},
 
+	// FunctionDecl
+	`0x7fb5a90e60d0 <line:231:1, col:22> col:7 clearerr 'void (FILE *)'`:
+	ast.FunctionDecl{
+		Address: "0x7fb5a90e60d0",
+		Position: "line:231:1, col:22",
+		Prev: "",
+		Position2: "col:7",
+		Name: "clearerr",
+		Type: "void (FILE *)",
+		IsExtern: false,
+		IsImplicit: false,
+		IsUsed: false,
+	},
+	`0x7fb5a90e2a50 </usr/include/sys/stdio.h:39:1, /usr/include/AvailabilityInternal.h:21697:126> /usr/include/sys/stdio.h:39:5 renameat 'int (int, const char *, int, const char *)'`:
+	ast.FunctionDecl{
+		Address: "0x7fb5a90e2a50",
+		Position: "/usr/include/sys/stdio.h:39:1, /usr/include/AvailabilityInternal.h:21697:126",
+		Prev: "",
+		Position2: "/usr/include/sys/stdio.h:39:5",
+		Name: "renameat",
+		Type: "int (int, const char *, int, const char *)",
+		IsExtern: false,
+		IsImplicit: false,
+		IsUsed: false,
+	},
+	`0x7fb5a90e9b70 </usr/include/stdio.h:244:6> col:6 implicit fprintf 'int (FILE *, const char *, ...)' extern`:
+	ast.FunctionDecl{
+		Address: "0x7fb5a90e9b70",
+		Position: "/usr/include/stdio.h:244:6",
+		Prev: "",
+		Position2: "col:6",
+		Name: "fprintf",
+		Type: "int (FILE *, const char *, ...)",
+		IsExtern: true,
+		IsImplicit: true,
+		IsUsed: false,
+	},
+	`0x7fb5a90e9d40 prev 0x7fb5a90e9b70 <col:1, /usr/include/sys/cdefs.h:351:63> /usr/include/stdio.h:244:6 fprintf 'int (FILE *, const char *, ...)'`:
+	ast.FunctionDecl{
+		Address: "0x7fb5a90e9d40",
+		Position: "col:1, /usr/include/sys/cdefs.h:351:63",
+		Prev: "0x7fb5a90e9b70",
+		Position2: "/usr/include/stdio.h:244:6",
+		Name: "fprintf",
+		Type: "int (FILE *, const char *, ...)",
+		IsExtern: false,
+		IsImplicit: false,
+		IsUsed: false,
+	},
+	`0x7fb5a90ec210 <line:259:6> col:6 implicit used printf 'int (const char *, ...)' extern`:
+	ast.FunctionDecl{
+		Address: "0x7fb5a90ec210",
+		Position: "line:259:6",
+		Prev: "",
+		Position2: "col:6",
+		Name: "printf",
+		Type: "int (const char *, ...)",
+		IsExtern: true,
+		IsImplicit: true,
+		IsUsed: true,
+	},
+
 	// FunctionProtoType
 	`0x7fa3b88bbb30 'struct _opaque_pthread_t *' foo`:
 	ast.FunctionProtoType{
@@ -496,7 +558,7 @@ func TestNodes(t *testing.T) {
 		actual := ast.Parse(reflect.TypeOf(expected).Name() + " " + line)
 
 		if expected != actual {
-			t.Errorf("\nexpected: %#v\n     got: %#v", expected, actual)
+			t.Errorf("\nexpected: %#v\n     got: %#v\n\n", expected, actual)
 		}
 	}
 }
