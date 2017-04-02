@@ -45,6 +45,8 @@ func Parse(line string) interface{} {
 		node = parseElaboratedType(line)
 	case "FieldDecl":
 		node = parseFieldDecl(line)
+	case "FloatingLiteral":
+		node = parseFloatingLiteral(line)
 	default:
 		panic(nodeName)
 	}
@@ -93,4 +95,13 @@ func removeQuotes(s string) string {
 	}
 
 	return s
+}
+
+func atof(s string) float64 {
+	f, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		panic(err)
+	}
+
+	return f
 }

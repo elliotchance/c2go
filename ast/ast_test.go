@@ -305,6 +305,15 @@ var nodes = map[string]interface{}{
 		Type: "int",
 		Referenced: true,
 	},
+
+	// FloatingLiteral
+	`0x7febe106f5e8 <col:24> 'double' 1.230000e+00`:
+	ast.FloatingLiteral{
+		Address: "0x7febe106f5e8",
+		Position: "col:24",
+		Type: "double",
+		Value: 1.23,
+	},
 }
 
 func TestNodes(t *testing.T) {

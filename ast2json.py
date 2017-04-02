@@ -28,7 +28,6 @@ regex = {
     'EnumDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)?(?P<name>.*)",
     'EnumType': r"^ (?P<address>[0-9a-fx]+) '(?P<name>.*)'",
 
-    'FieldDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)? (?P<tags>.*?)(?P<name>\w+?) '(?P<type>.+?)'",
     'FloatingLiteral': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*)' (?P<value>.+)",
     'FormatAttr': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<tags> \w+)? (?P<function>\w+) (?P<unknown1>\d+) (?P<unknown2>\d+)',
     'ForStmt': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>",
