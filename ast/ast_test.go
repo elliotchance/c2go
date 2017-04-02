@@ -355,6 +355,13 @@ var nodes = map[string]interface{}{
 		Address: "0x7fc0a69091d1",
 		Position: "line:11:7, line:18:7",
 	},
+
+	// WhileStmt
+	`0x7fa1478273a0 <line:7:4, line:11:4>`:
+	ast.MallocAttr{
+		Address: "0x7fa1478273a0",
+		Position: "line:7:4, line:11:4",
+	},
 }
 
 func TestNodes(t *testing.T) {

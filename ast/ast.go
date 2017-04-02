@@ -55,6 +55,8 @@ func Parse(line string) interface{} {
 		node = parseIfStmt(line)
 	case "MallocAttr":
 		node = parseMallocAttr(line)
+	case "WhileStmt":
+		node = parseWhileStmt(line)
 	default:
 		panic(nodeName)
 	}

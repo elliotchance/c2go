@@ -53,7 +53,6 @@ regex = {
     'TypedefType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<tags>.+)',
     'UnaryOperator': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)'(?P<tags1> lvalue)?(?P<tags2> prefix)?(?P<tags3> postfix)? '(?P<operator>.*?)'",
     'VarDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)? (?P<name>.+) '(?P<type>.+?)'(?P<type2>:'.*?')?(?P<tags>.*)",
-    'WhileStmt': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>",
 }
 
 # ParmVarDecl 0x4167750 <line:56:23> line:493:15 'struct __va_list_tag *':'struct __va_list_tag *'
