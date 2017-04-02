@@ -225,6 +225,13 @@ var nodes = map[string]interface{}{
 		Name: "variable",
 		Type2: "struct programming",
 	},
+
+	// DeclStmt
+	`0x7fb791846e80 <line:11:4, col:31>`:
+	ast.DeclStmt{
+		Address: "0x7fb791846e80",
+		Position: "line:11:4, col:31",
+	},
 }
 
 func TestNodes(t *testing.T) {

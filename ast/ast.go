@@ -37,6 +37,8 @@ func Parse(line string) interface{} {
 		node = parseCStyleCastExpr(line)
 	case "DeclRefExpr":
 		node = parseDeclRefExpr(line)
+	case "DeclStmt":
+		node = parseDeclStmt(line)
 	default:
 		panic(nodeName)
 	}
