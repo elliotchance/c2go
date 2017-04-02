@@ -370,6 +370,13 @@ var nodes = map[string]interface{}{
 		Position: "line:11:7, line:18:7",
 	},
 
+	// NoThrowAttr
+	`0x7fa1488273a0 <line:7:4, line:11:4>`:
+	ast.NoThrowAttr{
+		Address: "0x7fa1488273a0",
+		Position: "line:7:4, line:11:4",
+	},
+
 	// NotNullAttr
 	`0x7fa1488273b0 <line:7:4, line:11:4> 1`:
 	ast.NotNullAttr{
@@ -377,11 +384,25 @@ var nodes = map[string]interface{}{
 		Position: "line:7:4, line:11:4",
 	},
 
-	// NoThrowAttr
-	`0x7fa1488273a0 <line:7:4, line:11:4>`:
-	ast.NoThrowAttr{
-		Address: "0x7fa1488273a0",
-		Position: "line:7:4, line:11:4",
+	// PointerType
+	`0x7fa3b88bbb30 'struct _opaque_pthread_t *'`:
+	ast.PointerType{
+		Address: "0x7fa3b88bbb30",
+		Type: "struct _opaque_pthread_t *",
+	},
+
+	// Record
+	`0x7fd3ab857950 '__sFILE'`:
+	ast.Record{
+		Address: "0x7fd3ab857950",
+		Type: "__sFILE",
+	},
+
+	// RecordType
+	`0x7fd3ab84dda0 'struct _opaque_pthread_condattr_t'`:
+	ast.RecordType{
+		Address: "0x7fd3ab84dda0",
+		Type: "struct _opaque_pthread_condattr_t",
 	},
 
 	// ReturnStmt
@@ -395,6 +416,13 @@ var nodes = map[string]interface{}{
 	`0x7fe78a815ed0 <<invalid sloc>> <invalid sloc>`:
 	ast.TranslationUnitDecl{
 		Address: "0x7fe78a815ed0",
+	},
+
+	// Typedef
+	`0x7f84d10dc1d0 '__darwin_ssize_t'`:
+	ast.Typedef{
+		Address: "0x7f84d10dc1d0",
+		Type: "__darwin_ssize_t",
 	},
 
 	// WhileStmt

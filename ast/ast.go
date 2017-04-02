@@ -59,14 +59,22 @@ func Parse(line string) interface{} {
 		node = parseIfStmt(line)
 	case "MallocAttr":
 		node = parseMallocAttr(line)
-	case "NotNullAttr":
-		node = parseNotNullAttr(line)
 	case "NoThrowAttr":
 		node = parseNoThrowAttr(line)
+	case "NotNullAttr":
+		node = parseNotNullAttr(line)
+	case "PointerType":
+		node = parsePointerType(line)
+	case "Record":
+		node = parseRecord(line)
+	case "RecordType":
+		node = parseRecordType(line)
 	case "ReturnStmt":
 		node = parseReturnStmt(line)
 	case "TranslationUnitDecl":
 		node = parseTranslationUnitDecl(line)
+	case "Typedef":
+		node = parseTypedef(line)
 	case "WhileStmt":
 		node = parseWhileStmt(line)
 	default:
