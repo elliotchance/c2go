@@ -25,7 +25,6 @@ regex = {
     'RecordDecl':        r"^ (?P<address>[0-9a-fx]+) (?P<prev>prev 0x[0-9a-f]+ )?<(?P<position>.*)> (?P<position2>[^ ]+ )?(?P<kind>struct|union) (?P<name>\w*)( definition)?",
     'FunctionDecl':      r"^ (?P<address>[0-9a-fx]+) (?P<prev>prev [0-9a-fx]+)? ?<(?P<position1>.*)>(?P<position2> [^ ]+)?(?P<tags> .*)? (?P<name>\w+) '(?P<type>.*)'(?P<tags3> extern)?",
 
-    'TypedefType':       r'^ (?P<address>[0-9a-fx]+) '(?P<type>.*)' (?P<tags>.+)',
     'ConstAttr':         r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<tags>.*)",
     'EnumConstantDecl':  r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)? (?P<name>.+) '(?P<type>.+?)'",
     'EnumDecl':          r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)?(?P<name>.*)",

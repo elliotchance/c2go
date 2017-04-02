@@ -71,6 +71,8 @@ func Parse(line string) interface{} {
 		node = parseQualType(line)
 	case "Record":
 		node = parseRecord(line)
+	case "RecordDecl":
+		node = parseRecordDecl(line)
 	case "RecordType":
 		node = parseRecordType(line)
 	case "ReturnStmt":
