@@ -441,6 +441,14 @@ var nodes = map[string]interface{}{
 		Type: "__darwin_ssize_t",
 	},
 
+	// TypedefType
+	`0x7f887a0dc760 '__uint16_t' sugar`:
+	ast.TypedefType{
+		Address: "0x7f887a0dc760",
+		Type: "__uint16_t",
+		Tags: "sugar",
+	},
+
 	// WhileStmt
 	`0x7fa1478273a0 <line:7:4, line:11:4>`:
 	ast.MallocAttr{

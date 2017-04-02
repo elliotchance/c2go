@@ -79,6 +79,8 @@ func Parse(line string) interface{} {
 		node = parseTranslationUnitDecl(line)
 	case "Typedef":
 		node = parseTypedef(line)
+	case "TypedefType":
+		node = parseTypedefType(line)
 	case "WhileStmt":
 		node = parseWhileStmt(line)
 	default:
