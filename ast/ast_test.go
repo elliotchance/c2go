@@ -3,6 +3,7 @@ package ast_test
 import (
 	"testing"
 	"github.com/elliotchance/c2go/ast"
+	"reflect"
 )
 
 var nodes = map[string]interface{}{
@@ -103,24 +104,22 @@ var nodes = map[string]interface{}{
 		Message1: "Use mkstemp(3) instead.",
 		Message2: "",
 	},
+
+	// BinaryOperator
+	`0x7fca2d8070e0 <col:11, col:23> 'unsigned char' '='`:
+	ast.BinaryOperator{
+		Address: "0x7fca2d8070e0",
+		Position: "col:11, col:23",
+		Type: "unsigned char",
+		Operator: "=",
+	},
 }
 
 func TestNodes(t *testing.T) {
 	for line, expected := range nodes {
-		var actual interface{}
-
-		switch ty := expected.(type) {
-		case ast.AlwaysInlineAttr:
-			actual = ast.ParseAlwaysInlineAttr(line)
-		case ast.ArraySubscriptExpr:
-			actual = ast.ParseArraySubscriptExpr(line)
-		case ast.AsmLabelAttr:
-			actual = ast.ParseAsmLabelAttr(line)
-		case ast.AvailabilityAttr:
-			actual = ast.ParseAvailabilityAttr(line)
-		default:
-			t.Errorf("unknown %v", ty)
-		}
+		// Append the name of the struct onto the front. This would make
+		// the complete line it would normally be parsing.
+		actual := ast.Parse(reflect.TypeOf(expected).Name() + " " + line)
 
 		if expected != actual {
 			t.Errorf("\nexpected: %#v\n     got: %#v", expected, actual)

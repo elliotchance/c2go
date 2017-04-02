@@ -6,6 +6,28 @@ import (
 	"strings"
 )
 
+func Parse(line string) interface{} {
+	nodeName := strings.SplitN(line, " ", 2)[0]
+	var node interface{}
+
+	switch nodeName {
+	case "AlwaysInlineAttr":
+		node = ParseAlwaysInlineAttr(line)
+	case "ArraySubscriptExpr":
+		node = ParseArraySubscriptExpr(line)
+	case "AsmLabelAttr":
+		node = ParseAsmLabelAttr(line)
+	case "AvailabilityAttr":
+		node = ParseAvailabilityAttr(line)
+	case "BinaryOperator":
+		node = ParseBinaryOperator(line)
+	default:
+		panic(nodeName)
+	}
+
+	return node
+}
+
 func groupsFromRegex(rx, line string) map[string]string {
 	re := regexp.MustCompile("(?P<address>[0-9a-fx]+) " + rx)
 	match := re.FindStringSubmatch(line)
