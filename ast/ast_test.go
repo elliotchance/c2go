@@ -241,6 +241,14 @@ var nodes = map[string]interface{}{
 		Message1: "This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of tempnam(3), it is highly recommended that you use mkstemp(3) instead.",
 		Message2: "",
 	},
+
+	// ElaboratedType
+	`0x7f873686c120 'union __mbstate_t' sugar`:
+	ast.ElaboratedType{
+		Address: "0x7f873686c120",
+		Type: "union __mbstate_t",
+		Tags: "sugar",
+	},
 }
 
 func TestNodes(t *testing.T) {

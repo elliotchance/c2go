@@ -23,8 +23,6 @@ import json
 
 regex = {
     'ConstAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<tags>.*)",
-    'DeprecatedAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \"(?P<message1>.*?)\"(?P<message2> \".*?\")?",
-    'ElaboratedType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<tags>.+)',
     'Enum': r"^ (?P<address>[0-9a-fx]+) '(?P<name>.*)'",
     'EnumConstantDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)? (?P<name>.+) '(?P<type>.+?)'",
     'EnumDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)?(?P<name>.*)",

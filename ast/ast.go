@@ -41,6 +41,8 @@ func Parse(line string) interface{} {
 		node = parseDeclStmt(line)
 	case "DeprecatedAttr":
 		node = parseDeprecatedAttr(line)
+	case "ElaboratedType":
+		node = parseElaboratedType(line)
 	default:
 		panic(nodeName)
 	}
