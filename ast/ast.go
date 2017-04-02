@@ -83,6 +83,8 @@ func Parse(line string) interface{} {
 		node = parseNotNullAttr(line)
 	case "ParenExpr":
 		node = parseParenExpr(line)
+	case "ParmVarDecl":
+		node = parseParmVarDecl(line)
 	case "PointerType":
 		node = parsePointerType(line)
 	case "PredefinedExpr":

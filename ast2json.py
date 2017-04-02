@@ -23,14 +23,10 @@ import json
 
 regex = {
     'ParmVarDecl':       r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+:[\d:]+)?(?P<used> used)?(?P<name> \w+)? '(?P<type>.*?)'(?P<type2>:'.*?')?",
-    'StringLiteral':     r'^ (?P<address>[0-9a-fx]+) ',
     'TypedefDecl':       r"^ (?P<address>[0-9a-fx]+) <(?P<position>.+?)> (?P<position2><invalid sloc>|0x[0-9a-f]+)?(?P<tags>.*?)(?P<name>\w+) '(?P<type>.*?)'(?P<type2>:'.*?')?",
     'UnaryOperator':     r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)'(?P<tags1> lvalue)?(?P<tags2> prefix)?(?P<tags3> postfix)? '(?P<operator>.*?)'",
     'VarDecl':           r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)? (?P<name>.+) '(?P<type>.+?)'(?P<type2>:'.*?')?(?P<tags>.*)",
 }
-
-# ParmVarDecl 0x4167750 <line:56:23> line:493:15 'struct __va_list_tag *':'struct __va_list_tag *'
-# ParmVarDecl 0x2839dd0 </usr/include/_G_config.h:32:20> /usr/include/libio.h:496:58 '__ssize_t':'long'
 
 def build_tree(nodes, depth):
     """Convert an array of nodes, each prefixed with a depth into a tree."""
