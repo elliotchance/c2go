@@ -85,6 +85,8 @@ func Parse(line string) interface{} {
 		node = parseParenExpr(line)
 	case "PointerType":
 		node = parsePointerType(line)
+	case "PredefinedExpr":
+		node = parsePredefinedExpr(line)
 	case "QualType":
 		node = parseQualType(line)
 	case "Record":

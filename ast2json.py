@@ -22,9 +22,7 @@ import json
 #    before we enough information to really standardise the process.
 
 regex = {
-    'MemberExpr':        r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' (?P<tags>.*?)(?P<name>\w+) (?P<address2>[0-9a-fx]+)",
     'ParmVarDecl':       r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+:[\d:]+)?(?P<used> used)?(?P<name> \w+)? '(?P<type>.*?)'(?P<type2>:'.*?')?",
-    'PredefinedExpr':    r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*)' (?P<kind>.*) (?P<name>.*)",
     'StringLiteral':     r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*)'(?P<tags> lvalue)? (?P<value>.*)',
     'TypedefDecl':       r"^ (?P<address>[0-9a-fx]+) <(?P<position>.+?)> (?P<position2><invalid sloc>|0x[0-9a-f]+)?(?P<tags>.*?)(?P<name>\w+) '(?P<type>.*?)'(?P<type2>:'.*?')?",
     'UnaryOperator':     r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)'(?P<tags1> lvalue)?(?P<tags2> prefix)?(?P<tags3> postfix)? '(?P<operator>.*?)'",
