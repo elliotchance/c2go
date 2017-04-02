@@ -265,6 +265,15 @@ var nodes = map[string]interface{}{
 		Name: "foo",
 	},
 
+	// EnumDecl
+	`0x22a6c80 <line:180:1, line:186:1> __codecvt_result`:
+	ast.EnumDecl{
+		Address: "0x22a6c80",
+		Position: "line:180:1, line:186:1",
+		Position2: "",
+		Name: "__codecvt_result",
+	},
+
 	// EnumConstantDecl
 	`0x1660db0 <line:185:3> __codecvt_noconv 'int'`:
 	ast.EnumConstantDecl{

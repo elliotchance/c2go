@@ -49,6 +49,8 @@ func Parse(line string) interface{} {
 		node = parseEnum(line)
 	case "EnumConstantDecl":
 		node = parseEnumConstantDecl(line)
+	case "EnumDecl":
+		node = parseEnumDecl(line)
 	case "EnumType":
 		node = parseEnumType(line)
 	case "FieldDecl":
