@@ -35,6 +35,8 @@ func Parse(line string) interface{} {
 		node = parseConstantArrayType(line)
 	case "CStyleCastExpr":
 		node = parseCStyleCastExpr(line)
+	case "DeclRefExpr":
+		node = parseDeclRefExpr(line)
 	default:
 		panic(nodeName)
 	}
