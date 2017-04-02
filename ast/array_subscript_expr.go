@@ -7,7 +7,7 @@ type ArraySubscriptExpr struct {
 	Kind     string
 }
 
-func ParseArraySubscriptExpr(line string) ArraySubscriptExpr {
+func parseArraySubscriptExpr(line string) ArraySubscriptExpr {
 	groups := groupsFromRegex(
 		"<(?P<position>.*)> '(?P<type>.*?)' (?P<kind>.*)",
 		line,

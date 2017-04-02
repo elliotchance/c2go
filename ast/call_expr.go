@@ -6,7 +6,7 @@ type CallExpr struct {
 	Type     string
 }
 
-func ParseCallExpr(line string) CallExpr {
+func parseCallExpr(line string) CallExpr {
 	groups := groupsFromRegex(
 		"<(?P<position>.*)> '(?P<type>.*?)'",
 		line,

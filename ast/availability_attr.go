@@ -12,7 +12,7 @@ type AvailabilityAttr struct {
 	Message2    string
 }
 
-func ParseAvailabilityAttr(line string) AvailabilityAttr {
+func parseAvailabilityAttr(line string) AvailabilityAttr {
 	groups := groupsFromRegex(
 		"<(?P<position>.*)> (?P<os>\\w+) (?P<version>[\\d.]+) (?P<unknown1>[\\d.]+) (?P<unknown2>[\\d.]+)(?P<unavalable> Unavailable)? \"(?P<message1>.*?)\" \"(?P<message2>.*?)\"",
 		line,

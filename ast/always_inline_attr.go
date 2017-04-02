@@ -5,7 +5,7 @@ type AlwaysInlineAttr struct {
 	Position string
 }
 
-func ParseAlwaysInlineAttr(line string) AlwaysInlineAttr {
+func parseAlwaysInlineAttr(line string) AlwaysInlineAttr {
 	groups := groupsFromRegex(
 		"<(?P<position>.*)> always_inline",
 		line,

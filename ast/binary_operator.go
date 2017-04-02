@@ -7,7 +7,7 @@ type BinaryOperator struct {
 	Operator string
 }
 
-func ParseBinaryOperator(line string) BinaryOperator {
+func parseBinaryOperator(line string) BinaryOperator {
 	groups := groupsFromRegex(
 		"<(?P<position>.*)> '(?P<type>.*?)' '(?P<operator>.*?)'",
 		line,

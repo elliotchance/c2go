@@ -5,7 +5,7 @@ type BuiltinType struct {
 	Type    string
 }
 
-func ParseBuiltinType(line string) BuiltinType {
+func parseBuiltinType(line string) BuiltinType {
 	groups := groupsFromRegex(
 		"'(?P<type>.*?)'",
 		line,

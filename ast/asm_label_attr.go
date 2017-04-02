@@ -6,7 +6,7 @@ type AsmLabelAttr struct {
 	FunctionName string
 }
 
-func ParseAsmLabelAttr(line string) AsmLabelAttr {
+func parseAsmLabelAttr(line string) AsmLabelAttr {
 	groups := groupsFromRegex(
 		"<(?P<position>.*)> \"(?P<function>.+)\"",
 		line,

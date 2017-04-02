@@ -12,21 +12,23 @@ func Parse(line string) interface{} {
 
 	switch nodeName {
 	case "AlwaysInlineAttr":
-		node = ParseAlwaysInlineAttr(line)
+		node = parseAlwaysInlineAttr(line)
 	case "ArraySubscriptExpr":
-		node = ParseArraySubscriptExpr(line)
+		node = parseArraySubscriptExpr(line)
 	case "AsmLabelAttr":
-		node = ParseAsmLabelAttr(line)
+		node = parseAsmLabelAttr(line)
 	case "AvailabilityAttr":
-		node = ParseAvailabilityAttr(line)
+		node = parseAvailabilityAttr(line)
 	case "BinaryOperator":
-		node = ParseBinaryOperator(line)
+		node = parseBinaryOperator(line)
 	case "BreakStmt":
-		node = ParseBreakStmt(line)
+		node = parseBreakStmt(line)
 	case "BuiltinType":
-		node = ParseBuiltinType(line)
+		node = parseBuiltinType(line)
 	case "CallExpr":
-		node = ParseCallExpr(line)
+		node = parseCallExpr(line)
+	case "CharacterLiteral":
+		node = parseCharacterLiteral(line)
 	default:
 		panic(nodeName)
 	}

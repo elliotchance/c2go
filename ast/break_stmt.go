@@ -5,7 +5,7 @@ type BreakStmt struct {
 	Position string
 }
 
-func ParseBreakStmt(line string) BreakStmt {
+func parseBreakStmt(line string) BreakStmt {
 	groups := groupsFromRegex(
 		"<(?P<position>.*)>",
 		line,

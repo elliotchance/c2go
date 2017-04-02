@@ -146,6 +146,15 @@ var nodes = map[string]interface{}{
 		Position: "line:7:4, col:64",
 		Type: "int",
 	},
+
+	// CharacterLiteral
+	`0x7f980b858308 <col:62> 'int' 10`:
+	ast.CharacterLiteral{
+		Address: "0x7f980b858308",
+		Position: "col:62",
+		Type: "int",
+		Value: 10,
+	},
 }
 
 func TestNodes(t *testing.T) {
