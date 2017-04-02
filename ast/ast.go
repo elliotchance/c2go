@@ -73,6 +73,8 @@ func Parse(line string) interface{} {
 		node = parseIntegerLiteral(line)
 	case "MallocAttr":
 		node = parseMallocAttr(line)
+	case "MemberExpr":
+		node = parseMemberExpr(line)
 	case "ModeAttr":
 		node = parseModeAttr(line)
 	case "NoThrowAttr":

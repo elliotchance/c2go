@@ -492,6 +492,44 @@ var nodes = map[string]interface{}{
 		Position: "line:11:7, line:18:7",
 	},
 
+	// MemberExpr
+	`0x7fcc758e34a0 <col:8, col:12> 'int' lvalue ->_w 0x7fcc758d60c8`:
+	ast.MemberExpr{
+		Address: "0x7fcc758e34a0",
+		Position: "col:8, col:12",
+		Type: "int",
+		Lvalue: true,
+		Name: "_w",
+		Address2: "0x7fcc758d60c8",
+	},
+	`0x7fcc76004210 <col:12, col:16> 'unsigned char *' lvalue ->_p 0x7fcc758d6018`:
+	ast.MemberExpr{
+		Address: "0x7fcc76004210",
+		Position: "col:12, col:16",
+		Type: "unsigned char *",
+		Lvalue: true,
+		Name: "_p",
+		Address2: "0x7fcc758d6018",
+	},
+	`0x7f85338325b0 <col:4, col:13> 'float' lvalue .constant 0x7f8533832260`:
+	ast.MemberExpr{
+		Address: "0x7f85338325b0",
+		Position: "col:4, col:13",
+		Type: "float",
+		Lvalue: true,
+		Name: "constant",
+		Address2: "0x7f8533832260",
+	},
+	`0x7f8533832670 <col:4, col:13> 'char *' lvalue .pointer 0x7f85338322b8`:
+	ast.MemberExpr{
+		Address: "0x7f8533832670",
+		Position: "col:4, col:13",
+		Type: "char *",
+		Lvalue: true,
+		Name: "pointer",
+		Address2: "0x7f85338322b8",
+	},
+
 	// ModeAttr
 	`0x7f980b858309 <line:11:7, line:18:7> foo`:
 	ast.ModeAttr{
