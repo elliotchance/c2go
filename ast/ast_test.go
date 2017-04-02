@@ -132,6 +132,20 @@ var nodes = map[string]interface{}{
 		Address: "0x7f8a43023ea0",
 		Type: "unsigned long long",
 	},
+
+	// CallExpr
+	`0x7f9bf3033240 <col:11, col:25> 'int'`:
+	ast.CallExpr{
+		Address: "0x7f9bf3033240",
+		Position: "col:11, col:25",
+		Type: "int",
+	},
+	`0x7f9bf3035c20 <line:7:4, col:64> 'int'`:
+	ast.CallExpr{
+		Address: "0x7f9bf3035c20",
+		Position: "line:7:4, col:64",
+		Type: "int",
+	},
 }
 
 func TestNodes(t *testing.T) {

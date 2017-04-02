@@ -25,6 +25,8 @@ func Parse(line string) interface{} {
 		node = ParseBreakStmt(line)
 	case "BuiltinType":
 		node = ParseBuiltinType(line)
+	case "CallExpr":
+		node = ParseCallExpr(line)
 	default:
 		panic(nodeName)
 	}
