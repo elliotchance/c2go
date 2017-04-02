@@ -31,6 +31,8 @@ func Parse(line string) interface{} {
 		node = parseCharacterLiteral(line)
 	case "CompoundStmt":
 		node = parseCompoundStmt(line)
+	case "ConstAttr":
+		node = parseConstAttr(line)
 	case "ConstantArrayType":
 		node = parseConstantArrayType(line)
 	case "CStyleCastExpr":

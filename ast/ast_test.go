@@ -168,6 +168,14 @@ var nodes = map[string]interface{}{
 		Position: "line:4:1, line:13:1",
 	},
 
+	// ConstAttr
+	`0x7fa3b88bbb38 <line:4:1, line:13:1>foo`:
+	ast.ConstAttr{
+		Address: "0x7fa3b88bbb38",
+		Position: "line:4:1, line:13:1",
+		Tags: "foo",
+	},
+
 	// ConstantArrayType
 	`0x7f94ad016a40 'struct __va_list_tag [1]' 1`:
 	ast.ConstantArrayType{

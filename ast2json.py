@@ -22,7 +22,6 @@ import json
 #    before we enough information to really standardise the process.
 
 regex = {
-    'ConstAttr':         r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<tags>.*)",
     'EnumConstantDecl':  r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)? (?P<name>.+) '(?P<type>.+?)'",
     'EnumDecl':          r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)?(?P<name>.*)",
     'ModeAttr':          r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<name>.+)",
