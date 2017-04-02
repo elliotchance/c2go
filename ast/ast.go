@@ -77,6 +77,8 @@ func Parse(line string) interface{} {
 		node = parseNoThrowAttr(line)
 	case "NotNullAttr":
 		node = parseNotNullAttr(line)
+	case "ParenExpr":
+		node = parseParenExpr(line)
 	case "PointerType":
 		node = parsePointerType(line)
 	case "QualType":

@@ -498,6 +498,14 @@ var nodes = map[string]interface{}{
 		Position: "line:7:4, line:11:4",
 	},
 
+	// ParenExpr
+	`0x7fb0bc8b2308 <col:10, col:25> 'unsigned char'`:
+	ast.ParenExpr{
+		Address: "0x7fb0bc8b2308",
+		Position: "col:10, col:25",
+		Type: "unsigned char",
+	},
+
 	// PointerType
 	`0x7fa3b88bbb30 'struct _opaque_pthread_t *'`:
 	ast.PointerType{

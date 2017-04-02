@@ -23,9 +23,7 @@ import json
 
 regex = {
     'ImplicitCastExpr':  r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*)' <(?P<kind>.*)>',
-    'IntegerLiteral':    r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*)' (?P<value>.+)',
     'MemberExpr':        r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' (?P<tags>.*?)(?P<name>\w+) (?P<address2>[0-9a-fx]+)",
-    'ParenExpr':         r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)'',
     'ParmVarDecl':       r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+:[\d:]+)?(?P<used> used)?(?P<name> \w+)? '(?P<type>.*?)'(?P<type2>:'.*?')?",
     'PredefinedExpr':    r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*)' (?P<kind>.*) (?P<name>.*)",
     'StringLiteral':     r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*)'(?P<tags> lvalue)? (?P<value>.*)',
