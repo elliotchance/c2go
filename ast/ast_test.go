@@ -334,6 +334,13 @@ var nodes = map[string]interface{}{
 		Unknown1: 2,
 		Unknown2: 3,
 	},
+
+	// ForStmt
+	`0x7f961e018848 <line:9:4, line:10:70>`:
+	ast.ForStmt{
+		Address: "0x7f961e018848",
+		Position: "line:9:4, line:10:70",
+	},
 }
 
 func TestNodes(t *testing.T) {

@@ -28,7 +28,6 @@ regex = {
     'EnumDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)?(?P<name>.*)",
     'EnumType': r"^ (?P<address>[0-9a-fx]+) '(?P<name>.*)'",
 
-    'FormatAttr': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<tags> \w+)? (?P<function>\w+) (?P<unknown1>\d+) (?P<unknown2>\d+)',
     'ForStmt': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>",
     'FunctionDecl': r"^ (?P<address>[0-9a-fx]+) (?P<prev>prev [0-9a-fx]+)? ?<(?P<position1>.*)>(?P<position2> [^ ]+)?(?P<tags> .*)? (?P<name>\w+) '(?P<type>.*)'(?P<tags3> extern)?",
     'FunctionProtoType': r"^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<kind>.*)",
