@@ -53,6 +53,8 @@ func Parse(line string) interface{} {
 		node = parseForStmt(line)
 	case "IfStmt":
 		node = parseIfStmt(line)
+	case "MallocAttr":
+		node = parseMallocAttr(line)
 	default:
 		panic(nodeName)
 	}

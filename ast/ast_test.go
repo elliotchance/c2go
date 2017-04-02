@@ -342,10 +342,17 @@ var nodes = map[string]interface{}{
 		Position: "line:9:4, line:10:70",
 	},
 
-	// ForStmt
+	// IfStmt
 	`0x7fc0a69091d0 <line:11:7, line:18:7>`:
 	ast.IfStmt{
 		Address: "0x7fc0a69091d0",
+		Position: "line:11:7, line:18:7",
+	},
+
+	// MallocAttr
+	`0x7fc0a69091d1 <line:11:7, line:18:7>`:
+	ast.MallocAttr{
+		Address: "0x7fc0a69091d1",
 		Position: "line:11:7, line:18:7",
 	},
 }
