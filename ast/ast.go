@@ -67,6 +67,8 @@ func Parse(line string) interface{} {
 		node = parseForStmt(line)
 	case "IfStmt":
 		node = parseIfStmt(line)
+	case "IntegerLiteral":
+		node = parseIntegerLiteral(line)
 	case "MallocAttr":
 		node = parseMallocAttr(line)
 	case "ModeAttr":

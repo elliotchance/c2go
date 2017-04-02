@@ -460,6 +460,15 @@ var nodes = map[string]interface{}{
 		Position: "line:11:7, line:18:7",
 	},
 
+	// IntegerLiteral
+	`0x7fbe9804bcc8 <col:14> 'int' 1`:
+	ast.IntegerLiteral{
+		Address: "0x7fbe9804bcc8",
+		Position: "col:14",
+		Type: "int",
+		Value: 1,
+	},
+
 	// MallocAttr
 	`0x7fc0a69091d1 <line:11:7, line:18:7>`:
 	ast.MallocAttr{
