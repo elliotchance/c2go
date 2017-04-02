@@ -43,6 +43,8 @@ func Parse(line string) interface{} {
 		node = parseDeprecatedAttr(line)
 	case "ElaboratedType":
 		node = parseElaboratedType(line)
+	case "FieldDecl":
+		node = parseFieldDecl(line)
 	default:
 		panic(nodeName)
 	}
