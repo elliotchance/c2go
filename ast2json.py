@@ -28,7 +28,7 @@ regex = {
     'EnumDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)?(?P<name>.*)",
     'EnumType': r"^ (?P<address>[0-9a-fx]+) '(?P<name>.*)'",
 
-    'NoThrowAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>",
+    'ReturnStmt': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>',
 
     'NonNullAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> 1",
 
@@ -50,9 +50,7 @@ regex = {
     'QualType': r"^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<kind>.*)",
     'RecordDecl': r"^ (?P<address>[0-9a-fx]+) (?P<prev>prev 0x[0-9a-f]+ )?<(?P<position>.*)> (?P<position2>[^ ]+ )?(?P<kind>struct|union) (?P<name>\w*)( definition)?",
     'RestrictAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<name>.*)",
-    'ReturnStmt': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>',
     'StringLiteral': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*)\'(?P<tags> lvalue)? (?P<value>.*)',
-    'TranslationUnitDecl': r'^ (?P<address>[0-9a-fx]+)',
     'TypedefDecl': r"(?P<address>[0-9a-fx]+) <(?P<position>.+?)> (?P<position2><invalid sloc>|0x[0-9a-f]+)?(?P<tags>.*?)(?P<name>\w+) '(?P<type>.*?)'(?P<type2>:'.*?')?",
     'TypedefType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<tags>.+)',
     'UnaryOperator': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)'(?P<tags1> lvalue)?(?P<tags2> prefix)?(?P<tags3> postfix)? '(?P<operator>.*?)'",
