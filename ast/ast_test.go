@@ -250,6 +250,20 @@ var nodes = map[string]interface{}{
 		Tags: "sugar",
 	},
 
+	// Enum
+	`0x7f980b858308 'foo'`:
+	ast.Enum{
+		Address: "0x7f980b858308",
+		Name: "foo",
+	},
+
+	// EnumType
+	`0x7f980b858309 'foo'`:
+	ast.EnumType{
+		Address: "0x7f980b858309",
+		Name: "foo",
+	},
+
 	// FieldDecl
 	`0x7fef510c4848 <line:141:2, col:6> col:6 _ur 'int'`:
 	ast.FieldDecl{

@@ -43,6 +43,10 @@ func Parse(line string) interface{} {
 		node = parseDeprecatedAttr(line)
 	case "ElaboratedType":
 		node = parseElaboratedType(line)
+	case "Enum":
+		node = parseEnum(line)
+	case "EnumType":
+		node = parseEnumType(line)
 	case "FieldDecl":
 		node = parseFieldDecl(line)
 	case "FloatingLiteral":

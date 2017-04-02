@@ -23,29 +23,28 @@ import json
 
 regex = {
     'ConstAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<tags>.*)",
-    'Enum': r"^ (?P<address>[0-9a-fx]+) '(?P<name>.*)'",
     'EnumConstantDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)? (?P<name>.+) '(?P<type>.+?)'",
     'EnumDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)?(?P<name>.*)",
-    'EnumType': r"^ (?P<address>[0-9a-fx]+) '(?P<name>.*)'",
-
-    'NonNullAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> 1",
 
     'PointerType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\'',
     'Record': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\'',
     'RecordType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\'',
     'Typedef': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\'',
 
+    'QualType': r"^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<kind>.*)",
+    'ModeAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<name>.+)",
+
     'FunctionDecl': r"^ (?P<address>[0-9a-fx]+) (?P<prev>prev [0-9a-fx]+)? ?<(?P<position1>.*)>(?P<position2> [^ ]+)?(?P<tags> .*)? (?P<name>\w+) '(?P<type>.*)'(?P<tags3> extern)?",
     'FunctionProtoType': r"^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<kind>.*)",
     'ImplicitCastExpr': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*)\' <(?P<kind>.*)>',
     'IntegerLiteral': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*)\' (?P<value>.+)',
     'MemberExpr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' (?P<tags>.*?)(?P<name>\w+) (?P<address2>[0-9a-fx]+)",
-    'ModeAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<name>.+)",
+
     'ParenExpr': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*?)\'',
     'ParmVarDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+:[\d:]+)?(?P<used> used)?(?P<name> \w+)? '(?P<type>.*?)'(?P<type2>:'.*?')?",
 
     'PredefinedExpr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*)' (?P<kind>.*) (?P<name>.*)",
-    'QualType': r"^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<kind>.*)",
+
     'RecordDecl': r"^ (?P<address>[0-9a-fx]+) (?P<prev>prev 0x[0-9a-f]+ )?<(?P<position>.*)> (?P<position2>[^ ]+ )?(?P<kind>struct|union) (?P<name>\w*)( definition)?",
     'RestrictAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<name>.*)",
     'StringLiteral': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*)\'(?P<tags> lvalue)? (?P<value>.*)',
