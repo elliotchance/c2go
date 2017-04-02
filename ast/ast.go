@@ -33,6 +33,8 @@ func Parse(line string) interface{} {
 		node = parseCompoundStmt(line)
 	case "ConstantArrayType":
 		node = parseConstantArrayType(line)
+	case "CStyleCastExpr":
+		node = parseCStyleCastExpr(line)
 	default:
 		panic(nodeName)
 	}

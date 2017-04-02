@@ -181,6 +181,15 @@ var nodes = map[string]interface{}{
 		Type: "char [37]",
 		Size: 37,
 	},
+
+	// CStyleCastExpr
+	`0x7fddc18fb2e0 <col:50, col:56> 'char' <IntegralCast>`:
+	ast.CStyleCastExpr{
+		Address: "0x7fddc18fb2e0",
+		Position: "col:50, col:56",
+		Type: "char",
+		Kind: "IntegralCast",
+	},
 }
 
 func TestNodes(t *testing.T) {

@@ -22,18 +22,6 @@ import json
 #    before we enough information to really standardise the process.
 
 regex = {
-    'AlwaysInlineAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> always_inline",
-    'ArraySubscriptExpr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' (?P<tags>.*)",
-    'AsmLabelAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \"(?P<function>.+)\"",
-    'AvailabilityAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> (?P<os>\w+) (?P<version>[\d.]+) (?P<unknown1>[\d.]+) (?P<unknown2>[\d.]+) (?P<unknown3>\".*?\"|\w+)(?P<unknown4> \".*?\"| \w+)?",
-    'BinaryOperator': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' '(?P<operator>.*?)'",
-    'BreakStmt': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>",
-    'BuiltinType': r'^ (?P<address>[0-9a-fx]+) \'(?P<name>.*)\'',
-    'CallExpr': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*?)\'',
-    'CharacterLiteral': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' (?P<value>\d+)",
-    'CompoundStmt': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>',
-    'ConditionalOperator': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*?)\'',
-    'ConstantArrayType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<size>\d+)',
     'ConstAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<tags>.*)",
     'CStyleCastExpr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)' <(?P<kind>.*)>",
     'DeclRefExpr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> '(?P<type>.*?)'.*? (lvalue (?P<kind>\w+)|Function) (?P<address2>[0-9a-fx]+) '(?P<name>.*?)' '(?P<type2>.*?)'",
