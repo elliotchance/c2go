@@ -363,6 +363,13 @@ var nodes = map[string]interface{}{
 		Position: "line:7:4, line:11:4",
 	},
 
+	// ReturnStmt
+	`0x7fbb7a8325e0 <line:13:4, col:11>`:
+	ast.ReturnStmt{
+		Address: "0x7fbb7a8325e0",
+		Position: "line:13:4, col:11",
+	},
+
 	// TranslationUnitDecl
 	`0x7fe78a815ed0 <<invalid sloc>> <invalid sloc>`:
 	ast.TranslationUnitDecl{

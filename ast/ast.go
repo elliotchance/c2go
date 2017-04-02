@@ -57,6 +57,8 @@ func Parse(line string) interface{} {
 		node = parseMallocAttr(line)
 	case "NoThrowAttr":
 		node = parseNoThrowAttr(line)
+	case "ReturnStmt":
+		node = parseReturnStmt(line)
 	case "TranslationUnitDecl":
 		node = parseTranslationUnitDecl(line)
 	case "WhileStmt":

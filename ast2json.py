@@ -28,8 +28,6 @@ regex = {
     'EnumDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)?(?P<name>.*)",
     'EnumType': r"^ (?P<address>[0-9a-fx]+) '(?P<name>.*)'",
 
-    'ReturnStmt': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>',
-
     'NonNullAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> 1",
 
     'PointerType': r'^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\'',
