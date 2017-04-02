@@ -356,6 +356,12 @@ var nodes = map[string]interface{}{
 		Position: "line:11:7, line:18:7",
 	},
 
+	// TranslationUnitDecl
+	`0x7fe78a815ed0 <<invalid sloc>> <invalid sloc>`:
+	ast.TranslationUnitDecl{
+		Address: "0x7fe78a815ed0",
+	},
+
 	// WhileStmt
 	`0x7fa1478273a0 <line:7:4, line:11:4>`:
 	ast.MallocAttr{
