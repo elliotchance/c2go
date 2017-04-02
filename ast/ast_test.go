@@ -341,6 +341,13 @@ var nodes = map[string]interface{}{
 		Address: "0x7f961e018848",
 		Position: "line:9:4, line:10:70",
 	},
+
+	// ForStmt
+	`0x7fc0a69091d0 <line:11:7, line:18:7>`:
+	ast.IfStmt{
+		Address: "0x7fc0a69091d0",
+		Position: "line:11:7, line:18:7",
+	},
 }
 
 func TestNodes(t *testing.T) {

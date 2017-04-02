@@ -28,10 +28,8 @@ regex = {
     'EnumDecl': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>(?P<position2> [^ ]+)?(?P<name>.*)",
     'EnumType': r"^ (?P<address>[0-9a-fx]+) '(?P<name>.*)'",
 
-    'ForStmt': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>",
     'FunctionDecl': r"^ (?P<address>[0-9a-fx]+) (?P<prev>prev [0-9a-fx]+)? ?<(?P<position1>.*)>(?P<position2> [^ ]+)?(?P<tags> .*)? (?P<name>\w+) '(?P<type>.*)'(?P<tags3> extern)?",
     'FunctionProtoType': r"^ (?P<address>[0-9a-fx]+) \'(?P<type>.*)\' (?P<kind>.*)",
-    'IfStmt': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>',
     'ImplicitCastExpr': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*)\' <(?P<kind>.*)>',
     'IntegerLiteral': r'^ (?P<address>[0-9a-fx]+) <(?P<position>.*)> \'(?P<type>.*)\' (?P<value>.+)',
     'MallocAttr': r"^ (?P<address>[0-9a-fx]+) <(?P<position>.*)>",

@@ -51,6 +51,8 @@ func Parse(line string) interface{} {
 		node = parseFormatAttr(line)
 	case "ForStmt":
 		node = parseForStmt(line)
+	case "IfStmt":
+		node = parseIfStmt(line)
 	default:
 		panic(nodeName)
 	}
