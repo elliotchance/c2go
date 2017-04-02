@@ -23,6 +23,8 @@ func Parse(line string) interface{} {
 		node = ParseBinaryOperator(line)
 	case "BreakStmt":
 		node = ParseBreakStmt(line)
+	case "BuiltinType":
+		node = ParseBuiltinType(line)
 	default:
 		panic(nodeName)
 	}

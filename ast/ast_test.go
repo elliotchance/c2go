@@ -120,6 +120,18 @@ var nodes = map[string]interface{}{
 		Address: "0x7fca2d8070e0",
 		Position: "col:11, col:23",
 	},
+
+	// BuiltinType
+	`0x7f8a43023f40 '__int128'`:
+	ast.BuiltinType{
+		Address: "0x7f8a43023f40",
+		Type: "__int128",
+	},
+	`0x7f8a43023ea0 'unsigned long long'`:
+	ast.BuiltinType{
+		Address: "0x7f8a43023ea0",
+		Type: "unsigned long long",
+	},
 }
 
 func TestNodes(t *testing.T) {
