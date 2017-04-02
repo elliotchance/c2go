@@ -21,6 +21,8 @@ func Parse(line string) interface{} {
 		node = ParseAvailabilityAttr(line)
 	case "BinaryOperator":
 		node = ParseBinaryOperator(line)
+	case "BreakStmt":
+		node = ParseBreakStmt(line)
 	default:
 		panic(nodeName)
 	}
@@ -29,8 +31,15 @@ func Parse(line string) interface{} {
 }
 
 func groupsFromRegex(rx, line string) map[string]string {
-	re := regexp.MustCompile("(?P<address>[0-9a-fx]+) " + rx)
+	fullRegexp := "(?P<address>[0-9a-fx]+) " + rx
+	re := regexp.MustCompile(fullRegexp)
+
 	match := re.FindStringSubmatch(line)
+	if len(match) == 0 {
+		panic("could not match regexp '" + fullRegexp +
+			"' with string '" + line + "'")
+	}
+
 	result := make(map[string]string)
 	for i, name := range re.SubexpNames() {
 		if i != 0 {

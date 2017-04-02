@@ -113,6 +113,13 @@ var nodes = map[string]interface{}{
 		Type: "unsigned char",
 		Operator: "=",
 	},
+
+	// BreakStmt
+	`0x7fca2d8070e0 <col:11, col:23>`:
+	ast.BreakStmt{
+		Address: "0x7fca2d8070e0",
+		Position: "col:11, col:23",
+	},
 }
 
 func TestNodes(t *testing.T) {
