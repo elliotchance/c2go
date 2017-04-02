@@ -47,6 +47,8 @@ func Parse(line string) interface{} {
 		node = parseFieldDecl(line)
 	case "FloatingLiteral":
 		node = parseFloatingLiteral(line)
+	case "FormatAttr":
+		node = parseFormatAttr(line)
 	default:
 		panic(nodeName)
 	}

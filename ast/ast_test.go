@@ -314,6 +314,26 @@ var nodes = map[string]interface{}{
 		Type: "double",
 		Value: 1.23,
 	},
+
+	// FormatAttr
+	`0x7fcc8d8ecee8 <col:6> Implicit printf 2 3`:
+	ast.FormatAttr{
+		Address: "0x7fcc8d8ecee8",
+		Position: "col:6",
+		Implicit: true,
+		FunctionName: "printf",
+		Unknown1: 2,
+		Unknown2: 3,
+	},
+	`0x7fcc8d8ecff8 </usr/include/sys/cdefs.h:351:18, col:61> printf 2 3`:
+	ast.FormatAttr{
+		Address: "0x7fcc8d8ecff8",
+		Position: "/usr/include/sys/cdefs.h:351:18, col:61",
+		Implicit: false,
+		FunctionName: "printf",
+		Unknown1: 2,
+		Unknown2: 3,
+	},
 }
 
 func TestNodes(t *testing.T) {
