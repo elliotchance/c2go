@@ -460,6 +460,22 @@ var nodes = map[string]interface{}{
 		Position: "line:11:7, line:18:7",
 	},
 
+	// ImplicitCastExpr
+	`0x7f9f5b0a1288 <col:8> 'FILE *' <LValueToRValue>`:
+	ast.ImplicitCastExpr{
+		Address: "0x7f9f5b0a1288",
+		Position: "col:8",
+		Type: "FILE *",
+		Kind: "LValueToRValue",
+	},
+	`0x7f9f5b0a7828 <col:11> 'int (*)(int, FILE *)' <FunctionToPointerDecay>`:
+	ast.ImplicitCastExpr{
+		Address: "0x7f9f5b0a7828",
+		Position: "col:11",
+		Type: "int (*)(int, FILE *)",
+		Kind: "FunctionToPointerDecay",
+	},
+
 	// IntegerLiteral
 	`0x7fbe9804bcc8 <col:14> 'int' 1`:
 	ast.IntegerLiteral{
