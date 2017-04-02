@@ -18,6 +18,12 @@ var nodes = map[string]interface{}{
 		"char *",
 		"lvalue",
 	},
+	"0x7ff26d8224e8 </usr/include/sys/cdefs.h:569:36> \"_fopen\"":
+	ast.AsmLabelAttr{
+		"0x7ff26d8224e8",
+		"/usr/include/sys/cdefs.h:569:36",
+		"_fopen",
+	},
 }
 
 func TestNodes(t *testing.T) {
@@ -29,6 +35,8 @@ func TestNodes(t *testing.T) {
 			actual = ast.ParseAlwaysInlineAttr(line)
 		case ast.ArraySubscriptExpr:
 			actual = ast.ParseArraySubscriptExpr(line)
+		case ast.AsmLabelAttr:
+			actual = ast.ParseAsmLabelAttr(line)
 		default:
 			t.Errorf("unknown %v", ty)
 		}
