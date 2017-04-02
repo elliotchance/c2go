@@ -113,6 +113,8 @@ func Parse(line string) interface{} {
 		node = parseTypedefType(line)
 	case "UnaryOperator":
 		node = parseUnaryOperator(line)
+	case "VarDecl":
+		node = parseVarDecl(line)
 	case "WhileStmt":
 		node = parseWhileStmt(line)
 	default:

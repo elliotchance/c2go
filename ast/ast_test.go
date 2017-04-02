@@ -824,9 +824,41 @@ var nodes = map[string]interface{}{
 		Operator: "++",
 	},
 
+	// VarDecl
+	`0x7fd5e90e5a00 <col:14> col:17 'int'`:
+	ast.VarDecl{
+		Address: "0x7fd5e90e5a00",
+		Position: "col:14",
+		Position2: "col:17",
+		Name: "",
+		Type: "int",
+		Type2: "",
+		IsExtern: false,
+	},
+	`0x7fd5e90e9078 <line:156:1, col:14> col:14 __stdinp 'FILE *' extern`:
+	ast.VarDecl{
+		Address: "0x7fd5e90e9078",
+		Position: "line:156:1, col:14",
+		Position2: "col:14",
+		Name: "__stdinp",
+		Type: "FILE *",
+		Type2: "",
+		IsExtern: true,
+	},
+	`0x7fd5e90ed630 <col:40, col:47> col:47 __size 'size_t':'unsigned long'`:
+	ast.VarDecl{
+		Address: "0x7fd5e90ed630",
+		Position: "col:40, col:47",
+		Position2: "col:47",
+		Name: "__size",
+		Type: "size_t",
+		Type2: "unsigned long",
+		IsExtern: false,
+	},
+
 	// WhileStmt
 	`0x7fa1478273a0 <line:7:4, line:11:4>`:
-	ast.MallocAttr{
+	ast.WhileStmt{
 		Address: "0x7fa1478273a0",
 		Position: "line:7:4, line:11:4",
 	},
