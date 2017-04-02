@@ -155,6 +155,18 @@ var nodes = map[string]interface{}{
 		Type: "int",
 		Value: 10,
 	},
+
+	// CompoundStmt
+	`0x7fbd0f014f18 <col:54, line:358:1>`:
+	ast.CompoundStmt{
+		Address: "0x7fbd0f014f18",
+		Position: "col:54, line:358:1",
+	},
+	`0x7fbd0f8360b8 <line:4:1, line:13:1>`:
+	ast.CompoundStmt{
+		Address: "0x7fbd0f8360b8",
+		Position: "line:4:1, line:13:1",
+	},
 }
 
 func TestNodes(t *testing.T) {

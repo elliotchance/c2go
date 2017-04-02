@@ -29,6 +29,8 @@ func Parse(line string) interface{} {
 		node = parseCallExpr(line)
 	case "CharacterLiteral":
 		node = parseCharacterLiteral(line)
+	case "CompoundStmt":
+		node = parseCompoundStmt(line)
 	default:
 		panic(nodeName)
 	}
