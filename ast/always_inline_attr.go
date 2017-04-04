@@ -3,16 +3,18 @@ package ast
 type AlwaysInlineAttr struct {
 	Address  string
 	Position string
+	Children []interface{}
 }
 
-func parseAlwaysInlineAttr(line string) AlwaysInlineAttr {
+func parseAlwaysInlineAttr(line string) *AlwaysInlineAttr {
 	groups := groupsFromRegex(
 		"<(?P<position>.*)> always_inline",
 		line,
 	)
 
-	return AlwaysInlineAttr{
+	return &AlwaysInlineAttr{
 		Address: groups["address"],
 		Position: groups["position"],
+		Children: []interface{}{},
 	}
 }

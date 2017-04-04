@@ -21,10 +21,6 @@ import json
 #    it working on different versions of clang and different operating systems
 #    before we enough information to really standardise the process.
 
-regex = {
-    'VarDecl':           r"^ (?P<address>[0-9a-fx]+) ",
-}
-
 def build_tree(nodes, depth):
     """Convert an array of nodes, each prefixed with a depth into a tree."""
     if len(nodes) == 0:

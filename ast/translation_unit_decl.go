@@ -2,12 +2,14 @@ package ast
 
 type TranslationUnitDecl struct {
 	Address string
+	Children []interface{}
 }
 
-func parseTranslationUnitDecl(line string) TranslationUnitDecl {
+func parseTranslationUnitDecl(line string) *TranslationUnitDecl {
 	groups := groupsFromRegex("", line)
 
-	return TranslationUnitDecl{
+	return &TranslationUnitDecl{
 		Address: groups["address"],
+		Children: []interface{}{},
 	}
 }

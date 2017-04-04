@@ -11,11 +11,12 @@ type TypedefDecl struct {
 	Type2        string
 	IsImplicit   bool
 	IsReferenced bool
+	Children     []interface{}
 }
 
-func parseTypedefDecl(line string) TypedefDecl {
+func parseTypedefDecl(line string) *TypedefDecl {
 	groups := groupsFromRegex(
-		`<(?P<position>.+?)>(?P<position2> <invalid sloc>| [\w :\d]+?)?(?P<implicit> implicit)?(?P<referenced> referenced)? (?P<name>\w+) '(?P<type>.*?)'(?P<type2>:'.*?')?`,
+		`<(?P<position><invalid sloc>|.*?)>(?P<position2> <invalid sloc>| col:\d+)?(?P<implicit> implicit)?(?P<referenced> referenced)?(?P<name> \w+)?(?P<type> '.*?')?(?P<type2>:'.*?')?`,
 		line,
 	)
 
@@ -24,14 +25,15 @@ func parseTypedefDecl(line string) TypedefDecl {
 		type2 = type2[2:len(type2) - 1]
 	}
 
-	return TypedefDecl{
+	return &TypedefDecl{
 		Address: groups["address"],
 		Position: groups["position"],
 		Position2: strings.TrimSpace(groups["position2"]),
-		Name: groups["name"],
-		Type: groups["type"],
+		Name: strings.TrimSpace(groups["name"]),
+		Type: removeQuotes(groups["type"]),
 		Type2: type2,
 		IsImplicit: len(groups["implicit"]) > 0,
 		IsReferenced: len(groups["referenced"]) > 0,
+		Children: []interface{}{},
 	}
 }

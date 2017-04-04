@@ -10,9 +10,10 @@ type RecordDecl struct {
 	Kind       string
 	Name       string
 	Definition bool
+	Children []interface{}
 }
 
-func parseRecordDecl(line string) RecordDecl {
+func parseRecordDecl(line string) *RecordDecl {
 	groups := groupsFromRegex(
 		"(?P<prev>prev 0x[0-9a-f]+ )?<(?P<position>.*)> (?P<position2>[^ ]+ )?(?P<kind>struct|union)(?P<name>.*)",
 		line,
@@ -29,7 +30,7 @@ func parseRecordDecl(line string) RecordDecl {
 		definition = true
 	}
 
-	return RecordDecl{
+	return &RecordDecl{
 		Address: groups["address"],
 		Position: groups["position"],
 		Prev: groups["prev"],
@@ -37,5 +38,6 @@ func parseRecordDecl(line string) RecordDecl {
 		Kind: groups["kind"],
 		Name: name,
 		Definition: definition,
+		Children: []interface{}{},
 	}
 }

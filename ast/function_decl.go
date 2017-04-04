@@ -12,9 +12,10 @@ type FunctionDecl struct {
 	IsExtern   bool
 	IsImplicit bool
 	IsUsed     bool
+	Children []interface{}
 }
 
-func parseFunctionDecl(line string) FunctionDecl {
+func parseFunctionDecl(line string) *FunctionDecl {
 	groups := groupsFromRegex(
 		"(?P<prev>prev [0-9a-fx]+ )?<(?P<position1>.*)>(?P<position2> [^ ]+)?(?P<implicit> implicit)?(?P<used> used)? (?P<name>\\w+) '(?P<type>.*)'(?P<extern> extern)?",
 		line,
@@ -25,7 +26,7 @@ func parseFunctionDecl(line string) FunctionDecl {
 		prev = prev[5:len(prev) - 1]
 	}
 
-	return FunctionDecl{
+	return &FunctionDecl{
 		Address: groups["address"],
 		Position: groups["position1"],
 		Prev: prev,
@@ -35,5 +36,6 @@ func parseFunctionDecl(line string) FunctionDecl {
 		IsExtern: len(groups["extern"]) > 0,
 		IsImplicit: len(groups["implicit"]) > 0,
 		IsUsed: len(groups["used"]) > 0,
+		Children: []interface{}{},
 	}
 }

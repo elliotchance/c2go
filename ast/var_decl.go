@@ -10,9 +10,10 @@ type VarDecl struct {
 	Type      string
 	Type2     string
 	IsExtern  bool
+	Children []interface{}
 }
 
-func parseVarDecl(line string) VarDecl {
+func parseVarDecl(line string) *VarDecl {
 	groups := groupsFromRegex(
 		`<(?P<position>.*)>(?P<position2> \w+:\d+)?(?P<name> \w+)? '(?P<type>.+?)'(?P<type2>:'.*?')?(?P<extern> extern)?`,
 		line,
@@ -23,7 +24,7 @@ func parseVarDecl(line string) VarDecl {
 		type2 = type2[2:len(type2) - 1]
 	}
 
-	return VarDecl{
+	return &VarDecl{
 		Address: groups["address"],
 		Position: groups["position"],
 		Position2: strings.TrimSpace(groups["position2"]),
@@ -31,5 +32,6 @@ func parseVarDecl(line string) VarDecl {
 		Type: groups["type"],
 		Type2: type2,
 		IsExtern: len(groups["extern"]) > 0,
+		Children: []interface{}{},
 	}
 }

@@ -12,6 +12,7 @@ var nodes = map[string]interface{}{
 	ast.AlwaysInlineAttr{
 		Address: "0x7fce780f5018",
 		Position: "/usr/include/sys/cdefs.h:313:68",
+		Children: []interface{}{},
 	},
 
 	// ArraySubscriptExpr
@@ -21,6 +22,7 @@ var nodes = map[string]interface{}{
 		Position: "col:63, col:69",
 		Type: "char *",
 		Kind: "lvalue",
+		Children: []interface{}{},
 	},
 
 	// AsmLabelAttr
@@ -29,6 +31,7 @@ var nodes = map[string]interface{}{
 		Address: "0x7ff26d8224e8",
 		Position: "/usr/include/sys/cdefs.h:569:36",
 		FunctionName: "_fopen",
+		Children: []interface{}{},
 	},
 
 	// AvailabilityAttr
@@ -43,6 +46,7 @@ var nodes = map[string]interface{}{
 		Unavailable: false,
 		Message1: "",
 		Message2: "",
+		Children: []interface{}{},
 	},
 	`0x7fc5ff8e60d0 </usr/include/Availability.h:215:81, col:115> watchos 3.0 0 0 "" ""`:
 	ast.AvailabilityAttr{
@@ -55,6 +59,7 @@ var nodes = map[string]interface{}{
 		Unavailable: false,
 		Message1: "",
 		Message2: "",
+		Children: []interface{}{},
 	},
 	`0x7fc5ff8e6170 <col:81, col:115> tvos 10.0 0 0 "" ""`:
 	ast.AvailabilityAttr{
@@ -67,6 +72,7 @@ var nodes = map[string]interface{}{
 		Unavailable: false,
 		Message1: "",
 		Message2: "",
+		Children: []interface{}{},
 	},
 	`0x7fc5ff8e61d8 <col:81, col:115> ios 10.0 0 0 "" ""`:
 	ast.AvailabilityAttr{
@@ -79,6 +85,7 @@ var nodes = map[string]interface{}{
 		Unavailable: false,
 		Message1: "",
 		Message2: "",
+		Children: []interface{}{},
 	},
 	`0x7fc5ff8f0e18 </usr/include/sys/cdefs.h:275:50, col:99> swift 0 0 0 Unavailable "Use snprintf instead." ""`:
 	ast.AvailabilityAttr{
@@ -91,6 +98,7 @@ var nodes = map[string]interface{}{
 		Unavailable: true,
 		Message1: "Use snprintf instead.",
 		Message2: "",
+		Children: []interface{}{},
 	},
 	`0x7fc5ff8f1988 <line:275:50, col:99> swift 0 0 0 Unavailable "Use mkstemp(3) instead." ""`:
 	ast.AvailabilityAttr{
@@ -103,6 +111,7 @@ var nodes = map[string]interface{}{
 		Unavailable: true,
 		Message1: "Use mkstemp(3) instead.",
 		Message2: "",
+		Children: []interface{}{},
 	},
 
 	// BinaryOperator
@@ -112,6 +121,7 @@ var nodes = map[string]interface{}{
 		Position: "col:11, col:23",
 		Type: "unsigned char",
 		Operator: "=",
+		Children: []interface{}{},
 	},
 
 	// BreakStmt
@@ -119,6 +129,7 @@ var nodes = map[string]interface{}{
 	ast.BreakStmt{
 		Address: "0x7fca2d8070e0",
 		Position: "col:11, col:23",
+		Children: []interface{}{},
 	},
 
 	// BuiltinType
@@ -126,11 +137,13 @@ var nodes = map[string]interface{}{
 	ast.BuiltinType{
 		Address: "0x7f8a43023f40",
 		Type: "__int128",
+		Children: []interface{}{},
 	},
 	`0x7f8a43023ea0 'unsigned long long'`:
 	ast.BuiltinType{
 		Address: "0x7f8a43023ea0",
 		Type: "unsigned long long",
+		Children: []interface{}{},
 	},
 
 	// CallExpr
@@ -139,12 +152,14 @@ var nodes = map[string]interface{}{
 		Address: "0x7f9bf3033240",
 		Position: "col:11, col:25",
 		Type: "int",
+		Children: []interface{}{},
 	},
 	`0x7f9bf3035c20 <line:7:4, col:64> 'int'`:
 	ast.CallExpr{
 		Address: "0x7f9bf3035c20",
 		Position: "line:7:4, col:64",
 		Type: "int",
+		Children: []interface{}{},
 	},
 
 	// CharacterLiteral
@@ -154,6 +169,7 @@ var nodes = map[string]interface{}{
 		Position: "col:62",
 		Type: "int",
 		Value: 10,
+		Children: []interface{}{},
 	},
 
 	// CompoundStmt
@@ -161,11 +177,13 @@ var nodes = map[string]interface{}{
 	ast.CompoundStmt{
 		Address: "0x7fbd0f014f18",
 		Position: "col:54, line:358:1",
+		Children: []interface{}{},
 	},
 	`0x7fbd0f8360b8 <line:4:1, line:13:1>`:
 	ast.CompoundStmt{
 		Address: "0x7fbd0f8360b8",
 		Position: "line:4:1, line:13:1",
+		Children: []interface{}{},
 	},
 
 	// ConstAttr
@@ -174,6 +192,7 @@ var nodes = map[string]interface{}{
 		Address: "0x7fa3b88bbb38",
 		Position: "line:4:1, line:13:1",
 		Tags: "foo",
+		Children: []interface{}{},
 	},
 
 	// ConstantArrayType
@@ -182,12 +201,14 @@ var nodes = map[string]interface{}{
 		Address: "0x7f94ad016a40",
 		Type: "struct __va_list_tag [1]",
 		Size: 1,
+		Children: []interface{}{},
 	},
 	`0x7f8c5f059d20 'char [37]' 37`:
 	ast.ConstantArrayType{
 		Address: "0x7f8c5f059d20",
 		Type: "char [37]",
 		Size: 37,
+		Children: []interface{}{},
 	},
 
 	// CStyleCastExpr
@@ -197,6 +218,7 @@ var nodes = map[string]interface{}{
 		Position: "col:50, col:56",
 		Type: "char",
 		Kind: "IntegralCast",
+		Children: []interface{}{},
 	},
 
 	// DeclRefExpr
@@ -210,6 +232,7 @@ var nodes = map[string]interface{}{
 		Address2: "0x7fc9720642d0",
 		Name: "_p",
 		Type2: "FILE *",
+		Children: []interface{}{},
 	},
 	`0x7fc97206a958 <col:11> 'int (int, FILE *)' Function 0x7fc972064198 '__swbuf' 'int (int, FILE *)'`:
 	ast.DeclRefExpr{
@@ -221,6 +244,7 @@ var nodes = map[string]interface{}{
 		Address2: "0x7fc972064198",
 		Name: "__swbuf",
 		Type2: "int (int, FILE *)",
+		Children: []interface{}{},
 	},
 	`0x7fa36680f170 <col:19> 'struct programming':'struct programming' lvalue Var 0x7fa36680dc20 'variable' 'struct programming':'struct programming'`:
 	ast.DeclRefExpr{
@@ -232,6 +256,7 @@ var nodes = map[string]interface{}{
 		Address2: "0x7fa36680dc20",
 		Name: "variable",
 		Type2: "struct programming",
+		Children: []interface{}{},
 	},
 
 	// DeclStmt
@@ -239,6 +264,7 @@ var nodes = map[string]interface{}{
 	ast.DeclStmt{
 		Address: "0x7fb791846e80",
 		Position: "line:11:4, col:31",
+		Children: []interface{}{},
 	},
 
 	// DeprecatedAttr
@@ -248,6 +274,7 @@ var nodes = map[string]interface{}{
 		Position: "line:180:48, col:63",
 		Message1: "This function is provided for compatibility reasons only.  Due to security concerns inherent in the design of tempnam(3), it is highly recommended that you use mkstemp(3) instead.",
 		Message2: "",
+		Children: []interface{}{},
 	},
 
 	// ElaboratedType
@@ -256,6 +283,7 @@ var nodes = map[string]interface{}{
 		Address: "0x7f873686c120",
 		Type: "union __mbstate_t",
 		Tags: "sugar",
+		Children: []interface{}{},
 	},
 
 	// Enum
@@ -263,6 +291,7 @@ var nodes = map[string]interface{}{
 	ast.Enum{
 		Address: "0x7f980b858308",
 		Name: "foo",
+		Children: []interface{}{},
 	},
 
 	// EnumDecl
@@ -272,6 +301,7 @@ var nodes = map[string]interface{}{
 		Position: "line:180:1, line:186:1",
 		Position2: "",
 		Name: "__codecvt_result",
+		Children: []interface{}{},
 	},
 
 	// EnumConstantDecl
@@ -282,6 +312,7 @@ var nodes = map[string]interface{}{
 		Position2: "",
 		Name: "__codecvt_noconv",
 		Type: "int",
+		Children: []interface{}{},
 	},
 
 	// EnumType
@@ -289,6 +320,7 @@ var nodes = map[string]interface{}{
 	ast.EnumType{
 		Address: "0x7f980b858309",
 		Name: "foo",
+		Children: []interface{}{},
 	},
 
 	// FieldDecl
@@ -300,6 +332,7 @@ var nodes = map[string]interface{}{
 		Name: "_ur",
 		Type: "int",
 		Referenced: false,
+		Children: []interface{}{},
 	},
 	`0x7fef510c46f8 <line:139:2, col:16> col:16 _ub 'struct __sbuf':'struct __sbuf'`:
 	ast.FieldDecl{
@@ -309,6 +342,7 @@ var nodes = map[string]interface{}{
 		Name: "_ub",
 		Type: "struct __sbuf",
 		Referenced: false,
+		Children: []interface{}{},
 	},
 	`0x7fef510c3fe0 <line:134:2, col:19> col:19 _read 'int (* _Nullable)(void *, char *, int)':'int (*)(void *, char *, int)'`:
 	ast.FieldDecl{
@@ -318,6 +352,7 @@ var nodes = map[string]interface{}{
 		Name: "_read",
 		Type: "int (* _Nullable)(void *, char *, int)",
 		Referenced: false,
+		Children: []interface{}{},
 	},
 	`0x7fef51073a60 <line:105:2, col:40> col:40 __cleanup_stack 'struct __darwin_pthread_handler_rec *'`:
 	ast.FieldDecl{
@@ -327,6 +362,7 @@ var nodes = map[string]interface{}{
 		Name: "__cleanup_stack",
 		Type: "struct __darwin_pthread_handler_rec *",
 		Referenced: false,
+		Children: []interface{}{},
 	},
 	`0x7fef510738e8 <line:100:2, col:43> col:7 __opaque 'char [16]'`:
 	ast.FieldDecl{
@@ -336,6 +372,7 @@ var nodes = map[string]interface{}{
 		Name: "__opaque",
 		Type: "char [16]",
 		Referenced: false,
+		Children: []interface{}{},
 	},
 	`0x7fe9f5072268 <line:129:2, col:6> col:6 referenced _lbfsize 'int'`:
 	ast.FieldDecl{
@@ -345,6 +382,7 @@ var nodes = map[string]interface{}{
 		Name: "_lbfsize",
 		Type: "int",
 		Referenced: true,
+		Children: []interface{}{},
 	},
 
 	// FloatingLiteral
@@ -354,6 +392,7 @@ var nodes = map[string]interface{}{
 		Position: "col:24",
 		Type: "double",
 		Value: 1.23,
+		Children: []interface{}{},
 	},
 
 	// FormatAttr
@@ -365,6 +404,7 @@ var nodes = map[string]interface{}{
 		FunctionName: "printf",
 		Unknown1: 2,
 		Unknown2: 3,
+		Children: []interface{}{},
 	},
 	`0x7fcc8d8ecff8 </usr/include/sys/cdefs.h:351:18, col:61> printf 2 3`:
 	ast.FormatAttr{
@@ -374,6 +414,7 @@ var nodes = map[string]interface{}{
 		FunctionName: "printf",
 		Unknown1: 2,
 		Unknown2: 3,
+		Children: []interface{}{},
 	},
 
 	// FunctionDecl
@@ -388,6 +429,7 @@ var nodes = map[string]interface{}{
 		IsExtern: false,
 		IsImplicit: false,
 		IsUsed: false,
+		Children: []interface{}{},
 	},
 	`0x7fb5a90e2a50 </usr/include/sys/stdio.h:39:1, /usr/include/AvailabilityInternal.h:21697:126> /usr/include/sys/stdio.h:39:5 renameat 'int (int, const char *, int, const char *)'`:
 	ast.FunctionDecl{
@@ -400,6 +442,7 @@ var nodes = map[string]interface{}{
 		IsExtern: false,
 		IsImplicit: false,
 		IsUsed: false,
+		Children: []interface{}{},
 	},
 	`0x7fb5a90e9b70 </usr/include/stdio.h:244:6> col:6 implicit fprintf 'int (FILE *, const char *, ...)' extern`:
 	ast.FunctionDecl{
@@ -412,6 +455,7 @@ var nodes = map[string]interface{}{
 		IsExtern: true,
 		IsImplicit: true,
 		IsUsed: false,
+		Children: []interface{}{},
 	},
 	`0x7fb5a90e9d40 prev 0x7fb5a90e9b70 <col:1, /usr/include/sys/cdefs.h:351:63> /usr/include/stdio.h:244:6 fprintf 'int (FILE *, const char *, ...)'`:
 	ast.FunctionDecl{
@@ -424,6 +468,7 @@ var nodes = map[string]interface{}{
 		IsExtern: false,
 		IsImplicit: false,
 		IsUsed: false,
+		Children: []interface{}{},
 	},
 	`0x7fb5a90ec210 <line:259:6> col:6 implicit used printf 'int (const char *, ...)' extern`:
 	ast.FunctionDecl{
@@ -436,6 +481,7 @@ var nodes = map[string]interface{}{
 		IsExtern: true,
 		IsImplicit: true,
 		IsUsed: true,
+		Children: []interface{}{},
 	},
 
 	// FunctionProtoType
@@ -444,6 +490,7 @@ var nodes = map[string]interface{}{
 		Address: "0x7fa3b88bbb30",
 		Type: "struct _opaque_pthread_t *",
 		Kind: "foo",
+		Children: []interface{}{},
 	},
 
 	// ForStmt
@@ -451,6 +498,7 @@ var nodes = map[string]interface{}{
 	ast.ForStmt{
 		Address: "0x7f961e018848",
 		Position: "line:9:4, line:10:70",
+		Children: []interface{}{},
 	},
 
 	// IfStmt
@@ -458,6 +506,7 @@ var nodes = map[string]interface{}{
 	ast.IfStmt{
 		Address: "0x7fc0a69091d0",
 		Position: "line:11:7, line:18:7",
+		Children: []interface{}{},
 	},
 
 	// ImplicitCastExpr
@@ -467,6 +516,7 @@ var nodes = map[string]interface{}{
 		Position: "col:8",
 		Type: "FILE *",
 		Kind: "LValueToRValue",
+		Children: []interface{}{},
 	},
 	`0x7f9f5b0a7828 <col:11> 'int (*)(int, FILE *)' <FunctionToPointerDecay>`:
 	ast.ImplicitCastExpr{
@@ -474,6 +524,7 @@ var nodes = map[string]interface{}{
 		Position: "col:11",
 		Type: "int (*)(int, FILE *)",
 		Kind: "FunctionToPointerDecay",
+		Children: []interface{}{},
 	},
 
 	// IntegerLiteral
@@ -483,6 +534,7 @@ var nodes = map[string]interface{}{
 		Position: "col:14",
 		Type: "int",
 		Value: 1,
+		Children: []interface{}{},
 	},
 
 	// MallocAttr
@@ -490,6 +542,7 @@ var nodes = map[string]interface{}{
 	ast.MallocAttr{
 		Address: "0x7fc0a69091d1",
 		Position: "line:11:7, line:18:7",
+		Children: []interface{}{},
 	},
 
 	// MemberExpr
@@ -501,6 +554,7 @@ var nodes = map[string]interface{}{
 		Lvalue: true,
 		Name: "_w",
 		Address2: "0x7fcc758d60c8",
+		Children: []interface{}{},
 	},
 	`0x7fcc76004210 <col:12, col:16> 'unsigned char *' lvalue ->_p 0x7fcc758d6018`:
 	ast.MemberExpr{
@@ -510,6 +564,7 @@ var nodes = map[string]interface{}{
 		Lvalue: true,
 		Name: "_p",
 		Address2: "0x7fcc758d6018",
+		Children: []interface{}{},
 	},
 	`0x7f85338325b0 <col:4, col:13> 'float' lvalue .constant 0x7f8533832260`:
 	ast.MemberExpr{
@@ -519,6 +574,7 @@ var nodes = map[string]interface{}{
 		Lvalue: true,
 		Name: "constant",
 		Address2: "0x7f8533832260",
+		Children: []interface{}{},
 	},
 	`0x7f8533832670 <col:4, col:13> 'char *' lvalue .pointer 0x7f85338322b8`:
 	ast.MemberExpr{
@@ -528,6 +584,7 @@ var nodes = map[string]interface{}{
 		Lvalue: true,
 		Name: "pointer",
 		Address2: "0x7f85338322b8",
+		Children: []interface{}{},
 	},
 
 	// ModeAttr
@@ -536,6 +593,7 @@ var nodes = map[string]interface{}{
 		Address: "0x7f980b858309",
 		Position: "line:11:7, line:18:7",
 		Name: "foo",
+		Children: []interface{}{},
 	},
 
 	// NoThrowAttr
@@ -543,6 +601,7 @@ var nodes = map[string]interface{}{
 	ast.NoThrowAttr{
 		Address: "0x7fa1488273a0",
 		Position: "line:7:4, line:11:4",
+		Children: []interface{}{},
 	},
 
 	// NotNullAttr
@@ -550,6 +609,7 @@ var nodes = map[string]interface{}{
 	ast.NotNullAttr{
 		Address: "0x7fa1488273b0",
 		Position: "line:7:4, line:11:4",
+		Children: []interface{}{},
 	},
 
 	// ParenExpr
@@ -558,6 +618,7 @@ var nodes = map[string]interface{}{
 		Address: "0x7fb0bc8b2308",
 		Position: "col:10, col:25",
 		Type: "unsigned char",
+		Children: []interface{}{},
 	},
 
 	// ParmVarDecl
@@ -570,6 +631,7 @@ var nodes = map[string]interface{}{
 		Name: "",
 		Type2: "",
 		IsUsed: false,
+		Children: []interface{}{},
 	},
 	`0x7f973380f070 <col:19, col:30> col:31 'const char *'`:
 	ast.ParmVarDecl{
@@ -580,6 +642,7 @@ var nodes = map[string]interface{}{
 		Name: "",
 		Type2: "",
 		IsUsed: false,
+		Children: []interface{}{},
 	},
 	`0x7f9733816e50 <col:13, col:37> col:37 __filename 'const char *__restrict'`:
 	ast.ParmVarDecl{
@@ -590,6 +653,7 @@ var nodes = map[string]interface{}{
 		Name: "__filename",
 		Type2: "",
 		IsUsed: false,
+		Children: []interface{}{},
 	},
 	`0x7f9733817418 <<invalid sloc>> <invalid sloc> 'FILE *'`:
 	ast.ParmVarDecl{
@@ -600,6 +664,7 @@ var nodes = map[string]interface{}{
 		Name: "",
 		Type2: "",
 		IsUsed: false,
+		Children: []interface{}{},
 	},
 	`0x7f9733817c30 <col:40, col:47> col:47 __size 'size_t':'unsigned long'`:
 	ast.ParmVarDecl{
@@ -610,6 +675,7 @@ var nodes = map[string]interface{}{
 		Name: "__size",
 		Type2: "unsigned long",
 		IsUsed: false,
+		Children: []interface{}{},
 	},
 	`0x7f973382fa10 <line:476:18, col:25> col:34 'int (* _Nullable)(void *, char *, int)':'int (*)(void *, char *, int)'`:
 	ast.ParmVarDecl{
@@ -620,6 +686,7 @@ var nodes = map[string]interface{}{
 		Name: "",
 		Type2: "int (*)(void *, char *, int)",
 		IsUsed: false,
+		Children: []interface{}{},
 	},
 	`0x7f97338355b8 <col:10, col:14> col:14 used argc 'int'`:
 	ast.ParmVarDecl{
@@ -630,6 +697,7 @@ var nodes = map[string]interface{}{
 		Name: "argc",
 		Type2: "",
 		IsUsed: true,
+		Children: []interface{}{},
 	},
 
 	// PointerType
@@ -637,6 +705,7 @@ var nodes = map[string]interface{}{
 	ast.PointerType{
 		Address: "0x7fa3b88bbb30",
 		Type: "struct _opaque_pthread_t *",
+		Children: []interface{}{},
 	},
 
 	// PredefinedExpr
@@ -647,6 +716,7 @@ var nodes = map[string]interface{}{
 		Type: "const char [25]",
 		Lvalue: true,
 		Name: "__PRETTY_FUNCTION__",
+		Children: []interface{}{},
 	},
 
 	// QualType
@@ -655,6 +725,7 @@ var nodes = map[string]interface{}{
 		Address: "0x7fa3b88bbb31",
 		Type: "struct _opaque_pthread_t *",
 		Kind: "foo",
+		Children: []interface{}{},
 	},
 
 	// Record
@@ -662,6 +733,7 @@ var nodes = map[string]interface{}{
 	ast.Record{
 		Address: "0x7fd3ab857950",
 		Type: "__sFILE",
+		Children: []interface{}{},
 	},
 
 	// RecordDecl
@@ -674,6 +746,7 @@ var nodes = map[string]interface{}{
 		Kind: "union",
 		Name: "",
 		Definition: true,
+		Children: []interface{}{},
 	},
 	`0x7f85360285c8 </usr/include/sys/_pthread/_pthread_types.h:57:1, line:61:1> line:57:8 struct __darwin_pthread_handler_rec definition`:
 	ast.RecordDecl{
@@ -684,6 +757,7 @@ var nodes = map[string]interface{}{
 		Kind: "struct",
 		Name: "__darwin_pthread_handler_rec",
 		Definition: true,
+		Children: []interface{}{},
 	},
 	`0x7f85370248a0 <line:94:1, col:8> col:8 struct __sFILEX`:
 	ast.RecordDecl{
@@ -694,6 +768,7 @@ var nodes = map[string]interface{}{
 		Kind: "struct",
 		Name: "__sFILEX",
 		Definition: false,
+		Children: []interface{}{},
 	},
 
 	// RecordType
@@ -701,6 +776,7 @@ var nodes = map[string]interface{}{
 	ast.RecordType{
 		Address: "0x7fd3ab84dda0",
 		Type: "struct _opaque_pthread_condattr_t",
+		Children: []interface{}{},
 	},
 
 	// RestrictAttr
@@ -709,6 +785,7 @@ var nodes = map[string]interface{}{
 		Address: "0x7f980b858305",
 		Position: "line:11:7, line:18:7",
 		Name: "foo",
+		Children: []interface{}{},
 	},
 
 	// ReturnStmt
@@ -716,6 +793,7 @@ var nodes = map[string]interface{}{
 	ast.ReturnStmt{
 		Address: "0x7fbb7a8325e0",
 		Position: "line:13:4, col:11",
+		Children: []interface{}{},
 	},
 
 	// StringLiteral
@@ -726,12 +804,14 @@ var nodes = map[string]interface{}{
 		Type: "char [45]",
 		Lvalue: true,
 		Value: "Number of command line arguments passed: %d\n",
+		Children: []interface{}{},
 	},
 
 	// TranslationUnitDecl
 	`0x7fe78a815ed0 <<invalid sloc>> <invalid sloc>`:
 	ast.TranslationUnitDecl{
 		Address: "0x7fe78a815ed0",
+		Children: []interface{}{},
 	},
 
 	// Typedef
@@ -739,9 +819,22 @@ var nodes = map[string]interface{}{
 	ast.Typedef{
 		Address: "0x7f84d10dc1d0",
 		Type: "__darwin_ssize_t",
+		Children: []interface{}{},
 	},
 
 	// TypedefDecl
+	`0x7fdef0862430 <line:120:1, col:16> col:16`:
+	ast.TypedefDecl{
+		Address: "0x7fdef0862430",
+		Position: "line:120:1, col:16",
+		Position2: "col:16",
+		Name: "",
+		Type: "",
+		Type2: "",
+		IsImplicit: false,
+		IsReferenced: false,
+		Children: []interface{}{},
+	},
 	`0x7ffb9f824278 <<invalid sloc>> <invalid sloc> implicit __uint128_t 'unsigned __int128'`:
 	ast.TypedefDecl{
 		Address: "0x7ffb9f824278",
@@ -752,6 +845,7 @@ var nodes = map[string]interface{}{
 		Type2: "",
 		IsImplicit: true,
 		IsReferenced: false,
+		Children: []interface{}{},
 	},
 	`0x7ffb9f824898 <<invalid sloc>> <invalid sloc> implicit referenced __builtin_va_list 'struct __va_list_tag [1]'`:
 	ast.TypedefDecl{
@@ -763,6 +857,7 @@ var nodes = map[string]interface{}{
 		Type2: "",
 		IsImplicit: true,
 		IsReferenced: true,
+		Children: []interface{}{},
 	},
 	`0x7ffb9f8248f8 </usr/include/i386/_types.h:37:1, col:24> col:24 __int8_t 'signed char'`:
 	ast.TypedefDecl{
@@ -774,6 +869,7 @@ var nodes = map[string]interface{}{
 		Type2: "",
 		IsImplicit: false,
 		IsReferenced: false,
+		Children: []interface{}{},
 	},
 	`0x7ffb9f8dbf50 <line:98:1, col:27> col:27 referenced __darwin_va_list '__builtin_va_list':'struct __va_list_tag [1]'`:
 	ast.TypedefDecl{
@@ -785,6 +881,7 @@ var nodes = map[string]interface{}{
 		Type2: "struct __va_list_tag [1]",
 		IsImplicit: false,
 		IsReferenced: true,
+		Children: []interface{}{},
 	},
 
 	// TypedefType
@@ -793,6 +890,7 @@ var nodes = map[string]interface{}{
 		Address: "0x7f887a0dc760",
 		Type: "__uint16_t",
 		Tags: "sugar",
+		Children: []interface{}{},
 	},
 
 	// UnaryOperator
@@ -804,6 +902,7 @@ var nodes = map[string]interface{}{
 		IsLvalue: false,
 		IsPrefix: true,
 		Operator: "--",
+		Children: []interface{}{},
 	},
 	`0x7fe0260fb468 <col:11, col:18> 'unsigned char' lvalue prefix '*'`:
 	ast.UnaryOperator{
@@ -813,6 +912,7 @@ var nodes = map[string]interface{}{
 		IsLvalue: true,
 		IsPrefix: true,
 		Operator: "*",
+		Children: []interface{}{},
 	},
 	`0x7fe0260fb448 <col:12, col:18> 'unsigned char *' postfix '++'`:
 	ast.UnaryOperator{
@@ -822,6 +922,7 @@ var nodes = map[string]interface{}{
 		IsLvalue: false,
 		IsPrefix: false,
 		Operator: "++",
+		Children: []interface{}{},
 	},
 
 	// VarDecl
@@ -834,6 +935,7 @@ var nodes = map[string]interface{}{
 		Type: "int",
 		Type2: "",
 		IsExtern: false,
+		Children: []interface{}{},
 	},
 	`0x7fd5e90e9078 <line:156:1, col:14> col:14 __stdinp 'FILE *' extern`:
 	ast.VarDecl{
@@ -844,6 +946,7 @@ var nodes = map[string]interface{}{
 		Type: "FILE *",
 		Type2: "",
 		IsExtern: true,
+		Children: []interface{}{},
 	},
 	`0x7fd5e90ed630 <col:40, col:47> col:47 __size 'size_t':'unsigned long'`:
 	ast.VarDecl{
@@ -854,6 +957,7 @@ var nodes = map[string]interface{}{
 		Type: "size_t",
 		Type2: "unsigned long",
 		IsExtern: false,
+		Children: []interface{}{},
 	},
 
 	// WhileStmt
@@ -861,6 +965,7 @@ var nodes = map[string]interface{}{
 	ast.WhileStmt{
 		Address: "0x7fa1478273a0",
 		Position: "line:7:4, line:11:4",
+		Children: []interface{}{},
 	},
 }
 
@@ -868,10 +973,12 @@ func TestNodes(t *testing.T) {
 	for line, expected := range nodes {
 		// Append the name of the struct onto the front. This would make
 		// the complete line it would normally be parsing.
-		actual := ast.Parse(reflect.TypeOf(expected).Name() + " " + line)
+		actual := ast.Parse(
+			reflect.TypeOf(expected).Name() + " " + line)
 
-		if expected != actual {
-			t.Errorf("\nexpected: %#v\n     got: %#v\n\n", expected, actual)
+		if !reflect.DeepEqual(expected, actual) {
+			t.Errorf("\nexpected: %#v\n     got: %#v\n\n",
+				expected, actual)
 		}
 	}
 }

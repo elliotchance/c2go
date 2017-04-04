@@ -3,16 +3,18 @@ package ast
 type ReturnStmt struct {
 	Address  string
 	Position string
+	Children []interface{}
 }
 
-func parseReturnStmt(line string) ReturnStmt {
+func parseReturnStmt(line string) *ReturnStmt {
 	groups := groupsFromRegex(
 		"<(?P<position>.*)>",
 		line,
 	)
 
-	return ReturnStmt{
+	return &ReturnStmt{
 		Address: groups["address"],
 		Position: groups["position"],
+		Children: []interface{}{},
 	}
 }

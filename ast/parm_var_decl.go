@@ -10,9 +10,10 @@ type ParmVarDecl struct {
 	Type      string
 	Type2     string
 	IsUsed    bool
+	Children []interface{}
 }
 
-func parseParmVarDecl(line string) ParmVarDecl {
+func parseParmVarDecl(line string) *ParmVarDecl {
 	groups := groupsFromRegex(
 		"<(?P<position>.*)>(?P<position2> [^ ]+:[\\d:]+)?(?P<used> used)?(?P<name> \\w+)? '(?P<type>.*?)'(?P<type2>:'.*?')?",
 		line,
@@ -28,7 +29,7 @@ func parseParmVarDecl(line string) ParmVarDecl {
 		groups["position2"] = "<invalid sloc>"
 	}
 
-	return ParmVarDecl{
+	return &ParmVarDecl{
 		Address: groups["address"],
 		Position: groups["position"],
 		Position2: strings.TrimSpace(groups["position2"]),
@@ -36,5 +37,6 @@ func parseParmVarDecl(line string) ParmVarDecl {
 		Type: groups["type"],
 		Type2: type2,
 		IsUsed: len(groups["used"]) > 0,
+		Children: []interface{}{},
 	}
 }

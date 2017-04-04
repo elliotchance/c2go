@@ -6,19 +6,21 @@ type PredefinedExpr struct {
 	Type     string
 	Name     string
 	Lvalue   bool
+	Children []interface{}
 }
 
-func parsePredefinedExpr(line string) PredefinedExpr {
+func parsePredefinedExpr(line string) *PredefinedExpr {
 	groups := groupsFromRegex(
 		"<(?P<position>.*)> '(?P<type>.*)' lvalue (?P<name>.*)",
 		line,
 	)
 
-	return PredefinedExpr{
+	return &PredefinedExpr{
 		Address: groups["address"],
 		Position: groups["position"],
 		Type: groups["type"],
 		Name: groups["name"],
 		Lvalue: true,
+		Children: []interface{}{},
 	}
 }

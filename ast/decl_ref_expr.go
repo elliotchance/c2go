@@ -9,15 +9,16 @@ type DeclRefExpr struct {
 	Address2 string
 	Name     string
 	Type2    string
+	Children []interface{}
 }
 
-func parseDeclRefExpr(line string) DeclRefExpr {
+func parseDeclRefExpr(line string) *DeclRefExpr {
 	groups := groupsFromRegex(
 		"<(?P<position>.*)> '(?P<type>.*?)'.*?(?P<lvalue> lvalue)? (?P<for>\\w+) (?P<address2>[0-9a-fx]+) '(?P<name>.*?)' '(?P<type2>.*?)'",
 		line,
 	)
 
-	return DeclRefExpr{
+	return &DeclRefExpr{
 		Address: groups["address"],
 		Position: groups["position"],
 		Type: groups["type"],
@@ -26,5 +27,6 @@ func parseDeclRefExpr(line string) DeclRefExpr {
 		Address2: groups["address2"],
 		Name: groups["name"],
 		Type2: groups["type2"],
+		Children: []interface{}{},
 	}
 }

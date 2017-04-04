@@ -118,7 +118,7 @@ func Parse(line string) interface{} {
 	case "WhileStmt":
 		node = parseWhileStmt(line)
 	default:
-		panic(nodeName)
+		panic("'" + line + "'")
 	}
 
 	return node
@@ -159,9 +159,15 @@ func removeQuotes(s string) string {
 	if s == `""` {
 		return ""
 	}
+	if s == `''` {
+		return ""
+	}
 
 	if len(s) >= 2 && s[0] == '"' && s[len(s) - 1] == '"' {
 		return s[1:len(s) - 2]
+	}
+	if len(s) >= 2 && s[0] == '\'' && s[len(s) - 1] == '\'' {
+		return s[1:len(s) - 1]
 	}
 
 	return s
