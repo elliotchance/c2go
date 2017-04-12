@@ -532,24 +532,30 @@ func renderExpression(node interface{}) []string {
 	//        return 'noarch.Ternary(%s, func () interface{} { return %s }, func () interface{} { return %s })' % (a, b, c), node['type']
 }
 
-//def get_function_params(nodes):
-//    if 'children' not in nodes:
-//        return []
-//
-//    return [n for n in nodes['children'] if n['node'] == 'ParmVarDecl']
-//
-//def get_function_return_type(f):
-//    # The type of the function will be the complete prototype, like:
-//    #
-//    #     __inline_isfinitef(float) int
-//    #
-//    # will have a type of:
-//    #
-//    #     int (float)
-//    #
-//    # The arguments will handle themselves, we only care about the
-//    # return type ('int' in this case)
-//    return f.split('(')[0].strip()
+func getFunctionParams(f *ast.FunctionDecl) []*ast.ParmVarDecl {
+	r := []*ast.ParmVarDecl{}
+	for _, n := range f.Children {
+		if v, ok := n.(*ast.ParmVarDecl); ok {
+			r = append(r, v)
+		}
+	}
+
+	return r
+}
+
+func getFunctionReturnType(f string) string {
+	// The type of the function will be the complete prototype, like:
+	//
+	//     __inline_isfinitef(float) int
+	//
+	// will have a type of:
+	//
+	//     int (float)
+	//
+	// The arguments will handle themselves, we only care about the
+	// return type ('int' in this case)
+	return strings.TrimSpace(strings.Split(f, "(")[0])
+}
 
 func Render(out *bytes.Buffer, node interface{}, function_name string, indent int, return_type string) {
 	switch n := node.(type) {
@@ -623,48 +629,66 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 		printLine(out, renderExpression(node)[0], indent+1)
 		return
 
+	case *ast.FunctionDecl:
+		function_name = strings.TrimSpace(n.Name)
+
+		if function_name == "__istype" || function_name == "__isctype" ||
+			function_name == "__wcwidth" || function_name == "__sputc" ||
+			function_name == "__inline_signbitf" ||
+			function_name == "__inline_signbitd" ||
+			function_name == "__inline_signbitl" {
+			return
+		}
+
+		has_body := false
+		if len(n.Children) > 0 {
+			for _, c := range n.Children {
+				if _, ok := c.(*ast.CompoundStmt); ok {
+					has_body = true
+				}
+			}
+		}
+
+		args := []string{}
+		for _, a := range getFunctionParams(n) {
+			args = append(args, fmt.Sprintf("%s %s", a.Name, resolveType(a.Type)))
+		}
+
+		if has_body {
+			return_type := getFunctionReturnType(n.Type)
+
+			if function_name == "main" {
+				printLine(out, "func main() {", indent)
+			} else {
+				printLine(out, fmt.Sprintf("func %s(%s) %s {",
+					function_name, strings.Join(args, ", "),
+					resolveType(return_type)), indent)
+			}
+
+			for _, c := range n.Children {
+				if _, ok := c.(*ast.CompoundStmt); ok {
+					Render(out, c, function_name,
+						indent+1, n.Type)
+				}
+			}
+
+			printLine(out, "}\n", indent)
+
+			params := []string{}
+			for _, v := range getFunctionParams(n) {
+				params = append(params, v.Type)
+			}
+
+			FunctionDefinitions[n.Name] = FunctionDefinition{
+				getFunctionReturnType(n.Type), params,
+			}
+		}
+
 	default:
 		panic(reflect.ValueOf(node).Elem().Type())
 	}
 }
 
-//    if node['node'] == 'FunctionDecl':
-//        function_name = node['name'].strip()
-//
-//        if function_name in ('__istype', '__isctype', '__wcwidth', '__sputc',
-//            '__inline_signbitf', '__inline_signbitd', '__inline_signbitl'):
-//            return
-//
-//        has_body = False
-//        if 'children' in node:
-//            for c in node['children']:
-//                if c['node'] == 'CompoundStmt':
-//                    has_body = True
-//
-//        args = []
-//        for a in get_function_params(node):
-//            args.append('%s %s' % (a['name'], resolveType(a['type'])))
-//
-//        if has_body:
-//            return_type = get_function_return_type(node['type'])
-//
-//            if function_name == 'main':
-//                printLine(out, 'func main() {', indent)
-//            else:
-//                printLine(out, 'func %s(%s) %s {' % (function_name,
-//                    ', '.join(args), resolveType(return_type)), indent)
-//
-//            for c in node['children']:
-//                if c['node'] == 'CompoundStmt':
-//                    render(out, c, function_name, indent + 1, node['type'])
-//
-//            printLine(out, '}\n', indent)
-//
-//        FunctionDefinitions[node['name']] = (get_function_return_type(node['type']),
-//            [a['type'] for a in get_function_params(node)])
-//
-//        return
-//
 //    if node['node'] == 'CompoundStmt':
 //        for c in node['children']:
 //            render(out, c, function_name, indent, return_type)
