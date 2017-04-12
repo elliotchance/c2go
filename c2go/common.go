@@ -80,59 +80,59 @@ var FunctionSubstitutions = map[string]string{
 	"__assert_fail": "github.com/elliotchance/c2go/linux.AssertFail",
 }
 
-//# TODO: Some of these are based on assumtions that may not be true for all
-//# architectures (like the size of an int). At some point in the future we will
-//# need to find out the sizes of some of there and pick the most compatible type.
-//#
-//# Please keep them sorted by name.
-//simple_resolve_types = {
-//    'bool': 'bool',
-//    'char *': 'string',
-//    'char': 'byte',
-//    'char*': 'string',
-//    'double': 'float64',
-//    'float': 'float32',
-//    'int': 'int',
-//    'long double': 'float64',
-//    'long int': 'int32',
-//    'long long': 'int64',
-//    'long unsigned int': 'uint32',
-//    'long': 'int32',
-//    'short': 'int16',
-//    'signed char': 'int8',
-//    'unsigned char': 'uint8',
-//    'unsigned int': 'uint32',
-//    'unsigned long long': 'uint64',
-//    'unsigned long': 'uint32',
-//    'unsigned short': 'uint16',
-//    'void *': 'interface{}',
-//    'void': '',
+// TODO: Some of these are based on assumptions that may not be true for all
+// architectures (like the size of an int). At some point in the future we will
+// need to find out the sizes of some of there and pick the most compatible type.
 //
-//    'const char *': 'string',
-//
-//    # Darwin specific
-//    '__darwin_ct_rune_t': '__darwin_ct_rune_t',
-//    'union __mbstate_t': '__mbstate_t',
-//    'fpos_t': 'int',
-//    'struct __float2': 'github.com/elliotchance/c2go/darwin.Float2',
-//    'struct __double2': 'github.com/elliotchance/c2go/darwin.Double2',
-//
-//    # Linux specific:
-//    '_IO_FILE': 'github.com/elliotchance/c2go/linux.File',
-//
-//    # These are special cases that almost certainly don't work. I've put them
-//    # here becuase for whatever reason there is no suitable type or we don't
-//    # need these platform specific things to be implemented yet.
-//    '__builtin_va_list': 'int64',
-//    '__darwin_pthread_handler_rec': 'int64',
-//    '__int128': 'int64',
-//    '__mbstate_t': 'int64',
-//    '__sbuf': 'int64',
-//    '__sFILEX': 'interface{}',
-//    '__va_list_tag': 'interface{}',
-//    'FILE': 'int64',
-//}
-//
+// Please keep them sorted by name.
+var SimpleResolveTypes = map[string]string{
+	"bool":               "bool",
+	"char *":             "string",
+	"char":               "byte",
+	"char*":              "string",
+	"double":             "float64",
+	"float":              "float32",
+	"int":                "int",
+	"long double":        "float64",
+	"long int":           "int32",
+	"long long":          "int64",
+	"long unsigned int":  "uint32",
+	"long":               "int32",
+	"short":              "int16",
+	"signed char":        "int8",
+	"unsigned char":      "uint8",
+	"unsigned int":       "uint32",
+	"unsigned long long": "uint64",
+	"unsigned long":      "uint32",
+	"unsigned short":     "uint16",
+	"void *":             "interface{}",
+	"void":               "",
+
+	"const char *": "string",
+
+	// Darwin specific
+	"__darwin_ct_rune_t": "__darwin_ct_rune_t",
+	"union __mbstate_t":  "__mbstate_t",
+	"fpos_t":             "int",
+	"struct __float2":    "github.com/elliotchance/c2go/darwin.Float2",
+	"struct __double2":   "github.com/elliotchance/c2go/darwin.Double2",
+
+	// Linux specific
+	"_IO_FILE": "github.com/elliotchance/c2go/linux.File",
+
+	// These are special cases that almost certainly don"t work. I've put
+	// them here because for whatever reason there is no suitable type or we
+	// don't need these platform specific things to be implemented yet.
+	"__builtin_va_list":            "int64",
+	"__darwin_pthread_handler_rec": "int64",
+	"__int128":                     "int64",
+	"__mbstate_t":                  "int64",
+	"__sbuf":                       "int64",
+	"__sFILEX":                     "interface{}",
+	"__va_list_tag":                "interface{}",
+	"FILE":                         "int64",
+}
+
 //types_already_defined = set([
 //    # Linux specific
 //    '_LIB_VERSION_TYPE',
@@ -183,8 +183,8 @@ var FunctionSubstitutions = map[string]string{
 //
 //    # The simple resolve types are the types that we know there is an exact Go
 //    # equivalent. For example float, int, etc.
-//    if s in simple_resolve_types:
-//        return import_type(simple_resolve_types[s])
+//    if s in SimpleResolveTypes:
+//        return import_type(SimpleResolveTypes[s])
 //
 //    # If the type is already defined we can proceed with the same name.
 //    if s in types_already_defined:
@@ -195,15 +195,15 @@ var FunctionSubstitutions = map[string]string{
 //        if s[-1] == '*':
 //            s = s[7:-2]
 //
-//            if s in simple_resolve_types:
-//                return '*' + import_type(simple_resolve_types[s])
+//            if s in SimpleResolveTypes:
+//                return '*' + import_type(SimpleResolveTypes[s])
 //
 //            return '*' + s
 //        else:
 //            s = s[7:]
 //
-//            if s in simple_resolve_types:
-//                return import_type(simple_resolve_types[s])
+//            if s in SimpleResolveTypes:
+//                return import_type(SimpleResolveTypes[s])
 //
 //            return s
 //
