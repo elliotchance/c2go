@@ -518,6 +518,19 @@ var nodes = map[string]interface{}{
 		IsUsed: true,
 		Children: []interface{}{},
 	},
+	`0x2ae30d8 </usr/include/math.h:65:3, /usr/include/x86_64-linux-gnu/sys/cdefs.h:57:54> <scratch space>:17:1 __acos 'double (double)' extern`:
+	&ast.FunctionDecl{
+		Address: "0x2ae30d8",
+		Position: "/usr/include/math.h:65:3, /usr/include/x86_64-linux-gnu/sys/cdefs.h:57:54",
+		Prev: "",
+		Position2: "<scratch space>:17:1",
+		Name: "__acos",
+		Type: "double (double)",
+		IsExtern: true,
+		IsImplicit: false,
+		IsUsed: false,
+		Children: []interface{}{},
+	},
 
 	// FunctionProtoType
 	`0x7fa3b88bbb30 'struct _opaque_pthread_t *' foo`:

@@ -17,7 +17,7 @@ type FunctionDecl struct {
 
 func parseFunctionDecl(line string) *FunctionDecl {
 	groups := groupsFromRegex(
-		"(?P<prev>prev [0-9a-fx]+ )?<(?P<position1>.*)>(?P<position2> [^ ]+)?(?P<implicit> implicit)?(?P<used> used)? (?P<name>\\w+) '(?P<type>.*)'(?P<extern> extern)?",
+		`(?P<prev>prev [0-9a-fx]+ )?<(?P<position1>.*?)>(?P<position2> <scratch space>[^ ]+| [^ ]+)?(?P<implicit> implicit)?(?P<used> used)? (?P<name>[_\w]+) '(?P<type>.*)'(?P<extern> extern)?`,
 		line,
 	)
 
