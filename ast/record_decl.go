@@ -15,7 +15,11 @@ type RecordDecl struct {
 
 func parseRecordDecl(line string) *RecordDecl {
 	groups := groupsFromRegex(
-		"(?P<prev>prev 0x[0-9a-f]+ )?<(?P<position>.*)> (?P<position2>[^ ]+ )?(?P<kind>struct|union)(?P<name>.*)",
+		`(?P<prev>prev 0x[0-9a-f]+ )?
+		<(?P<position>.*)>
+		 (?P<position2>[^ ]+ )?
+		(?P<kind>struct|union)
+		(?P<name>.*)`,
 		line,
 	)
 

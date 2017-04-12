@@ -14,7 +14,14 @@ type DeclRefExpr struct {
 
 func parseDeclRefExpr(line string) *DeclRefExpr {
 	groups := groupsFromRegex(
-		"<(?P<position>.*)> '(?P<type>.*?)'.*?(?P<lvalue> lvalue)? (?P<for>\\w+) (?P<address2>[0-9a-fx]+) '(?P<name>.*?)' '(?P<type2>.*?)'",
+		`<(?P<position>.*)>
+		 '(?P<type>.*?)'
+		.*?
+		(?P<lvalue> lvalue)?
+		 (?P<for>\w+)
+		 (?P<address2>[0-9a-fx]+)
+		 '(?P<name>.*?)'
+		 '(?P<type2>.*?)'`,
 		line,
 	)
 

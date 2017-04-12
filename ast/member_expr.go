@@ -12,7 +12,11 @@ type MemberExpr struct {
 
 func parseMemberExpr(line string) *MemberExpr {
 	groups := groupsFromRegex(
-		"<(?P<position>.*)> '(?P<type>.*?)' (?P<tags>.*?)(?P<name>\\w+) (?P<address2>[0-9a-fx]+)",
+		`<(?P<position>.*)>
+		 '(?P<type>.*?)'
+		 (?P<tags>.*?)
+		(?P<name>\w+)
+		 (?P<address2>[0-9a-fx]+)`,
 		line,
 	)
 

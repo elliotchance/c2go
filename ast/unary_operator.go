@@ -12,7 +12,12 @@ type UnaryOperator struct {
 
 func parseUnaryOperator(line string) *UnaryOperator {
 	groups := groupsFromRegex(
-		"<(?P<position>.*)> '(?P<type>.*?)'(?P<lvalue> lvalue)?(?P<prefix> prefix)?(?P<postfix> postfix)? '(?P<operator>.*?)'",
+		`<(?P<position>.*)>
+		 '(?P<type>.*?)'
+		(?P<lvalue> lvalue)?
+		(?P<prefix> prefix)?
+		(?P<postfix> postfix)?
+		 '(?P<operator>.*?)'`,
 		line,
 	)
 

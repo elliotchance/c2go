@@ -13,7 +13,12 @@ type FormatAttr struct {
 
 func parseFormatAttr(line string) *FormatAttr {
 	groups := groupsFromRegex(
-		"<(?P<position>.*)>(?P<implicit> Implicit)?(?P<inherited> Inherited)? (?P<function>\\w+) (?P<unknown1>\\d+) (?P<unknown2>\\d+)",
+		`<(?P<position>.*)>
+		(?P<implicit> Implicit)?
+		(?P<inherited> Inherited)?
+		 (?P<function>\w+)
+		 (?P<unknown1>\d+)
+		 (?P<unknown2>\d+)`,
 		line,
 	)
 

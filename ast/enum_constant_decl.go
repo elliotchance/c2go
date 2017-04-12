@@ -11,7 +11,10 @@ type EnumConstantDecl struct {
 
 func parseEnumConstantDecl(line string) *EnumConstantDecl {
 	groups := groupsFromRegex(
-		"<(?P<position>.*)>(?P<position2> [^ ]+)? (?P<name>.+) '(?P<type>.+?)'",
+		`<(?P<position>.*)>
+		(?P<position2> [^ ]+)?
+		 (?P<name>.+)
+		 '(?P<type>.+?)'`,
 		line,
 	)
 

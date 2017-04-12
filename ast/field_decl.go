@@ -14,7 +14,11 @@ type FieldDecl struct {
 
 func parseFieldDecl(line string) *FieldDecl {
 	groups := groupsFromRegex(
-		"<(?P<position>.*)>(?P<position2> [^ ]+)?(?P<referenced> referenced)? (?P<name>\\w+?) '(?P<type>.+?)'",
+		`<(?P<position>.*)>
+		(?P<position2> [^ ]+)?
+		(?P<referenced> referenced)?
+		 (?P<name>\w+?)
+		 '(?P<type>.+?)'`,
 		line,
 	)
 

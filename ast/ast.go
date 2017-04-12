@@ -127,7 +127,11 @@ func Parse(line string) interface{} {
 }
 
 func groupsFromRegex(rx, line string) map[string]string {
-	fullRegexp := "(?P<address>[0-9a-fx]+) " + rx
+	// We remove tabs and newlines from the regex. This is purely cosmetic
+	// as the regex input can be quite lone and its nice for the caller to
+	// be able to format it in a more readable way.
+	fullRegexp := "(?P<address>[0-9a-fx]+) " +
+		strings.Replace(strings.Replace(rx, "\n", "", -1), "\t", "", -1)
 	re := regexp.MustCompile(fullRegexp)
 
 	match := re.FindStringSubmatch(line)

@@ -10,7 +10,7 @@ type DeprecatedAttr struct {
 
 func parseDeprecatedAttr(line string) *DeprecatedAttr {
 	groups := groupsFromRegex(
-		"<(?P<position>.*)> \"(?P<message1>.*?)\"(?P<message2> \".*?\")?",
+		`<(?P<position>.*)> "(?P<message1>.*?)"(?P<message2> ".*?")?`,
 		line,
 	)
 

@@ -11,7 +11,7 @@ type StringLiteral struct {
 
 func parseStringLiteral(line string) *StringLiteral {
 	groups := groupsFromRegex(
-		"<(?P<position>.*)> '(?P<type>.*)' lvalue \"(?P<value>.*)\"",
+		`<(?P<position>.*)> '(?P<type>.*)' lvalue "(?P<value>.*)"`,
 		line,
 	)
 
