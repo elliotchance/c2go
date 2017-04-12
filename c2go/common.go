@@ -1,5 +1,10 @@
 package c2go
 
+import (
+	"regexp"
+	"strings"
+)
+
 type FunctionDefinition struct {
 	ReturnType    string
 	ArgumentTypes []string
@@ -133,44 +138,61 @@ var SimpleResolveTypes = map[string]string{
 	"FILE":                         "int64",
 }
 
-//types_already_defined = set([
-//    # Linux specific
-//    '_LIB_VERSION_TYPE',
-//    '_IO_FILE',
-//
-//    # Darwin specific
-//    '__float2',
-//    '__double2',
-//])
-//
-//imports = ["fmt"]
-//
+var TypesAlreadyDefined = []string{
+	// Linux specific
+	"_LIB_VERSION_TYPE",
+	"_IO_FILE",
+
+	// Darwin specific
+	"__float2",
+	"__double2",
+}
+
+var imports = []string{"fmt"}
+
+func ucfirst(word string) string {
+	return strings.ToUpper(string(word[0])) + word[1:]
+}
+
+func getExportedName(field string) string {
+	return ucfirst(strings.TrimLeft(field, "_"))
+}
+
+func addImport(importName string) {
+	for _, i := range imports {
+		if i == importName {
+			return
+		}
+	}
+
+	imports = append(imports, importName)
+}
+
 //class NoSuchTypeException(Exception):
 //    pass
 //
-//def ucfirst(word):
-//    return word[0].upper() + word[1:]
-//
-//def get_exported_name(field):
-//    return ucfirst(field.lstrip('_'))
-//
-//def add_import(import_name):
-//    if import_name not in imports:
-//        imports.append(import_name)
-//
-//def import_type(type_name):
-//    if '.' in type_name:
-//        add_import('.'.join(type_name.split('.')[:-1]))
-//        return type_name.split('/')[-1]
-//
-//    return type_name
-//
-//def is_keyword(w):
-//    return w in ('char', 'long', 'struct', 'void')
-//
-//def is_identifier(w):
-//    return not is_keyword(w) and re.match('[_a-zA-Z][_a-zA-Z0-9]*', w)
-//
+
+func importType(typeName string) string {
+	if strings.Index(typeName, ".") != -1 {
+		parts := strings.Split(typeName, ".")
+		addImport(strings.Join(parts[:len(parts)-1], "."))
+
+		parts2 := strings.Split(typeName, "/")
+		return parts2[len(parts2)-1]
+	}
+
+	return typeName
+}
+
+func isKeyword(w string) bool {
+	return w == "char" || w == "long" || w == "struct" || w == "void"
+}
+
+func isIdentifier(w string) bool {
+	return !isKeyword(w) && regexp.MustCompile("[_a-zA-Z][_a-zA-Z0-9]*").
+		MatchString(w)
+}
+
 //def resolve_type(s):
 //    # Remove any whitespace or attributes that are not relevant to Go.
 //    s = s.replace('const ', '')
@@ -184,11 +206,11 @@ var SimpleResolveTypes = map[string]string{
 //    # The simple resolve types are the types that we know there is an exact Go
 //    # equivalent. For example float, int, etc.
 //    if s in SimpleResolveTypes:
-//        return import_type(SimpleResolveTypes[s])
+//        return importType(SimpleResolveTypes[s])
 //
 //    # If the type is already defined we can proceed with the same name.
-//    if s in types_already_defined:
-//        return import_type(s)
+//    if s in TypesAlreadyDefined:
+//        return importType(s)
 //
 //    # Structures are by name.
 //    if s[:7] == 'struct ':
@@ -196,14 +218,14 @@ var SimpleResolveTypes = map[string]string{
 //            s = s[7:-2]
 //
 //            if s in SimpleResolveTypes:
-//                return '*' + import_type(SimpleResolveTypes[s])
+//                return '*' + importType(SimpleResolveTypes[s])
 //
 //            return '*' + s
 //        else:
 //            s = s[7:]
 //
 //            if s in SimpleResolveTypes:
-//                return import_type(SimpleResolveTypes[s])
+//                return importType(SimpleResolveTypes[s])
 //
 //            return s
 //
@@ -266,7 +288,7 @@ var SimpleResolveTypes = map[string]string{
 //    if from_type in types and to_type in types:
 //        return '%s(%s)' % (to_type, expr)
 //
-//    add_import('github.com/elliotchance/c2go/noarch')
+//    addImport('github.com/elliotchance/c2go/noarch')
 //    return 'noarch.%sTo%s(%s)' % (ucfirst(from_type), ucfirst(to_type), expr)
 //
 //def print_line(out, line, indent):
@@ -335,10 +357,10 @@ var SimpleResolveTypes = map[string]string{
 //
 //        if name == 'argc':
 //            name = 'len(os.Args)'
-//            add_import("os")
+//            addImport("os")
 //        elif name == 'argv':
 //            name = 'os.Args'
-//            add_import("os")
+//            addImport("os")
 //
 //        return name, node['type']
 //
@@ -352,7 +374,7 @@ var SimpleResolveTypes = map[string]string{
 //        func_def = FunctionDefinitions[func_name]
 //
 //        if func_name in FunctionSubstitutions:
-//            add_import('.'.join(FunctionSubstitutions[func_name].split('.')[:-1]))
+//            addImport('.'.join(FunctionSubstitutions[func_name].split('.')[:-1]))
 //            func_name = FunctionSubstitutions[func_name].split('/')[-1]
 //
 //        args = []
@@ -384,7 +406,7 @@ var SimpleResolveTypes = map[string]string{
 //        rhs = node['name']
 //
 //        if lhs_type in ('darwin.Float2', 'darwin.Double2'):
-//            rhs = get_exported_name(rhs)
+//            rhs = getExportedName(rhs)
 //
 //        return '%s.%s' % (lhs[0], rhs), children[0]['type']
 //
@@ -438,7 +460,7 @@ var SimpleResolveTypes = map[string]string{
 //        b = render_expression(node['children'][1])[0]
 //        c = render_expression(node['children'][2])[0]
 //
-//        add_import('github.com/elliotchance/c2go/noarch')
+//        addImport('github.com/elliotchance/c2go/noarch')
 //        return 'noarch.Ternary(%s, func () interface{} { return %s }, func () interface{} { return %s })' % (a, b, c), node['type']
 //
 //    raise Exception('render_expression: %s' % node['node'])
@@ -574,10 +596,10 @@ var SimpleResolveTypes = map[string]string{
 //
 //    if node['node'] == 'TypedefDecl':
 //        name = node['name'].strip()
-//        if name in types_already_defined:
+//        if name in TypesAlreadyDefined:
 //            return
 //
-//        types_already_defined.add(name)
+//        TypesAlreadyDefined.add(name)
 //
 //        # FIXME: All of the logic here is just to avoid errors, it needs to be
 //        # fixed up.
@@ -588,11 +610,11 @@ var SimpleResolveTypes = map[string]string{
 //        resolved_type = resolve_type(node['type'])
 //
 //        if name == '__mbstate_t':
-//            add_import('github.com/elliotchance/c2go/darwin')
+//            addImport('github.com/elliotchance/c2go/darwin')
 //            resolved_type = 'darwin.C__mbstate_t'
 //
 //        if name == '__darwin_ct_rune_t':
-//            add_import('github.com/elliotchance/c2go/darwin')
+//            addImport('github.com/elliotchance/c2go/darwin')
 //            resolved_type = 'darwin.C__darwin_ct_rune_t'
 //
 //        if name in ('__builtin_va_list', '__qaddr_t', 'definition',
@@ -613,10 +635,10 @@ var SimpleResolveTypes = map[string]string{
 //
 //    if node['node'] == 'RecordDecl':
 //        name = node['name'].strip()
-//        if name in types_already_defined or name == '':
+//        if name in TypesAlreadyDefined or name == '':
 //            return
 //
-//        types_already_defined.add(name)
+//        TypesAlreadyDefined.add(name)
 //
 //        if node['kind'] == 'union':
 //            return
@@ -682,8 +704,8 @@ var SimpleResolveTypes = map[string]string{
 //
 //    print("package main\n")
 //    print("import (")
-//    for import_name in sorted(imports):
-//        print('\t"%s"' % import_name)
+//    for importName in sorted(imports):
+//        print('\t"%s"' % importName)
 //    print(")\n")
 //
 //    print(go_out.getvalue())
