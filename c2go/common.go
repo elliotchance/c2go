@@ -360,6 +360,46 @@ func renderExpression(node interface{}) []string {
 
 		return []string{fmt.Sprintf("%s %s%s", name, fieldType, suffix), "unknown3"}
 
+	case *ast.CallExpr:
+		children := n.Children
+		func_name := renderExpression(children[0])[0]
+
+		func_def := FunctionDefinitions[func_name]
+
+		if _, ok := FunctionSubstitutions[func_name]; ok {
+			parts := strings.Split(FunctionSubstitutions[func_name], ".")
+			addImport(strings.Join(parts[:len(parts)-1], "."))
+
+			parts2 := strings.Split(FunctionSubstitutions[func_name], "/")
+			func_name = parts2[len(parts2)-1]
+		}
+
+		args := []string{}
+		i := 0
+		for _, arg := range children[1:] {
+			e := renderExpression(arg)
+
+			if i > len(func_def.ArgumentTypes)-1 {
+				// This means the argument is one of the varargs so we don't
+				// know what type it needs to be cast to.
+				args = append(args, e[0])
+			} else {
+				args = append(args, cast(e[0], e[1], func_def.ArgumentTypes[i]))
+			}
+
+			i += 1
+		}
+
+		parts := []string{}
+
+		for _, v := range args {
+			parts = append(parts, v)
+		}
+
+		return []string{
+			fmt.Sprintf("%s(%s)", func_name, strings.Join(parts, ", ")),
+			func_def.ReturnType}
+
 	default:
 		panic(fmt.Sprintf("renderExpression: %#v", n))
 	}
@@ -434,32 +474,6 @@ func renderExpression(node interface{}) []string {
 	//
 	//    if node['node'] == 'ImplicitCastExpr':
 	//        return renderExpression(node['children'][0])
-	//
-	//    if node['node'] == 'CallExpr':
-	//        children = node['children']
-	//        func_name = renderExpression(children[0])[0]
-	//
-	//        func_def = FunctionDefinitions[func_name]
-	//
-	//        if func_name in FunctionSubstitutions:
-	//            addImport('.'.join(FunctionSubstitutions[func_name].split('.')[:-1]))
-	//            func_name = FunctionSubstitutions[func_name].split('/')[-1]
-	//
-	//        args = []
-	//        i = 0
-	//        for arg in children[1:]:
-	//            e = renderExpression(arg)
-	//
-	//            if i > len(func_def[1]) - 1:
-	//                # This means the argument is one of the varargs so we don't know
-	//                # what type it needs to be cast to.
-	//                args.append(e[0])
-	//            else:
-	//                args.append(cast(e[0], e[1], func_def[1][i]))
-	//
-	//            i += 1
-	//
-	//        return '%s(%s)' % (func_name, ', '.join([str(a) for a in args])), func_def[0]
 	//
 	//    if node['node'] == 'ArraySubscriptExpr':
 	//        children = node['children']
@@ -685,13 +699,15 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 		}
 
 	case *ast.VarDecl:
-		// FIXME?
-		return
+	// FIXME?
 
 	case *ast.CompoundStmt:
 		for _, c := range n.Children {
 			Render(out, c, function_name, indent, return_type)
 		}
+
+	case *ast.CallExpr:
+		printLine(out, renderExpression(node)[0], indent)
 
 	default:
 		panic(reflect.ValueOf(node).Elem().Type())
@@ -756,7 +772,7 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 //        printLine(out, r, indent)
 //        return
 //
-//    if node['node'] in ('BinaryOperator', 'INTEGER_LITERAL', 'CallExpr'):
+//    if node['node'] in ('BinaryOperator', 'INTEGER_LITERAL'):
 //        printLine(out, renderExpression(node)[0], indent)
 //        return
 //
