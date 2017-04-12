@@ -1,18 +1,18 @@
 package ast
 
-type NotNullAttr struct {
+type NonNullAttr struct {
 	Address  string
 	Position string
 	Children []interface{}
 }
 
-func parseNotNullAttr(line string) *NotNullAttr {
+func parseNonNullAttr(line string) *NonNullAttr {
 	groups := groupsFromRegex(
 		"<(?P<position>.*)> 1",
 		line,
 	)
 
-	return &NotNullAttr{
+	return &NonNullAttr{
 		Address: groups["address"],
 		Position: groups["position"],
 		Children: []interface{}{},

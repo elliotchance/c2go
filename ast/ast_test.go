@@ -613,11 +613,17 @@ var nodes = map[string]interface{}{
 		Children: []interface{}{},
 	},
 
-	// NotNullAttr
+	// NonNullAttr
 	`0x7fa1488273b0 <line:7:4, line:11:4> 1`:
-	&ast.NotNullAttr{
+	&ast.NonNullAttr{
 		Address: "0x7fa1488273b0",
 		Position: "line:7:4, line:11:4",
+		Children: []interface{}{},
+	},
+	`0x2cce280 </sys/cdefs.h:286:44, /bits/mathcalls.h:115:69> 1`:
+	&ast.NonNullAttr{
+		Address: "0x2cce280",
+		Position: "/sys/cdefs.h:286:44, /bits/mathcalls.h:115:69",
 		Children: []interface{}{},
 	},
 

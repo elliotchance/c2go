@@ -81,8 +81,8 @@ func Parse(line string) interface{} {
 		node = parseModeAttr(line)
 	case "NoThrowAttr":
 		node = parseNoThrowAttr(line)
-	case "NotNullAttr":
-		node = parseNotNullAttr(line)
+	case "NonNullAttr":
+		node = parseNonNullAttr(line)
 	case "ParenExpr":
 		node = parseParenExpr(line)
 	case "ParmVarDecl":

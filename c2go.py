@@ -37,6 +37,9 @@ function_defs = {
     # darwin/assert.h
     '__builtin_expect': ('int', ('int', 'int')),
     '__assert_rtn': ('bool', ('const char*', 'const char*', 'int', 'const char*')),
+
+    # linux/assert.h
+    '__assert_fail': ('bool', ('const char*', 'const char*', 'unsigned int', 'const char*')),
 }
 
 function_subs = {
@@ -82,6 +85,9 @@ function_subs = {
     # assert
     '__builtin_expect': 'github.com/elliotchance/c2go/darwin.BuiltinExpect',
     '__assert_rtn': 'github.com/elliotchance/c2go/darwin.AssertRtn',
+
+    # linux/assert.h
+    '__assert_fail': 'github.com/elliotchance/c2go/linux.AssertFail',
 }
 
 # TODO: Some of these are based on assumtions that may not be true for all
@@ -121,6 +127,9 @@ simple_resolve_types = {
     'struct __float2': 'github.com/elliotchance/c2go/darwin.Float2',
     'struct __double2': 'github.com/elliotchance/c2go/darwin.Double2',
 
+    # Linux specific:
+    '_IO_FILE': 'github.com/elliotchance/c2go/linux.File',
+
     # These are special cases that almost certainly don't work. I've put them
     # here becuase for whatever reason there is no suitable type or we don't
     # need these platform specific things to be implemented yet.
@@ -137,6 +146,7 @@ simple_resolve_types = {
 types_already_defined = set([
     # Linux specific
     '_LIB_VERSION_TYPE',
+    '_IO_FILE',
 
     # Darwin specific
     '__float2',
@@ -188,14 +198,24 @@ def resolve_type(s):
 
     # If the type is already defined we can proceed with the same name.
     if s in types_already_defined:
-        return s
+        return import_type(s)
 
     # Structures are by name.
     if s[:7] == 'struct ':
         if s[-1] == '*':
-            return '*' + s[7:-2]
+            s = s[7:-2]
+
+            if s in simple_resolve_types:
+                return '*' + import_type(simple_resolve_types[s])
+
+            return '*' + s
         else:
-            return s[7:]
+            s = s[7:]
+
+            if s in simple_resolve_types:
+                return import_type(simple_resolve_types[s])
+
+            return s
 
     # Enums are by name.
     if s[:5] == 'enum ':
@@ -384,7 +404,6 @@ def render_expression(node):
 
     if node['node'] == 'FieldDecl' or node['node'] == 'VarDecl':
         type = resolve_type(node['type'])
-        #print(type)
         name = node['name'].replace('used', '')
 
         # Go does not allow the name of a variable to be called "type". For the
@@ -588,7 +607,7 @@ def render(out, node, function_name, indent=0, return_type=None):
 
         if name in ('__builtin_va_list', '__qaddr_t', 'definition',
             '_IO_lock_t', 'va_list', 'fpos_t', '__NSConstantString',
-            '__darwin_va_list'):
+            '__darwin_va_list', '__fsid_t', '_G_fpos_t', '_G_fpos64_t'):
             return
 
         print_line(out, "type %s %s\n" % (name, resolved_type), indent)
@@ -604,7 +623,7 @@ def render(out, node, function_name, indent=0, return_type=None):
 
     if node['node'] == 'RecordDecl':
         name = node['name'].strip()
-        if name in types_already_defined:
+        if name in types_already_defined or name == '':
             return
 
         types_already_defined.add(name)
@@ -612,14 +631,11 @@ def render(out, node, function_name, indent=0, return_type=None):
         if node['kind'] == 'union':
             return
 
-        # FIXME
-        if name in ('definition', '_IO_FILE'):
-            return
-
         print_line(out, "type %s %s {" % (name, node['kind']), indent)
         if 'children' in node:
             for c in node['children']:
                 render(out, c, function_name, indent + 1)
+
         print_line(out, "}\n", indent)
         return
 
