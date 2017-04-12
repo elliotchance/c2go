@@ -14,8 +14,8 @@ function run_test {
 
     echo $TEST
 
-    # First check that ast2json.py can understand every line of the clang AST.
-    $CLANG_BIN -Xclang -ast-dump -fsyntax-only $TEST | python ast2json.py > /tmp/0.txt
+    # First check that the AST can be understood.
+    $CLANG_BIN -Xclang -ast-dump -fsyntax-only $TEST | ./c2go > /tmp/0.txt
     if [ $? != 0 ]; then
         cat /tmp/0.txt
         exit 1
@@ -32,18 +32,19 @@ function run_test {
     $(echo "7" | ./a.out some args 2> /tmp/1-stderr.txt 1> /tmp/1-stdout.txt)
     C_EXIT_CODE=$?
 
-    GO_FILES=$(python c2go.py $TEST)
-    go build -o out $GO_FILES
+    mkdir -p build
+    python c2go.py $TEST > build/main.go
+    cd build && go build && cd ..
 
     if [ $? != 0 ]; then
         echo "=== out.go"
-        cat --number out.go
+        cat --number build/main.go
         exit 1
     fi
 
     # Run the program in a subshell so that the "Abort trap: 6" message is not
     # printed.
-    $(echo "7" | ./out some args 2> /tmp/2-stderr.txt 1> /tmp/2-stdout.txt)
+    $(echo "7" | ./build/build some args 2> /tmp/2-stderr.txt 1> /tmp/2-stdout.txt)
     GO_EXIT_CODE=$?
 
     if [ $C_EXIT_CODE -ne $GO_EXIT_CODE ]; then
@@ -55,6 +56,9 @@ function run_test {
     diff /tmp/1-stderr.txt /tmp/2-stderr.txt
     diff /tmp/1-stdout.txt /tmp/2-stdout.txt
 }
+
+# Before we begin, lets build c2go
+go build
 
 for TEST in ${@-$(find tests -name "*.c")}; do
     run_test $TEST

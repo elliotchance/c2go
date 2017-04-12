@@ -10,12 +10,14 @@ type VarDecl struct {
 	Type      string
 	Type2     string
 	IsExtern  bool
-	Children []interface{}
+	IsUsed    bool
+	IsCInit   bool
+	Children  []interface{}
 }
 
 func parseVarDecl(line string) *VarDecl {
 	groups := groupsFromRegex(
-		`<(?P<position>.*)>(?P<position2> \w+:\d+)?(?P<name> \w+)? '(?P<type>.+?)'(?P<type2>:'.*?')?(?P<extern> extern)?`,
+		`<(?P<position>.*)>(?P<position2> .+:\d+)?(?P<used> used)?(?P<name> \w+)? '(?P<type>.+?)'(?P<type2>:'.*?')?(?P<extern> extern)?(?P<cinit> cinit)?`,
 		line,
 	)
 
@@ -32,6 +34,8 @@ func parseVarDecl(line string) *VarDecl {
 		Type: groups["type"],
 		Type2: type2,
 		IsExtern: len(groups["extern"]) > 0,
+		IsUsed: len(groups["used"]) > 0,
+		IsCInit: len(groups["cinit"]) > 0,
 		Children: []interface{}{},
 	}
 }

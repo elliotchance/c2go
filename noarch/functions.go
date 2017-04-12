@@ -1,9 +1,9 @@
-package main
+package noarch
 
 // FIXME
 type __builtin_va_list int64
 
-func __bool_to_int(x bool) int {
+func BoolToInt(x bool) int {
     if x {
         return 1
     }
@@ -35,7 +35,7 @@ func __not_int(x int) int {
     return 0
 }
 
-func __ternary(a bool, b, c func () interface{}) interface{} {
+func Ternary(a bool, b, c func () interface{}) interface{} {
     if a {
         return b()
     }

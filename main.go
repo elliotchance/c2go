@@ -1,14 +1,14 @@
 package main
 
 import (
-	"os"
 	"bufio"
 	"encoding/json"
-	"regexp"
-	"strings"
 	"fmt"
 	"github.com/elliotchance/c2go/ast"
+	"os"
 	"reflect"
+	"regexp"
+	"strings"
 )
 
 func readAST() []string {
@@ -91,7 +91,7 @@ func buildTree(nodes []interface{}, depth int) []interface{} {
 		if node.([]interface{})[0] == depth {
 			sections = append(sections, []interface{}{node})
 		} else {
-			sections[len(sections) - 1] = append(sections[len(sections) - 1], node)
+			sections[len(sections)-1] = append(sections[len(sections)-1], node)
 		}
 	}
 
@@ -104,28 +104,13 @@ func buildTree(nodes []interface{}, depth int) []interface{} {
 			}
 		}
 
-		children := buildTree(slice, depth + 1)
+		children := buildTree(slice, depth+1)
 		result := section[0].([]interface{})[1]
 
 		if len(children) > 0 {
-			//panic(fmt.Sprintf("%v", result))
-			//result = ast.AlwaysInlineAttr{}
 			c := reflect.ValueOf(result).Elem().FieldByName("Children")
 			slice := reflect.AppendSlice(c, reflect.ValueOf(children))
 			c.Set(slice)
-
-			//reflect.ValueOf(&result).Elem().Elem().
-			//	FieldByName("Children").Elem().App
-			//	Set(reflect.ValueOf(children).Elem())
-			//if reflect.ValueOf(&result).Elem().Elem().FieldByName("Children").IsValid() {
-			//	panic("true")
-			//}
-			//panic("false")
-			//panic(reflect.ValueOf(&result).Elem().
-			//	FieldByName("Children").IsValid())
-			//reflect.ValueOf(result).Elem().
-			//	FieldByName("Children").
-			//	Set(reflect.ValueOf(children))
 		}
 
 		results = append(results, result)
@@ -134,12 +119,42 @@ func buildTree(nodes []interface{}, depth int) []interface{} {
 	return results
 }
 
+func ToJSON(tree []interface{}) []map[string]interface{} {
+	r := make([]map[string]interface{}, len(tree))
+
+	for j, n := range tree {
+		rn := reflect.ValueOf(n).Elem()
+		r[j] = make(map[string]interface{})
+		r[j]["node"] = rn.Type().Name()
+
+		for i := 0; i < rn.NumField(); i++ {
+			name := strings.ToLower(rn.Type().Field(i).Name)
+			value := rn.Field(i).Interface()
+
+			if name == "children" {
+				v := value.([]interface{})
+
+				if len(v) == 0 {
+					continue
+				}
+
+				value = ToJSON(v)
+			}
+
+			r[j][name] = value
+		}
+	}
+
+	return r
+}
+
 func main() {
 	lines := readAST()
 	nodes := convertLinesToNodes(lines)
 	tree := buildTree(nodes, 0)
+	jsonTree := ToJSON(tree)
 
-	out, err := json.MarshalIndent(tree, " ", "  ")
+	out, err := json.MarshalIndent(jsonTree, " ", "  ")
 	if err != nil {
 		panic(err)
 	}

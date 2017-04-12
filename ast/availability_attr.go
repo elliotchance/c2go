@@ -5,7 +5,7 @@ type AvailabilityAttr struct {
 	Position    string
 	OS          string
 	Version     string
-	Unknown1    int
+	Unknown1    float64
 	Unknown2    int
 	Unavailable bool
 	Message1    string
@@ -24,7 +24,7 @@ func parseAvailabilityAttr(line string) *AvailabilityAttr {
 		Position: groups["position"],
 		OS: groups["os"],
 		Version: groups["version"],
-		Unknown1: atoi(groups["unknown1"]),
+		Unknown1: atof(groups["unknown1"]),
 		Unknown2: atoi(groups["unknown2"]),
 		Unavailable: len(groups["unavalable"]) > 0,
 		Message1: removeQuotes(groups["message1"]),

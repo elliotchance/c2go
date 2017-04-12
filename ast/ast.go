@@ -31,6 +31,8 @@ func Parse(line string) interface{} {
 		node = parseCharacterLiteral(line)
 	case "CompoundStmt":
 		node = parseCompoundStmt(line)
+	case "ConditionalOperator":
+		node = parseConditionalOperator(line)
 	case "ConstAttr":
 		node = parseConstAttr(line)
 	case "ConstantArrayType":

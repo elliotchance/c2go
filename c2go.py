@@ -21,7 +21,7 @@ function_defs = {
     '__toupper': ('__darwin_ct_rune_t', ('__darwin_ct_rune_t',)),
     '__maskrune': ('uint32', ('__darwin_ct_rune_t', 'uint32')),
 
-    # These are provided by functions-Darwin.go
+    # darwin/math.h
     '__builtin_fabs': ('double', ('double',)),
     '__builtin_fabsf': ('float', ('float',)),
     '__builtin_fabsl': ('double', ('double',)),
@@ -29,8 +29,14 @@ function_defs = {
     '__builtin_inff': ('float', ()),
     '__builtin_infl': ('double', ()),
 
-    # assert.h functions-Darwin.go
-    '__builtin_expect': ('int', ('int', 'int'))
+    '__sincospi_stret': ('Double2', ('float',)),
+    '__sincospif_stret': ('Float2', ('float',)),
+    '__sincos_stret': ('Double2', ('float',)),
+    '__sincosf_stret': ('Float2', ('float',)),
+
+    # darwin/assert.h
+    '__builtin_expect': ('int', ('int', 'int')),
+    '__assert_rtn': ('bool', ('const char*', 'const char*', 'int', 'const char*')),
 }
 
 function_subs = {
@@ -56,9 +62,26 @@ function_subs = {
     'tan': 'math.Tan',
     'tanh': 'math.Tanh',
 
+    # darwin/math.h
+    '__builtin_fabs': 'github.com/elliotchance/c2go/darwin.Fabs',
+    '__builtin_fabsf': 'github.com/elliotchance/c2go/darwin.Fabsf',
+    '__builtin_fabsl': 'github.com/elliotchance/c2go/darwin.Fabsl',
+    '__builtin_inf': 'github.com/elliotchance/c2go/darwin.Inf',
+    '__builtin_inff': 'github.com/elliotchance/c2go/darwin.Inff',
+    '__builtin_infl': 'github.com/elliotchance/c2go/darwin.Infl',
+
+    '__sincospi_stret': 'github.com/elliotchance/c2go/darwin.SincospiStret',
+    '__sincospif_stret': 'github.com/elliotchance/c2go/darwin.SincospifStret',
+    '__sincos_stret': 'github.com/elliotchance/c2go/darwin.SincosStret',
+    '__sincosf_stret': 'github.com/elliotchance/c2go/darwin.SincosfStret',
+
     # stdio
     'printf': 'fmt.Printf',
     'scanf': 'fmt.Scanf',
+
+    # assert
+    '__builtin_expect': 'github.com/elliotchance/c2go/darwin.BuiltinExpect',
+    '__assert_rtn': 'github.com/elliotchance/c2go/darwin.AssertRtn',
 }
 
 # TODO: Some of these are based on assumtions that may not be true for all
@@ -91,8 +114,12 @@ simple_resolve_types = {
 
     'const char *': 'string',
 
-    # Mac specific
+    # Darwin specific
     '__darwin_ct_rune_t': '__darwin_ct_rune_t',
+    'union __mbstate_t': '__mbstate_t',
+    'fpos_t': 'int',
+    'struct __float2': 'github.com/elliotchance/c2go/darwin.Float2',
+    'struct __double2': 'github.com/elliotchance/c2go/darwin.Double2',
 
     # These are special cases that almost certainly don't work. I've put them
     # here becuase for whatever reason there is no suitable type or we don't
@@ -109,7 +136,11 @@ simple_resolve_types = {
 
 types_already_defined = set([
     # Linux specific
-    '_LIB_VERSION_TYPE'
+    '_LIB_VERSION_TYPE',
+
+    # Darwin specific
+    '__float2',
+    '__double2',
 ])
 
 imports = ["fmt"]
@@ -117,9 +148,22 @@ imports = ["fmt"]
 class NoSuchTypeException(Exception):
     pass
 
+def ucfirst(word):
+    return word[0].upper() + word[1:]
+
+def get_exported_name(field):
+    return ucfirst(field.lstrip('_'))
+
 def add_import(import_name):
     if import_name not in imports:
         imports.append(import_name)
+
+def import_type(type_name):
+    if '.' in type_name:
+        add_import('.'.join(type_name.split('.')[:-1]))
+        return type_name.split('/')[-1]
+
+    return type_name
 
 def is_keyword(w):
     return w in ('char', 'long', 'struct', 'void')
@@ -134,14 +178,17 @@ def resolve_type(s):
     s = s.replace('*restrict', '*')
     s = s.strip(' \t\n\r')
 
-    # If the type is already defined we can proceed with the same name.
-    if s in types_already_defined:
-        return s
+    if s == 'fpos_t':
+        return 'int'
 
     # The simple resolve types are the types that we know there is an exact Go
     # equivalent. For example float, int, etc.
     if s in simple_resolve_types:
-        return simple_resolve_types[s]
+        return import_type(simple_resolve_types[s])
+
+    # If the type is already defined we can proceed with the same name.
+    if s in types_already_defined:
+        return s
 
     # Structures are by name.
     if s[:7] == 'struct ':
@@ -209,7 +256,8 @@ def cast(expr, from_type, to_type):
     if from_type in types and to_type in types:
         return '%s(%s)' % (to_type, expr)
 
-    return '__%s_to_%s(%s)' % (from_type, to_type, expr)
+    add_import('github.com/elliotchance/c2go/noarch')
+    return 'noarch.%sTo%s(%s)' % (ucfirst(from_type), ucfirst(to_type), expr)
 
 def print_line(out, line, indent):
     out.write('%s%s\n' % ('\t' * indent, line))
@@ -260,14 +308,14 @@ def render_expression(node):
         return '%s%s' % (operator, expr[0]), expr[1]
 
     if node['node'] == 'StringLiteral':
-        return node['value'], 'const char *'
+        return '"%s"' % node['value'].replace("\n", "\\n"), 'const char *'
 
     if node['node'] == 'FloatingLiteral':
         return node['value'], 'double'
 
     if node['node'] == 'IntegerLiteral':
         literal = node['value']
-        if literal[-1] == 'L':
+        if str(literal)[-1] == 'L':
             literal = '%s(%s)' % (resolve_type('long'), literal[:-1])
 
         return literal, 'int'
@@ -294,8 +342,8 @@ def render_expression(node):
         func_def = function_defs[func_name]
 
         if func_name in function_subs:
-            func_name = function_subs[func_name]
-            add_import(func_name.split('.')[0])
+            add_import('.'.join(function_subs[func_name].split('.')[:-1]))
+            func_name = function_subs[func_name].split('/')[-1]
 
         args = []
         i = 0
@@ -311,7 +359,7 @@ def render_expression(node):
 
             i += 1
 
-        return '%s(%s)' % (func_name, ', '.join(args)), func_def[0]
+        return '%s(%s)' % (func_name, ', '.join([str(a) for a in args])), func_def[0]
 
     if node['node'] == 'ArraySubscriptExpr':
         children = node['children']
@@ -320,7 +368,15 @@ def render_expression(node):
 
     if node['node'] == 'MemberExpr':
         children = node['children']
-        return '%s.%s' % (render_expression(children[0])[0], node['name']), children[0]['type']
+
+        lhs = render_expression(children[0])
+        lhs_type = resolve_type(lhs[1])
+        rhs = node['name']
+
+        if lhs_type in ('darwin.Float2', 'darwin.Double2'):
+            rhs = get_exported_name(rhs)
+
+        return '%s.%s' % (lhs[0], rhs), children[0]['type']
 
     if node['node'] == 'CStyleCastExpr':
         children = node['children']
@@ -328,6 +384,7 @@ def render_expression(node):
 
     if node['node'] == 'FieldDecl' or node['node'] == 'VarDecl':
         type = resolve_type(node['type'])
+        #print(type)
         name = node['name'].replace('used', '')
 
         # Go does not allow the name of a variable to be called "type". For the
@@ -371,7 +428,9 @@ def render_expression(node):
         a = render_expression(node['children'][0])[0]
         b = render_expression(node['children'][1])[0]
         c = render_expression(node['children'][2])[0]
-        return '__ternary(%s, func () interface{} { return %s }, func () interface{} { return %s })' % (a, b, c), node['type']
+
+        add_import('github.com/elliotchance/c2go/noarch')
+        return 'noarch.Ternary(%s, func () interface{} { return %s }, func () interface{} { return %s })' % (a, b, c), node['type']
 
     raise Exception('render_expression: %s' % node['node'])
 
@@ -513,14 +572,26 @@ def render(out, node, function_name, indent=0, return_type=None):
 
         # FIXME: All of the logic here is just to avoid errors, it needs to be
         # fixed up.
-        if 'struct' in node['type'] or 'union' in node['type']:
-            return
+        # if ('struct' in node['type'] or 'union' in node['type']) and :
+        #     return
         node['type'] = node['type'].replace('unsigned', '')
+
+        resolved_type = resolve_type(node['type'])
+
+        if name == '__mbstate_t':
+            add_import('github.com/elliotchance/c2go/darwin')
+            resolved_type = 'darwin.C__mbstate_t'
+
+        if name == '__darwin_ct_rune_t':
+            add_import('github.com/elliotchance/c2go/darwin')
+            resolved_type = 'darwin.C__darwin_ct_rune_t'
+
         if name in ('__builtin_va_list', '__qaddr_t', 'definition',
-            '_IO_lock_t', 'va_list', 'fpos_t'):
+            '_IO_lock_t', 'va_list', 'fpos_t', '__NSConstantString',
+            '__darwin_va_list'):
             return
 
-        print_line(out, "type %s %s\n" % (name, resolve_type(node['type'])), indent)
+        print_line(out, "type %s %s\n" % (name, resolved_type), indent)
 
         return
 
@@ -573,19 +644,17 @@ c_file_path = sys.argv[1]
 # 2. Preprocess
 pp = subprocess.Popen(["clang", "-E", c_file_path], stdout=subprocess.PIPE).communicate()[0]
 
-pp_file_path = 'pp.c'
+pp_file_path = '/tmp/pp.c'
 with open(pp_file_path, 'wb') as pp_out:
     pp_out.write(pp)
 
 # 3. Generate JSON from AST
 ast_pp = subprocess.Popen(["clang", "-Xclang", "-ast-dump", "-fsyntax-only", pp_file_path], stdout=subprocess.PIPE)
-pp = subprocess.Popen(["python", "ast2json.py"], stdin=ast_pp.stdout, stdout=subprocess.PIPE).communicate()[0]
+pp = subprocess.Popen(["./c2go"], stdin=ast_pp.stdout, stdout=subprocess.PIPE).communicate()[0]
 
 json_file_path = 'pp.json'
 with open(json_file_path, 'wb') as json_out:
     json_out.write(pp)
-
-out_file = open('out.go', 'w')
 
 with open(json_file_path, 'r') as json_in:
     # 3. Parse C and output Go
@@ -602,19 +671,10 @@ with open(json_file_path, 'r') as json_in:
 
     render(go_out, l[0], function_name=None)
 
-    out_file.write("package main\n\n")
-    out_file.write("import (\n")
+    print("package main\n")
+    print("import (")
     for import_name in sorted(imports):
-        if os.path.exists("functions-%s-%s.go" % (platform.system(), import_name)):
-            print("functions-%s-%s.go" % (platform.system(), import_name))
+        print('\t"%s"' % import_name)
+    print(")\n")
 
-        out_file.write('\t"%s"\n' % import_name)
-    out_file.write(")\n\n")
-    out_file.write(go_out.getvalue())
-
-    # 4. Compile the Go
-    #subprocess.call(["go", "run", "functions.go", go_file_path])
-
-print("out.go")
-print("functions.go")
-print("functions-%s.go" % platform.system())
+    print(go_out.getvalue())
