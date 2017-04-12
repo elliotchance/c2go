@@ -53,3 +53,10 @@ script:
       else
         bash run-tests.sh
       fi
+
+  # These steps are from the README to verify it can be installed and run as
+  # documented.
+  - cd /tmp
+  - export C2GO=$GOPATH/src/github.com/elliotchance/c2go
+  - python $C2GO/c2go.py $C2GO/tests/hello-world.c > hello-world.go
+  - go run hello-world.go
