@@ -113,6 +113,19 @@ var nodes = map[string]interface{}{
 		Message2: "",
 		Children: []interface{}{},
 	},
+	`0x104035438 </usr/include/AvailabilityInternal.h:14571:88, col:124> macosx 10.10 0 0 ""`:
+	&ast.AvailabilityAttr{
+		Address: "0x104035438",
+		Position: "/usr/include/AvailabilityInternal.h:14571:88, col:124",
+		OS: "macosx",
+		Version: "10.10",
+		Unknown1: 0,
+		Unknown2: 0,
+		Unavailable: false,
+		Message1: "",
+		Message2: "",
+		Children: []interface{}{},
+	},
 
 	// BinaryOperator
 	`0x7fca2d8070e0 <col:11, col:23> 'unsigned char' '='`:
@@ -410,6 +423,7 @@ var nodes = map[string]interface{}{
 		Address: "0x7fcc8d8ecee8",
 		Position: "col:6",
 		Implicit: true,
+		Inherited: false,
 		FunctionName: "printf",
 		Unknown1: 2,
 		Unknown2: 3,
@@ -420,6 +434,18 @@ var nodes = map[string]interface{}{
 		Address: "0x7fcc8d8ecff8",
 		Position: "/usr/include/sys/cdefs.h:351:18, col:61",
 		Implicit: false,
+		Inherited: false,
+		FunctionName: "printf",
+		Unknown1: 2,
+		Unknown2: 3,
+		Children: []interface{}{},
+	},
+	`0x273b4d0 <line:357:12> Inherited printf 2 3`:
+	&ast.FormatAttr{
+		Address: "0x273b4d0",
+		Position: "line:357:12",
+		Implicit: false,
+		Inherited: true,
 		FunctionName: "printf",
 		Unknown1: 2,
 		Unknown2: 3,
