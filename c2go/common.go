@@ -1,6 +1,7 @@
 package c2go
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 )
@@ -193,86 +194,110 @@ func isIdentifier(w string) bool {
 		MatchString(w)
 }
 
-//def resolve_type(s):
-//    # Remove any whitespace or attributes that are not relevant to Go.
-//    s = s.replace('const ', '')
-//    s = s.replace('*__restrict', '*')
-//    s = s.replace('*restrict', '*')
-//    s = s.strip(' \t\n\r')
-//
-//    if s == 'fpos_t':
-//        return 'int'
-//
-//    # The simple resolve types are the types that we know there is an exact Go
-//    # equivalent. For example float, int, etc.
-//    if s in SimpleResolveTypes:
-//        return importType(SimpleResolveTypes[s])
-//
-//    # If the type is already defined we can proceed with the same name.
-//    if s in TypesAlreadyDefined:
-//        return importType(s)
-//
-//    # Structures are by name.
-//    if s[:7] == 'struct ':
-//        if s[-1] == '*':
-//            s = s[7:-2]
-//
-//            if s in SimpleResolveTypes:
-//                return '*' + importType(SimpleResolveTypes[s])
-//
-//            return '*' + s
-//        else:
-//            s = s[7:]
-//
-//            if s in SimpleResolveTypes:
-//                return importType(SimpleResolveTypes[s])
-//
-//            return s
-//
-//    # Enums are by name.
-//    if s[:5] == 'enum ':
-//        if s[-1] == '*':
-//            return '*' + s[5:-2]
-//        else:
-//            return s[5:]
-//
-//    # I have no idea how to handle this yet.
-//    if 'anonymous union' in s:
-//        return 'interface{}'
-//
-//    # It may be a pointer of a simple type. For example, float *, int *, etc.
-//    try:
-//        if re.match(r"[\w ]+\*", s):
-//            return '*' + resolve_type(s[:-2].strip())
-//    except NoSuchTypeException:
-//        # Keep trying the next one.
-//        pass
-//
-//    # Function pointers are not yet supported. In th mean time they will be
-//    # replaced with a type that certainly wont work until we can fix this
-//    # properly.
-//    search = re.search(r"[\w ]+\(\*.*?\)\(.*\)", s)
-//    if search:
-//        return 'interface{}'
-//    search = re.search(r"[\w ]+ \(.*\)", s)
-//    if search:
-//        return 'interface{}'
-//
-//    try:
-//        # It could be an array of fixed length.
-//        search = re.search(r"([\w ]+)\[(\d+)\]", s)
-//        if search:
-//            return '[%s]%s' % (search.group(2), resolve_type(search.group(1)))
-//
-//    except NoSuchTypeException as e:
-//        # Make the nested exception message more contextual.
-//        raise NoSuchTypeException(e.message + " (from '%s')" % s)
-//
-//    raise NoSuchTypeException("'%s'" % s)
-//
+func resolveType(s string) string {
+	// Remove any whitespace or attributes that are not relevant to Go.
+	s = strings.Replace(s, "const ", "", -1)
+	s = strings.Replace(s, "*__restrict", "*", -1)
+	s = strings.Replace(s, "*restrict", "*", -1)
+	s = strings.Trim(s, " \t\n\r")
+
+	if s == "fpos_t" {
+		return "int"
+	}
+
+	// The simple resolve types are the types that we know there is an exact Go
+	// equivalent. For example float, int, etc.
+	for _, v := range SimpleResolveTypes {
+		if v == s {
+			return importType(SimpleResolveTypes[s])
+		}
+	}
+
+	// If the type is already defined we can proceed with the same name.
+	for _, v := range TypesAlreadyDefined {
+		if v == s {
+			return importType(s)
+		}
+	}
+
+	// Structures are by name.
+	if s[:7] == "struct " {
+		if s[len(s)-1] == '*' {
+			s = s[7 : len(s)-2]
+
+			for _, v := range SimpleResolveTypes {
+				if v == s {
+					return "*" + importType(SimpleResolveTypes[s])
+				}
+			}
+
+			return "*" + s
+		} else {
+			s = s[7:]
+
+			for _, v := range SimpleResolveTypes {
+				if v == s {
+					return importType(SimpleResolveTypes[s])
+				}
+			}
+
+			return s
+		}
+	}
+
+	// Enums are by name.
+	if s[:5] == "enum " {
+		if s[len(s)-1] == '*' {
+			return "*" + s[5:len(s)-2]
+		} else {
+			return s[5:]
+		}
+	}
+
+	// I have no idea how to handle this yet.
+	if strings.Index(s, "anonymous union") != -1 {
+		return "interface{}"
+	}
+
+	// It may be a pointer of a simple type. For example, float *, int *, etc.
+	//try:
+	if regexp.MustCompile("[\\w ]+\\*").MatchString(s) {
+		return "*" + resolveType(strings.TrimSpace(s[:len(s)-2]))
+	}
+	//except NoSuchTypeException:
+	//    # Keep trying the next one.
+	//    pass
+
+	// Function pointers are not yet supported. In th mean time they will be
+	// replaced with a type that certainly wont work until we can fix this
+	// properly.
+	search := regexp.MustCompile("[\\w ]+\\(\\*.*?\\)\\(.*\\)").MatchString(s)
+	if search {
+		return "interface{}"
+	}
+
+	search = regexp.MustCompile("[\\w ]+ \\(.*\\)").MatchString(s)
+	if search {
+		return "interface{}"
+	}
+
+	//try:
+	// It could be an array of fixed length.
+	search2 := regexp.MustCompile("([\\w ]+)\\[(\\d+)\\]").FindStringSubmatch(s)
+	if len(search2) > 0 {
+		return fmt.Sprintf("[%s]%s", search2[2], resolveType(search2[1]))
+	}
+	//except NoSuchTypeException as e:
+	// Make the nested exception message more contextual.
+	//raise NoSuchTypeException(e.message + " (from '%s')" % s)
+
+	//raise NoSuchTypeException("'%s'" % s)
+	panic(fmt.Sprintf("'%s'", s))
+}
+
 //def cast(expr, from_type, to_type):
-//    from_type = resolve_type(from_type)
-//    to_type = resolve_type(to_type)
+//    from_type = resolveType(from_type)
+//    to_type = resolveType(to_type)
 //
 //    if from_type == to_type:
 //        return expr
@@ -348,7 +373,7 @@ func isIdentifier(w string) bool {
 //    if node['node'] == 'IntegerLiteral':
 //        literal = node['value']
 //        if str(literal)[-1] == 'L':
-//            literal = '%s(%s)' % (resolve_type('long'), literal[:-1])
+//            literal = '%s(%s)' % (resolveType('long'), literal[:-1])
 //
 //        return literal, 'int'
 //
@@ -402,7 +427,7 @@ func isIdentifier(w string) bool {
 //        children = node['children']
 //
 //        lhs = render_expression(children[0])
-//        lhs_type = resolve_type(lhs[1])
+//        lhs_type = resolveType(lhs[1])
 //        rhs = node['name']
 //
 //        if lhs_type in ('darwin.Float2', 'darwin.Double2'):
@@ -415,7 +440,7 @@ func isIdentifier(w string) bool {
 //        return render_expression(children[0])
 //
 //    if node['node'] == 'FieldDecl' or node['node'] == 'VarDecl':
-//        type = resolve_type(node['type'])
+//        type = resolveType(node['type'])
 //        name = node['name'].replace('used', '')
 //
 //        # Go does not allow the name of a variable to be called "type". For the
@@ -505,7 +530,7 @@ func isIdentifier(w string) bool {
 //
 //        args = []
 //        for a in get_function_params(node):
-//            args.append('%s %s' % (a['name'], resolve_type(a['type'])))
+//            args.append('%s %s' % (a['name'], resolveType(a['type'])))
 //
 //        if has_body:
 //            return_type = get_function_return_type(node['type'])
@@ -514,7 +539,7 @@ func isIdentifier(w string) bool {
 //                print_line(out, 'func main() {', indent)
 //            else:
 //                print_line(out, 'func %s(%s) %s {' % (function_name,
-//                    ', '.join(args), resolve_type(return_type)), indent)
+//                    ', '.join(args), resolveType(return_type)), indent)
 //
 //            for c in node['children']:
 //                if c['node'] == 'CompoundStmt':
@@ -607,7 +632,7 @@ func isIdentifier(w string) bool {
 //        #     return
 //        node['type'] = node['type'].replace('unsigned', '')
 //
-//        resolved_type = resolve_type(node['type'])
+//        resolved_type = resolveType(node['type'])
 //
 //        if name == '__mbstate_t':
 //            addImport('github.com/elliotchance/c2go/darwin')
