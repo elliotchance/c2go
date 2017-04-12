@@ -1,7 +1,10 @@
 package c2go
 
 import (
+	"bytes"
 	"fmt"
+	"github.com/elliotchance/c2go/ast"
+	"reflect"
 	"regexp"
 	"strings"
 )
@@ -526,13 +529,20 @@ func cast(expr, fromType, toType string) string {
 //    # The arguments will handle themselves, we only care about the
 //    # return type ('int' in this case)
 //    return f.split('(')[0].strip()
-//
-//def render(out, node, function_name, indent=0, return_type=None):
-//    if node['node'] == 'TranslationUnitDecl':
-//        for c in node['children']:
-//            render(out, c, function_name, indent, return_type)
-//        return
-//
+
+func Render(out *bytes.Buffer, node interface{}, function_name string, indent int, return_type string) {
+	switch n := node.(type) {
+	case *ast.TranslationUnitDecl:
+		for _, c := range n.Children {
+			Render(out, c, function_name, indent, return_type)
+		}
+		panic("nice")
+
+	default:
+		panic(reflect.ValueOf(node).Elem().Type())
+	}
+}
+
 //    if node['node'] == 'FunctionDecl':
 //        function_name = node['name'].strip()
 //
@@ -708,47 +718,3 @@ func cast(expr, fromType, toType string) string {
 //        return
 //
 //    raise Exception(node['node'])
-//
-//if 'GOPATH' not in os.environ or os.environ['GOPATH'] == '':
-//    print('The $GOPATH must be set.')
-//
-//# 1. Compile it first (checking for errors)
-//c_file_path = sys.argv[1]
-//
-//# 2. Preprocess
-//pp = subprocess.Popen(["clang", "-E", c_file_path], stdout=subprocess.PIPE).communicate()[0]
-//
-//pp_file_path = '/tmp/pp.c'
-//with open(pp_file_path, 'wb') as pp_out:
-//    pp_out.write(pp)
-//
-//# 3. Generate JSON from AST
-//ast_pp = subprocess.Popen(["clang", "-Xclang", "-ast-dump", "-fsyntax-only", pp_file_path], stdout=subprocess.PIPE)
-//pp = subprocess.Popen(["%s/src/github.com/elliotchance/c2go/c2go" % os.environ['GOPATH']], stdin=ast_pp.stdout, stdout=subprocess.PIPE).communicate()[0]
-//
-//json_file_path = 'pp.json'
-//with open(json_file_path, 'wb') as json_out:
-//    json_out.write(pp)
-//
-//with open(json_file_path, 'r') as json_in:
-//    # 3. Parse C and output Go
-//    go_file_path = '%s.go' % c_file_path.split('/')[-1][:-2]
-//    go_out = io.StringIO()
-//    all_json = json_in.read()
-//
-//    try:
-//        l = json.loads(all_json)
-//    except ValueError as e:
-//        # This occurs if the JSON cannot be parsed
-//        print(all_json)
-//        raise e
-//
-//    render(go_out, l[0], function_name=None)
-//
-//    print("package main\n")
-//    print("import (")
-//    for importName in sorted(imports):
-//        print('\t"%s"' % importName)
-//    print(")\n")
-//
-//    print(go_out.getvalue())
