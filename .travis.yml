@@ -1,4 +1,4 @@
-language: generic
+language: go
 
 # There is a basic build matrix of 4 jobs that test the latest clang against
 # both operating systems and both majoy versions of Python.
