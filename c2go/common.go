@@ -33,54 +33,53 @@ var FunctionDefinitions = map[string]FunctionDefinition{
 	"__assert_fail": FunctionDefinition{"bool", []string{"const char*", "const char*", "unsigned int", "const char*"}},
 }
 
-//function_subs = {
-//    # math.h
-//    'acos': 'math.Acos',
-//    'asin': 'math.Asin',
-//    'atan': 'math.Atan',
-//    'atan2': 'math.Atan2',
-//    'ceil': 'math.Ceil',
-//    'cos': 'math.Cos',
-//    'cosh': 'math.Cosh',
-//    'exp': 'math.Exp',
-//    'fabs': 'math.Abs',
-//    'floor': 'math.Floor',
-//    'fmod': 'math.Mod',
-//    'ldexp': 'math.Ldexp',
-//    'log': 'math.Log',
-//    'log10': 'math.Log10',
-//    'pow': 'math.Pow',
-//    'sin': 'math.Sin',
-//    'sinh': 'math.Sinh',
-//    'sqrt': 'math.Sqrt',
-//    'tan': 'math.Tan',
-//    'tanh': 'math.Tanh',
-//
-//    # darwin/math.h
-//    '__builtin_fabs': 'github.com/elliotchance/c2go/darwin.Fabs',
-//    '__builtin_fabsf': 'github.com/elliotchance/c2go/darwin.Fabsf',
-//    '__builtin_fabsl': 'github.com/elliotchance/c2go/darwin.Fabsl',
-//    '__builtin_inf': 'github.com/elliotchance/c2go/darwin.Inf',
-//    '__builtin_inff': 'github.com/elliotchance/c2go/darwin.Inff',
-//    '__builtin_infl': 'github.com/elliotchance/c2go/darwin.Infl',
-//
-//    '__sincospi_stret': 'github.com/elliotchance/c2go/darwin.SincospiStret',
-//    '__sincospif_stret': 'github.com/elliotchance/c2go/darwin.SincospifStret',
-//    '__sincos_stret': 'github.com/elliotchance/c2go/darwin.SincosStret',
-//    '__sincosf_stret': 'github.com/elliotchance/c2go/darwin.SincosfStret',
-//
-//    # stdio
-//    'printf': 'fmt.Printf',
-//    'scanf': 'fmt.Scanf',
-//
-//    # assert
-//    '__builtin_expect': 'github.com/elliotchance/c2go/darwin.BuiltinExpect',
-//    '__assert_rtn': 'github.com/elliotchance/c2go/darwin.AssertRtn',
-//
-//    # linux/assert.h
-//    '__assert_fail': 'github.com/elliotchance/c2go/linux.AssertFail',
-//}
-//
+var FunctionSubstitutions = map[string]string{
+	// math.h
+	"acos":  "math.Acos",
+	"asin":  "math.Asin",
+	"atan":  "math.Atan",
+	"atan2": "math.Atan2",
+	"ceil":  "math.Ceil",
+	"cos":   "math.Cos",
+	"cosh":  "math.Cosh",
+	"exp":   "math.Exp",
+	"fabs":  "math.Abs",
+	"floor": "math.Floor",
+	"fmod":  "math.Mod",
+	"ldexp": "math.Ldexp",
+	"log":   "math.Log",
+	"log10": "math.Log10",
+	"pow":   "math.Pow",
+	"sin":   "math.Sin",
+	"sinh":  "math.Sinh",
+	"sqrt":  "math.Sqrt",
+	"tan":   "math.Tan",
+	"tanh":  "math.Tanh",
+
+	// stdio
+	"printf": "fmt.Printf",
+	"scanf":  "fmt.Scanf",
+
+	// darwin/math.h
+	"__builtin_fabs":    "github.com/elliotchance/c2go/darwin.Fabs",
+	"__builtin_fabsf":   "github.com/elliotchance/c2go/darwin.Fabsf",
+	"__builtin_fabsl":   "github.com/elliotchance/c2go/darwin.Fabsl",
+	"__builtin_inf":     "github.com/elliotchance/c2go/darwin.Inf",
+	"__builtin_inff":    "github.com/elliotchance/c2go/darwin.Inff",
+	"__builtin_infl":    "github.com/elliotchance/c2go/darwin.Infl",
+	"__sincospi_stret":  "github.com/elliotchance/c2go/darwin.SincospiStret",
+	"__sincospif_stret": "github.com/elliotchance/c2go/darwin.SincospifStret",
+	"__sincos_stret":    "github.com/elliotchance/c2go/darwin.SincosStret",
+	"__sincosf_stret":   "github.com/elliotchance/c2go/darwin.SincosfStret",
+
+	// darwin/assert.h
+	"__builtin_expect": "github.com/elliotchance/c2go/darwin.BuiltinExpect",
+	"__assert_rtn":     "github.com/elliotchance/c2go/darwin.AssertRtn",
+
+	// linux/assert.h
+	"__assert_fail": "github.com/elliotchance/c2go/linux.AssertFail",
+}
+
 //# TODO: Some of these are based on assumtions that may not be true for all
 //# architectures (like the size of an int). At some point in the future we will
 //# need to find out the sizes of some of there and pick the most compatible type.
@@ -352,9 +351,9 @@ var FunctionDefinitions = map[string]FunctionDefinition{
 //
 //        func_def = FunctionDefinitions[func_name]
 //
-//        if func_name in function_subs:
-//            add_import('.'.join(function_subs[func_name].split('.')[:-1]))
-//            func_name = function_subs[func_name].split('/')[-1]
+//        if func_name in FunctionSubstitutions:
+//            add_import('.'.join(FunctionSubstitutions[func_name].split('.')[:-1]))
+//            func_name = FunctionSubstitutions[func_name].split('/')[-1]
 //
 //        args = []
 //        i = 0
