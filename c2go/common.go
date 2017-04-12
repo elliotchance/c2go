@@ -295,27 +295,45 @@ func resolveType(s string) string {
 	panic(fmt.Sprintf("'%s'", s))
 }
 
-//def cast(expr, from_type, to_type):
-//    from_type = resolveType(from_type)
-//    to_type = resolveType(to_type)
-//
-//    if from_type == to_type:
-//        return expr
-//
-//    types = ('int', 'int64', 'uint32', '__darwin_ct_rune_t', 'byte', 'float32',
-//        'float64')
-//    if from_type in types and to_type == 'bool':
-//        return '%s != 0' % expr
-//
-//    if from_type == '*int' and to_type == 'bool':
-//        return '%s != nil' % expr
-//
-//    if from_type in types and to_type in types:
-//        return '%s(%s)' % (to_type, expr)
-//
-//    addImport('github.com/elliotchance/c2go/noarch')
-//    return 'noarch.%sTo%s(%s)' % (ucfirst(from_type), ucfirst(to_type), expr)
-//
+func inStrings(item string, items []string) bool {
+	for _, v := range items {
+		if item == v {
+			return true
+		}
+	}
+
+	return false
+}
+
+func cast(expr, fromType, toType string) string {
+	fromType = resolveType(fromType)
+	toType = resolveType(toType)
+
+	if fromType == toType {
+		return expr
+	}
+
+	types := []string{"int", "int64", "uint32", "__darwin_ct_rune_t", "byte", "float32",
+		"float64"}
+
+	for _, v := range types {
+		if fromType == v && toType == "bool" {
+			return fmt.Sprintf("%s != 0", expr)
+		}
+	}
+
+	if fromType == "*int" && toType == "bool" {
+		return fmt.Sprintf("%s != nil", expr)
+	}
+
+	if inStrings(fromType, types) && inStrings(toType, types) {
+		return fmt.Sprintf("%s(%s)", toType, expr)
+	}
+
+	addImport("github.com/elliotchance/c2go/noarch")
+	return fmt.Sprintf("noarch.%sTo%s(%s)", ucfirst(fromType), ucfirst(toType), expr)
+}
+
 //def print_line(out, line, indent):
 //    out.write('%s%s\n' % ('\t' * indent, line))
 //
