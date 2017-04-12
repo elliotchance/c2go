@@ -654,6 +654,9 @@ def render(out, node, function_name, indent=0, return_type=None):
 
     raise Exception(node['node'])
 
+if 'GOPATH' not in os.environ or os.environ['GOPATH'] == '':
+    print('The $GOPATH must be set.')
+
 # 1. Compile it first (checking for errors)
 c_file_path = sys.argv[1]
 
@@ -666,7 +669,7 @@ with open(pp_file_path, 'wb') as pp_out:
 
 # 3. Generate JSON from AST
 ast_pp = subprocess.Popen(["clang", "-Xclang", "-ast-dump", "-fsyntax-only", pp_file_path], stdout=subprocess.PIPE)
-pp = subprocess.Popen(["./c2go"], stdin=ast_pp.stdout, stdout=subprocess.PIPE).communicate()[0]
+pp = subprocess.Popen(["%s/src/github.com/elliotchance/c2go/c2go" % os.environ['GOPATH']], stdin=ast_pp.stdout, stdout=subprocess.PIPE).communicate()[0]
 
 json_file_path = 'pp.json'
 with open(json_file_path, 'wb') as json_out:
