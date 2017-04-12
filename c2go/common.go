@@ -220,7 +220,7 @@ func resolveType(s string) string {
 	}
 
 	// Structures are by name.
-	if s[:7] == "struct " {
+	if strings.HasPrefix(s, "struct ") {
 		if s[len(s)-1] == '*' {
 			s = s[7 : len(s)-2]
 
@@ -684,16 +684,20 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 			}
 		}
 
+	case *ast.VarDecl:
+		// FIXME?
+		return
+
+	case *ast.CompoundStmt:
+		for _, c := range n.Children {
+			Render(out, c, function_name, indent, return_type)
+		}
+
 	default:
 		panic(reflect.ValueOf(node).Elem().Type())
 	}
 }
 
-//    if node['node'] == 'CompoundStmt':
-//        for c in node['children']:
-//            render(out, c, function_name, indent, return_type)
-//        return
-//
 //    if node['node'] == 'IfStmt':
 //        children = node['children']
 //
@@ -763,10 +767,6 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 //    if node['node'] == 'DeclStmt':
 //        for child in node['children']:
 //            printLine(out, renderExpression(child)[0], indent)
-//        return
-//
-//    if node['node'] == 'VarDecl':
-//        # FIXME?
 //        return
 //
 //    if node['node'] == 'ParenExpr':
