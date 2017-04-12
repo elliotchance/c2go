@@ -179,10 +179,10 @@ func addImport(importName string) {
 func importType(typeName string) string {
 	if strings.Index(typeName, ".") != -1 {
 		parts := strings.Split(typeName, ".")
-		addImport(strings.Join(parts[:len(parts)-1], "."))
+		addImport(strings.Join(parts[:len(parts) - 1], "."))
 
 		parts2 := strings.Split(typeName, "/")
-		return parts2[len(parts2)-1]
+		return parts2[len(parts2) - 1]
 	}
 
 	return typeName
@@ -225,8 +225,8 @@ func resolveType(s string) string {
 
 	// Structures are by name.
 	if s[:7] == "struct " {
-		if s[len(s)-1] == '*' {
-			s = s[7 : len(s)-2]
+		if s[len(s) - 1] == '*' {
+			s = s[7 : len(s) - 2]
 
 			for _, v := range SimpleResolveTypes {
 				if v == s {
@@ -250,8 +250,8 @@ func resolveType(s string) string {
 
 	// Enums are by name.
 	if s[:5] == "enum " {
-		if s[len(s)-1] == '*' {
-			return "*" + s[5:len(s)-2]
+		if s[len(s) - 1] == '*' {
+			return "*" + s[5:len(s) - 2]
 		} else {
 			return s[5:]
 		}
@@ -265,7 +265,7 @@ func resolveType(s string) string {
 	// It may be a pointer of a simple type. For example, float *, int *, etc.
 	//try:
 	if regexp.MustCompile("[\\w ]+\\*").MatchString(s) {
-		return "*" + resolveType(strings.TrimSpace(s[:len(s)-2]))
+		return "*" + resolveType(strings.TrimSpace(s[:len(s) - 2]))
 	}
 	//except NoSuchTypeException:
 	//    # Keep trying the next one.
@@ -337,9 +337,10 @@ func cast(expr, fromType, toType string) string {
 	return fmt.Sprintf("noarch.%sTo%s(%s)", ucfirst(fromType), ucfirst(toType), expr)
 }
 
-//def print_line(out, line, indent):
-//    out.write('%s%s\n' % ('\t' * indent, line))
-//
+func printLine(out *bytes.Buffer, line string, indent int) {
+	out.WriteString(fmt.Sprintf("%s%s\n", strings.Repeat("\t", indent), line))
+}
+
 //def render_expression(node):
 //    if node['node'] == 'BinaryOperator':
 //        operator = node['operator']
@@ -538,6 +539,45 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 		}
 		panic("nice")
 
+	case *ast.TypedefDecl:
+		name := strings.TrimSpace(n.Name)
+		for _, v := range TypesAlreadyDefined {
+			if name == v {
+				return
+			}
+		}
+
+		TypesAlreadyDefined = append(TypesAlreadyDefined, name)
+
+		// FIXME: All of the logic here is just to avoid errors, it
+		// needs to be fixed up.
+		// if ("struct" in node["type"] or "union" in node["type"]) and :
+		//     return
+		n.Type = strings.Replace(n.Type, "unsigned", "", -1)
+
+		resolved_type := resolveType(n.Type)
+
+		if name == "__mbstate_t" {
+			addImport("github.com/elliotchance/c2go/darwin")
+			resolved_type = "darwin.C__mbstate_t"
+		}
+
+		if name == "__darwin_ct_rune_t" {
+			addImport("github.com/elliotchance/c2go/darwin")
+			resolved_type = "darwin.C__darwin_ct_rune_t"
+		}
+
+		if name == "__builtin_va_list" || name == "__qaddr_t" || name == "definition" || name ==
+			"_IO_lock_t" || name == "va_list" || name == "fpos_t" || name == "__NSConstantString" || name ==
+			"__darwin_va_list" || name == "__fsid_t" || name == "_G_fpos_t" || name == "_G_fpos64_t" {
+			return
+		}
+
+		printLine(out, fmt.Sprintf("type %s %s\n", name, resolved_type), indent)
+
+		return
+
+
 	default:
 		panic(reflect.ValueOf(node).Elem().Type())
 	}
@@ -564,16 +604,16 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 //            return_type = get_function_return_type(node['type'])
 //
 //            if function_name == 'main':
-//                print_line(out, 'func main() {', indent)
+//                printLine(out, 'func main() {', indent)
 //            else:
-//                print_line(out, 'func %s(%s) %s {' % (function_name,
+//                printLine(out, 'func %s(%s) %s {' % (function_name,
 //                    ', '.join(args), resolveType(return_type)), indent)
 //
 //            for c in node['children']:
 //                if c['node'] == 'CompoundStmt':
 //                    render(out, c, function_name, indent + 1, node['type'])
 //
-//            print_line(out, '}\n', indent)
+//            printLine(out, '}\n', indent)
 //
 //        FunctionDefinitions[node['name']] = (get_function_return_type(node['type']),
 //            [a['type'] for a in get_function_params(node)])
@@ -589,15 +629,15 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 //        children = node['children']
 //
 //        e = render_expression(children[0])
-//        print_line(out, 'if %s {' % cast(e[0], e[1], 'bool'), indent)
+//        printLine(out, 'if %s {' % cast(e[0], e[1], 'bool'), indent)
 //
 //        render(out, children[1], function_name, indent + 1, return_type)
 //
 //        if len(children) > 2:
-//            print_line(out, '} else {', indent)
+//            printLine(out, '} else {', indent)
 //            render(out, children[2], function_name, indent + 1, return_type)
 //
-//        print_line(out, '}', indent)
+//        printLine(out, '}', indent)
 //
 //        return
 //
@@ -605,11 +645,11 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 //        children = node['children']
 //
 //        e = render_expression(children[0])
-//        print_line(out, 'for %s {' % cast(e[0], e[1], 'bool'), indent)
+//        printLine(out, 'for %s {' % cast(e[0], e[1], 'bool'), indent)
 //
 //        render(out, children[1], function_name, indent + 1, return_type)
 //
-//        print_line(out, '}', indent)
+//        printLine(out, '}', indent)
 //
 //        return
 //
@@ -617,20 +657,20 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 //        children = node['children']
 //
 //        a, b, c = [render_expression(e)[0] for e in children[:3]]
-//        print_line(out, 'for %s; %s; %s {' % (a, b, c), indent)
+//        printLine(out, 'for %s; %s; %s {' % (a, b, c), indent)
 //
 //        render(out, children[3], function_name, indent + 1, return_type)
 //
-//        print_line(out, '}', indent)
+//        printLine(out, '}', indent)
 //
 //        return
 //
 //    if node['node'] == 'BreakStmt':
-//        print_line(out, 'break', indent)
+//        printLine(out, 'break', indent)
 //        return
 //
 //    if node['node'] == 'UnaryOperator':
-//        print_line(out, render_expression(node)[0], indent)
+//        printLine(out, render_expression(node)[0], indent)
 //        return
 //
 //    if node['node'] == 'ReturnStmt':
@@ -640,50 +680,19 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 //            expr, type = render_expression(node['children'][0])
 //            r = 'return ' + cast(expr, type, 'int')
 //
-//        print_line(out, r, indent)
+//        printLine(out, r, indent)
 //        return
 //
 //    if node['node'] in ('BinaryOperator', 'INTEGER_LITERAL', 'CallExpr'):
-//        print_line(out, render_expression(node)[0], indent)
+//        printLine(out, render_expression(node)[0], indent)
 //        return
 //
-//    if node['node'] == 'TypedefDecl':
-//        name = node['name'].strip()
-//        if name in TypesAlreadyDefined:
-//            return
-//
-//        TypesAlreadyDefined.add(name)
-//
-//        # FIXME: All of the logic here is just to avoid errors, it needs to be
-//        # fixed up.
-//        # if ('struct' in node['type'] or 'union' in node['type']) and :
-//        #     return
-//        node['type'] = node['type'].replace('unsigned', '')
-//
-//        resolved_type = resolveType(node['type'])
-//
-//        if name == '__mbstate_t':
-//            addImport('github.com/elliotchance/c2go/darwin')
-//            resolved_type = 'darwin.C__mbstate_t'
-//
-//        if name == '__darwin_ct_rune_t':
-//            addImport('github.com/elliotchance/c2go/darwin')
-//            resolved_type = 'darwin.C__darwin_ct_rune_t'
-//
-//        if name in ('__builtin_va_list', '__qaddr_t', 'definition',
-//            '_IO_lock_t', 'va_list', 'fpos_t', '__NSConstantString',
-//            '__darwin_va_list', '__fsid_t', '_G_fpos_t', '_G_fpos64_t'):
-//            return
-//
-//        print_line(out, "type %s %s\n" % (name, resolved_type), indent)
-//
-//        return
-//
+
 //    if node['node'] == 'EnumDecl':
 //        return
 //
 //    if node['node'] == 'FieldDecl':
-//        print_line(out, render_expression(node)[0], indent + 1)
+//        printLine(out, render_expression(node)[0], indent + 1)
 //        return
 //
 //    if node['node'] == 'RecordDecl':
@@ -696,17 +705,17 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 //        if node['kind'] == 'union':
 //            return
 //
-//        print_line(out, "type %s %s {" % (name, node['kind']), indent)
+//        printLine(out, "type %s %s {" % (name, node['kind']), indent)
 //        if 'children' in node:
 //            for c in node['children']:
 //                render(out, c, function_name, indent + 1)
 //
-//        print_line(out, "}\n", indent)
+//        printLine(out, "}\n", indent)
 //        return
 //
 //    if node['node'] == 'DeclStmt':
 //        for child in node['children']:
-//            print_line(out, render_expression(child)[0], indent)
+//            printLine(out, render_expression(child)[0], indent)
 //        return
 //
 //    if node['node'] == 'VarDecl':
@@ -714,7 +723,7 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 //        return
 //
 //    if node['node'] == 'ParenExpr':
-//        print_line(out, render_expression(node)[0], indent)
+//        printLine(out, render_expression(node)[0], indent)
 //        return
 //
 //    raise Exception(node['node'])
