@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+	"strconv"
 )
 
 type FunctionDefinition struct {
@@ -380,8 +381,9 @@ func renderExpression(node interface{}) []string {
 			e := renderExpression(arg)
 
 			if i > len(func_def.ArgumentTypes) - 1 {
-				// This means the argument is one of the varargs so we don't
-				// know what type it needs to be cast to.
+				// This means the argument is one of the varargs
+				// so we don't know what type it needs to be
+				// cast to.
 				args = append(args, e[0])
 			} else {
 				args = append(args, cast(e[0], e[1], func_def.ArgumentTypes[i]))
@@ -404,9 +406,9 @@ func renderExpression(node interface{}) []string {
 		return renderExpression(n.Children[0])
 
 	case *ast.DeclRefExpr:
-	        name := n.Name
+		name := n.Name
 
-	        if name == "argc" {
+		if name == "argc" {
 			name = "len(os.Args)"
 			addImport("os")
 		} else if name == "argv" {
@@ -414,76 +416,110 @@ func renderExpression(node interface{}) []string {
 			addImport("os")
 		}
 
-	        return []string{name, n.Type}
+		return []string{name, n.Type}
 
 	case *ast.StringLiteral:
-	        return []string{
+		return []string{
 			fmt.Sprintf("\"%s\"", strings.Replace(n.Value, "\n", "\\n", -1)),
 			"const char *",
 		}
 
+	case *ast.VarDecl:
+		theType := resolveType(n.Type)
+		name := n.Name
+
+		// Go does not allow the name of a variable to be called "type".
+		// For the moment I will rename this to avoid the error.
+		if name == "type" {
+			name = "type_"
+		}
+
+		suffix := ""
+		if len(n.Children) > 0 {
+			children := n.Children
+			suffix = fmt.Sprintf(" = %s", renderExpression(children[0])[0])
+		}
+
+		if suffix == " = (0)" {
+			suffix = " = nil"
+		}
+
+		return []string{fmt.Sprintf("var %s %s%s", name, theType, suffix), "unknown3"}
+
+	case *ast.BinaryOperator:
+		operator := n.Operator
+
+		left := renderExpression(n.Children[0])
+		right := renderExpression(n.Children[1])
+
+		return_type := "bool"
+		if inStrings(operator, []string{"|", "&", "+", "-", "*", "/"}) {
+			// TODO: The left and right type might be different
+			return_type = left[1]
+		}
+
+		if operator == "&&" {
+			left[0] = cast(left[0], left[1], return_type)
+			right[0] = cast(right[0], right[1], return_type)
+		}
+
+		if (operator == "!=" || operator == "==") && right[0] == "(0)" {
+			right[0] = "nil"
+		}
+
+		return []string{fmt.Sprintf("%s %s %s", left[0], operator, right[0]), return_type}
+
+	case *ast.IntegerLiteral:
+		literal := n.Value
+
+		// FIXME
+		//if str(literal)[-1] == 'L':
+		//    literal = '%s(%s)' % (resolveType('long'), literal[:-1])
+
+		return []string{strconv.FormatInt(int64(literal), 10), "int"}
+
+	case *ast.UnaryOperator:
+		operator := n.Operator
+		expr := renderExpression(n.Children[0])
+
+		if operator == "!" {
+			if expr[1] == "bool" {
+				return []string{fmt.Sprintf("!(%s)", expr[0]), expr[1]}
+			}
+
+			addImport("github.com/elliotchance/c2go/noarch")
+			return []string{fmt.Sprintf("%s(%s)", fmt.Sprintf("noarch.Not%s", ucfirst(expr[1])), expr[0]), expr[1]}
+		}
+
+		if operator == "*" {
+			if expr[1] == "const char *" {
+				return []string{fmt.Sprintf("%s[0]", expr[0]), "char"}
+			}
+
+			return []string{fmt.Sprintf("*%s", expr[0]), "int"}
+		}
+
+		if operator == "++" {
+			return []string{fmt.Sprintf("%s += 1", expr[0]), expr[1]}
+		}
+
+		if operator == "~" {
+			operator = "^"
+		}
+
+		return []string{fmt.Sprintf("%s%s", operator, expr[0]), expr[1]}
+
+	case *ast.ArraySubscriptExpr:
+		children := n.Children
+		return []string{fmt.Sprintf("%s[%s]", renderExpression(children[0])[0],
+			renderExpression(children[1])[0]), "unknown1"}
 
 	default:
 		panic(fmt.Sprintf("renderExpression: %#v", n))
 	}
-	//    if node['node'] == 'BinaryOperator':
-	//        operator = node['operator']
-	//
-	//        left, left_type = renderExpression(node['children'][0])
-	//        right, right_type = renderExpression(node['children'][1])
-	//
-	//        return_type = 'bool'
-	//        if operator in ('|', '&', '+', '-', '*', '/'):
-	//            # TODO: The left and right type might be different
-	//            return_type = left_type
-	//
-	//        if operator == '&&':
-	//            left = cast(left, left_type, return_type)
-	//            right = cast(right, right_type, return_type)
-	//
-	//        if (operator == '!=' or operator == '==') and right == '(0)':
-	//            right = 'nil'
-	//
-	//        return '%s %s %s' % (left, operator, right), return_type
-	//
-	//    if node['node'] == 'UnaryOperator':
-	//        operator = node['operator']
-	//        expr = renderExpression(node['children'][0])
-	//
-	//        if operator == '!':
-	//            if expr[1] == 'bool':
-	//                return '!(%s)' % expr[0], expr[1]
-	//
-	//            return '%s(%s)' % ('__not_%s' % expr[1], expr[0]), expr[1]
-	//
-	//        if operator == '*':
-	//            if expr[1] == 'const char *':
-	//                return '%s[0]' % expr[0], 'char'
-	//
-	//            return '*%s' % expr[0], 'int'
-	//
-	//        if operator == '++':
-	//            return '%s += 1' % expr[0], expr[1]
-	//
-	//        if operator == '~':
-	//            operator = '^'
-	//
-	//        return '%s%s' % (operator, expr[0]), expr[1]
-	//
+
 	//    if node['node'] == 'FloatingLiteral':
 	//        return node['value'], 'double'
-	//
-	//    if node['node'] == 'IntegerLiteral':
-	//        literal = node['value']
-	//        if str(literal)[-1] == 'L':
-	//            literal = '%s(%s)' % (resolveType('long'), literal[:-1])
-	//
-	//        return literal, 'int'
-	//
-	//    if node['node'] == 'ArraySubscriptExpr':
-	//        children = node['children']
-	//        return '%s[%s]' % (renderExpression(children[0])[0],
-	//            renderExpression(children[1])[0]), 'unknown1'
 	//
 	//    if node['node'] == 'MemberExpr':
 	//        children = node['children']
@@ -714,16 +750,32 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 		printLine(out, renderExpression(node)[0], indent)
 
 	case *ast.ReturnStmt:
-	        r := "return"
+		r := "return"
 
-	        if len(n.Children) > 0 && function_name != "main" {
-	            re := renderExpression(n.Children[0])
-	            r = "return " + cast(re[0], re[1], "int")
+		if len(n.Children) > 0 && function_name != "main" {
+			re := renderExpression(n.Children[0])
+			r = "return " + cast(re[0], re[1], "int")
 		}
 
-	        printLine(out, r, indent)
-	        return
+		printLine(out, r, indent)
 
+	case *ast.DeclStmt:
+		for _, child := range n.Children {
+			printLine(out, renderExpression(child)[0], indent)
+		}
+
+	case *ast.ForStmt:
+		children := n.Children
+
+		a := renderExpression(children[0])[0]
+		b := renderExpression(children[1])[0]
+		c := renderExpression(children[2])[0]
+
+		printLine(out, fmt.Sprintf("for %s; %s; %s {", a, b, c), indent)
+
+		Render(out, children[3], function_name, indent + 1, return_type)
+
+		printLine(out, "}", indent)
 
 	default:
 		panic(reflect.ValueOf(node).Elem().Type())
@@ -758,18 +810,6 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 //
 //        return
 //
-//    if node['node'] == 'ForStmt':
-//        children = node['children']
-//
-//        a, b, c = [renderExpression(e)[0] for e in children[:3]]
-//        printLine(out, 'for %s; %s; %s {' % (a, b, c), indent)
-//
-//        render(out, children[3], function_name, indent + 1, return_type)
-//
-//        printLine(out, '}', indent)
-//
-//        return
-//
 //    if node['node'] == 'BreakStmt':
 //        printLine(out, 'break', indent)
 //        return
@@ -785,11 +825,6 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 //    if node['node'] == 'EnumDecl':
 //        return
 //
-//
-//    if node['node'] == 'DeclStmt':
-//        for child in node['children']:
-//            printLine(out, renderExpression(child)[0], indent)
-//        return
 //
 //    if node['node'] == 'ParenExpr':
 //        printLine(out, renderExpression(node)[0], indent)

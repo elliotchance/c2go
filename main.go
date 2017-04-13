@@ -166,5 +166,5 @@ func main() {
 
 	fmt.Printf(")\n\n")
 
-	fmt.Printf(go_out.String())
+	fmt.Print(go_out.String())
 }
