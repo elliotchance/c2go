@@ -157,12 +157,14 @@ func main() {
 
 	c2go.Render(go_out, tree[0], "", 0, "")
 
-	fmt.Printf("package main\n")
-	fmt.Printf("import (")
+	fmt.Printf("package main\n\n")
+	fmt.Printf("import (\n")
 
-	//for importName in sorted(imports):
-	//    print('\t"%s"' % importName)
-	fmt.Printf(")\n")
+	for _, importName := range c2go.Imports {
+		fmt.Printf(fmt.Sprintf("\t\"%s\"\n", importName))
+	}
+
+	fmt.Printf(")\n\n")
 
 	fmt.Printf(go_out.String())
 }

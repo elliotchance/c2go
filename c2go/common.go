@@ -152,7 +152,7 @@ var TypesAlreadyDefined = []string{
 	"__double2",
 }
 
-var imports = []string{"fmt"}
+var Imports = []string{"fmt"}
 
 func ucfirst(word string) string {
 	return strings.ToUpper(string(word[0])) + word[1:]
@@ -163,22 +163,22 @@ func getExportedName(field string) string {
 }
 
 func addImport(importName string) {
-	for _, i := range imports {
+	for _, i := range Imports {
 		if i == importName {
 			return
 		}
 	}
 
-	imports = append(imports, importName)
+	Imports = append(Imports, importName)
 }
 
 func importType(typeName string) string {
 	if strings.Index(typeName, ".") != -1 {
 		parts := strings.Split(typeName, ".")
-		addImport(strings.Join(parts[:len(parts)-1], "."))
+		addImport(strings.Join(parts[:len(parts) - 1], "."))
 
 		parts2 := strings.Split(typeName, "/")
-		return parts2[len(parts2)-1]
+		return parts2[len(parts2) - 1]
 	}
 
 	return typeName
@@ -221,8 +221,8 @@ func resolveType(s string) string {
 
 	// Structures are by name.
 	if strings.HasPrefix(s, "struct ") {
-		if s[len(s)-1] == '*' {
-			s = s[7 : len(s)-2]
+		if s[len(s) - 1] == '*' {
+			s = s[7 : len(s) - 2]
 
 			for _, v := range SimpleResolveTypes {
 				if v == s {
@@ -246,8 +246,8 @@ func resolveType(s string) string {
 
 	// Enums are by name.
 	if s[:5] == "enum " {
-		if s[len(s)-1] == '*' {
-			return "*" + s[5:len(s)-2]
+		if s[len(s) - 1] == '*' {
+			return "*" + s[5:len(s) - 2]
 		} else {
 			return s[5:]
 		}
@@ -261,7 +261,7 @@ func resolveType(s string) string {
 	// It may be a pointer of a simple type. For example, float *, int *, etc.
 	//try:
 	if regexp.MustCompile("[\\w ]+\\*").MatchString(s) {
-		return "*" + resolveType(strings.TrimSpace(s[:len(s)-2]))
+		return "*" + resolveType(strings.TrimSpace(s[:len(s) - 2]))
 	}
 	//except NoSuchTypeException:
 	//    # Keep trying the next one.
@@ -368,10 +368,10 @@ func renderExpression(node interface{}) []string {
 
 		if _, ok := FunctionSubstitutions[func_name]; ok {
 			parts := strings.Split(FunctionSubstitutions[func_name], ".")
-			addImport(strings.Join(parts[:len(parts)-1], "."))
+			addImport(strings.Join(parts[:len(parts) - 1], "."))
 
 			parts2 := strings.Split(FunctionSubstitutions[func_name], "/")
-			func_name = parts2[len(parts2)-1]
+			func_name = parts2[len(parts2) - 1]
 		}
 
 		args := []string{}
@@ -379,7 +379,7 @@ func renderExpression(node interface{}) []string {
 		for _, arg := range children[1:] {
 			e := renderExpression(arg)
 
-			if i > len(func_def.ArgumentTypes)-1 {
+			if i > len(func_def.ArgumentTypes) - 1 {
 				// This means the argument is one of the varargs so we don't
 				// know what type it needs to be cast to.
 				args = append(args, e[0])
@@ -399,6 +399,29 @@ func renderExpression(node interface{}) []string {
 		return []string{
 			fmt.Sprintf("%s(%s)", func_name, strings.Join(parts, ", ")),
 			func_def.ReturnType}
+
+	case *ast.ImplicitCastExpr:
+		return renderExpression(n.Children[0])
+
+	case *ast.DeclRefExpr:
+	        name := n.Name
+
+	        if name == "argc" {
+			name = "len(os.Args)"
+			addImport("os")
+		} else if name == "argv" {
+			name = "os.Args"
+			addImport("os")
+		}
+
+	        return []string{name, n.Type}
+
+	case *ast.StringLiteral:
+	        return []string{
+			fmt.Sprintf("\"%s\"", strings.Replace(n.Value, "\n", "\\n", -1)),
+			"const char *",
+		}
+
 
 	default:
 		panic(fmt.Sprintf("renderExpression: %#v", n))
@@ -447,9 +470,6 @@ func renderExpression(node interface{}) []string {
 	//
 	//        return '%s%s' % (operator, expr[0]), expr[1]
 	//
-	//    if node['node'] == 'StringLiteral':
-	//        return '"%s"' % node['value'].replace("\n", "\\n"), 'const char *'
-	//
 	//    if node['node'] == 'FloatingLiteral':
 	//        return node['value'], 'double'
 	//
@@ -459,21 +479,6 @@ func renderExpression(node interface{}) []string {
 	//            literal = '%s(%s)' % (resolveType('long'), literal[:-1])
 	//
 	//        return literal, 'int'
-	//
-	//    if node['node'] == 'DeclRefExpr':
-	//        name = node['name']
-	//
-	//        if name == 'argc':
-	//            name = 'len(os.Args)'
-	//            addImport("os")
-	//        elif name == 'argv':
-	//            name = 'os.Args'
-	//            addImport("os")
-	//
-	//        return name, node['type']
-	//
-	//    if node['node'] == 'ImplicitCastExpr':
-	//        return renderExpression(node['children'][0])
 	//
 	//    if node['node'] == 'ArraySubscriptExpr':
 	//        children = node['children']
@@ -577,7 +582,6 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 		for _, c := range n.Children {
 			Render(out, c, function_name, indent, return_type)
 		}
-		panic("nice")
 
 	case *ast.TypedefDecl:
 		name := strings.TrimSpace(n.Name)
@@ -632,7 +636,7 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 		printLine(out, fmt.Sprintf("type %s %s {", name, n.Kind), indent)
 		if len(n.Children) > 0 {
 			for _, c := range n.Children {
-				Render(out, c, function_name, indent+1, "")
+				Render(out, c, function_name, indent + 1, "")
 			}
 		}
 
@@ -640,7 +644,7 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 		return
 
 	case *ast.FieldDecl:
-		printLine(out, renderExpression(node)[0], indent+1)
+		printLine(out, renderExpression(node)[0], indent + 1)
 		return
 
 	case *ast.FunctionDecl:
@@ -682,7 +686,7 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 			for _, c := range n.Children {
 				if _, ok := c.(*ast.CompoundStmt); ok {
 					Render(out, c, function_name,
-						indent+1, n.Type)
+						indent + 1, n.Type)
 				}
 			}
 
@@ -708,6 +712,18 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 
 	case *ast.CallExpr:
 		printLine(out, renderExpression(node)[0], indent)
+
+	case *ast.ReturnStmt:
+	        r := "return"
+
+	        if len(n.Children) > 0 && function_name != "main" {
+	            re := renderExpression(n.Children[0])
+	            r = "return " + cast(re[0], re[1], "int")
+		}
+
+	        printLine(out, r, indent)
+	        return
+
 
 	default:
 		panic(reflect.ValueOf(node).Elem().Type())
@@ -760,16 +776,6 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 //
 //    if node['node'] == 'UnaryOperator':
 //        printLine(out, renderExpression(node)[0], indent)
-//        return
-//
-//    if node['node'] == 'ReturnStmt':
-//        r = 'return'
-//
-//        if 'children' in node and function_name != 'main':
-//            expr, type = renderExpression(node['children'][0])
-//            r = 'return ' + cast(expr, type, 'int')
-//
-//        printLine(out, r, indent)
 //        return
 //
 //    if node['node'] in ('BinaryOperator', 'INTEGER_LITERAL'):
