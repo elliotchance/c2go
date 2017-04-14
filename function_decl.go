@@ -54,7 +54,13 @@ func parseFunctionDecl(line string) *FunctionDecl {
 func (n *FunctionDecl) RenderLine(out *bytes.Buffer, functionName string, indent int, returnType string) {
 	functionName = strings.TrimSpace(n.Name)
 
-	if functionName == "__istype" || functionName == "__isctype" ||
+	// If the function has a direct substitute in Go we do not want to
+	// output the C definition of it.
+	if f := getFunctionDefinition(functionName); f != nil && f.Substitution != "" {
+		return
+	}
+
+	if functionName == "__isctype" ||
 		functionName == "__wcwidth" || functionName == "__sputc" ||
 		functionName == "__inline_signbitf" ||
 		functionName == "__inline_signbitd" ||

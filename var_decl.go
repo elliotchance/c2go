@@ -63,14 +63,18 @@ func (n *VarDecl) Render() []string {
 	suffix := ""
 	if len(n.Children) > 0 {
 		children := n.Children
-		suffix = fmt.Sprintf(" = %s", renderExpression(children[0])[0])
+		defaultValue := renderExpression(children[0])
+		suffix = fmt.Sprintf(" = %s", cast(defaultValue[0], defaultValue[1], n.Type))
 	}
 
 	if suffix == " = (0)" {
 		suffix = " = nil"
 	}
 
-	return []string{fmt.Sprintf("var %s %s%s", name, theType, suffix), "unknown3"}
+	return []string{
+		fmt.Sprintf("var %s %s%s", name, theType, suffix),
+		n.Type,
+	}
 }
 
 func (n *VarDecl) RenderLine(out *bytes.Buffer, functionName string, indent int, returnType string) {

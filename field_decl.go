@@ -38,7 +38,7 @@ func parseFieldDecl(line string) *FieldDecl {
 
 func (n *FieldDecl) Render() []string {
 	fieldType := resolveType(n.Type)
-	name := strings.Replace(n.Name, "used", "", -1)
+	name := n.Name
 
 	// Go does not allow the name of a variable to be called "type". For the
 	// moment I will rename this to avoid the error.

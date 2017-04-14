@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -37,8 +38,11 @@ var simpleResolveTypes = map[string]string{
 
 	"const char *": "string",
 
+	// Are these built into some compilers?
+	"uint32": "uint32",
+
 	// Darwin specific
-	"__darwin_ct_rune_t": "__darwin_ct_rune_t",
+	"__darwin_ct_rune_t": "github.com/elliotchance/c2go/darwin.Darwin_ct_rune_t",
 	"union __mbstate_t":  "__mbstate_t",
 	"fpos_t":             "int",
 	"struct __float2":    "github.com/elliotchance/c2go/darwin.Float2",
@@ -49,6 +53,7 @@ var simpleResolveTypes = map[string]string{
 	// don't need these platform specific things to be implemented yet.
 	"__builtin_va_list":            "int64",
 	"__darwin_pthread_handler_rec": "int64",
+	"unsigned __int128":            "uint64",
 	"__int128":                     "int64",
 	"__mbstate_t":                  "int64",
 	"__sbuf":                       "int64",
@@ -164,5 +169,22 @@ func resolveType(s string) string {
 		return fmt.Sprintf("[%s]%s", search2[2], resolveType(search2[1]))
 	}
 
-	panic(fmt.Sprintf("'%s'", s))
+	panic(fmt.Sprintf("Oh no! I couldn't find an appropriate the Go type for the C type '%s'.", s))
+}
+
+func getDereferenceType(cType string) (string, error) {
+	// In the form of: "char [8]" -> "char"
+	search := regexp.MustCompile(`([\w ]+)\s*\[\d+\]`).FindStringSubmatch(cType)
+	if len(search) > 0 {
+		return search[1], nil
+	}
+
+	// In the form of: "char **" -> "char *"
+	search = regexp.MustCompile(`([\w ]+)\s*(\*+)`).FindStringSubmatch(cType)
+	if len(search) > 0 {
+		return search[1] + search[2][0:len(search[2])-1], nil
+	}
+
+	// I give up...
+	return "unknown5", errors.New(cType)
 }

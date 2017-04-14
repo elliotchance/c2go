@@ -44,7 +44,12 @@ func (n *UnaryOperator) Render() []string {
 		}
 
 		addImport("github.com/elliotchance/c2go/noarch")
-		return []string{fmt.Sprintf("%s(%s)", fmt.Sprintf("noarch.Not%s", ucfirst(expr[1])), expr[0]), expr[1]}
+
+		functionName := fmt.Sprintf("noarch.Not%s", ucfirst(expr[1]))
+		return []string{
+			fmt.Sprintf("%s(%s)", functionName, expr[0]),
+			expr[1],
+		}
 	}
 
 	if operator == "*" {

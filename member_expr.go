@@ -46,6 +46,6 @@ func (n *MemberExpr) Render() []string {
 
 	return []string{
 		fmt.Sprintf("%s.%s", lhs[0], rhs),
-		children[0].(*DeclRefExpr).Type,
+		lhs[1],
 	}
 }

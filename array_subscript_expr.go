@@ -26,7 +26,15 @@ func parseArraySubscriptExpr(line string) *ArraySubscriptExpr {
 }
 
 func (n *ArraySubscriptExpr) Render() []string {
-	children := n.Children
-	return []string{fmt.Sprintf("%s[%s]", renderExpression(children[0])[0],
-		renderExpression(children[1])[0]), "unknown1"}
+	lhs := renderExpression(n.Children[0])
+	rhs := renderExpression(n.Children[1])
+	newExpression := fmt.Sprintf("%s[%s]", lhs[0], rhs[0])
+
+	newType, err := getDereferenceType(lhs[1])
+	if err != nil {
+		panic(fmt.Sprintf("Cannot dereference type '%s' for the expression '%s'",
+			lhs[1], newExpression))
+	}
+
+	return []string{newExpression, newType}
 }

@@ -45,11 +45,12 @@ var builtInFunctionDefinitions = []string{
 	"bool __assert_rtn(const char*, const char*, int, const char*) -> darwin.AssertRtn",
 
 	// darwin/ctype.h
-	"uint32 __istype(__darwin_ct_rune_t, uint32)",
-	"__darwin_ct_rune_t __isctype(__darwin_ct_rune_t, uint32)",
-	"__darwin_ct_rune_t __tolower(__darwin_ct_rune_t)",
-	"__darwin_ct_rune_t __toupper(__darwin_ct_rune_t)",
-	"uint32 __maskrune(__darwin_ct_rune_t, uint32)",
+	"int isascii(int) -> darwin.IsAscii",
+	"uint32 __istype(__darwin_ct_rune_t, uint32) -> darwin.IsType",
+	"__darwin_ct_rune_t __isctype(__darwin_ct_rune_t, uint32) -> darwin.IsCType",
+	"__darwin_ct_rune_t __tolower(__darwin_ct_rune_t) -> darwin.ToLower",
+	"__darwin_ct_rune_t __toupper(__darwin_ct_rune_t) -> darwin.ToUpper",
+	"uint32 __maskrune(__darwin_ct_rune_t, uint32) -> darwin.MaskRune",
 
 	// darwin/math.h
 	"double __builtin_fabs(double) -> darwin.Fabs",
@@ -95,12 +96,14 @@ var builtInFunctionDefinitions = []string{
 
 // getFunctionDefinition will return nil if the function does not exist (is not
 // registered).
-func getFunctionDefinition(functionName string) FunctionDefinition {
+func getFunctionDefinition(functionName string) *FunctionDefinition {
 	loadFunctionDefinitions()
 
-	//fmt.Printf("%#v", functionDefinitions)
+	if f, ok := functionDefinitions[functionName]; ok {
+		return &f
+	}
 
-	return functionDefinitions[functionName]
+	return nil
 }
 
 // addFunctionDefinition registers a function definition. If the definition
