@@ -8,35 +8,6 @@ import (
 	"strings"
 )
 
-func cast(expr, fromType, toType string) string {
-	fromType = resolveType(fromType)
-	toType = resolveType(toType)
-
-	if fromType == toType {
-		return expr
-	}
-
-	types := []string{"int", "int64", "uint32", "__darwin_ct_rune_t",
-		"byte", "float32", "float64"}
-
-	for _, v := range types {
-		if fromType == v && toType == "bool" {
-			return fmt.Sprintf("%s != 0", expr)
-		}
-	}
-
-	if fromType == "*int" && toType == "bool" {
-		return fmt.Sprintf("%s != nil", expr)
-	}
-
-	if inStrings(fromType, types) && inStrings(toType, types) {
-		return fmt.Sprintf("%s(%s)", toType, expr)
-	}
-
-	addImport("github.com/elliotchance/c2go/noarch")
-	return fmt.Sprintf("noarch.%sTo%s(%s)", ucfirst(fromType), ucfirst(toType), expr)
-}
-
 func printLine(out *bytes.Buffer, line string, indent int) {
 	out.WriteString(fmt.Sprintf("%s%s\n", strings.Repeat("\t", indent), line))
 }
@@ -44,25 +15,7 @@ func printLine(out *bytes.Buffer, line string, indent int) {
 func renderExpression(node interface{}) []string {
 	switch n := node.(type) {
 	case *FieldDecl:
-		fieldType := resolveType(n.Type)
-		name := strings.Replace(n.Name, "used", "", -1)
-
-		// Go does not allow the name of a variable to be called "type".
-		// For the moment I will rename this to avoid the error.
-		if name == "type" {
-			name = "type_"
-		}
-
-		suffix := ""
-		if len(n.Children) > 0 {
-			suffix = fmt.Sprintf(" = %s", renderExpression(n.Children[0])[0])
-		}
-
-		if suffix == " = (0)" {
-			suffix = " = nil"
-		}
-
-		return []string{fmt.Sprintf("%s %s%s", name, fieldType, suffix), "unknown3"}
+		return n.Render()
 
 	case *CallExpr:
 		children := n.Children
