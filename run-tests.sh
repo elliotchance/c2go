@@ -2,12 +2,9 @@
 
 CLANG_BIN=${CLANG_BIN:-clang}
 CLANG_VERSION=$($CLANG_BIN --version)
-PYTHON_VERSION=$(python --version 2>&1 | awk '{print $2}')
-C2GO_BIN="./bin"
 
 echo "CLANG_BIN=$CLANG_BIN"
 echo "CLANG_VERSION=$CLANG_VERSION"
-echo "PYTHON_VERSION=$PYTHON_VERSION"
 echo
 
 function run_test {
@@ -27,7 +24,7 @@ function run_test {
     C_EXIT_CODE=$?
 
     mkdir -p build
-    $C2GO_BIN $TEST > build/main.go
+    ./c2go $TEST > build/main.go
     cd build && go build && cd ..
 
     if [ $? != 0 ]; then
@@ -52,7 +49,7 @@ function run_test {
 }
 
 # Before we begin, lets build c2go
-go build -o $C2GO_BIN
+go build
 
 for TEST in ${@-$(find tests -name "*.c")}; do
     run_test $TEST
