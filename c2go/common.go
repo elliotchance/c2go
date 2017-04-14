@@ -556,33 +556,6 @@ func renderExpression(node interface{}) []string {
 	default:
 		panic(fmt.Sprintf("renderExpression: %#v", n))
 	}
-
-
-	//    if node['node'] == 'FieldDecl' or node['node'] == 'VarDecl':
-	//        type = resolveType(node['type'])
-	//        name = node['name'].replace('used', '')
-	//
-	//        # Go does not allow the name of a variable to be called "type". For the
-	//        # moment I will rename this to avoid the error.
-	//        if name == 'type':
-	//            name = 'type_'
-	//
-	//        prefix = ''
-	//        if node['node'] == 'VarDecl':
-	//            prefix = 'var '
-	//
-	//        suffix = ''
-	//        if 'children' in node:
-	//            children = n.Children
-	//            suffix = ' = %s' % renderExpression(children[0])[0]
-	//
-	//            if suffix == ' = (0)':
-	//                suffix = ' = nil'
-	//
-	//        return '%s%s %s%s' % (prefix, name, type, suffix), 'unknown3'
-	//
-	//    if node['node'] == 'RecordDecl':
-	//        return '/* RecordDecl */', 'unknown5'
 }
 
 func getFunctionParams(f *ast.FunctionDecl) []*ast.ParmVarDecl {

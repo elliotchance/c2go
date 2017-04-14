@@ -8,7 +8,6 @@ os:
 
 env:
   - CLANG=3.9
-  - CLANG=3.9
 
 # On top of testing the latest version of clang we also need to test all (most?)
 # of the previous releases. We only test these against linux and python 3
