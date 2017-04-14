@@ -808,33 +808,27 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 
 		printLine(out, "}", indent)
 
+	case *ast.BreakStmt:
+	        printLine(out, "break", indent)
+
+	case *ast.WhileStmt:
+	        children := n.Children
+
+	        e := renderExpression(children[0])
+	        printLine(out, fmt.Sprintf("for %s {", cast(e[0], e[1], "bool")), indent)
+
+		// FIXME: Does this do anything?
+	        Render(out, children[1], function_name, indent + 1, return_type)
+
+	        printLine(out, "}", indent)
+
+	case *ast.UnaryOperator:
+	        printLine(out, renderExpression(node)[0], indent)
+
+	case *ast.EnumDecl:
+		return
+
 	default:
 		panic(reflect.ValueOf(node).Elem().Type())
 	}
 }
-
-
-//    if node['node'] == 'WhileStmt':
-//        children = n.Children
-//
-//        e = renderExpression(children[0])
-//        printLine(out, 'for %s {' % cast(e[0], e[1], 'bool'), indent)
-//
-//        render(out, children[1], function_name, indent + 1, return_type)
-//
-//        printLine(out, '}', indent)
-//
-//        return
-//
-//    if node['node'] == 'BreakStmt':
-//        printLine(out, 'break', indent)
-//        return
-//
-//    if node['node'] == 'UnaryOperator':
-//        printLine(out, renderExpression(node)[0], indent)
-//        return
-//
-//    if node['node'] == 'EnumDecl':
-//        return
-//
-//
