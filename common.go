@@ -10,14 +10,6 @@ import (
 
 var Imports = []string{"fmt"}
 
-func ucfirst(word string) string {
-	return strings.ToUpper(string(word[0])) + word[1:]
-}
-
-func getExportedName(field string) string {
-	return ucfirst(strings.TrimLeft(field, "_"))
-}
-
 func addImport(importName string) {
 	for _, i := range Imports {
 		if i == importName {
