@@ -2,11 +2,6 @@
 
 A tool for converting C to Go.
 
-# Why?
-
-I created this project as a proof of concept. It is written in Go and Python
-(soon to be only Go) and uses the clang AST to do all of the hard work.
-
 The goals of this project are:
 
 1. To create a generic tool that can convert C to Go.
@@ -14,9 +9,8 @@ The goals of this project are:
 as possible (the clang AST API is not stable).
 3. To be a repeatable and predictable tool (rather than doing most of the work
 and you have to clean up the output to get it working.)
-4. To be written in Go (coming soon!).
-5. To deliver quick and small version increments.
-6. The ultimate milestone is to be able to compile the
+4. To deliver quick and small version increments.
+5. The ultimate milestone is to be able to compile the
 [SQLite3 source code](https://sqlite.org/download.html) and have it working
 without modification. This will be the 1.0.0 release.
 
@@ -28,15 +22,11 @@ go get -u github.com/elliotchance/c2go
 
 # Usage
 
-Once the project is written entirely in Go there will be a lovely executable
-ready to go, until that time you will have to use the `c2go.py` script:
-
 ```bash
-export C2GO=$GOPATH/src/github.com/elliotchance/c2go
-python $C2GO/c2go.py myfile.c
+c2go myfile.c
 ```
 
-The `c2go.py` script processes a single C file and outputs the translated code
+The `c2go` program processes a single C file and outputs the translated code
 in Go. Let's use an included example,
 [prime.c](https://github.com/elliotchance/c2go/blob/master/tests/math/prime.c):
 
@@ -69,7 +59,7 @@ int main()
 ```
 
 ```bash
-python $C2GO/c2go.py $C2GO/tests/prime.c > prime.go
+c2go prime.c > prime.go
 go run prime.go
 ```
 
