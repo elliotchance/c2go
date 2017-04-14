@@ -29,6 +29,11 @@ before_install:
         sudo apt-get install -f -y --force-yes clang-$CLANG lldb-$CLANG
       fi
 
+  - |
+      if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+        rvm get head
+      fi
+
 script:
   # Run the unit tests first
   - |
