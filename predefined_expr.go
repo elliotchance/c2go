@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type PredefinedExpr struct {
 	Address  string
 	Position string
@@ -23,4 +25,18 @@ func parsePredefinedExpr(line string) *PredefinedExpr {
 		Lvalue:   true,
 		Children: []interface{}{},
 	}
+}
+
+func (n *PredefinedExpr) Render() []string {
+	if n.Name == "__PRETTY_FUNCTION__" {
+		// FIXME
+		return []string{"\"void print_number(int *)\"", "const char*"}
+	}
+
+	if n.Name == "__func__" {
+		// FIXME
+		return []string{fmt.Sprintf("\"%s\"", "print_number"), "const char*"}
+	}
+
+	panic(fmt.Sprintf("renderExpression: unknown PredefinedExpr: %s", n.Name))
 }

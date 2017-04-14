@@ -22,3 +22,7 @@ func parseImplicitCastExpr(line string) *ImplicitCastExpr {
 		Children: []interface{}{},
 	}
 }
+
+func (n *ImplicitCastExpr) Render() []string {
+	return renderExpression(n.Children[0])
+}

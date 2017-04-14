@@ -1,6 +1,9 @@
 package main
 
-import "strings"
+import (
+	"strings"
+	"fmt"
+)
 
 type VarDecl struct {
 	Address   string
@@ -44,4 +47,27 @@ func parseVarDecl(line string) *VarDecl {
 		IsCInit:   len(groups["cinit"]) > 0,
 		Children:  []interface{}{},
 	}
+}
+
+func (n *VarDecl) Render() []string {
+	theType := resolveType(n.Type)
+	name := n.Name
+
+	// Go does not allow the name of a variable to be called "type".
+	// For the moment I will rename this to avoid the error.
+	if name == "type" {
+		name = "type_"
+	}
+
+	suffix := ""
+	if len(n.Children) > 0 {
+		children := n.Children
+		suffix = fmt.Sprintf(" = %s", renderExpression(children[0])[0])
+	}
+
+	if suffix == " = (0)" {
+		suffix = " = nil"
+	}
+
+	return []string{fmt.Sprintf("var %s %s%s", name, theType, suffix), "unknown3"}
 }

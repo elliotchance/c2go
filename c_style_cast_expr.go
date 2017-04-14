@@ -22,3 +22,8 @@ func parseCStyleCastExpr(line string) *CStyleCastExpr {
 		Children: []interface{}{},
 	}
 }
+
+func (n *CStyleCastExpr) Render() []string {
+	children := n.Children
+	return renderExpression(children[0])
+}

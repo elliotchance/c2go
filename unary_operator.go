@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type UnaryOperator struct {
 	Address  string
 	Position string
@@ -30,4 +32,36 @@ func parseUnaryOperator(line string) *UnaryOperator {
 		Operator: groups["operator"],
 		Children: []interface{}{},
 	}
+}
+
+func (n *UnaryOperator) Render() []string {
+	operator := n.Operator
+	expr := renderExpression(n.Children[0])
+
+	if operator == "!" {
+		if expr[1] == "bool" {
+			return []string{fmt.Sprintf("!(%s)", expr[0]), expr[1]}
+		}
+
+		addImport("github.com/elliotchance/c2go/noarch")
+		return []string{fmt.Sprintf("%s(%s)", fmt.Sprintf("noarch.Not%s", ucfirst(expr[1])), expr[0]), expr[1]}
+	}
+
+	if operator == "*" {
+		if expr[1] == "const char *" {
+			return []string{fmt.Sprintf("%s[0]", expr[0]), "char"}
+		}
+
+		return []string{fmt.Sprintf("*%s", expr[0]), "int"}
+	}
+
+	if operator == "++" {
+		return []string{fmt.Sprintf("%s += 1", expr[0]), expr[1]}
+	}
+
+	if operator == "~" {
+		operator = "^"
+	}
+
+	return []string{fmt.Sprintf("%s%s", operator, expr[0]), expr[1]}
 }

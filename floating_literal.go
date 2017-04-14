@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type FloatingLiteral struct {
 	Address  string
 	Position string
@@ -21,4 +23,8 @@ func parseFloatingLiteral(line string) *FloatingLiteral {
 		Value:    atof(groups["value"]),
 		Children: []interface{}{},
 	}
+}
+
+func (n *FloatingLiteral) Render() []string {
+	return []string{fmt.Sprintf("%f", n.Value), "double"}
 }

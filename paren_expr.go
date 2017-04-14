@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type ParenExpr struct {
 	Address  string
 	Position string
@@ -19,4 +21,9 @@ func parseParenExpr(line string) *ParenExpr {
 		Type:     groups["type"],
 		Children: []interface{}{},
 	}
+}
+
+func (n *ParenExpr) Render() []string {
+	a := renderExpression(n.Children[0])
+	return []string{fmt.Sprintf("(%s)", a[0]), a[1]}
 }

@@ -37,3 +37,17 @@ func parseDeclRefExpr(line string) *DeclRefExpr {
 		Children: []interface{}{},
 	}
 }
+
+func (n *DeclRefExpr) Render() []string {
+	name := n.Name
+
+	if name == "argc" {
+		name = "len(os.Args)"
+		addImport("os")
+	} else if name == "argv" {
+		name = "os.Args"
+		addImport("os")
+	}
+
+	return []string{name, n.Type}
+}
