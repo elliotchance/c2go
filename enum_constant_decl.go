@@ -6,7 +6,7 @@ type EnumConstantDecl struct {
 	Position2 string
 	Name      string
 	Type      string
-	Children []interface{}
+	Children  []interface{}
 }
 
 func parseEnumConstantDecl(line string) *EnumConstantDecl {
@@ -19,11 +19,11 @@ func parseEnumConstantDecl(line string) *EnumConstantDecl {
 	)
 
 	return &EnumConstantDecl{
-		Address: groups["address"],
-		Position: groups["position"],
+		Address:   groups["address"],
+		Position:  groups["position"],
 		Position2: groups["position2"],
-		Name: groups["name"],
-		Type: groups["type"],
-		Children: []interface{}{},
+		Name:      groups["name"],
+		Type:      groups["type"],
+		Children:  []interface{}{},
 	}
 }

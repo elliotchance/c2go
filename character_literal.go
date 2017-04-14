@@ -15,10 +15,10 @@ func parseCharacterLiteral(line string) *CharacterLiteral {
 	)
 
 	return &CharacterLiteral{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
-		Type: groups["type"],
-		Value: atoi(groups["value"]),
+		Type:     groups["type"],
+		Value:    atoi(groups["value"]),
 		Children: []interface{}{},
 	}
 }

@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type ArraySubscriptExpr struct {
 	Address  string
 	Position string
@@ -15,10 +17,16 @@ func parseArraySubscriptExpr(line string) *ArraySubscriptExpr {
 	)
 
 	return &ArraySubscriptExpr{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
-		Type: groups["type"],
-		Kind: groups["kind"],
+		Type:     groups["type"],
+		Kind:     groups["kind"],
 		Children: []interface{}{},
 	}
+}
+
+func (n *ArraySubscriptExpr) Render() []string {
+	children := n.Children
+	return []string{fmt.Sprintf("%s[%s]", renderExpression(children[0])[0],
+		renderExpression(children[1])[0]), "unknown1"}
 }

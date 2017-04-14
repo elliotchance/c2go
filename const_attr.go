@@ -14,9 +14,9 @@ func parseConstAttr(line string) *ConstAttr {
 	)
 
 	return &ConstAttr{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
-		Tags: groups["tags"],
+		Tags:     groups["tags"],
 		Children: []interface{}{},
 	}
 }

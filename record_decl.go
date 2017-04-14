@@ -1,6 +1,10 @@
 package main
 
-import "strings"
+import (
+	"bytes"
+	"fmt"
+	"strings"
+)
 
 type RecordDecl struct {
 	Address    string
@@ -10,7 +14,7 @@ type RecordDecl struct {
 	Kind       string
 	Name       string
 	Definition bool
-	Children []interface{}
+	Children   []interface{}
 }
 
 func parseRecordDecl(line string) *RecordDecl {
@@ -30,18 +34,40 @@ func parseRecordDecl(line string) *RecordDecl {
 		definition = true
 	}
 	if strings.HasSuffix(name, " definition") {
-		name = name[0:len(name) - 11]
+		name = name[0 : len(name)-11]
 		definition = true
 	}
 
 	return &RecordDecl{
-		Address: groups["address"],
-		Position: groups["position"],
-		Prev: groups["prev"],
-		Position2: strings.TrimSpace(groups["position2"]),
-		Kind: groups["kind"],
-		Name: name,
+		Address:    groups["address"],
+		Position:   groups["position"],
+		Prev:       groups["prev"],
+		Position2:  strings.TrimSpace(groups["position2"]),
+		Kind:       groups["kind"],
+		Name:       name,
 		Definition: definition,
-		Children: []interface{}{},
+		Children:   []interface{}{},
 	}
+}
+
+func (n *RecordDecl) RenderLine(out *bytes.Buffer, functionName string, indent int, returnType string) {
+	name := strings.TrimSpace(n.Name)
+	if name == "" || typeIsAlreadyDefined(name) {
+		return
+	}
+
+	typeIsNowDefined(name)
+
+	if n.Kind == "union" {
+		return
+	}
+
+	printLine(out, fmt.Sprintf("type %s %s {", name, n.Kind), indent)
+	if len(n.Children) > 0 {
+		for _, c := range n.Children {
+			Render(out, c, functionName, indent+1, "")
+		}
+	}
+
+	printLine(out, "}\n", indent)
 }

@@ -14,9 +14,9 @@ func parseRestrictAttr(line string) *RestrictAttr {
 	)
 
 	return &RestrictAttr{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
-		Name: groups["name"],
+		Name:     groups["name"],
 		Children: []interface{}{},
 	}
 }

@@ -1,9 +1,9 @@
 package main
 
 type TypedefType struct {
-	Address string
-	Type    string
-	Tags    string
+	Address  string
+	Type     string
+	Tags     string
 	Children []interface{}
 }
 
@@ -14,9 +14,9 @@ func parseTypedefType(line string) *TypedefType {
 	)
 
 	return &TypedefType{
-		Address: groups["address"],
-		Type: groups["type"],
-		Tags: groups["tags"],
+		Address:  groups["address"],
+		Type:     groups["type"],
+		Tags:     groups["tags"],
 		Children: []interface{}{},
 	}
 }

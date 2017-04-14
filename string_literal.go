@@ -1,5 +1,10 @@
 package main
 
+import (
+	"fmt"
+	"strings"
+)
+
 type StringLiteral struct {
 	Address  string
 	Position string
@@ -16,11 +21,18 @@ func parseStringLiteral(line string) *StringLiteral {
 	)
 
 	return &StringLiteral{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
-		Type: groups["type"],
-		Value: unescapeString(groups["value"]),
-		Lvalue: true,
+		Type:     groups["type"],
+		Value:    unescapeString(groups["value"]),
+		Lvalue:   true,
 		Children: []interface{}{},
+	}
+}
+
+func (n *StringLiteral) Render() []string {
+	return []string{
+		fmt.Sprintf("\"%s\"", strings.Replace(n.Value, "\n", "\\n", -1)),
+		"const char *",
 	}
 }

@@ -26,14 +26,28 @@ func parseDeclRefExpr(line string) *DeclRefExpr {
 	)
 
 	return &DeclRefExpr{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
-		Type: groups["type"],
-		Lvalue: len(groups["lvalue"]) > 0,
-		For: groups["for"],
+		Type:     groups["type"],
+		Lvalue:   len(groups["lvalue"]) > 0,
+		For:      groups["for"],
 		Address2: groups["address2"],
-		Name: groups["name"],
-		Type2: groups["type2"],
+		Name:     groups["name"],
+		Type2:    groups["type2"],
 		Children: []interface{}{},
 	}
+}
+
+func (n *DeclRefExpr) Render() []string {
+	name := n.Name
+
+	if name == "argc" {
+		name = "len(os.Args)"
+		addImport("os")
+	} else if name == "argv" {
+		name = "os.Args"
+		addImport("os")
+	}
+
+	return []string{name, n.Type}
 }

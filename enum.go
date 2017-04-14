@@ -1,8 +1,8 @@
 package main
 
 type Enum struct {
-	Address string
-	Name    string
+	Address  string
+	Name     string
 	Children []interface{}
 }
 
@@ -13,8 +13,8 @@ func parseEnum(line string) *Enum {
 	)
 
 	return &Enum{
-		Address: groups["address"],
-		Name: groups["name"],
+		Address:  groups["address"],
+		Name:     groups["name"],
 		Children: []interface{}{},
 	}
 }

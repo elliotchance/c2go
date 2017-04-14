@@ -1,5 +1,7 @@
 package main
 
+import "strconv"
+
 type IntegerLiteral struct {
 	Address  string
 	Position string
@@ -15,10 +17,20 @@ func parseIntegerLiteral(line string) *IntegerLiteral {
 	)
 
 	return &IntegerLiteral{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
-		Type: groups["type"],
-		Value: atoi(groups["value"]),
+		Type:     groups["type"],
+		Value:    atoi(groups["value"]),
 		Children: []interface{}{},
 	}
+}
+
+func (n *IntegerLiteral) Render() []string {
+	literal := n.Value
+
+	// FIXME
+	//if str(literal)[-1] == 'L':
+	//    literal = '%s(%s)' % (resolveType('long'), literal[:-1])
+
+	return []string{strconv.FormatInt(int64(literal), 10), "int"}
 }

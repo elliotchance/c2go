@@ -1,6 +1,10 @@
 package main
 
-import "strings"
+import (
+	"bytes"
+	"fmt"
+	"strings"
+)
 
 type VarDecl struct {
 	Address   string
@@ -29,19 +33,45 @@ func parseVarDecl(line string) *VarDecl {
 
 	type2 := groups["type2"]
 	if type2 != "" {
-		type2 = type2[2:len(type2) - 1]
+		type2 = type2[2 : len(type2)-1]
 	}
 
 	return &VarDecl{
-		Address: groups["address"],
-		Position: groups["position"],
+		Address:   groups["address"],
+		Position:  groups["position"],
 		Position2: strings.TrimSpace(groups["position2"]),
-		Name: strings.TrimSpace(groups["name"]),
-		Type: groups["type"],
-		Type2: type2,
-		IsExtern: len(groups["extern"]) > 0,
-		IsUsed: len(groups["used"]) > 0,
-		IsCInit: len(groups["cinit"]) > 0,
-		Children: []interface{}{},
+		Name:      strings.TrimSpace(groups["name"]),
+		Type:      groups["type"],
+		Type2:     type2,
+		IsExtern:  len(groups["extern"]) > 0,
+		IsUsed:    len(groups["used"]) > 0,
+		IsCInit:   len(groups["cinit"]) > 0,
+		Children:  []interface{}{},
 	}
+}
+
+func (n *VarDecl) Render() []string {
+	theType := resolveType(n.Type)
+	name := n.Name
+
+	// Go does not allow the name of a variable to be called "type".
+	// For the moment I will rename this to avoid the error.
+	if name == "type" {
+		name = "type_"
+	}
+
+	suffix := ""
+	if len(n.Children) > 0 {
+		children := n.Children
+		suffix = fmt.Sprintf(" = %s", renderExpression(children[0])[0])
+	}
+
+	if suffix == " = (0)" {
+		suffix = " = nil"
+	}
+
+	return []string{fmt.Sprintf("var %s %s%s", name, theType, suffix), "unknown3"}
+}
+
+func (n *VarDecl) RenderLine(out *bytes.Buffer, functionName string, indent int, returnType string) {
 }

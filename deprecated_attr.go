@@ -15,7 +15,7 @@ func parseDeprecatedAttr(line string) *DeprecatedAttr {
 	)
 
 	return &DeprecatedAttr{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
 		Message1: removeQuotes(groups["message1"]),
 		Message2: removeQuotes(groups["message2"]),

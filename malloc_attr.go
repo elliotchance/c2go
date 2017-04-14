@@ -13,7 +13,7 @@ func parseMallocAttr(line string) *MallocAttr {
 	)
 
 	return &MallocAttr{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
 		Children: []interface{}{},
 	}

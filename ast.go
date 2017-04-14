@@ -1,10 +1,20 @@
 package main
 
 import (
+	"bytes"
 	"regexp"
-	"strconv"
 	"strings"
 )
+
+type ExpressionRenderer interface {
+	// TODO: The two arguments returned are the rendered Go and the C type.
+	// This should be made into an appropriate type.
+	Render() []string
+}
+
+type LineRenderer interface {
+	RenderLine(out *bytes.Buffer, functionName string, indent int, returnType string)
+}
 
 func Parse(line string) interface{} {
 	nodeName := strings.SplitN(line, " ", 2)[0]
@@ -148,50 +158,4 @@ func groupsFromRegex(rx, line string) map[string]string {
 	}
 
 	return result
-}
-
-func atoi(s string) int {
-	i, err := strconv.Atoi(s)
-	if err != nil {
-		panic(err)
-	}
-
-	return i
-}
-
-func removeQuotes(s string) string {
-	s = strings.TrimSpace(s)
-
-	if s == `""` {
-		return ""
-	}
-	if s == `''` {
-		return ""
-	}
-
-	if len(s) >= 2 && s[0] == '"' && s[len(s) - 1] == '"' {
-		return s[1:len(s) - 2]
-	}
-	if len(s) >= 2 && s[0] == '\'' && s[len(s) - 1] == '\'' {
-		return s[1:len(s) - 1]
-	}
-
-	return s
-}
-
-func atof(s string) float64 {
-	f, err := strconv.ParseFloat(s, 64)
-	if err != nil {
-		panic(err)
-	}
-
-	return f
-}
-
-func unescapeString(s string) string {
-	s = strings.Replace(s, "\\n", "\n", -1)
-	s = strings.Replace(s, "\\r", "\r", -1)
-	s = strings.Replace(s, "\\t", "\t", -1)
-
-	return s
 }

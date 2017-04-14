@@ -1,8 +1,8 @@
 package main
 
 type RecordType struct {
-	Address string
-	Type    string
+	Address  string
+	Type     string
 	Children []interface{}
 }
 
@@ -13,8 +13,8 @@ func parseRecordType(line string) *RecordType {
 	)
 
 	return &RecordType{
-		Address: groups["address"],
-		Type: groups["type"],
+		Address:  groups["address"],
+		Type:     groups["type"],
 		Children: []interface{}{},
 	}
 }

@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type MemberExpr struct {
 	Address  string
 	Position string
@@ -21,12 +23,29 @@ func parseMemberExpr(line string) *MemberExpr {
 	)
 
 	return &MemberExpr{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
-		Type: groups["type"],
-		Lvalue: true,
-		Name: groups["name"],
+		Type:     groups["type"],
+		Lvalue:   true,
+		Name:     groups["name"],
 		Address2: groups["address2"],
 		Children: []interface{}{},
+	}
+}
+
+func (n *MemberExpr) Render() []string {
+	children := n.Children
+
+	lhs := renderExpression(children[0])
+	lhs_type := resolveType(lhs[1])
+	rhs := n.Name
+
+	if inStrings(lhs_type, []string{"darwin.Float2", "darwin.Double2"}) {
+		rhs = getExportedName(rhs)
+	}
+
+	return []string{
+		fmt.Sprintf("%s.%s", lhs[0], rhs),
+		children[0].(*DeclRefExpr).Type,
 	}
 }

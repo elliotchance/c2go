@@ -1,8 +1,8 @@
 package main
 
 import (
-	"testing"
 	"path/filepath"
+	"testing"
 )
 
 // This test exists for code coverage and does not actually test anything. The

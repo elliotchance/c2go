@@ -14,9 +14,9 @@ func parseAsmLabelAttr(line string) *AsmLabelAttr {
 	)
 
 	return &AsmLabelAttr{
-		Address: groups["address"],
-		Position: groups["position"],
+		Address:      groups["address"],
+		Position:     groups["position"],
 		FunctionName: groups["function"],
-		Children: []interface{}{},
+		Children:     []interface{}{},
 	}
 }
