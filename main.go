@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/elliotchance/c2go/ast"
-	"github.com/elliotchance/c2go/c2go"
+	"github.com/elliotchance/c2go/core"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -115,31 +115,31 @@ func ToJSON(tree []interface{}) []map[string]interface{} {
 	return r
 }
 
-func check(e error) {
+func Check(e error) {
 	if e != nil {
 		panic(e)
 	}
 }
 
-func main() {
+func Start(args []string) string {
 	if os.Getenv("GOPATH") == "" {
 		panic("The $GOPATH must be set.")
 	}
 
 	// 1. Compile it first (checking for errors)
-	cFilePath := os.Args[1]
+	cFilePath := args[1]
 
 	// 2. Preprocess
 	pp, err := exec.Command("clang", "-E", cFilePath).Output()
-	check(err)
+	Check(err)
 
 	pp_file_path := "/tmp/pp.c"
 	err = ioutil.WriteFile(pp_file_path, pp, 0644)
-	check(err)
+	Check(err)
 
 	// 3. Generate JSON from AST
 	ast_pp, err := exec.Command("clang", "-Xclang", "-ast-dump", "-fsyntax-only", pp_file_path).Output()
-	check(err)
+	Check(err)
 
 	lines := readAST(ast_pp)
 	nodes := convertLinesToNodes(lines)
@@ -148,7 +148,7 @@ func main() {
 	// TODO: allow the user to print the JSON tree:
 	//jsonTree := ToJSON(tree)
 	//_, err := json.MarshalIndent(jsonTree, " ", "  ")
-	//check(err)
+	//Check(err)
 
 	// 3. Parse C and output Go
 	//parts := strings.Split(cFilePath, "/")
@@ -157,14 +157,18 @@ func main() {
 
 	c2go.Render(go_out, tree[0], "", 0, "")
 
-	fmt.Printf("package main\n\n")
-	fmt.Printf("import (\n")
+	// Put together the whole file
+	all := "package main\n\nimport (\n"
 
 	for _, importName := range c2go.Imports {
-		fmt.Printf(fmt.Sprintf("\t\"%s\"\n", importName))
+		all += fmt.Sprintf("\t\"%s\"\n", importName)
 	}
 
-	fmt.Printf(")\n\n")
+	all += ")\n\n" + go_out.String()
 
-	fmt.Print(go_out.String())
+	return all
+}
+
+func main() {
+	fmt.Print(Start(os.Args))
 }
