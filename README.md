@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/elliotchance/c2go.svg?branch=master)](https://travis-ci.org/elliotchance/c2go)
+[![codecov](https://codecov.io/gh/elliotchance/c2go/branch/master/graph/badge.svg)](https://codecov.io/gh/elliotchance/c2go)
 
 A tool for converting C to Go.
 
