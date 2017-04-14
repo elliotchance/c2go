@@ -1,32 +1,19 @@
 package main
 
 import (
-	"bufio"
-	"encoding/json"
+	"bytes"
 	"fmt"
 	"github.com/elliotchance/c2go/ast"
+	"github.com/elliotchance/c2go/c2go"
+	"io/ioutil"
 	"os"
+	"os/exec"
 	"reflect"
 	"regexp"
 	"strings"
 )
 
-func readAST() []string {
-	reader := bufio.NewReader(os.Stdin)
-	data := []byte{}
-
-	for {
-		buf := make([]byte, 16384)
-		bytesRead, err := reader.Read(buf)
-		if err != nil && err.Error() != "EOF" {
-			panic(err)
-		}
-		if bytesRead == 0 {
-			break
-		}
-		data = append(data, buf[0:bytesRead]...)
-	}
-
+func readAST(data []byte) []string {
 	uncolored := regexp.MustCompile(`\x1b\[[\d;]+m`).ReplaceAll(data, []byte{})
 	return strings.Split(string(uncolored), "\n")
 }
@@ -49,28 +36,8 @@ func convertLinesToNodes(lines []string) []interface{} {
 			panic(fmt.Sprintf("Can not understand line '%s'", line))
 		}
 
-		//nodeType := indentAndType[2]
 		offset := len(indentAndType[1])
-		//try:
 		node := ast.Parse(line[offset:])
-		//except KeyError:
-		//    print("There is no regex for '%s'." % node_type)
-		//    print("I will print out all the lines so a regex can be created:\n")
-		//
-		//    for line in lines:
-		//        //s = re.search(r'^([|\- `]*)(\w+)', line)
-		//        if s is not None and node_type == s.group(2):
-		//            print(line[offset:])
-		//
-		//    sys.exit(1)
-
-		//if result is None:
-		//    print("Can not understand line '%s'" % line)
-		//    sys.exit(1)
-
-		//node = result.groupdict()
-
-		//node['node'] = node_type
 
 		indentLevel := len(indentAndType[1]) / 2
 		nodes = append(nodes, []interface{}{indentLevel, node})
@@ -148,16 +115,56 @@ func ToJSON(tree []interface{}) []map[string]interface{} {
 	return r
 }
 
-func main() {
-	lines := readAST()
-	nodes := convertLinesToNodes(lines)
-	tree := buildTree(nodes, 0)
-	jsonTree := ToJSON(tree)
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
+}
 
-	out, err := json.MarshalIndent(jsonTree, " ", "  ")
-	if err != nil {
-		panic(err)
+func main() {
+	if os.Getenv("GOPATH") == "" {
+		panic("The $GOPATH must be set.")
 	}
 
-	fmt.Print(string(out))
+	// 1. Compile it first (checking for errors)
+	cFilePath := os.Args[1]
+
+	// 2. Preprocess
+	pp, err := exec.Command("clang", "-E", cFilePath).Output()
+	check(err)
+
+	pp_file_path := "/tmp/pp.c"
+	err = ioutil.WriteFile(pp_file_path, pp, 0644)
+	check(err)
+
+	// 3. Generate JSON from AST
+	ast_pp, err := exec.Command("clang", "-Xclang", "-ast-dump", "-fsyntax-only", pp_file_path).Output()
+	check(err)
+
+	lines := readAST(ast_pp)
+	nodes := convertLinesToNodes(lines)
+	tree := buildTree(nodes, 0)
+
+	// TODO: allow the user to print the JSON tree:
+	//jsonTree := ToJSON(tree)
+	//_, err := json.MarshalIndent(jsonTree, " ", "  ")
+	//check(err)
+
+	// 3. Parse C and output Go
+	//parts := strings.Split(cFilePath, "/")
+	//go_file_path := fmt.Sprintf("%s.go", parts[len(parts) - 1][:len(parts) - 2])
+	go_out := bytes.NewBuffer([]byte{})
+
+	c2go.Render(go_out, tree[0], "", 0, "")
+
+	fmt.Printf("package main\n\n")
+	fmt.Printf("import (\n")
+
+	for _, importName := range c2go.Imports {
+		fmt.Printf(fmt.Sprintf("\t\"%s\"\n", importName))
+	}
+
+	fmt.Printf(")\n\n")
+
+	fmt.Print(go_out.String())
 }

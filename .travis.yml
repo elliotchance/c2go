@@ -7,8 +7,7 @@ os:
   - osx
 
 env:
-  - CLANG=3.9 PYENV_VERSION=2.7.13
-  - CLANG=3.9 PYENV_VERSION=3.4.6
+  - CLANG=3.9
 
 # On top of testing the latest version of clang we also need to test all (most?)
 # of the previous releases. We only test these against linux and python 3
@@ -16,26 +15,16 @@ env:
 # build matrix unnecessarily large.
 matrix:
   include:
-    - env: CLANG=3.8 PYENV_VERSION=3.4.6
+    - env: CLANG=3.8
       os: linux
-    - env: CLANG=3.7 PYENV_VERSION=3.4.6
+    - env: CLANG=3.7
       os: linux
-    - env: CLANG=3.6 PYENV_VERSION=3.4.6
+    - env: CLANG=3.6
       os: linux
-    - env: CLANG=3.4 PYENV_VERSION=3.4.6
+    - env: CLANG=3.4
       os: linux
-
-cache:
-  - pip
-  - directories:
-    - $HOME/.pyenv_cache
 
 before_install:
-  - |
-      if [[ -n "$PYENV_VERSION" ]]; then
-        wget https://github.com/praekeltfoundation/travis-pyenv/releases/download/0.3.0/setup-pyenv.sh
-        source setup-pyenv.sh
-      fi
   - |
       if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         wget -O - http://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
@@ -58,5 +47,5 @@ script:
   # documented.
   - cd /tmp
   - export C2GO=$GOPATH/src/github.com/elliotchance/c2go
-  - python $C2GO/c2go.py $C2GO/tests/hello-world.c > hello-world.go
+  - c2go $C2GO/tests/hello-world.c > hello-world.go
   - go run hello-world.go

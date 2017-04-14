@@ -3,6 +3,7 @@
 CLANG_BIN=${CLANG_BIN:-clang}
 CLANG_VERSION=$($CLANG_BIN --version)
 PYTHON_VERSION=$(python --version 2>&1 | awk '{print $2}')
+C2GO_BIN="./bin"
 
 echo "CLANG_BIN=$CLANG_BIN"
 echo "CLANG_VERSION=$CLANG_VERSION"
@@ -14,14 +15,7 @@ function run_test {
 
     echo $TEST
 
-    # First check that the AST can be understood.
-    $CLANG_BIN -Xclang -ast-dump -fsyntax-only $TEST | ./c2go > /tmp/0.txt
-    if [ $? != 0 ]; then
-        cat /tmp/0.txt
-        exit 1
-    fi
-
-    # Compile with clang
+    # Compile with clang.
     $CLANG_BIN -lm $TEST
     if [ $? != 0 ]; then
         exit 1
@@ -33,7 +27,7 @@ function run_test {
     C_EXIT_CODE=$?
 
     mkdir -p build
-    python c2go.py $TEST > build/main.go
+    $C2GO_BIN $TEST > build/main.go
     cd build && go build && cd ..
 
     if [ $? != 0 ]; then
@@ -58,7 +52,7 @@ function run_test {
 }
 
 # Before we begin, lets build c2go
-go build
+go build -o $C2GO_BIN
 
 for TEST in ${@-$(find tests -name "*.c")}; do
     run_test $TEST

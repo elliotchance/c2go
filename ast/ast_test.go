@@ -937,6 +937,18 @@ var nodes = map[string]interface{}{
 		IsReferenced: true,
 		Children: []interface{}{},
 	},
+	`0x34461f0 <line:338:1, col:77> __io_read_fn '__ssize_t (void *, char *, size_t)'`:
+	&ast.TypedefDecl{
+		Address: "0x34461f0",
+		Position: "line:338:1, col:77",
+		Position2: "",
+		Name: "__io_read_fn",
+		Type: "__ssize_t (void *, char *, size_t)",
+		Type2: "",
+		IsImplicit: false,
+		IsReferenced: false,
+		Children: []interface{}{},
+	},
 
 	// TypedefType
 	`0x7f887a0dc760 '__uint16_t' sugar`:
