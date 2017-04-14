@@ -3,6 +3,7 @@ package main
 import (
 	"strings"
 	"fmt"
+	"bytes"
 )
 
 type VarDecl struct {
@@ -70,4 +71,7 @@ func (n *VarDecl) Render() []string {
 	}
 
 	return []string{fmt.Sprintf("var %s %s%s", name, theType, suffix), "unknown3"}
+}
+
+func (n *VarDecl) RenderLine(out *bytes.Buffer, functionName string, indent int, returnType string) {
 }

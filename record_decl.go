@@ -1,6 +1,10 @@
 package main
 
-import "strings"
+import (
+	"strings"
+	"bytes"
+	"fmt"
+)
 
 type RecordDecl struct {
 	Address    string
@@ -44,4 +48,26 @@ func parseRecordDecl(line string) *RecordDecl {
 		Definition: definition,
 		Children:   []interface{}{},
 	}
+}
+
+func (n *RecordDecl) RenderLine(out *bytes.Buffer, functionName string, indent int, returnType string) {
+	name := strings.TrimSpace(n.Name)
+	if name == "" || typeIsAlreadyDefined(name) {
+		return
+	}
+
+	typeIsNowDefined(name)
+
+	if n.Kind == "union" {
+		return
+	}
+
+	printLine(out, fmt.Sprintf("type %s %s {", name, n.Kind), indent)
+	if len(n.Children) > 0 {
+		for _, c := range n.Children {
+			Render(out, c, functionName, indent+1, "")
+		}
+	}
+
+	printLine(out, "}\n", indent)
 }

@@ -18,3 +18,7 @@ func parseBreakStmt(line string) *BreakStmt {
 		Children: []interface{}{},
 	}
 }
+
+func (n *BreakStmt) Render() []string {
+	return []string{"break", ""}
+}

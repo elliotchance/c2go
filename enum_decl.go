@@ -24,3 +24,7 @@ func parseEnumDecl(line string) *EnumDecl {
 		Children:  []interface{}{},
 	}
 }
+
+func (n *EnumDecl) Render() []string {
+	return []string{"", ""}
+}

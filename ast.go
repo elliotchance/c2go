@@ -3,12 +3,17 @@ package main
 import (
 	"regexp"
 	"strings"
+	"bytes"
 )
 
-type Renderer interface {
+type ExpressionRenderer interface {
 	// TODO: The two arguments returned are the rendered Go and the C type.
 	// This should be made into an appropriate type.
 	Render() []string
+}
+
+type LineRenderer interface {
+	RenderLine(out *bytes.Buffer, functionName string, indent int, returnType string)
 }
 
 func Parse(line string) interface{} {
