@@ -127,9 +127,6 @@ var SimpleResolveTypes = map[string]string{
 	"struct __float2":    "github.com/elliotchance/c2go/darwin.Float2",
 	"struct __double2":   "github.com/elliotchance/c2go/darwin.Double2",
 
-	// Linux specific
-	"_IO_FILE": "github.com/elliotchance/c2go/linux.File",
-
 	// These are special cases that almost certainly don"t work. I've put
 	// them here because for whatever reason there is no suitable type or we
 	// don't need these platform specific things to be implemented yet.
@@ -146,7 +143,6 @@ var SimpleResolveTypes = map[string]string{
 var TypesAlreadyDefined = []string{
 	// Linux specific
 	"_LIB_VERSION_TYPE",
-	"_IO_FILE",
 
 	// Darwin specific
 	"__float2",
@@ -259,14 +255,11 @@ func resolveType(s string) string {
 		return "interface{}"
 	}
 
-	// It may be a pointer of a simple type. For example, float *, int *, etc.
-	//try:
-	if regexp.MustCompile("[\\w ]+\\*").MatchString(s) {
+	// It may be a pointer of a simple type. For example, float *, int *,
+	// etc.
+	if regexp.MustCompile("[\\w ]+\\*+$").MatchString(s) {
 		return "*" + resolveType(strings.TrimSpace(s[:len(s) - 2]))
 	}
-	//except NoSuchTypeException:
-	//    # Keep trying the next one.
-	//    pass
 
 	// Function pointers are not yet supported. In th mean time they will be
 	// replaced with a type that certainly wont work until we can fix this
@@ -281,17 +274,12 @@ func resolveType(s string) string {
 		return "interface{}"
 	}
 
-	//try:
 	// It could be an array of fixed length.
 	search2 := regexp.MustCompile("([\\w ]+)\\[(\\d+)\\]").FindStringSubmatch(s)
 	if len(search2) > 0 {
 		return fmt.Sprintf("[%s]%s", search2[2], resolveType(search2[1]))
 	}
-	//except NoSuchTypeException as e:
-	// Make the nested exception message more contextual.
-	//raise NoSuchTypeException(e.message + " (from '%s')" % s)
 
-	//raise NoSuchTypeException("'%s'" % s)
 	panic(fmt.Sprintf("'%s'", s))
 }
 
