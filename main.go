@@ -3,8 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/elliotchance/c2go/ast"
-	"github.com/elliotchance/c2go/core"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -37,7 +35,7 @@ func convertLinesToNodes(lines []string) []interface{} {
 		}
 
 		offset := len(indentAndType[1])
-		node := ast.Parse(line[offset:])
+		node := Parse(line[offset:])
 
 		indentLevel := len(indentAndType[1]) / 2
 		nodes = append(nodes, []interface{}{indentLevel, node})
@@ -155,12 +153,12 @@ func Start(args []string) string {
 	//go_file_path := fmt.Sprintf("%s.go", parts[len(parts) - 1][:len(parts) - 2])
 	go_out := bytes.NewBuffer([]byte{})
 
-	c2go.Render(go_out, tree[0], "", 0, "")
+	Render(go_out, tree[0], "", 0, "")
 
 	// Put together the whole file
 	all := "package main\n\nimport (\n"
 
-	for _, importName := range c2go.Imports {
+	for _, importName := range Imports {
 		all += fmt.Sprintf("\t\"%s\"\n", importName)
 	}
 
