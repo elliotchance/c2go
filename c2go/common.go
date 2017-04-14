@@ -514,6 +514,38 @@ func renderExpression(node interface{}) []string {
 		return []string{fmt.Sprintf("%s[%s]", renderExpression(children[0])[0],
 			renderExpression(children[1])[0]), "unknown1"}
 
+	case *ast.ParenExpr:
+		a := renderExpression(n.Children[0])
+		return []string{fmt.Sprintf("(%s)", a[0]), a[1]}
+
+	case *ast.ConditionalOperator:
+		a := renderExpression(n.Children[0])[0]
+		b := renderExpression(n.Children[1])[0]
+		c := renderExpression(n.Children[2])[0]
+
+		addImport("github.com/elliotchance/c2go/noarch")
+		return []string{
+			fmt.Sprintf("noarch.Ternary(%s, func () interface{} { return %s }, func () interface{} { return %s })", a, b, c),
+			n.Type,
+		}
+
+	case *ast.CStyleCastExpr:
+		children := n.Children
+		return renderExpression(children[0])
+
+	case *ast.PredefinedExpr:
+		if n.Name == "__PRETTY_FUNCTION__" {
+			// FIXME
+			return []string{"\"void print_number(int *)\"", "const char*"}
+		}
+
+		if n.Name == "__func__" {
+			// FIXME
+			return []string{fmt.Sprintf("\"%s\"", "print_number"), "const char*"}
+		}
+
+		panic(fmt.Sprintf("renderExpression: unknown PredefinedExpr: %s", n.Name))
+
 	default:
 		panic(fmt.Sprintf("renderExpression: %#v", n))
 	}
@@ -522,7 +554,7 @@ func renderExpression(node interface{}) []string {
 	//        return node['value'], 'double'
 	//
 	//    if node['node'] == 'MemberExpr':
-	//        children = node['children']
+	//        children = n.Children
 	//
 	//        lhs = renderExpression(children[0])
 	//        lhs_type = resolveType(lhs[1])
@@ -532,10 +564,6 @@ func renderExpression(node interface{}) []string {
 	//            rhs = getExportedName(rhs)
 	//
 	//        return '%s.%s' % (lhs[0], rhs), children[0]['type']
-	//
-	//    if node['node'] == 'CStyleCastExpr':
-	//        children = node['children']
-	//        return renderExpression(children[0])
 	//
 	//    if node['node'] == 'FieldDecl' or node['node'] == 'VarDecl':
 	//        type = resolveType(node['type'])
@@ -552,7 +580,7 @@ func renderExpression(node interface{}) []string {
 	//
 	//        suffix = ''
 	//        if 'children' in node:
-	//            children = node['children']
+	//            children = n.Children
 	//            suffix = ' = %s' % renderExpression(children[0])[0]
 	//
 	//            if suffix == ' = (0)':
@@ -562,29 +590,6 @@ func renderExpression(node interface{}) []string {
 	//
 	//    if node['node'] == 'RecordDecl':
 	//        return '/* RecordDecl */', 'unknown5'
-	//
-	//    if node['node'] == 'ParenExpr':
-	//        a, b = renderExpression(node['children'][0])
-	//        return '(%s)' % a, b
-	//
-	//    if node['node'] == 'PredefinedExpr':
-	//        if node['name'] == '__PRETTY_FUNCTION__':
-	//            # FIXME
-	//            return '"void print_number(int *)"', 'const char*'
-	//
-	//        if node['name'] == '__func__':
-	//            # FIXME
-	//            return '"%s"' % 'print_number', 'const char*'
-	//
-	//        raise Exception('renderExpression: unknown PredefinedExpr: %s' % node['name'])
-	//
-	//    if node['node'] == 'ConditionalOperator':
-	//        a = renderExpression(node['children'][0])[0]
-	//        b = renderExpression(node['children'][1])[0]
-	//        c = renderExpression(node['children'][2])[0]
-	//
-	//        addImport('github.com/elliotchance/c2go/noarch')
-	//        return 'noarch.Ternary(%s, func () interface{} { return %s }, func () interface{} { return %s })' % (a, b, c), node['type']
 }
 
 func getFunctionParams(f *ast.FunctionDecl) []*ast.ParmVarDecl {
@@ -777,13 +782,19 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 
 		printLine(out, "}", indent)
 
+	case *ast.BinaryOperator:
+		printLine(out, renderExpression(node)[0], indent)
+
+	case *ast.ParenExpr:
+		printLine(out, renderExpression(node)[0], indent)
+
 	default:
 		panic(reflect.ValueOf(node).Elem().Type())
 	}
 }
 
 //    if node['node'] == 'IfStmt':
-//        children = node['children']
+//        children = n.Children
 //
 //        e = renderExpression(children[0])
 //        printLine(out, 'if %s {' % cast(e[0], e[1], 'bool'), indent)
@@ -799,7 +810,7 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 //        return
 //
 //    if node['node'] == 'WhileStmt':
-//        children = node['children']
+//        children = n.Children
 //
 //        e = renderExpression(children[0])
 //        printLine(out, 'for %s {' % cast(e[0], e[1], 'bool'), indent)
@@ -818,16 +829,7 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 //        printLine(out, renderExpression(node)[0], indent)
 //        return
 //
-//    if node['node'] in ('BinaryOperator', 'INTEGER_LITERAL'):
-//        printLine(out, renderExpression(node)[0], indent)
-//        return
-//
 //    if node['node'] == 'EnumDecl':
 //        return
 //
 //
-//    if node['node'] == 'ParenExpr':
-//        printLine(out, renderExpression(node)[0], indent)
-//        return
-//
-//    raise Exception(node['node'])
