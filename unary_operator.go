@@ -22,9 +22,9 @@ func parseUnaryOperator(line string) *UnaryOperator {
 	)
 
 	return &UnaryOperator{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
-		Type: groups["type"],
+		Type:     groups["type"],
 		IsLvalue: len(groups["lvalue"]) > 0,
 		IsPrefix: len(groups["prefix"]) > 0,
 		Operator: groups["operator"],

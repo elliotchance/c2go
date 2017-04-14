@@ -13,7 +13,7 @@ func parseNoThrowAttr(line string) *NoThrowAttr {
 	)
 
 	return &NoThrowAttr{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
 		Children: []interface{}{},
 	}

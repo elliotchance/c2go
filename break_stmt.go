@@ -13,7 +13,7 @@ func parseBreakStmt(line string) *BreakStmt {
 	)
 
 	return &BreakStmt{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
 		Children: []interface{}{},
 	}

@@ -10,7 +10,7 @@ type ParmVarDecl struct {
 	Type      string
 	Type2     string
 	IsUsed    bool
-	Children []interface{}
+	Children  []interface{}
 }
 
 func parseParmVarDecl(line string) *ParmVarDecl {
@@ -26,7 +26,7 @@ func parseParmVarDecl(line string) *ParmVarDecl {
 
 	type2 := groups["type2"]
 	if type2 != "" {
-		type2 = type2[2:len(type2) - 1]
+		type2 = type2[2 : len(type2)-1]
 	}
 
 	if strings.Index(groups["position"], "<invalid sloc>") > -1 {
@@ -35,13 +35,13 @@ func parseParmVarDecl(line string) *ParmVarDecl {
 	}
 
 	return &ParmVarDecl{
-		Address: groups["address"],
-		Position: groups["position"],
+		Address:   groups["address"],
+		Position:  groups["position"],
 		Position2: strings.TrimSpace(groups["position2"]),
-		Name: strings.TrimSpace(groups["name"]),
-		Type: groups["type"],
-		Type2: type2,
-		IsUsed: len(groups["used"]) > 0,
-		Children: []interface{}{},
+		Name:      strings.TrimSpace(groups["name"]),
+		Type:      groups["type"],
+		Type2:     type2,
+		IsUsed:    len(groups["used"]) > 0,
+		Children:  []interface{}{},
 	}
 }

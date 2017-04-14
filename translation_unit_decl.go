@@ -1,7 +1,7 @@
 package main
 
 type TranslationUnitDecl struct {
-	Address string
+	Address  string
 	Children []interface{}
 }
 
@@ -9,7 +9,7 @@ func parseTranslationUnitDecl(line string) *TranslationUnitDecl {
 	groups := groupsFromRegex("", line)
 
 	return &TranslationUnitDecl{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Children: []interface{}{},
 	}
 }

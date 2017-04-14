@@ -9,7 +9,7 @@ type FieldDecl struct {
 	Name       string
 	Type       string
 	Referenced bool
-	Children []interface{}
+	Children   []interface{}
 }
 
 func parseFieldDecl(line string) *FieldDecl {
@@ -23,12 +23,12 @@ func parseFieldDecl(line string) *FieldDecl {
 	)
 
 	return &FieldDecl{
-		Address: groups["address"],
-		Position: groups["position"],
-		Position2: strings.TrimSpace(groups["position2"]),
-		Name: groups["name"],
-		Type: groups["type"],
+		Address:    groups["address"],
+		Position:   groups["position"],
+		Position2:  strings.TrimSpace(groups["position2"]),
+		Name:       groups["name"],
+		Type:       groups["type"],
 		Referenced: len(groups["referenced"]) > 0,
-		Children: []interface{}{},
+		Children:   []interface{}{},
 	}
 }

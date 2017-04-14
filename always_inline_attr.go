@@ -13,7 +13,7 @@ func parseAlwaysInlineAttr(line string) *AlwaysInlineAttr {
 	)
 
 	return &AlwaysInlineAttr{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
 		Children: []interface{}{},
 	}

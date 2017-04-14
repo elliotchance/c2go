@@ -13,7 +13,7 @@ func parseForStmt(line string) *ForStmt {
 	)
 
 	return &ForStmt{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
 		Children: []interface{}{},
 	}

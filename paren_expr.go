@@ -14,9 +14,9 @@ func parseParenExpr(line string) *ParenExpr {
 	)
 
 	return &ParenExpr{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
-		Type: groups["type"],
+		Type:     groups["type"],
 		Children: []interface{}{},
 	}
 }

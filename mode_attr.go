@@ -14,9 +14,9 @@ func parseModeAttr(line string) *ModeAttr {
 	)
 
 	return &ModeAttr{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
-		Name: groups["name"],
+		Name:     groups["name"],
 		Children: []interface{}{},
 	}
 }

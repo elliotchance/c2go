@@ -14,9 +14,9 @@ func parseCallExpr(line string) *CallExpr {
 	)
 
 	return &CallExpr{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
-		Type: groups["type"],
+		Type:     groups["type"],
 		Children: []interface{}{},
 	}
 }

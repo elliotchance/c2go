@@ -23,13 +23,13 @@ func parseFormatAttr(line string) *FormatAttr {
 	)
 
 	return &FormatAttr{
-		Address: groups["address"],
-		Position: groups["position"],
-		Implicit: len(groups["implicit"]) > 0,
-		Inherited: len(groups["inherited"]) > 0,
+		Address:      groups["address"],
+		Position:     groups["position"],
+		Implicit:     len(groups["implicit"]) > 0,
+		Inherited:    len(groups["inherited"]) > 0,
 		FunctionName: groups["function"],
-		Unknown1: atoi(groups["unknown1"]),
-		Unknown2: atoi(groups["unknown2"]),
-		Children: []interface{}{},
+		Unknown1:     atoi(groups["unknown1"]),
+		Unknown2:     atoi(groups["unknown2"]),
+		Children:     []interface{}{},
 	}
 }

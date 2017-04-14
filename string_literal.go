@@ -16,11 +16,11 @@ func parseStringLiteral(line string) *StringLiteral {
 	)
 
 	return &StringLiteral{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
-		Type: groups["type"],
-		Value: unescapeString(groups["value"]),
-		Lvalue: true,
+		Type:     groups["type"],
+		Value:    unescapeString(groups["value"]),
+		Lvalue:   true,
 		Children: []interface{}{},
 	}
 }

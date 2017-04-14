@@ -5,42 +5,9 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
-	"strings"
 	"strconv"
+	"strings"
 )
-
-type FunctionDefinition struct {
-	ReturnType    string
-	ArgumentTypes []string
-}
-
-var FunctionDefinitions = map[string]FunctionDefinition{
-	// darwin/assert.h
-	"__builtin_expect": FunctionDefinition{"int", []string{"int", "int"}},
-	"__assert_rtn":     FunctionDefinition{"bool", []string{"const char*", "const char*", "int", "const char*"}},
-
-	// darwin/ctype.h
-	"__istype":   FunctionDefinition{"uint32", []string{"__darwin_ct_rune_t", "uint32"}},
-	"__isctype":  FunctionDefinition{"__darwin_ct_rune_t", []string{"__darwin_ct_rune_t", "uint32"}},
-	"__tolower":  FunctionDefinition{"__darwin_ct_rune_t", []string{"__darwin_ct_rune_t"}},
-	"__toupper":  FunctionDefinition{"__darwin_ct_rune_t", []string{"__darwin_ct_rune_t"}},
-	"__maskrune": FunctionDefinition{"uint32", []string{"__darwin_ct_rune_t", "uint32"}},
-
-	// darwin/math.h
-	"__builtin_fabs":    FunctionDefinition{"double", []string{"double"}},
-	"__builtin_fabsf":   FunctionDefinition{"float", []string{"float"}},
-	"__builtin_fabsl":   FunctionDefinition{"double", []string{"double"}},
-	"__builtin_inf":     FunctionDefinition{"double", []string{}},
-	"__builtin_inff":    FunctionDefinition{"float", []string{}},
-	"__builtin_infl":    FunctionDefinition{"double", []string{}},
-	"__sincospi_stret":  FunctionDefinition{"Double2", []string{"double"}},
-	"__sincospif_stret": FunctionDefinition{"Float2", []string{"float"}},
-	"__sincos_stret":    FunctionDefinition{"Double2", []string{"double"}},
-	"__sincosf_stret":   FunctionDefinition{"Float2", []string{"float"}},
-
-	// linux/assert.h
-	"__assert_fail": FunctionDefinition{"bool", []string{"const char*", "const char*", "unsigned int", "const char*"}},
-}
 
 var FunctionSubstitutions = map[string]string{
 	// math.h
@@ -171,10 +138,10 @@ func addImport(importName string) {
 func importType(typeName string) string {
 	if strings.Index(typeName, ".") != -1 {
 		parts := strings.Split(typeName, ".")
-		addImport(strings.Join(parts[:len(parts) - 1], "."))
+		addImport(strings.Join(parts[:len(parts)-1], "."))
 
 		parts2 := strings.Split(typeName, "/")
-		return parts2[len(parts2) - 1]
+		return parts2[len(parts2)-1]
 	}
 
 	return typeName
@@ -217,8 +184,8 @@ func resolveType(s string) string {
 
 	// Structures are by name.
 	if strings.HasPrefix(s, "struct ") {
-		if s[len(s) - 1] == '*' {
-			s = s[7 : len(s) - 2]
+		if s[len(s)-1] == '*' {
+			s = s[7 : len(s)-2]
 
 			for _, v := range SimpleResolveTypes {
 				if v == s {
@@ -242,8 +209,8 @@ func resolveType(s string) string {
 
 	// Enums are by name.
 	if s[:5] == "enum " {
-		if s[len(s) - 1] == '*' {
-			return "*" + s[5:len(s) - 2]
+		if s[len(s)-1] == '*' {
+			return "*" + s[5:len(s)-2]
 		} else {
 			return s[5:]
 		}
@@ -257,7 +224,7 @@ func resolveType(s string) string {
 	// It may be a pointer of a simple type. For example, float *, int *,
 	// etc.
 	if regexp.MustCompile("[\\w ]+\\*+$").MatchString(s) {
-		return "*" + resolveType(strings.TrimSpace(s[:len(s) - 2]))
+		return "*" + resolveType(strings.TrimSpace(s[:len(s)-2]))
 	}
 
 	// Function pointers are not yet supported. In th mean time they will be
@@ -352,14 +319,14 @@ func renderExpression(node interface{}) []string {
 		children := n.Children
 		func_name := renderExpression(children[0])[0]
 
-		func_def := FunctionDefinitions[func_name]
+		func_def := getFunctionDefinition(func_name)
 
 		if _, ok := FunctionSubstitutions[func_name]; ok {
 			parts := strings.Split(FunctionSubstitutions[func_name], ".")
-			addImport(strings.Join(parts[:len(parts) - 1], "."))
+			addImport(strings.Join(parts[:len(parts)-1], "."))
 
 			parts2 := strings.Split(FunctionSubstitutions[func_name], "/")
-			func_name = parts2[len(parts2) - 1]
+			func_name = parts2[len(parts2)-1]
 		}
 
 		args := []string{}
@@ -367,7 +334,7 @@ func renderExpression(node interface{}) []string {
 		for _, arg := range children[1:] {
 			e := renderExpression(arg)
 
-			if i > len(func_def.ArgumentTypes) - 1 {
+			if i > len(func_def.ArgumentTypes)-1 {
 				// This means the argument is one of the varargs
 				// so we don't know what type it needs to be
 				// cast to.
@@ -534,20 +501,20 @@ func renderExpression(node interface{}) []string {
 		panic(fmt.Sprintf("renderExpression: unknown PredefinedExpr: %s", n.Name))
 
 	case *FloatingLiteral:
-	        return []string{fmt.Sprintf("%f", n.Value), "double"}
+		return []string{fmt.Sprintf("%f", n.Value), "double"}
 
 	case *MemberExpr:
-	        children := n.Children
+		children := n.Children
 
-	        lhs := renderExpression(children[0])
-	        lhs_type := resolveType(lhs[1])
-	        rhs := n.Name
+		lhs := renderExpression(children[0])
+		lhs_type := resolveType(lhs[1])
+		rhs := n.Name
 
-	        if inStrings(lhs_type, []string{"darwin.Float2", "darwin.Double2"}) {
+		if inStrings(lhs_type, []string{"darwin.Float2", "darwin.Double2"}) {
 			rhs = getExportedName(rhs)
 		}
 
-	        return []string{
+		return []string{
 			fmt.Sprintf("%s.%s", lhs[0], rhs),
 			children[0].(*DeclRefExpr).Type,
 		}
@@ -642,7 +609,7 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 		printLine(out, fmt.Sprintf("type %s %s {", name, n.Kind), indent)
 		if len(n.Children) > 0 {
 			for _, c := range n.Children {
-				Render(out, c, function_name, indent + 1, "")
+				Render(out, c, function_name, indent+1, "")
 			}
 		}
 
@@ -650,7 +617,7 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 		return
 
 	case *FieldDecl:
-		printLine(out, renderExpression(node)[0], indent + 1)
+		printLine(out, renderExpression(node)[0], indent+1)
 		return
 
 	case *FunctionDecl:
@@ -692,7 +659,7 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 			for _, c := range n.Children {
 				if _, ok := c.(*CompoundStmt); ok {
 					Render(out, c, function_name,
-						indent + 1, n.Type)
+						indent+1, n.Type)
 				}
 			}
 
@@ -703,9 +670,11 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 				params = append(params, v.Type)
 			}
 
-			FunctionDefinitions[n.Name] = FunctionDefinition{
-				getFunctionReturnType(n.Type), params,
-			}
+			addFunctionDefinition(FunctionDefinition{
+				Name:          n.Name,
+				ReturnType:    getFunctionReturnType(n.Type),
+				ArgumentTypes: params,
+			})
 		}
 
 	case *VarDecl:
@@ -743,7 +712,7 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 
 		printLine(out, fmt.Sprintf("for %s; %s; %s {", a, b, c), indent)
 
-		Render(out, children[3], function_name, indent + 1, return_type)
+		Render(out, children[3], function_name, indent+1, return_type)
 
 		printLine(out, "}", indent)
 
@@ -759,31 +728,31 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 		e := renderExpression(children[0])
 		printLine(out, fmt.Sprintf("if %s {", cast(e[0], e[1], "bool")), indent)
 
-		Render(out, children[1], function_name, indent + 1, return_type)
+		Render(out, children[1], function_name, indent+1, return_type)
 
 		if len(children) > 2 {
 			printLine(out, "} else {", indent)
-			Render(out, children[2], function_name, indent + 1, return_type)
+			Render(out, children[2], function_name, indent+1, return_type)
 		}
 
 		printLine(out, "}", indent)
 
 	case *BreakStmt:
-	        printLine(out, "break", indent)
+		printLine(out, "break", indent)
 
 	case *WhileStmt:
-	        children := n.Children
+		children := n.Children
 
-	        e := renderExpression(children[0])
-	        printLine(out, fmt.Sprintf("for %s {", cast(e[0], e[1], "bool")), indent)
+		e := renderExpression(children[0])
+		printLine(out, fmt.Sprintf("for %s {", cast(e[0], e[1], "bool")), indent)
 
 		// FIXME: Does this do anything?
-	        Render(out, children[1], function_name, indent + 1, return_type)
+		Render(out, children[1], function_name, indent+1, return_type)
 
-	        printLine(out, "}", indent)
+		printLine(out, "}", indent)
 
 	case *UnaryOperator:
-	        printLine(out, renderExpression(node)[0], indent)
+		printLine(out, renderExpression(node)[0], indent)
 
 	case *EnumDecl:
 		return

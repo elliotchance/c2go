@@ -13,7 +13,7 @@ func parseWhileStmt(line string) *WhileStmt {
 	)
 
 	return &WhileStmt{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
 		Children: []interface{}{},
 	}

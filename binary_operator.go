@@ -15,9 +15,9 @@ func parseBinaryOperator(line string) *BinaryOperator {
 	)
 
 	return &BinaryOperator{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
-		Type: groups["type"],
+		Type:     groups["type"],
 		Operator: groups["operator"],
 		Children: []interface{}{},
 	}

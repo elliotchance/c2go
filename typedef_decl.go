@@ -28,18 +28,18 @@ func parseTypedefDecl(line string) *TypedefDecl {
 
 	type2 := groups["type2"]
 	if type2 != "" {
-		type2 = type2[2:len(type2) - 1]
+		type2 = type2[2 : len(type2)-1]
 	}
 
 	return &TypedefDecl{
-		Address: groups["address"],
-		Position: groups["position"],
-		Position2: strings.TrimSpace(groups["position2"]),
-		Name: strings.TrimSpace(groups["name"]),
-		Type: removeQuotes(groups["type"]),
-		Type2: type2,
-		IsImplicit: len(groups["implicit"]) > 0,
+		Address:      groups["address"],
+		Position:     groups["position"],
+		Position2:    strings.TrimSpace(groups["position2"]),
+		Name:         strings.TrimSpace(groups["name"]),
+		Type:         removeQuotes(groups["type"]),
+		Type2:        type2,
+		IsImplicit:   len(groups["implicit"]) > 0,
 		IsReferenced: len(groups["referenced"]) > 0,
-		Children: []interface{}{},
+		Children:     []interface{}{},
 	}
 }

@@ -13,7 +13,7 @@ func parseIfStmt(line string) *IfStmt {
 	)
 
 	return &IfStmt{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
 		Children: []interface{}{},
 	}

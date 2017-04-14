@@ -10,7 +10,7 @@ type RecordDecl struct {
 	Kind       string
 	Name       string
 	Definition bool
-	Children []interface{}
+	Children   []interface{}
 }
 
 func parseRecordDecl(line string) *RecordDecl {
@@ -30,18 +30,18 @@ func parseRecordDecl(line string) *RecordDecl {
 		definition = true
 	}
 	if strings.HasSuffix(name, " definition") {
-		name = name[0:len(name) - 11]
+		name = name[0 : len(name)-11]
 		definition = true
 	}
 
 	return &RecordDecl{
-		Address: groups["address"],
-		Position: groups["position"],
-		Prev: groups["prev"],
-		Position2: strings.TrimSpace(groups["position2"]),
-		Kind: groups["kind"],
-		Name: name,
+		Address:    groups["address"],
+		Position:   groups["position"],
+		Prev:       groups["prev"],
+		Position2:  strings.TrimSpace(groups["position2"]),
+		Kind:       groups["kind"],
+		Name:       name,
 		Definition: definition,
-		Children: []interface{}{},
+		Children:   []interface{}{},
 	}
 }

@@ -15,10 +15,10 @@ func parseCStyleCastExpr(line string) *CStyleCastExpr {
 	)
 
 	return &CStyleCastExpr{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
-		Type: groups["type"],
-		Kind: groups["kind"],
+		Type:     groups["type"],
+		Kind:     groups["kind"],
 		Children: []interface{}{},
 	}
 }

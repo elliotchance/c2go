@@ -3,7 +3,7 @@ package main
 type ConditionalOperator struct {
 	Address  string
 	Position string
-	Type string
+	Type     string
 	Children []interface{}
 }
 
@@ -14,9 +14,9 @@ func parseConditionalOperator(line string) *ConditionalOperator {
 	)
 
 	return &ConditionalOperator{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
-		Type: groups["type"],
+		Type:     groups["type"],
 		Children: []interface{}{},
 	}
 }

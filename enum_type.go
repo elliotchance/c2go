@@ -1,8 +1,8 @@
 package main
 
 type EnumType struct {
-	Address string
-	Name    string
+	Address  string
+	Name     string
 	Children []interface{}
 }
 
@@ -13,8 +13,8 @@ func parseEnumType(line string) *EnumType {
 	)
 
 	return &EnumType{
-		Address: groups["address"],
-		Name: groups["name"],
+		Address:  groups["address"],
+		Name:     groups["name"],
 		Children: []interface{}{},
 	}
 }

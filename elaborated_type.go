@@ -14,9 +14,9 @@ func parseElaboratedType(line string) *ElaboratedType {
 	)
 
 	return &ElaboratedType{
-		Address: groups["address"],
-		Type: groups["type"],
-		Tags: groups["tags"],
+		Address:  groups["address"],
+		Type:     groups["type"],
+		Tags:     groups["tags"],
 		Children: []interface{}{},
 	}
 }

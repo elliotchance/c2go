@@ -15,10 +15,10 @@ func parseFloatingLiteral(line string) *FloatingLiteral {
 	)
 
 	return &FloatingLiteral{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
-		Type: groups["type"],
-		Value: atof(groups["value"]),
+		Type:     groups["type"],
+		Value:    atof(groups["value"]),
 		Children: []interface{}{},
 	}
 }

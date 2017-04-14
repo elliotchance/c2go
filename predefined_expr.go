@@ -16,11 +16,11 @@ func parsePredefinedExpr(line string) *PredefinedExpr {
 	)
 
 	return &PredefinedExpr{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
-		Type: groups["type"],
-		Name: groups["name"],
-		Lvalue: true,
+		Type:     groups["type"],
+		Name:     groups["name"],
+		Lvalue:   true,
 		Children: []interface{}{},
 	}
 }

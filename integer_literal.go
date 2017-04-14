@@ -15,10 +15,10 @@ func parseIntegerLiteral(line string) *IntegerLiteral {
 	)
 
 	return &IntegerLiteral{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
-		Type: groups["type"],
-		Value: atoi(groups["value"]),
+		Type:     groups["type"],
+		Value:    atoi(groups["value"]),
 		Children: []interface{}{},
 	}
 }

@@ -13,7 +13,7 @@ func parseNonNullAttr(line string) *NonNullAttr {
 	)
 
 	return &NonNullAttr{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
 		Children: []interface{}{},
 	}

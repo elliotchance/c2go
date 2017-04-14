@@ -13,7 +13,7 @@ func parseDeclStmt(line string) *DeclStmt {
 	)
 
 	return &DeclStmt{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
 		Children: []interface{}{},
 	}

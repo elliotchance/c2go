@@ -1,9 +1,9 @@
 package main
 
 type QualType struct {
-	Address string
-	Type    string
-	Kind    string
+	Address  string
+	Type     string
+	Kind     string
 	Children []interface{}
 }
 
@@ -14,9 +14,9 @@ func parseQualType(line string) *QualType {
 	)
 
 	return &QualType{
-		Address: groups["address"],
-		Type: groups["type"],
-		Kind: groups["kind"],
+		Address:  groups["address"],
+		Type:     groups["type"],
+		Kind:     groups["kind"],
 		Children: []interface{}{},
 	}
 }

@@ -12,7 +12,7 @@ type FunctionDecl struct {
 	IsExtern   bool
 	IsImplicit bool
 	IsUsed     bool
-	Children []interface{}
+	Children   []interface{}
 }
 
 func parseFunctionDecl(line string) *FunctionDecl {
@@ -30,19 +30,19 @@ func parseFunctionDecl(line string) *FunctionDecl {
 
 	prev := groups["prev"]
 	if prev != "" {
-		prev = prev[5:len(prev) - 1]
+		prev = prev[5 : len(prev)-1]
 	}
 
 	return &FunctionDecl{
-		Address: groups["address"],
-		Position: groups["position1"],
-		Prev: prev,
-		Position2: strings.TrimSpace(groups["position2"]),
-		Name: groups["name"],
-		Type: groups["type"],
-		IsExtern: len(groups["extern"]) > 0,
+		Address:    groups["address"],
+		Position:   groups["position1"],
+		Prev:       prev,
+		Position2:  strings.TrimSpace(groups["position2"]),
+		Name:       groups["name"],
+		Type:       groups["type"],
+		IsExtern:   len(groups["extern"]) > 0,
 		IsImplicit: len(groups["implicit"]) > 0,
-		IsUsed: len(groups["used"]) > 0,
-		Children: []interface{}{},
+		IsUsed:     len(groups["used"]) > 0,
+		Children:   []interface{}{},
 	}
 }

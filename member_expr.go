@@ -21,11 +21,11 @@ func parseMemberExpr(line string) *MemberExpr {
 	)
 
 	return &MemberExpr{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
-		Type: groups["type"],
-		Lvalue: true,
-		Name: groups["name"],
+		Type:     groups["type"],
+		Lvalue:   true,
+		Name:     groups["name"],
 		Address2: groups["address2"],
 		Children: []interface{}{},
 	}

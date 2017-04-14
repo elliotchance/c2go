@@ -13,7 +13,7 @@ func parseCompoundStmt(line string) *CompoundStmt {
 	)
 
 	return &CompoundStmt{
-		Address: groups["address"],
+		Address:  groups["address"],
 		Position: groups["position"],
 		Children: []interface{}{},
 	}
