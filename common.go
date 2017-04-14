@@ -9,53 +9,6 @@ import (
 	"strings"
 )
 
-var FunctionSubstitutions = map[string]string{
-	// math.h
-	"acos":  "math.Acos",
-	"asin":  "math.Asin",
-	"atan":  "math.Atan",
-	"atan2": "math.Atan2",
-	"ceil":  "math.Ceil",
-	"cos":   "math.Cos",
-	"cosh":  "math.Cosh",
-	"exp":   "math.Exp",
-	"fabs":  "math.Abs",
-	"floor": "math.Floor",
-	"fmod":  "math.Mod",
-	"ldexp": "math.Ldexp",
-	"log":   "math.Log",
-	"log10": "math.Log10",
-	"pow":   "math.Pow",
-	"sin":   "math.Sin",
-	"sinh":  "math.Sinh",
-	"sqrt":  "math.Sqrt",
-	"tan":   "math.Tan",
-	"tanh":  "math.Tanh",
-
-	// stdio
-	"printf": "fmt.Printf",
-	"scanf":  "fmt.Scanf",
-
-	// darwin/math.h
-	"__builtin_fabs":    "github.com/elliotchance/c2go/darwin.Fabs",
-	"__builtin_fabsf":   "github.com/elliotchance/c2go/darwin.Fabsf",
-	"__builtin_fabsl":   "github.com/elliotchance/c2go/darwin.Fabsl",
-	"__builtin_inf":     "github.com/elliotchance/c2go/darwin.Inf",
-	"__builtin_inff":    "github.com/elliotchance/c2go/darwin.Inff",
-	"__builtin_infl":    "github.com/elliotchance/c2go/darwin.Infl",
-	"__sincospi_stret":  "github.com/elliotchance/c2go/darwin.SincospiStret",
-	"__sincospif_stret": "github.com/elliotchance/c2go/darwin.SincospifStret",
-	"__sincos_stret":    "github.com/elliotchance/c2go/darwin.SincosStret",
-	"__sincosf_stret":   "github.com/elliotchance/c2go/darwin.SincosfStret",
-
-	// darwin/assert.h
-	"__builtin_expect": "github.com/elliotchance/c2go/darwin.BuiltinExpect",
-	"__assert_rtn":     "github.com/elliotchance/c2go/darwin.AssertRtn",
-
-	// linux/assert.h
-	"__assert_fail": "github.com/elliotchance/c2go/linux.AssertFail",
-}
-
 // TODO: Some of these are based on assumptions that may not be true for all
 // architectures (like the size of an int). At some point in the future we will
 // need to find out the sizes of some of there and pick the most compatible type.
@@ -208,7 +161,7 @@ func resolveType(s string) string {
 	}
 
 	// Enums are by name.
-	if s[:5] == "enum " {
+	if strings.HasPrefix(s, "enum ") {
 		if s[len(s)-1] == '*' {
 			return "*" + s[5:len(s)-2]
 		} else {
@@ -321,11 +274,11 @@ func renderExpression(node interface{}) []string {
 
 		func_def := getFunctionDefinition(func_name)
 
-		if _, ok := FunctionSubstitutions[func_name]; ok {
-			parts := strings.Split(FunctionSubstitutions[func_name], ".")
+		if func_def.Substitution != "" {
+			parts := strings.Split(func_def.Substitution, ".")
 			addImport(strings.Join(parts[:len(parts)-1], "."))
 
-			parts2 := strings.Split(FunctionSubstitutions[func_name], "/")
+			parts2 := strings.Split(func_def.Substitution, "/")
 			func_name = parts2[len(parts2)-1]
 		}
 
