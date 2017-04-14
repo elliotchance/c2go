@@ -8,10 +8,10 @@ import (
 // FunctionDefinition contains the prototype definition for a function.
 type FunctionDefinition struct {
 	// The name of the function, like "printf".
-	Name          string
+	Name string
 
 	// The C return type, like "int".
-	ReturnType    string
+	ReturnType string
 
 	// The C argument types, like ["bool", "int"]. There is currently no way
 	// to represent a varargs.
@@ -20,7 +20,7 @@ type FunctionDefinition struct {
 	// If this is not empty then this function name should be used instead
 	// of the Name. Many low level functions have an exact match with a Go
 	// function. For example, "sin()".
-	Substitution  string
+	Substitution string
 }
 
 var functionDefinitions = map[string]FunctionDefinition{}

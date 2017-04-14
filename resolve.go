@@ -1,9 +1,9 @@
 package main
 
 import (
-	"strings"
-	"regexp"
 	"fmt"
+	"regexp"
+	"strings"
 )
 
 // TODO: Some of these are based on assumptions that may not be true for all

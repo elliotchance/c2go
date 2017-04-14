@@ -1,9 +1,9 @@
 package main
 
 import (
-	"strings"
-	"fmt"
 	"bytes"
+	"fmt"
+	"strings"
 )
 
 type FunctionDecl struct {

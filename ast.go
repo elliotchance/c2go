@@ -1,9 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"regexp"
 	"strings"
-	"bytes"
 )
 
 type ExpressionRenderer interface {
