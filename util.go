@@ -9,3 +9,13 @@ func ucfirst(word string) string {
 func getExportedName(field string) string {
 	return ucfirst(strings.TrimLeft(field, "_"))
 }
+
+func inStrings(item string, items []string) bool {
+	for _, v := range items {
+		if item == v {
+			return true
+		}
+	}
+
+	return false
+}

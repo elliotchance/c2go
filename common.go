@@ -8,40 +8,6 @@ import (
 	"strings"
 )
 
-var Imports = []string{"fmt"}
-
-func addImport(importName string) {
-	for _, i := range Imports {
-		if i == importName {
-			return
-		}
-	}
-
-	Imports = append(Imports, importName)
-}
-
-func importType(typeName string) string {
-	if strings.Index(typeName, ".") != -1 {
-		parts := strings.Split(typeName, ".")
-		addImport(strings.Join(parts[:len(parts)-1], "."))
-
-		parts2 := strings.Split(typeName, "/")
-		return parts2[len(parts2)-1]
-	}
-
-	return typeName
-}
-
-func inStrings(item string, items []string) bool {
-	for _, v := range items {
-		if item == v {
-			return true
-		}
-	}
-
-	return false
-}
-
 func cast(expr, fromType, toType string) string {
 	fromType = resolveType(fromType)
 	toType = resolveType(toType)
