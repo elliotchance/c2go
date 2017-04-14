@@ -20,7 +20,7 @@ func parseFieldDecl(line string) *FieldDecl {
 		`<(?P<position>.*)>
 		(?P<position2> [^ ]+)?
 		(?P<referenced> referenced)?
-		 (?P<name>\w+?)
+		(?P<name> \w+?)?
 		 '(?P<type>.+?)'`,
 		line,
 	)
@@ -29,7 +29,7 @@ func parseFieldDecl(line string) *FieldDecl {
 		Address:    groups["address"],
 		Position:   groups["position"],
 		Position2:  strings.TrimSpace(groups["position2"]),
-		Name:       groups["name"],
+		Name:       strings.TrimSpace(groups["name"]),
 		Type:       groups["type"],
 		Referenced: len(groups["referenced"]) > 0,
 		Children:   []interface{}{},
@@ -38,7 +38,7 @@ func parseFieldDecl(line string) *FieldDecl {
 
 func (n *FieldDecl) Render() []string {
 	fieldType := resolveType(n.Type)
-	name := strings.Replace(n.Name, "used", "", -1)
+	name := n.Name
 
 	// Go does not allow the name of a variable to be called "type". For the
 	// moment I will rename this to avoid the error.
@@ -46,11 +46,15 @@ func (n *FieldDecl) Render() []string {
 		name = "type_"
 	}
 
+	// It may have a default value.
 	suffix := ""
 	if len(n.Children) > 0 {
 		suffix = fmt.Sprintf(" = %s", renderExpression(n.Children[0])[0])
 	}
 
+	// NULL is a macro that one rendered looks like "(0)" we have to be
+	// sensitive to catch this as Go would complain that 0 (int) is not
+	// compatible with the type we are setting it to.
 	if suffix == " = (0)" {
 		suffix = " = nil"
 	}
