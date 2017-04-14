@@ -1,7 +1,8 @@
 language: go
 
-# There is a basic build matrix of 4 jobs that test the latest clang against
-# both operating systems and both majoy versions of Python.
+go:
+  - 1.7
+
 os:
   - linux
   - osx
@@ -9,10 +10,6 @@ os:
 env:
   - CLANG=3.9
 
-# On top of testing the latest version of clang we also need to test all (most?)
-# of the previous releases. We only test these against linux and python 3
-# becuase the clang version on mac is more stable and we don't want to make the
-# build matrix unnecessarily large.
 matrix:
   include:
     - env: CLANG=3.8
@@ -65,4 +62,4 @@ script:
   - go run hello-world.go
 
 after_success:
-  - bash <(curl -s https://codecov.io/bash)
+  - include_cov=coverage.txt bash <(curl -s https://codecov.io/bash)
