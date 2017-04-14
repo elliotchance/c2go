@@ -57,6 +57,7 @@ script:
   - export C2GO=$GOPATH/src/github.com/elliotchance/c2go
   - c2go $C2GO/tests/hello-world.c > hello-world.go
   - go run hello-world.go
+  - cd -
 
 after_success:
   - include_cov=coverage.txt bash <(curl -s https://codecov.io/bash)
