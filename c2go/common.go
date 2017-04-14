@@ -34,9 +34,9 @@ var FunctionDefinitions = map[string]FunctionDefinition{
 	"__builtin_inf":     FunctionDefinition{"double", []string{}},
 	"__builtin_inff":    FunctionDefinition{"float", []string{}},
 	"__builtin_infl":    FunctionDefinition{"double", []string{}},
-	"__sincospi_stret":  FunctionDefinition{"Double2", []string{"float"}},
+	"__sincospi_stret":  FunctionDefinition{"Double2", []string{"double"}},
 	"__sincospif_stret": FunctionDefinition{"Float2", []string{"float"}},
-	"__sincos_stret":    FunctionDefinition{"Double2", []string{"float"}},
+	"__sincos_stret":    FunctionDefinition{"Double2", []string{"double"}},
 	"__sincosf_stret":   FunctionDefinition{"Float2", []string{"float"}},
 
 	// linux/assert.h
@@ -313,8 +313,8 @@ func cast(expr, fromType, toType string) string {
 		return expr
 	}
 
-	types := []string{"int", "int64", "uint32", "__darwin_ct_rune_t", "byte", "float32",
-		"float64"}
+	types := []string{"int", "int64", "uint32", "__darwin_ct_rune_t",
+		"byte", "float32", "float64"}
 
 	for _, v := range types {
 		if fromType == v && toType == "bool" {
@@ -546,25 +546,30 @@ func renderExpression(node interface{}) []string {
 
 		panic(fmt.Sprintf("renderExpression: unknown PredefinedExpr: %s", n.Name))
 
+	case *ast.FloatingLiteral:
+	        return []string{fmt.Sprintf("%f", n.Value), "double"}
+
+	case *ast.MemberExpr:
+	        children := n.Children
+
+	        lhs := renderExpression(children[0])
+	        lhs_type := resolveType(lhs[1])
+	        rhs := n.Name
+
+	        if inStrings(lhs_type, []string{"darwin.Float2", "darwin.Double2"}) {
+			rhs = getExportedName(rhs)
+		}
+
+	        return []string{
+			fmt.Sprintf("%s.%s", lhs[0], rhs),
+			children[0].(*ast.DeclRefExpr).Type,
+		}
+
 	default:
 		panic(fmt.Sprintf("renderExpression: %#v", n))
 	}
 
-	//    if node['node'] == 'FloatingLiteral':
-	//        return node['value'], 'double'
-	//
-	//    if node['node'] == 'MemberExpr':
-	//        children = n.Children
-	//
-	//        lhs = renderExpression(children[0])
-	//        lhs_type = resolveType(lhs[1])
-	//        rhs = node['name']
-	//
-	//        if lhs_type in ('darwin.Float2', 'darwin.Double2'):
-	//            rhs = getExportedName(rhs)
-	//
-	//        return '%s.%s' % (lhs[0], rhs), children[0]['type']
-	//
+
 	//    if node['node'] == 'FieldDecl' or node['node'] == 'VarDecl':
 	//        type = resolveType(node['type'])
 	//        name = node['name'].replace('used', '')
@@ -788,27 +793,27 @@ func Render(out *bytes.Buffer, node interface{}, function_name string, indent in
 	case *ast.ParenExpr:
 		printLine(out, renderExpression(node)[0], indent)
 
+	case *ast.IfStmt:
+		children := n.Children
+
+		e := renderExpression(children[0])
+		printLine(out, fmt.Sprintf("if %s {", cast(e[0], e[1], "bool")), indent)
+
+		Render(out, children[1], function_name, indent + 1, return_type)
+
+		if len(children) > 2 {
+			printLine(out, "} else {", indent)
+			Render(out, children[2], function_name, indent + 1, return_type)
+		}
+
+		printLine(out, "}", indent)
+
 	default:
 		panic(reflect.ValueOf(node).Elem().Type())
 	}
 }
 
-//    if node['node'] == 'IfStmt':
-//        children = n.Children
-//
-//        e = renderExpression(children[0])
-//        printLine(out, 'if %s {' % cast(e[0], e[1], 'bool'), indent)
-//
-//        render(out, children[1], function_name, indent + 1, return_type)
-//
-//        if len(children) > 2:
-//            printLine(out, '} else {', indent)
-//            render(out, children[2], function_name, indent + 1, return_type)
-//
-//        printLine(out, '}', indent)
-//
-//        return
-//
+
 //    if node['node'] == 'WhileStmt':
 //        children = n.Children
 //
