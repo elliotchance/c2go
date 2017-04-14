@@ -36,6 +36,10 @@ before_install:
       fi
 
 script:
+  # Run the unit tests first
+  - go test ./ast -race -coverprofile=coverage.txt -covermode=atomic
+
+  # Now run the integration tests.
   - |
       if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         CLANG_BIN=clang-$CLANG bash run-tests.sh
@@ -49,3 +53,6 @@ script:
   - export C2GO=$GOPATH/src/github.com/elliotchance/c2go
   - c2go $C2GO/tests/hello-world.c > hello-world.go
   - go run hello-world.go
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
