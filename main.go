@@ -164,6 +164,9 @@ func Start(args []string) string {
 
 	all += ")\n\n" + go_out.String()
 
+	// Reset the imports
+	initImports()
+
 	return all
 }
 
