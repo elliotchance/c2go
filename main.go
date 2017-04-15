@@ -179,7 +179,7 @@ func Start(args []string) string {
 
 func main() {
 	flag.Usage = func() {
-		fmt.Fprintln(os.Stderr, "Usage: %s <file.c>", os.Args[0])
+		fmt.Fprintf(os.Stderr, "Usage: %s <file.c>\n", os.Args[0])
 		flag.PrintDefaults()
 	}
 	flag.Parse()
