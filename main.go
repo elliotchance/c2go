@@ -124,13 +124,6 @@ func Check(e error) {
 }
 
 func Start(args []string) string {
-
-        // Need at least one argument for C file path 
-        if len(args) < 2 {
-        fmt.Fprintf(os.Stderr, "Usage: %s tests/misc/prime.c > /tmp/prime.go\n", args[0])
-        os.Exit(1)
-        }
-
 	if os.Getenv("GOPATH") == "" {
 		panic("The $GOPATH must be set.")
 	}
@@ -193,6 +186,8 @@ func main() {
 
 	if flag.NArg() < 1 {
 		flag.Usage()
+		return
 	}
+
 	fmt.Print(Start(flag.Args()))
 }
