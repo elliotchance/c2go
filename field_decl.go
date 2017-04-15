@@ -40,6 +40,10 @@ func (n *FieldDecl) Render() []string {
 	fieldType := resolveType(n.Type)
 	name := n.Name
 
+	if name == "" {
+		return []string{"", "unknown71"}
+	}
+
 	// Go does not allow the name of a variable to be called "type". For the
 	// moment I will rename this to avoid the error.
 	if name == "type" {
