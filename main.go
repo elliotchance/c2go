@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -9,6 +10,10 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+)
+
+var (
+	printAst = flag.Bool("print-ast", false, "Print AST before translated Go code.")
 )
 
 func readAST(data []byte) []string {
@@ -124,7 +129,7 @@ func Start(args []string) string {
 	}
 
 	// 1. Compile it first (checking for errors)
-	cFilePath := args[1]
+	cFilePath := args[0]
 
 	// 2. Preprocess
 	pp, err := exec.Command("clang", "-E", cFilePath).Output()
@@ -139,6 +144,12 @@ func Start(args []string) string {
 	Check(err)
 
 	lines := readAST(ast_pp)
+	if *printAst {
+		for _, l := range lines {
+			fmt.Println(l)
+		}
+		fmt.Println()
+	}
 	nodes := convertLinesToNodes(lines)
 	tree := buildTree(nodes, 0)
 
@@ -167,5 +178,14 @@ func Start(args []string) string {
 }
 
 func main() {
-	fmt.Print(Start(os.Args))
+	flag.Usage = func() {
+		fmt.Fprintln(os.Stderr, "Usage: c2go <file.c>")
+		flag.PrintDefaults()
+	}
+	flag.Parse()
+
+	if flag.NArg() < 1 {
+		flag.Usage()
+	}
+	fmt.Print(Start(flag.Args()))
 }

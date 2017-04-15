@@ -25,7 +25,9 @@ func parseWhileStmt(line string) *WhileStmt {
 }
 
 func (n *WhileStmt) RenderLine(out *bytes.Buffer, functionName string, indent int, returnType string) {
-	children := n.Children
+	// TODO: The first child of a WhileStmt appears to always be null.
+	// Are there any cases where it is used?
+	children := n.Children[1:]
 
 	e := renderExpression(children[0])
 	printLine(out, fmt.Sprintf("for %s {", cast(e[0], e[1], "bool")), indent)
