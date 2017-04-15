@@ -856,6 +856,18 @@ var nodes = map[string]interface{}{
 		IsReferenced: false,
 		Children:     []interface{}{},
 	},
+	// Issue: #26
+	`0x55b9da8784b0 <line:341:1, line:342:16> line:341:19 __io_write_fn '__ssize_t (void *, const char *, size_t)'`: &TypedefDecl{
+		Address:      "0x55b9da8784b0",
+		Position:     "line:341:1, line:342:16",
+		Position2:    "line:341:19",
+		Name:         "__io_write_fn",
+		Type:         "__ssize_t (void *, const char *, size_t)",
+		Type2:        "",
+		IsImplicit:   false,
+		IsReferenced: false,
+		Children:     []interface{}{},
+	},
 
 	// TypedefType
 	`0x7f887a0dc760 '__uint16_t' sugar`: &TypedefType{
