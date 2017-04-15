@@ -17,6 +17,6 @@ func TestIntegrationScripts(t *testing.T) {
 	}
 
 	for _, file := range files {
-		Start([]string{"", file})
+		Start([]string{file})
 	}
 }
