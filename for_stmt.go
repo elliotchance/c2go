@@ -28,12 +28,21 @@ func (n *ForStmt) RenderLine(out *bytes.Buffer, functionName string, indent int,
 	children := n.Children
 
 	a := renderExpression(children[0])[0]
-	b := renderExpression(children[1])[0]
-	c := renderExpression(children[2])[0]
+	// TODO: The second child of a ForStmt appears to always be null.
+	// Are there any cases where it is used?
+	if children[1] != nil {
+		panic("non-nil child 1 in ForStmt")
+	}
+	b := renderExpression(children[2])[0]
+	c := renderExpression(children[3])[0]
 
-	printLine(out, fmt.Sprintf("for %s; %s; %s {", a, b, c), indent)
+	if a == "" && b == "" && c == "" {
+		printLine(out, fmt.Sprintf("for {"), indent)
+	} else {
+		printLine(out, fmt.Sprintf("for %s; %s; %s {", a, b, c), indent)
+	}
 
-	Render(out, children[3], functionName, indent+1, returnType)
+	Render(out, children[4], functionName, indent+1, returnType)
 
 	printLine(out, "}", indent)
 }
