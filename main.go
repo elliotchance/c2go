@@ -23,15 +23,14 @@ func convertLinesToNodes(lines []string) []interface{} {
 			continue
 		}
 
-		// This will need to be handled more gracefully... I'm not even
-		// sure what this means?
-		if strings.Index(line, "<<<NULL>>>") >= 0 {
-			continue
-		}
+		// It is tempting to discard null AST nodes, but these may
+		// have semantic importance: for example, they represent omitted
+		// for-loop conditions, as in for(;;).
+		line = strings.Replace(line, "<<<NULL>>>", "NullStmt", 1)
 
 		indentAndType := regexp.MustCompile("^([|\\- `]*)(\\w+)").FindStringSubmatch(line)
 		if len(indentAndType) == 0 {
-			panic(fmt.Sprintf("Can not understand line '%s'", line))
+			panic(fmt.Sprintf("Cannot understand line '%s'", line))
 		}
 
 		offset := len(indentAndType[1])

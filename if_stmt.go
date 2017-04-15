@@ -25,7 +25,8 @@ func parseIfStmt(line string) *IfStmt {
 }
 
 func (n *IfStmt) RenderLine(out *bytes.Buffer, functionName string, indent int, returnType string) {
-	children := n.Children
+	// XXX: the first two children of an IfStmt appear to always be null.
+	children := n.Children[2:]
 
 	e := renderExpression(children[0])
 	printLine(out, fmt.Sprintf("if %s {", cast(e[0], e[1], "bool")), indent)

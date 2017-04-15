@@ -11,6 +11,9 @@ func printLine(out *bytes.Buffer, line string, indent int) {
 }
 
 func renderExpression(node interface{}) []string {
+	if node == nil {
+		return []string{""}
+	}
 	if n, ok := node.(ExpressionRenderer); ok {
 		return n.Render()
 	}
