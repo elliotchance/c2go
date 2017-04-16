@@ -106,37 +106,8 @@ func main() {
 
 # What Is Supported?
 
-This table represents what is supported. If you see anything missing (there is a
-lot missing!) please add it with a pull request.
-
-| Function      | Supported?    | Notes                      |
-| ------------- | ------------- | -------------------------- |
-| **assert.h**  | Yes           |                            |
-| assert        | Yes           | This is actually a macro.  |
-| **math.h**    | Partly        | All of the C99 functions.  |
-| acos          | Yes           |                            |
-| asin          | Yes           |                            |
-| atan          | Yes           |                            |
-| atan2         | Yes           |                            |
-| ceil          | Yes           |                            |
-| cos           | Yes           |                            |
-| cosh          | Yes           |                            |
-| exp           | Yes           |                            |
-| fabs          | Yes           |                            |
-| floor         | Yes           |                            |
-| fmod          | Yes           |                            |
-| ldexp         | Yes           |                            |
-| log           | Yes           |                            |
-| log10         | Yes           |                            |
-| pow           | Yes           |                            |
-| sin           | Yes           |                            |
-| sinh          | Yes           |                            |
-| sqrt          | Yes           |                            |
-| tan           | Yes           |                            |
-| tanh          | Yes           |                            |
-| **stdio.h**   | Partly        |                            |
-| printf        | Yes           |                            |
-| scanf         | Yes           |                            |
+See the
+[Project Progress](https://github.com/elliotchance/c2go/wiki/Project-Progress).
 
 # How It Works
 
@@ -175,6 +146,7 @@ The test suite is run with `go test`.
 # Contributing
 
 Contributing is done with pull requests. There is no help that is too small! :)
+
 If you're looking for where to start I can suggest
 [finding a simple C program](http://www.programmingsimplified.com/c-program-examples)
 (like the other examples) that do not successfully translate into Go.
