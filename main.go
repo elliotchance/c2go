@@ -179,14 +179,14 @@ func Start(args []string) string {
 
 func main() {
 	flag.Usage = func() {
-		fmt.Fprintln(os.Stderr, "Usage: c2go <file.c>")
+		fmt.Fprintf(os.Stderr, "Usage: %s <file.c>\n", os.Args[0])
 		flag.PrintDefaults()
 	}
 	flag.Parse()
 
 	if flag.NArg() < 1 {
 		flag.Usage()
-		return
+		os.Exit(1)
 	}
 
 	fmt.Print(Start(flag.Args()))
