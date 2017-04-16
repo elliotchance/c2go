@@ -54,10 +54,11 @@ func TestIntegrationScripts(t *testing.T) {
 
 			// Compile Go
 			goSrc := Start([]string{file})
+			// fmt.Println(goSrc)
 			ioutil.WriteFile("build/main.go", []byte(goSrc), os.ModePerm)
-			err = exec.Command("go", "build", "-o", goPath, "build/main.go").Run()
+			buildErr, err := exec.Command("go", "build", "-o", goPath, "build/main.go").CombinedOutput()
 			if err != nil {
-				t.Fatal(err)
+				t.Fatal(string(buildErr), err)
 			}
 
 			// Run Go program
