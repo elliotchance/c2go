@@ -92,6 +92,7 @@ var builtInFunctionDefinitions = []string{
 	// stdio.h
 	"int printf() -> fmt.Printf",
 	"int scanf() -> fmt.Scanf",
+	"int putchar(int) -> darwin.Putchar",
 }
 
 // getFunctionDefinition will return nil if the function does not exist (is not

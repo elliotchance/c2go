@@ -31,5 +31,5 @@ func importType(typeName string) string {
 }
 
 func initImports() {
-	Imports = []string{"fmt"}
+	Imports = []string{}
 }

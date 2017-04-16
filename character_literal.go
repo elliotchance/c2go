@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type CharacterLiteral struct {
 	Address  string
 	Position string
@@ -20,5 +22,12 @@ func parseCharacterLiteral(line string) *CharacterLiteral {
 		Type:     groups["type"],
 		Value:    atoi(groups["value"]),
 		Children: []interface{}{},
+	}
+}
+
+func (n *CharacterLiteral) Render() []string {
+	return []string{
+		fmt.Sprintf("'%c'", n.Value),
+		n.Type,
 	}
 }
