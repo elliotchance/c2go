@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -9,6 +10,10 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+)
+
+var (
+	printAst = flag.Bool("print-ast", false, "Print AST before translated Go code.")
 )
 
 func readAST(data []byte) []string {
@@ -23,15 +28,14 @@ func convertLinesToNodes(lines []string) []interface{} {
 			continue
 		}
 
-		// This will need to be handled more gracefully... I'm not even
-		// sure what this means?
-		if strings.Index(line, "<<<NULL>>>") >= 0 {
-			continue
-		}
+		// It is tempting to discard null AST nodes, but these may
+		// have semantic importance: for example, they represent omitted
+		// for-loop conditions, as in for(;;).
+		line = strings.Replace(line, "<<<NULL>>>", "NullStmt", 1)
 
 		indentAndType := regexp.MustCompile("^([|\\- `]*)(\\w+)").FindStringSubmatch(line)
 		if len(indentAndType) == 0 {
-			panic(fmt.Sprintf("Can not understand line '%s'", line))
+			panic(fmt.Sprintf("Cannot understand line '%s'", line))
 		}
 
 		offset := len(indentAndType[1])
@@ -125,7 +129,7 @@ func Start(args []string) string {
 	}
 
 	// 1. Compile it first (checking for errors)
-	cFilePath := args[1]
+	cFilePath := args[0]
 
 	// 2. Preprocess
 	pp, err := exec.Command("clang", "-E", cFilePath).Output()
@@ -140,6 +144,12 @@ func Start(args []string) string {
 	Check(err)
 
 	lines := readAST(ast_pp)
+	if *printAst {
+		for _, l := range lines {
+			fmt.Println(l)
+		}
+		fmt.Println()
+	}
 	nodes := convertLinesToNodes(lines)
 	tree := buildTree(nodes, 0)
 
@@ -168,5 +178,16 @@ func Start(args []string) string {
 }
 
 func main() {
-	fmt.Print(Start(os.Args))
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: %s <file.c>\n", os.Args[0])
+		flag.PrintDefaults()
+	}
+	flag.Parse()
+
+	if flag.NArg() < 1 {
+		flag.Usage()
+		os.Exit(1)
+	}
+
+	fmt.Print(Start(flag.Args()))
 }
