@@ -5,7 +5,7 @@ type CharacterLiteral struct {
 	Position string
 	Type     string
 	Value    int
-	Children []interface{}
+	Children []Node
 }
 
 func parseCharacterLiteral(line string) *CharacterLiteral {
@@ -19,7 +19,7 @@ func parseCharacterLiteral(line string) *CharacterLiteral {
 		Position: groups["position"],
 		Type:     groups["type"],
 		Value:    atoi(groups["value"]),
-		Children: []interface{}{},
+		Children: []Node{},
 	}
 }
 

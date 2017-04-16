@@ -3,7 +3,7 @@ package ast
 type NoThrowAttr struct {
 	Address  string
 	Position string
-	Children []interface{}
+	Children []Node
 }
 
 func parseNoThrowAttr(line string) *NoThrowAttr {
@@ -15,7 +15,7 @@ func parseNoThrowAttr(line string) *NoThrowAttr {
 	return &NoThrowAttr{
 		Address:  groups["address"],
 		Position: groups["position"],
-		Children: []interface{}{},
+		Children: []Node{},
 	}
 }
 

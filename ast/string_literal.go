@@ -11,7 +11,7 @@ type StringLiteral struct {
 	Type     string
 	Value    string
 	Lvalue   bool
-	Children []interface{}
+	Children []Node
 }
 
 func parseStringLiteral(line string) *StringLiteral {
@@ -26,7 +26,7 @@ func parseStringLiteral(line string) *StringLiteral {
 		Type:     groups["type"],
 		Value:    unescapeString(groups["value"]),
 		Lvalue:   true,
-		Children: []interface{}{},
+		Children: []Node{},
 	}
 }
 

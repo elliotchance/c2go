@@ -9,7 +9,7 @@ type DeclRefExpr struct {
 	Address2 string
 	Name     string
 	Type2    string
-	Children []interface{}
+	Children []Node
 }
 
 func parseDeclRefExpr(line string) *DeclRefExpr {
@@ -34,7 +34,7 @@ func parseDeclRefExpr(line string) *DeclRefExpr {
 		Address2: groups["address2"],
 		Name:     groups["name"],
 		Type2:    groups["type2"],
-		Children: []interface{}{},
+		Children: []Node{},
 	}
 }
 

@@ -3,7 +3,7 @@ package ast
 type NonNullAttr struct {
 	Address  string
 	Position string
-	Children []interface{}
+	Children []Node
 }
 
 func parseNonNullAttr(line string) *NonNullAttr {
@@ -15,7 +15,7 @@ func parseNonNullAttr(line string) *NonNullAttr {
 	return &NonNullAttr{
 		Address:  groups["address"],
 		Position: groups["position"],
-		Children: []interface{}{},
+		Children: []Node{},
 	}
 }
 

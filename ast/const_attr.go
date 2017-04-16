@@ -4,7 +4,7 @@ type ConstAttr struct {
 	Address  string
 	Position string
 	Tags     string
-	Children []interface{}
+	Children []Node
 }
 
 func parseConstAttr(line string) *ConstAttr {
@@ -17,7 +17,7 @@ func parseConstAttr(line string) *ConstAttr {
 		Address:  groups["address"],
 		Position: groups["position"],
 		Tags:     groups["tags"],
-		Children: []interface{}{},
+		Children: []Node{},
 	}
 }
 

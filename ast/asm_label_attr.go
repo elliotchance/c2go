@@ -4,7 +4,7 @@ type AsmLabelAttr struct {
 	Address      string
 	Position     string
 	FunctionName string
-	Children     []interface{}
+	Children     []Node
 }
 
 func parseAsmLabelAttr(line string) *AsmLabelAttr {
@@ -17,7 +17,7 @@ func parseAsmLabelAttr(line string) *AsmLabelAttr {
 		Address:      groups["address"],
 		Position:     groups["position"],
 		FunctionName: groups["function"],
-		Children:     []interface{}{},
+		Children:     []Node{},
 	}
 }
 

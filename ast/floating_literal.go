@@ -7,7 +7,7 @@ type FloatingLiteral struct {
 	Position string
 	Type     string
 	Value    float64
-	Children []interface{}
+	Children []Node
 }
 
 func parseFloatingLiteral(line string) *FloatingLiteral {
@@ -21,7 +21,7 @@ func parseFloatingLiteral(line string) *FloatingLiteral {
 		Position: groups["position"],
 		Type:     groups["type"],
 		Value:    atof(groups["value"]),
-		Children: []interface{}{},
+		Children: []Node{},
 	}
 }
 

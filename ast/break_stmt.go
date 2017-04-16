@@ -3,7 +3,7 @@ package ast
 type BreakStmt struct {
 	Address  string
 	Position string
-	Children []interface{}
+	Children []Node
 }
 
 func parseBreakStmt(line string) *BreakStmt {
@@ -15,7 +15,7 @@ func parseBreakStmt(line string) *BreakStmt {
 	return &BreakStmt{
 		Address:  groups["address"],
 		Position: groups["position"],
-		Children: []interface{}{},
+		Children: []Node{},
 	}
 }
 

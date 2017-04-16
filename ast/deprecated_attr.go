@@ -5,7 +5,7 @@ type DeprecatedAttr struct {
 	Position string
 	Message1 string
 	Message2 string
-	Children []interface{}
+	Children []Node
 }
 
 func parseDeprecatedAttr(line string) *DeprecatedAttr {
@@ -19,7 +19,7 @@ func parseDeprecatedAttr(line string) *DeprecatedAttr {
 		Position: groups["position"],
 		Message1: removeQuotes(groups["message1"]),
 		Message2: removeQuotes(groups["message2"]),
-		Children: []interface{}{},
+		Children: []Node{},
 	}
 }
 

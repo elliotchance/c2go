@@ -3,7 +3,7 @@ package ast
 type Typedef struct {
 	Address  string
 	Type     string
-	Children []interface{}
+	Children []Node
 }
 
 func parseTypedef(line string) *Typedef {
@@ -15,7 +15,7 @@ func parseTypedef(line string) *Typedef {
 	return &Typedef{
 		Address:  groups["address"],
 		Type:     groups["type"],
-		Children: []interface{}{},
+		Children: []Node{},
 	}
 }
 

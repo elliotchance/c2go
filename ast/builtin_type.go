@@ -3,7 +3,7 @@ package ast
 type BuiltinType struct {
 	Address  string
 	Type     string
-	Children []interface{}
+	Children []Node
 }
 
 func parseBuiltinType(line string) *BuiltinType {
@@ -15,7 +15,7 @@ func parseBuiltinType(line string) *BuiltinType {
 	return &BuiltinType{
 		Address:  groups["address"],
 		Type:     groups["type"],
-		Children: []interface{}{},
+		Children: []Node{},
 	}
 }
 

@@ -8,7 +8,7 @@ type FormatAttr struct {
 	FunctionName string
 	Unknown1     int
 	Unknown2     int
-	Children     []interface{}
+	Children     []Node
 }
 
 func parseFormatAttr(line string) *FormatAttr {
@@ -30,7 +30,7 @@ func parseFormatAttr(line string) *FormatAttr {
 		FunctionName: groups["function"],
 		Unknown1:     atoi(groups["unknown1"]),
 		Unknown2:     atoi(groups["unknown2"]),
-		Children:     []interface{}{},
+		Children:     []Node{},
 	}
 }
 

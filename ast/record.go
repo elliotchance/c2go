@@ -3,7 +3,7 @@ package ast
 type Record struct {
 	Address  string
 	Type     string
-	Children []interface{}
+	Children []Node
 }
 
 func parseRecord(line string) *Record {
@@ -15,7 +15,7 @@ func parseRecord(line string) *Record {
 	return &Record{
 		Address:  groups["address"],
 		Type:     groups["type"],
-		Children: []interface{}{},
+		Children: []Node{},
 	}
 }
 

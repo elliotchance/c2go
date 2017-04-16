@@ -7,7 +7,7 @@ type IntegerLiteral struct {
 	Position string
 	Type     string
 	Value    int
-	Children []interface{}
+	Children []Node
 }
 
 func parseIntegerLiteral(line string) *IntegerLiteral {
@@ -21,7 +21,7 @@ func parseIntegerLiteral(line string) *IntegerLiteral {
 		Position: groups["position"],
 		Type:     groups["type"],
 		Value:    atoi(groups["value"]),
-		Children: []interface{}{},
+		Children: []Node{},
 	}
 }
 

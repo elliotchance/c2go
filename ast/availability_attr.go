@@ -10,7 +10,7 @@ type AvailabilityAttr struct {
 	Unavailable bool
 	Message1    string
 	Message2    string
-	Children    []interface{}
+	Children    []Node
 }
 
 func parseAvailabilityAttr(line string) *AvailabilityAttr {
@@ -36,7 +36,7 @@ func parseAvailabilityAttr(line string) *AvailabilityAttr {
 		Unavailable: len(groups["unavalable"]) > 0,
 		Message1:    removeQuotes(groups["message1"]),
 		Message2:    removeQuotes(groups["message2"]),
-		Children:    []interface{}{},
+		Children:    []Node{},
 	}
 }
 

@@ -3,7 +3,7 @@ package ast
 type AlwaysInlineAttr struct {
 	Address  string
 	Position string
-	Children []interface{}
+	Children []Node
 }
 
 func parseAlwaysInlineAttr(line string) *AlwaysInlineAttr {
@@ -15,7 +15,7 @@ func parseAlwaysInlineAttr(line string) *AlwaysInlineAttr {
 	return &AlwaysInlineAttr{
 		Address:  groups["address"],
 		Position: groups["position"],
-		Children: []interface{}{},
+		Children: []Node{},
 	}
 }
 

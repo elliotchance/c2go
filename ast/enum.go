@@ -3,7 +3,7 @@ package ast
 type Enum struct {
 	Address  string
 	Name     string
-	Children []interface{}
+	Children []Node
 }
 
 func parseEnum(line string) *Enum {
@@ -15,7 +15,7 @@ func parseEnum(line string) *Enum {
 	return &Enum{
 		Address:  groups["address"],
 		Name:     groups["name"],
-		Children: []interface{}{},
+		Children: []Node{},
 	}
 }
 

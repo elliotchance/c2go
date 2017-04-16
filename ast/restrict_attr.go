@@ -4,7 +4,7 @@ type RestrictAttr struct {
 	Address  string
 	Position string
 	Name     string
-	Children []interface{}
+	Children []Node
 }
 
 func parseRestrictAttr(line string) *RestrictAttr {
@@ -17,7 +17,7 @@ func parseRestrictAttr(line string) *RestrictAttr {
 		Address:  groups["address"],
 		Position: groups["position"],
 		Name:     groups["name"],
-		Children: []interface{}{},
+		Children: []Node{},
 	}
 }
 
