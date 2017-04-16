@@ -374,6 +374,15 @@ var nodes = map[string]interface{}{
 		Referenced: false,
 		Children:   []interface{}{},
 	},
+	`0x30363a0 <col:18, col:29> __val 'int [2]'`: &FieldDecl{
+		Address:    "0x30363a0",
+		Position:   "col:18, col:29",
+		Position2:  "",
+		Name:       "__val",
+		Type:       "int [2]",
+		Referenced: false,
+		Children:   []interface{}{},
+	},
 
 	// FloatingLiteral
 	`0x7febe106f5e8 <col:24> 'double' 1.230000e+00`: &FloatingLiteral{

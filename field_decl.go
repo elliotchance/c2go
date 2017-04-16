@@ -18,7 +18,7 @@ type FieldDecl struct {
 func parseFieldDecl(line string) *FieldDecl {
 	groups := groupsFromRegex(
 		`<(?P<position>.*)>
-		(?P<position2> [^ ]+)?
+		(?P<position2> col:\d+| line:\d+:\d+)?
 		(?P<referenced> referenced)?
 		(?P<name> \w+?)?
 		 '(?P<type>.+?)'`,
@@ -40,9 +40,9 @@ func (n *FieldDecl) Render() []string {
 	fieldType := resolveType(n.Type)
 	name := n.Name
 
-	if name == "" {
-		return []string{"", "unknown71"}
-	}
+	//if name == "" {
+	//	return []string{"", "unknown71"}
+	//}
 
 	// Go does not allow the name of a variable to be called "type". For the
 	// moment I will rename this to avoid the error.
