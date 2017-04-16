@@ -48,14 +48,6 @@ script:
           fi
       done
 
-  # Now run the integration tests.
-  - |
-      if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-        CLANG_BIN=clang-$CLANG bash run-tests.sh
-      else
-        bash run-tests.sh
-      fi
-
   # These steps are from the README to verify it can be installed and run as
   # documented.
   - cd /tmp
