@@ -86,7 +86,7 @@ func (n *TypedefDecl) RenderLine(out *bytes.Buffer, functionName string, indent 
 
 	if name == "__darwin_ct_rune_t" {
 		addImport("github.com/elliotchance/c2go/darwin")
-		resolvedType = "darwin.C__darwin_ct_rune_t"
+		resolvedType = "darwin.Darwin_ct_rune_t"
 	}
 
 	// A bunch of random stuff to ignore... I really should deal with these.

@@ -16,7 +16,8 @@ func cast(expr, fromType, toType string) string {
 	// Compatible integer types
 	types := []string{
 		// General types:
-		"int", "int64", "uint32", "byte", "float32", "float64",
+		"int", "int64", "uint16", "uint32", "byte",
+		"float32", "float64",
 
 		// Darwin specific:
 		"__darwin_ct_rune_t", "darwin.Darwin_ct_rune_t",
@@ -31,14 +32,14 @@ func cast(expr, fromType, toType string) string {
 	// - `string` -> `[8]byte`
 	// - `string` -> `char *[13]`
 	match1 := regexp.MustCompile(`\[(\d+)\]byte`).FindStringSubmatch(toType)
-	match2 := regexp.MustCompile(`char *\[(\d+)\]`).FindStringSubmatch(toType)
+	match2 := regexp.MustCompile(`char \*\[(\d+)\]`).FindStringSubmatch(toType)
 	if fromType == "string" && (len(match1) > 0 || len(match2) > 0) {
 		// Construct a byte array from "first":
 		//
 		//     var str [5]byte = [5]byte{'f','i','r','s','t'}
 
 		s := ""
-		for i := 1; i < len(expr) - 1; i++ {
+		for i := 1; i < len(expr)-1; i++ {
 			if i > 1 {
 				s += "','"
 			}
@@ -59,13 +60,32 @@ func cast(expr, fromType, toType string) string {
 			size = match2[1]
 		}
 
-		return fmt.Sprintf("[%s]byte{'%s'}", size, s)
+		return fmt.Sprintf("[%s]byte{'%s', 0}", size, s)
+	}
+
+	// In the forms of:
+	// - `[7]byte` -> `string`
+	// - `char *[12]` -> `string`
+	match1 = regexp.MustCompile(`\[(\d+)\]byte`).FindStringSubmatch(fromType)
+	match2 = regexp.MustCompile(`char \*\[(\d+)\]`).FindStringSubmatch(fromType)
+	if (len(match1) > 0 || len(match2) > 0) && toType == "string" {
+		size := 0
+		if len(match1) > 0 {
+			size = atoi(match1[1])
+		} else {
+			size = atoi(match2[1])
+		}
+
+		return fmt.Sprintf("string(%s[:%d])", expr, size-1)
 	}
 
 	// FIXME: This should be a more general rule for any pointer used a
 	// bool.
 	if fromType == "*int" && toType == "bool" {
 		return fmt.Sprintf("%s != nil", expr)
+	}
+	if fromType == "int" && toType == "*int" {
+		return "nil"
 	}
 
 	if inStrings(fromType, types) && inStrings(toType, types) {

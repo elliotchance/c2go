@@ -39,7 +39,10 @@ var simpleResolveTypes = map[string]string{
 	"const char *": "string",
 
 	// Are these built into some compilers?
-	"uint32": "uint32",
+	"uint32":     "uint32",
+	"uint64":     "uint64",
+	"__uint32_t": "uint32",
+	"__uint64_t": "uint64",
 
 	// Darwin specific
 	"__darwin_ct_rune_t": "github.com/elliotchance/c2go/darwin.Darwin_ct_rune_t",
@@ -47,8 +50,10 @@ var simpleResolveTypes = map[string]string{
 	"fpos_t":             "int",
 	"struct __float2":    "github.com/elliotchance/c2go/darwin.Float2",
 	"struct __double2":   "github.com/elliotchance/c2go/darwin.Double2",
+	"Float2":             "github.com/elliotchance/c2go/darwin.Float2",
+	"Double2":            "github.com/elliotchance/c2go/darwin.Double2",
 
-	// These are special cases that almost certainly don"t work. I've put
+	// These are special cases that almost certainly don't work. I've put
 	// them here because for whatever reason there is no suitable type or we
 	// don't need these platform specific things to be implemented yet.
 	"__builtin_va_list":            "int64",
@@ -60,6 +65,8 @@ var simpleResolveTypes = map[string]string{
 	"__sFILEX":                     "interface{}",
 	"__va_list_tag":                "interface{}",
 	"FILE":                         "int64",
+	"union sigval":                 "int",
+	"union __sigaction_u":          "int",
 }
 
 var TypesAlreadyDefined = []string{
@@ -169,7 +176,7 @@ func resolveType(s string) string {
 		return fmt.Sprintf("[%s]%s", search2[2], resolveType(search2[1]))
 	}
 
-	panic(fmt.Sprintf("Oh no! I couldn't find an appropriate the Go type for the C type '%s'.", s))
+	panic(fmt.Sprintf("I couldn't find an appropriate Go type for the C type '%s'.", s))
 }
 
 func getDereferenceType(cType string) (string, error) {

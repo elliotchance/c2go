@@ -269,6 +269,13 @@ var nodes = map[string]interface{}{
 		Children: []interface{}{},
 	},
 
+	// DoStmt
+	`0x7ff36d0a0938 <line:11:5, line:14:23>`: &DoStmt{
+		Address:  "0x7ff36d0a0938",
+		Position: "line:11:5, line:14:23",
+		Children: []interface{}{},
+	},
+
 	// ElaboratedType
 	`0x7f873686c120 'union __mbstate_t' sugar`: &ElaboratedType{
 		Address:  "0x7f873686c120",
@@ -623,6 +630,14 @@ var nodes = map[string]interface{}{
 		Address:  "0x7fb0bc8b2308",
 		Position: "col:10, col:25",
 		Type:     "unsigned char",
+		Children: []interface{}{},
+	},
+
+	// ParenType
+	`0x7faf820a4c60 'void (int)' sugar`: &ParenType{
+		Address:  "0x7faf820a4c60",
+		Type:     "void (int)",
+		Sugar:    true,
 		Children: []interface{}{},
 	},
 
@@ -1000,6 +1015,13 @@ var nodes = map[string]interface{}{
 		IsUsed:    true,
 		IsCInit:   true,
 		Children:  []interface{}{},
+	},
+
+	// WarnUnusedResultAttr
+	`0x7fa1d704d420 <col:60> warn_unused_result`: &WarnUnusedResultAttr{
+		Address:  "0x7fa1d704d420",
+		Position: "col:60",
+		Children: []interface{}{},
 	},
 
 	// WhileStmt

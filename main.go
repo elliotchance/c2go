@@ -174,8 +174,9 @@ func Start(args []string) string {
 
 	all += ")\n\n" + go_out.String()
 
-	// Reset the imports
+	// Reset state here - this is important for integration tests
 	initImports()
+	builtInFunctionDefinitionsHaveBeenLoaded = false
 
 	return all
 }

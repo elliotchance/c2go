@@ -52,7 +52,19 @@ func parseFunctionDecl(line string) *FunctionDecl {
 }
 
 func (n *FunctionDecl) RenderLine(out *bytes.Buffer, functionName string, indent int, returnType string) {
-	functionName = strings.TrimSpace(n.Name)
+	functionName = n.Name
+
+	// Always register the new function. Only from this point onwards will
+	// we be allowed to refer to the function.
+	if getFunctionDefinition(functionName) == nil {
+		addFunctionDefinition(FunctionDefinition{
+			Name:       functionName,
+			ReturnType: returnType,
+			// FIXME
+			ArgumentTypes: []string{},
+			Substitution:  "",
+		})
+	}
 
 	// If the function has a direct substitute in Go we do not want to
 	// output the C definition of it.
@@ -60,7 +72,8 @@ func (n *FunctionDecl) RenderLine(out *bytes.Buffer, functionName string, indent
 		return
 	}
 
-	if functionName == "__isctype" ||
+	if functionName == "_OSSwapInt16" || functionName == "_OSSwapInt32" ||
+		functionName == "_OSSwapInt64" || functionName == "__isctype" ||
 		functionName == "__wcwidth" || functionName == "__sputc" ||
 		functionName == "__inline_signbitf" ||
 		functionName == "__inline_signbitd" ||

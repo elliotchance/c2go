@@ -40,24 +40,17 @@ func (n *FieldDecl) Render() []string {
 	fieldType := resolveType(n.Type)
 	name := n.Name
 
+	// FIXME: There are some cases where the name is empty. We need to
+	// investigate this further. For now I will just exclude them.
+	if name == "" {
+		return []string{"", "unknown72"}
+	}
+
 	// Go does not allow the name of a variable to be called "type". For the
 	// moment I will rename this to avoid the error.
 	if name == "type" {
 		name = "type_"
 	}
 
-	// It may have a default value.
-	suffix := ""
-	if len(n.Children) > 0 {
-		suffix = fmt.Sprintf(" = %s", renderExpression(n.Children[0])[0])
-	}
-
-	// NULL is a macro that one rendered looks like "(0)" we have to be
-	// sensitive to catch this as Go would complain that 0 (int) is not
-	// compatible with the type we are setting it to.
-	if suffix == " = (0)" {
-		suffix = " = nil"
-	}
-
-	return []string{fmt.Sprintf("%s %s%s", name, fieldType, suffix), "unknown3"}
+	return []string{fmt.Sprintf("%s %s", name, fieldType), "unknown3"}
 }

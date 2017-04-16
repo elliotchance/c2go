@@ -92,6 +92,16 @@ var builtInFunctionDefinitions = []string{
 	"int printf() -> fmt.Printf",
 	"int scanf() -> fmt.Scanf",
 	"int putchar(int) -> darwin.Putchar",
+	"FILE* fopen(const char *, const char *) -> noarch.Fopen",
+	"int fclose(int) -> noarch.Fclose",
+
+	// stdlib.h
+	"int atoi(const char*) -> noarch.Atoi",
+	"long strtol(const char *, char **, int) -> noarch.Strtol",
+
+	// I'm not sure which header file these comes from?
+	"uint32 __builtin_bswap32(uint32) -> darwin.BSwap32",
+	"uint64 __builtin_bswap64(uint64) -> darwin.BSwap64",
 }
 
 // getFunctionDefinition will return nil if the function does not exist (is not

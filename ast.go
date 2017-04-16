@@ -55,6 +55,8 @@ func Parse(line string) interface{} {
 		node = parseDeclStmt(line)
 	case "DeprecatedAttr":
 		node = parseDeprecatedAttr(line)
+	case "DoStmt":
+		node = parseDoStmt(line)
 	case "ElaboratedType":
 		node = parseElaboratedType(line)
 	case "Enum":
@@ -95,6 +97,8 @@ func Parse(line string) interface{} {
 		node = parseNonNullAttr(line)
 	case "ParenExpr":
 		node = parseParenExpr(line)
+	case "ParenType":
+		node = parseParenType(line)
 	case "ParmVarDecl":
 		node = parseParmVarDecl(line)
 	case "PointerType":
@@ -129,12 +133,14 @@ func Parse(line string) interface{} {
 		node = parseUnaryOperator(line)
 	case "VarDecl":
 		node = parseVarDecl(line)
+	case "WarnUnusedResultAttr":
+		node = parseWarnUnusedResultAttr(line)
 	case "WhileStmt":
 		node = parseWhileStmt(line)
 	case "NullStmt":
 		node = nil
 	default:
-		panic("Unknown node type: '" + line + "'")
+		panic("unknown node type: '" + line + "'")
 	}
 
 	return node
