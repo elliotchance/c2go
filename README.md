@@ -170,20 +170,14 @@ For each of those files:
 4. Both binaries are executed and the output is compared. All C files will
 contain some output so the results can be verified.
 
-The test suite is run with
-[run-tests.sh](https://github.com/elliotchance/c2go/blob/master/run-tests.sh).
+The test suite is run with `go test`.
 
 # Contributing
-
-As I said it is still very early days (sorry for all the hacky Python). And
-eventually the build chain can be converted to pure Go since we don't need any
-clang APIs.
 
 Contributing is done with pull requests. There is no help that is too small! :)
 If you're looking for where to start I can suggest
 [finding a simple C program](http://www.programmingsimplified.com/c-program-examples)
-(like the other examples) that does not successful translate into Go and fixing
-up the Python so that it does.
+(like the other examples) that do not successfully translate into Go.
 
 Or, if you don't want to do that you can submit it as an issue so that it can be
 picked up by someone else.

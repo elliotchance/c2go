@@ -131,16 +131,18 @@ func Parse(line string) interface{} {
 		node = parseVarDecl(line)
 	case "WhileStmt":
 		node = parseWhileStmt(line)
+	case "NullStmt":
+		node = nil
 	default:
-		panic("'" + line + "'")
+		panic("Unknown node type: '" + line + "'")
 	}
 
 	return node
 }
 
 func groupsFromRegex(rx, line string) map[string]string {
-	// We remove tabs and newlines from the regex. This is purely cosmetic
-	// as the regex input can be quite lone and its nice for the caller to
+	// We remove tabs and newlines from the regex. This is purely cosmetic,
+	// as the regex input can be quite long and it's nice for the caller to
 	// be able to format it in a more readable way.
 	fullRegexp := "(?P<address>[0-9a-fx]+) " +
 		strings.Replace(strings.Replace(rx, "\n", "", -1), "\t", "", -1)
