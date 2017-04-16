@@ -365,6 +365,24 @@ var nodes = map[string]interface{}{
 		Referenced: true,
 		Children:   []interface{}{},
 	},
+	`0x7f9bc9083d00 <line:91:5, line:97:8> line:91:5 'unsigned short'`: &FieldDecl{
+		Address:    "0x7f9bc9083d00",
+		Position:   "line:91:5, line:97:8",
+		Position2:  "line:91:5",
+		Name:       "",
+		Type:       "unsigned short",
+		Referenced: false,
+		Children:   []interface{}{},
+	},
+	`0x30363a0 <col:18, col:29> __val 'int [2]'`: &FieldDecl{
+		Address:    "0x30363a0",
+		Position:   "col:18, col:29",
+		Position2:  "",
+		Name:       "__val",
+		Type:       "int [2]",
+		Referenced: false,
+		Children:   []interface{}{},
+	},
 
 	// FloatingLiteral
 	`0x7febe106f5e8 <col:24> 'double' 1.230000e+00`: &FloatingLiteral{

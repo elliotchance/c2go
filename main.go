@@ -188,5 +188,6 @@ func main() {
 		flag.Usage()
 		os.Exit(1)
 	}
+
 	fmt.Print(Start(flag.Args()))
 }
