@@ -25,9 +25,23 @@ type programOut struct {
 
 // TestIntegrationScripts tests all programs in the tests directory
 func TestIntegrationScripts(t *testing.T) {
-	files, err := filepath.Glob("tests/*/*.c")
-	if err != nil {
-		t.Fatal(err)
+	var files []string
+
+	// It can be painful to run all the tests all of the time. If the `T`
+	// environment variable is set it will only test that specific file,
+	// like:
+	//
+	//     T=tests/ctype/isalnum.c go test
+	//
+	onlyRunSpecificFile := os.Getenv("T")
+	if onlyRunSpecificFile != "" {
+		files = []string{onlyRunSpecificFile}
+	} else {
+		var err error
+		files, err = filepath.Glob("tests/*/*.c")
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 
 	for _, file := range files {
