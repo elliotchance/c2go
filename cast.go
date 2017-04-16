@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -27,11 +28,26 @@ func cast(expr, fromType, toType string) string {
 		}
 	}
 
-	if fromType == "string" && toType == "[8]byte" {
-		return fmt.Sprintf("[8]byte{'%s'}",
-			strings.Join(strings.Split(expr[1:len(expr)-1], ""), "','"))
+	// In the form of `string` -> `[8]byte`
+	match := regexp.MustCompile(`\[(\d+)\]byte`).FindStringSubmatch(toType)
+	if fromType == "string" && len(match) > 0 {
+		chars := strings.Split(expr[1:len(expr)-1], "")
+		return fmt.Sprintf("[%s]byte{'%s'}",
+			match[1],
+			strings.Join(chars, "','"))
 	}
 
+	// In the form of `string` -> `char *[13]`
+	match = regexp.MustCompile(`char *\[(\d+)\]`).FindStringSubmatch(toType)
+	if fromType == "string" && len(match) > 0 {
+		chars := strings.Split(expr[1:len(expr)-1], "")
+		return fmt.Sprintf("[%s]byte{'%s'}",
+			match[1],
+			strings.Join(chars, "','"))
+	}
+
+	// FIXME: This should be a more general rule for any pointer used a
+	// bool.
 	if fromType == "*int" && toType == "bool" {
 		return fmt.Sprintf("%s != nil", expr)
 	}
