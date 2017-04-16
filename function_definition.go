@@ -45,7 +45,6 @@ var builtInFunctionDefinitions = []string{
 	"bool __assert_rtn(const char*, const char*, int, const char*) -> darwin.AssertRtn",
 
 	// darwin/ctype.h
-	"int isascii(int) -> darwin.IsAscii",
 	"uint32 __istype(__darwin_ct_rune_t, uint32) -> darwin.IsType",
 	"__darwin_ct_rune_t __isctype(__darwin_ct_rune_t, uint32) -> darwin.IsCType",
 	"__darwin_ct_rune_t __tolower(__darwin_ct_rune_t) -> darwin.ToLower",

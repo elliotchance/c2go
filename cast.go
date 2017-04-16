@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"regexp"
-	"strings"
 )
 
 func cast(expr, fromType, toType string) string {
@@ -28,22 +27,39 @@ func cast(expr, fromType, toType string) string {
 		}
 	}
 
-	// In the form of `string` -> `[8]byte`
-	match := regexp.MustCompile(`\[(\d+)\]byte`).FindStringSubmatch(toType)
-	if fromType == "string" && len(match) > 0 {
-		chars := strings.Split(expr[1:len(expr)-1], "")
-		return fmt.Sprintf("[%s]byte{'%s'}",
-			match[1],
-			strings.Join(chars, "','"))
-	}
+	// In the forms of:
+	// - `string` -> `[8]byte`
+	// - `string` -> `char *[13]`
+	match1 := regexp.MustCompile(`\[(\d+)\]byte`).FindStringSubmatch(toType)
+	match2 := regexp.MustCompile(`char *\[(\d+)\]`).FindStringSubmatch(toType)
+	if fromType == "string" && (len(match1) > 0 || len(match2) > 0) {
+		// Construct a byte array from "first":
+		//
+		//     var str [5]byte = [5]byte{'f','i','r','s','t'}
 
-	// In the form of `string` -> `char *[13]`
-	match = regexp.MustCompile(`char *\[(\d+)\]`).FindStringSubmatch(toType)
-	if fromType == "string" && len(match) > 0 {
-		chars := strings.Split(expr[1:len(expr)-1], "")
-		return fmt.Sprintf("[%s]byte{'%s'}",
-			match[1],
-			strings.Join(chars, "','"))
+		s := ""
+		for i := 1; i < len(expr) - 1; i++ {
+			if i > 1 {
+				s += "','"
+			}
+
+			// Watch out for escape characters.
+			if expr[i] == '\\' {
+				s += fmt.Sprintf("\\%c", expr[i+1])
+				i += 1
+			} else {
+				s += string(expr[i])
+			}
+		}
+
+		size := "0"
+		if len(match1) > 0 {
+			size = match1[1]
+		} else {
+			size = match2[1]
+		}
+
+		return fmt.Sprintf("[%s]byte{'%s'}", size, s)
 	}
 
 	// FIXME: This should be a more general rule for any pointer used a
