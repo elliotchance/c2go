@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -10,6 +9,10 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+
+	"go/format"
+
+	"github.com/elliotchance/c2go/ast"
 )
 
 var (
@@ -21,8 +24,13 @@ func readAST(data []byte) []string {
 	return strings.Split(string(uncolored), "\n")
 }
 
-func convertLinesToNodes(lines []string) []interface{} {
-	nodes := []interface{}{}
+type treeNode struct {
+	indent int
+	node   ast.Node
+}
+
+func convertLinesToNodes(lines []string) []treeNode {
+	nodes := []treeNode{}
 	for _, line := range lines {
 		if strings.TrimSpace(line) == "" {
 			continue
@@ -39,50 +47,45 @@ func convertLinesToNodes(lines []string) []interface{} {
 		}
 
 		offset := len(indentAndType[1])
-		node := Parse(line[offset:])
+		node := ast.Parse(line[offset:])
 
 		indentLevel := len(indentAndType[1]) / 2
-		nodes = append(nodes, []interface{}{indentLevel, node})
+		nodes = append(nodes, treeNode{indentLevel, node})
 	}
 
 	return nodes
 }
 
 // buildTree convert an array of nodes, each prefixed with a depth into a tree.
-func buildTree(nodes []interface{}, depth int) []interface{} {
+func buildTree(nodes []treeNode, depth int) []ast.Node {
 	if len(nodes) == 0 {
-		return []interface{}{}
+		return []ast.Node{}
 	}
 
 	// Split the list into sections, treat each section as a a tree with its own root.
-	sections := [][]interface{}{}
+	sections := [][]treeNode{}
 	for _, node := range nodes {
-		if node.([]interface{})[0] == depth {
-			sections = append(sections, []interface{}{node})
+		if node.indent == depth {
+			sections = append(sections, []treeNode{node})
 		} else {
 			sections[len(sections)-1] = append(sections[len(sections)-1], node)
 		}
 	}
 
-	results := []interface{}{}
+	results := []ast.Node{}
 	for _, section := range sections {
-		slice := []interface{}{}
+		slice := []treeNode{}
 		for _, n := range section {
-			if n.([]interface{})[0].(int) > depth {
+			if n.indent > depth {
 				slice = append(slice, n)
 			}
 		}
 
 		children := buildTree(slice, depth+1)
-		result := section[0].([]interface{})[1]
-
-		if len(children) > 0 {
-			c := reflect.ValueOf(result).Elem().FieldByName("Children")
-			slice := reflect.AppendSlice(c, reflect.ValueOf(children))
-			c.Set(slice)
+		for _, child := range children {
+			section[0].node.AddChild(child)
 		}
-
-		results = append(results, result)
+		results = append(results, section[0].node)
 	}
 
 	return results
@@ -161,21 +164,25 @@ func Start(args []string) string {
 	// 3. Parse C and output Go
 	//parts := strings.Split(cFilePath, "/")
 	//go_file_path := fmt.Sprintf("%s.go", parts[len(parts) - 1][:len(parts) - 2])
-	go_out := bytes.NewBuffer([]byte{})
 
-	Render(go_out, tree[0], "", 0, "")
+	// Render(go_out, tree[0], "", 0, "")
+	astTree := ast.NewAst()
+	goOut := ast.Render(astTree, tree[0].(ast.Node))
+
+	// Format the code
+	goOutFmt, err := format.Source([]byte(goOut))
+	if err != nil {
+		panic(err)
+	}
 
 	// Put together the whole file
 	all := "package main\n\nimport (\n"
 
-	for _, importName := range Imports {
+	for _, importName := range astTree.Imports() {
 		all += fmt.Sprintf("\t\"%s\"\n", importName)
 	}
 
-	all += ")\n\n" + go_out.String()
-
-	// Reset the imports
-	initImports()
+	all += ")\n\n" + string(goOutFmt)
 
 	return all
 }
