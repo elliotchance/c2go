@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"regexp"
+	"strings"
 )
 
 func cast(expr, fromType, toType string) string {
@@ -20,7 +21,7 @@ func cast(expr, fromType, toType string) string {
 		"float32", "float64",
 
 		// Darwin specific:
-		"__darwin_ct_rune_t", "darwin.Darwin_ct_rune_t",
+		"__darwin_ct_rune_t", "github.com/elliotchance/c2go/darwin.Darwin_ct_rune_t",
 	}
 	for _, v := range types {
 		if fromType == v && toType == "bool" {
@@ -79,13 +80,16 @@ func cast(expr, fromType, toType string) string {
 		return fmt.Sprintf("string(%s[:%d])", expr, size-1)
 	}
 
-	// FIXME: This should be a more general rule for any pointer used a
-	// bool.
-	if fromType == "*int" && toType == "bool" {
+	// Anything that is a pointer can be compared to nil
+	if fromType[0] == '*' && toType == "bool" {
 		return fmt.Sprintf("%s != nil", expr)
 	}
+
 	if fromType == "int" && toType == "*int" {
 		return "nil"
+	}
+	if fromType == "int" && toType == "*byte" {
+		return `""`
 	}
 
 	if inStrings(fromType, types) && inStrings(toType, types) {
@@ -93,5 +97,19 @@ func cast(expr, fromType, toType string) string {
 	}
 
 	addImport("github.com/elliotchance/c2go/noarch")
-	return fmt.Sprintf("noarch.%sTo%s(%s)", ucfirst(fromType), ucfirst(toType), expr)
+
+	leftName := fromType
+	rightName := toType
+
+	if strings.Index(leftName, ".") != -1 {
+		parts := strings.Split(leftName, ".")
+		leftName = parts[len(parts) - 1]
+	}
+	if strings.Index(rightName, ".") != -1 {
+		parts := strings.Split(rightName, ".")
+		rightName = parts[len(parts) - 1]
+	}
+
+	return fmt.Sprintf("noarch.%sTo%s(%s)",
+		ucfirst(leftName), ucfirst(rightName), expr)
 }

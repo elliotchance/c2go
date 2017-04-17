@@ -24,6 +24,6 @@ func Atoi(a string) int {
 	return v
 }
 
-func Strtol(string, string, int) int {
+func Strtol(string, string, int) int32 {
 	panic("strtol is not supported")
 }

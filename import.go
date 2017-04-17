@@ -20,6 +20,11 @@ func addImport(importName string) {
 
 func importType(typeName string) string {
 	if strings.Index(typeName, ".") != -1 {
+		// This is just for debugging purposes.
+		if strings.Index(typeName, "/") == -1 {
+			panic(typeName)
+		}
+
 		parts := strings.Split(typeName, ".")
 		addImport(strings.Join(parts[:len(parts)-1], "."))
 

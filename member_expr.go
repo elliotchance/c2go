@@ -40,12 +40,13 @@ func (n *MemberExpr) Render() []string {
 	lhs_type := resolveType(lhs[1])
 	rhs := n.Name
 
+	// FIXME: This is just a hack
 	if inStrings(lhs_type, []string{"darwin.Float2", "darwin.Double2"}) {
 		rhs = getExportedName(rhs)
 	}
 
 	return []string{
 		fmt.Sprintf("%s.%s", lhs[0], rhs),
-		lhs[1],
+		"int",
 	}
 }

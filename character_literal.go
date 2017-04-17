@@ -26,8 +26,14 @@ func parseCharacterLiteral(line string) *CharacterLiteral {
 }
 
 func (n *CharacterLiteral) Render() []string {
-	return []string{
-		fmt.Sprintf("'%c'", n.Value),
-		n.Type,
+	var s string
+
+	switch n.Value {
+	case '\n':
+		s = "'\\n'"
+	default:
+		s = fmt.Sprintf("'%c'", n.Value)
 	}
+
+	return []string{s, n.Type}
 }

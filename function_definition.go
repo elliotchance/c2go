@@ -23,7 +23,7 @@ type FunctionDefinition struct {
 	Substitution string
 }
 
-var functionDefinitions = map[string]FunctionDefinition{}
+var functionDefinitions map[string]FunctionDefinition
 
 var builtInFunctionDefinitionsHaveBeenLoaded = false
 
@@ -129,6 +129,7 @@ func loadFunctionDefinitions() {
 		return
 	}
 
+	functionDefinitions = map[string]FunctionDefinition{}
 	builtInFunctionDefinitionsHaveBeenLoaded = true
 
 	for _, f := range builtInFunctionDefinitions {

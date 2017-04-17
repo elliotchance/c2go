@@ -80,13 +80,11 @@ func (n *TypedefDecl) RenderLine(out *bytes.Buffer, functionName string, indent 
 	}
 
 	if name == "__mbstate_t" {
-		addImport("github.com/elliotchance/c2go/darwin")
-		resolvedType = "darwin.C__mbstate_t"
+		resolvedType = importType("github.com/elliotchance/c2go/darwin.C__mbstate_t")
 	}
 
 	if name == "__darwin_ct_rune_t" {
-		addImport("github.com/elliotchance/c2go/darwin")
-		resolvedType = "darwin.Darwin_ct_rune_t"
+		resolvedType = importType("github.com/elliotchance/c2go/darwin.Darwin_ct_rune_t")
 	}
 
 	// A bunch of random stuff to ignore... I really should deal with these.

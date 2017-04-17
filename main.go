@@ -128,6 +128,18 @@ func Start(args []string) string {
 		panic("The $GOPATH must be set.")
 	}
 
+	// Reset state here - this is important for integration tests
+	initImports()
+	builtInFunctionDefinitionsHaveBeenLoaded = false
+	TypesAlreadyDefined = []string{
+		// Linux specific.
+		"_LIB_VERSION_TYPE",
+
+		// Darwin specific.
+		"__float2",
+		"__double2",
+	}
+
 	// 1. Compile it first (checking for errors)
 	cFilePath := args[0]
 
@@ -174,18 +186,13 @@ func Start(args []string) string {
 
 	all += ")\n\n" + go_out.String()
 
-	// Reset state here - this is important for integration tests
-	initImports()
-	builtInFunctionDefinitionsHaveBeenLoaded = false
-
 	return all
 }
 
 func main() {
-	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: %s <file.c>\n", os.Args[0])
-		flag.PrintDefaults()
-	}
+	//flag.Usage = func() {
+	//	flag.Usage()
+	//}
 	flag.Parse()
 
 	if flag.NArg() < 1 {

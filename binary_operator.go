@@ -32,13 +32,17 @@ func (n *BinaryOperator) Render() []string {
 	right := renderExpression(n.Children[1])
 
 	return_type := "bool"
-	if inStrings(operator, []string{"|", "&", "+", "-", "*", "/"}) {
+	if inStrings(operator, []string{"|", "&", "+", "-", "*", "/", "="}) {
 		// TODO: The left and right type might be different
 		return_type = left[1]
 	}
 
 	if operator == "&&" {
 		left[0] = cast(left[0], left[1], return_type)
+		right[0] = cast(right[0], right[1], return_type)
+	}
+
+	if _, ok := n.Children[1].(*UnaryOperator); !ok && operator == "=" {
 		right[0] = cast(right[0], right[1], return_type)
 	}
 

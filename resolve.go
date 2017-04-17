@@ -69,14 +69,7 @@ var simpleResolveTypes = map[string]string{
 	"union __sigaction_u":          "int",
 }
 
-var TypesAlreadyDefined = []string{
-	// Linux specific.
-	"_LIB_VERSION_TYPE",
-
-	// Darwin specific.
-	"__float2",
-	"__double2",
-}
+var TypesAlreadyDefined []string
 
 func typeIsAlreadyDefined(typeName string) bool {
 	return inStrings(typeName, TypesAlreadyDefined)
