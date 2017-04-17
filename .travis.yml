@@ -40,13 +40,11 @@ script:
       set -e
       echo "" > coverage.txt
 
-      for d in $(go list ./... | grep -v vendor); do
-          go test -race -coverprofile=profile.out -coverpkg -covermode=atomic $d
-          if [ -f profile.out ]; then
-              cat profile.out >> coverage.txt
-              rm profile.out
-          fi
-      done
+      go test -race -coverprofile=profile.out -coverpkg ./...
+      if [ -f profile.out ]; then
+        cat profile.out >> coverage.txt
+        rm profile.out
+      fi
 
   # These steps are from the README to verify it can be installed and run as
   # documented.
