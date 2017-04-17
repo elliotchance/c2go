@@ -11,10 +11,10 @@ import (
 )
 
 var (
-	cPath = "build/a.out"
+	cPath  = "build/a.out"
 	goPath = "build/go.out"
-	stdin = "7"
-	args = []string{"some", "args"}
+	stdin  = "7"
+	args   = []string{"some", "args"}
 )
 
 type programOut struct {
@@ -60,10 +60,11 @@ func TestIntegrationScripts(t *testing.T) {
 
 			// Compile Go
 			goSrc := Start([]string{file})
+			// fmt.Println(goSrc)
 			ioutil.WriteFile("build/main.go", []byte(goSrc), os.ModePerm)
-			out, err := exec.Command("go", "build", "-o", goPath, "build/main.go").CombinedOutput()
+			buildErr, err := exec.Command("go", "build", "-o", goPath, "build/main.go").CombinedOutput()
 			if err != nil {
-				t.Fatalf("ERROR: %s\n%s", err, out)
+				t.Fatal(string(buildErr), err)
 			}
 
 			// Run Go program
