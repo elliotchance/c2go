@@ -12,3 +12,7 @@ clean:
 	if [ -f *~ ] ; then rm *~ ; fi
 	if [ -f ${BINARY} ] ; then rm ${BINARY} ; fi
 	if [ -f ${GOPATH}/bin/${BINARY} ] ; then rm ${GOPATH}/bin/${BINARY} ; fi
+<<<<<<< HEAD
+=======
+
+>>>>>>> db0dd45068b4bf524f1363916b79b52f850585b3
