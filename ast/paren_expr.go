@@ -28,3 +28,7 @@ func (n *ParenExpr) render(ast *Ast) (string, string) {
 	src := fmt.Sprintf("(%s)", a)
 	return src, aType
 }
+
+func (n *ParenExpr) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

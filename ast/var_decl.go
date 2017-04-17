@@ -83,3 +83,7 @@ func (n *VarDecl) render(ast *Ast) (string, string) {
 
 	return fmt.Sprintf("var %s %s%s", name, theType, suffix), "unknown3"
 }
+
+func (n *VarDecl) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

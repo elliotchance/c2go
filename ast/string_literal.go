@@ -34,3 +34,7 @@ func (n *StringLiteral) render(ast *Ast) (string, string) {
 	src := fmt.Sprintf("\"%s\"", strings.Replace(n.Value, "\n", "\\n", -1))
 	return src, "const char *"
 }
+
+func (n *StringLiteral) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

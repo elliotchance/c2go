@@ -66,3 +66,7 @@ func (n *CallExpr) render(ast *Ast) (string, string) {
 	src := fmt.Sprintf("%s(%s)", func_name, strings.Join(parts, ", "))
 	return src, func_def.ReturnType
 }
+
+func (n *CallExpr) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

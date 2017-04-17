@@ -49,3 +49,7 @@ func parseParmVarDecl(line string) *ParmVarDecl {
 func (n *ParmVarDecl) render(ast *Ast) (string, string) {
 	return "", ""
 }
+
+func (n *ParmVarDecl) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

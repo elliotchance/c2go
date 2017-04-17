@@ -69,3 +69,7 @@ func (n *ForStmt) render(ast *Ast) (string, string) {
 
 	return out.String(), ""
 }
+
+func (n *ForStmt) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

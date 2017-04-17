@@ -28,3 +28,7 @@ func parseFloatingLiteral(line string) *FloatingLiteral {
 func (n *FloatingLiteral) render(ast *Ast) (string, string) {
 	return fmt.Sprintf("%f", n.Value), "double"
 }
+
+func (n *FloatingLiteral) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

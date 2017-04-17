@@ -67,3 +67,7 @@ func (n *FieldDecl) render(ast *Ast) (string, string) {
 	src := fmt.Sprintf("%s %s%s", name, fieldType, suffix)
 	return src, "unknown3"
 }
+
+func (n *FieldDecl) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

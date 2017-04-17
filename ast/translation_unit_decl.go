@@ -27,3 +27,7 @@ func (n *TranslationUnitDecl) render(ast *Ast) (string, string) {
 
 	return out.String(), ""
 }
+
+func (n *TranslationUnitDecl) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

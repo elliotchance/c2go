@@ -24,8 +24,13 @@ func readAST(data []byte) []string {
 	return strings.Split(string(uncolored), "\n")
 }
 
-func convertLinesToNodes(lines []string) []interface{} {
-	nodes := []interface{}{}
+type treeNode struct {
+	indent int
+	node   ast.Node
+}
+
+func convertLinesToNodes(lines []string) []treeNode {
+	nodes := []treeNode{}
 	for _, line := range lines {
 		if strings.TrimSpace(line) == "" {
 			continue
@@ -45,23 +50,23 @@ func convertLinesToNodes(lines []string) []interface{} {
 		node := ast.Parse(line[offset:])
 
 		indentLevel := len(indentAndType[1]) / 2
-		nodes = append(nodes, []interface{}{indentLevel, node})
+		nodes = append(nodes, treeNode{indentLevel, node})
 	}
 
 	return nodes
 }
 
 // buildTree convert an array of nodes, each prefixed with a depth into a tree.
-func buildTree(nodes []interface{}, depth int) []ast.Node {
+func buildTree(nodes []treeNode, depth int) []ast.Node {
 	if len(nodes) == 0 {
 		return []ast.Node{}
 	}
 
 	// Split the list into sections, treat each section as a a tree with its own root.
-	sections := [][]interface{}{}
+	sections := [][]treeNode{}
 	for _, node := range nodes {
-		if node.([]interface{})[0] == depth {
-			sections = append(sections, []interface{}{node})
+		if node.indent == depth {
+			sections = append(sections, []treeNode{node})
 		} else {
 			sections[len(sections)-1] = append(sections[len(sections)-1], node)
 		}
@@ -69,25 +74,18 @@ func buildTree(nodes []interface{}, depth int) []ast.Node {
 
 	results := []ast.Node{}
 	for _, section := range sections {
-		slice := []interface{}{}
+		slice := []treeNode{}
 		for _, n := range section {
-			if n.([]interface{})[0].(int) > depth {
+			if n.indent > depth {
 				slice = append(slice, n)
 			}
 		}
 
 		children := buildTree(slice, depth+1)
-		if result, ok := section[0].([]interface{})[1].(ast.Node); ok {
-			if len(children) > 0 {
-				c := reflect.ValueOf(result).Elem().FieldByName("Children")
-				slice := reflect.AppendSlice(c, reflect.ValueOf(children))
-				c.Set(slice)
-			}
-
-			results = append(results, result)
-		} else {
-			results = append(results, nil)
+		for _, child := range children {
+			section[0].node.AddChild(child)
 		}
+		results = append(results, section[0].node)
 	}
 
 	return results

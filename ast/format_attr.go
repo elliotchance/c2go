@@ -37,3 +37,7 @@ func parseFormatAttr(line string) *FormatAttr {
 func (n *FormatAttr) render(ast *Ast) (string, string) {
 	return "", ""
 }
+
+func (n *FormatAttr) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

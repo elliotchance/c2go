@@ -26,3 +26,7 @@ func parseImplicitCastExpr(line string) *ImplicitCastExpr {
 func (n *ImplicitCastExpr) render(ast *Ast) (string, string) {
 	return renderExpression(ast, n.Children[0])
 }
+
+func (n *ImplicitCastExpr) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

@@ -24,3 +24,7 @@ func parseConstantArrayType(line string) *ConstantArrayType {
 func (n *ConstantArrayType) render(ast *Ast) (string, string) {
 	return "", ""
 }
+
+func (n *ConstantArrayType) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

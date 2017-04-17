@@ -22,3 +22,7 @@ func parseMallocAttr(line string) *MallocAttr {
 func (n *MallocAttr) render(ast *Ast) (string, string) {
 	return "", ""
 }
+
+func (n *MallocAttr) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

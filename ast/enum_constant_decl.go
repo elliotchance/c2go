@@ -31,3 +31,7 @@ func parseEnumConstantDecl(line string) *EnumConstantDecl {
 func (n *EnumConstantDecl) render(ast *Ast) (string, string) {
 	return "", ""
 }
+
+func (n *EnumConstantDecl) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

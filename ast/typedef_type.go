@@ -24,3 +24,7 @@ func parseTypedefType(line string) *TypedefType {
 func (n *TypedefType) render(ast *Ast) (string, string) {
 	return "", ""
 }
+
+func (n *TypedefType) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

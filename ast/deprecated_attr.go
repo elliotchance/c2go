@@ -26,3 +26,7 @@ func parseDeprecatedAttr(line string) *DeprecatedAttr {
 func (n *DeprecatedAttr) render(ast *Ast) (string, string) {
 	return "", ""
 }
+
+func (n *DeprecatedAttr) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

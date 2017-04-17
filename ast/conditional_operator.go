@@ -32,3 +32,7 @@ func (n *ConditionalOperator) render(ast *Ast) (string, string) {
 	src := fmt.Sprintf("noarch.Ternary(%s, func () interface{} { return %s }, func () interface{} { return %s })", a, b, c)
 	return src, n.Type
 }
+
+func (n *ConditionalOperator) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

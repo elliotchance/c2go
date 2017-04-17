@@ -51,3 +51,7 @@ func (n *DeclRefExpr) render(ast *Ast) (string, string) {
 
 	return name, n.Type
 }
+
+func (n *DeclRefExpr) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

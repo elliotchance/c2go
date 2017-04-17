@@ -24,3 +24,7 @@ func parseAsmLabelAttr(line string) *AsmLabelAttr {
 func (n *AsmLabelAttr) render(ast *Ast) (string, string) {
 	return "", ""
 }
+
+func (n *AsmLabelAttr) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

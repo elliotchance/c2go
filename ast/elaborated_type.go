@@ -24,3 +24,7 @@ func parseElaboratedType(line string) *ElaboratedType {
 func (n *ElaboratedType) render(ast *Ast) (string, string) {
 	return "", ""
 }
+
+func (n *ElaboratedType) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

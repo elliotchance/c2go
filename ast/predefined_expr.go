@@ -41,3 +41,7 @@ func (n *PredefinedExpr) render(ast *Ast) (string, string) {
 
 	panic(fmt.Sprintf("renderExpression: unknown PredefinedExpr: %s", n.Name))
 }
+
+func (n *PredefinedExpr) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

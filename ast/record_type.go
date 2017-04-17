@@ -22,3 +22,7 @@ func parseRecordType(line string) *RecordType {
 func (n *RecordType) render(ast *Ast) (string, string) {
 	return "", ""
 }
+
+func (n *RecordType) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

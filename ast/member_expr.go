@@ -47,3 +47,7 @@ func (n *MemberExpr) render(ast *Ast) (string, string) {
 	src := fmt.Sprintf("%s.%s", lhs, rhs)
 	return src, children[0].(*DeclRefExpr).Type
 }
+
+func (n *MemberExpr) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

@@ -26,3 +26,7 @@ func parseCharacterLiteral(line string) *CharacterLiteral {
 func (n *CharacterLiteral) render(ast *Ast) (string, string) {
 	return "", ""
 }
+
+func (n *CharacterLiteral) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

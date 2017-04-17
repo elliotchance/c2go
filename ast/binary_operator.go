@@ -49,3 +49,7 @@ func (n *BinaryOperator) render(ast *Ast) (string, string) {
 	src := fmt.Sprintf("%s %s %s", left, operator, right)
 	return src, return_type
 }
+
+func (n *BinaryOperator) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

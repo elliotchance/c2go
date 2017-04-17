@@ -34,3 +34,7 @@ func (n *IntegerLiteral) render(ast *Ast) (string, string) {
 
 	return strconv.FormatInt(int64(literal), 10), "int"
 }
+
+func (n *IntegerLiteral) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

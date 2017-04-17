@@ -32,3 +32,7 @@ func (n *ArraySubscriptExpr) render(ast *Ast) (string, string) {
 	src := fmt.Sprintf("%s[%s]", expression, index)
 	return src, "unknown1"
 }
+
+func (n *ArraySubscriptExpr) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

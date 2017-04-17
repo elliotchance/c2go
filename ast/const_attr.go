@@ -24,3 +24,7 @@ func parseConstAttr(line string) *ConstAttr {
 func (n *ConstAttr) render(ast *Ast) (string, string) {
 	return "", ""
 }
+
+func (n *ConstAttr) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

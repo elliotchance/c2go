@@ -74,3 +74,7 @@ func (n *RecordDecl) render(ast *Ast) (string, string) {
 	printLine(out, "}\n", ast.indent)
 	return out.String(), ""
 }
+
+func (n *RecordDecl) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

@@ -22,3 +22,7 @@ func parseAlwaysInlineAttr(line string) *AlwaysInlineAttr {
 func (n *AlwaysInlineAttr) render(ast *Ast) (string, string) {
 	return "", ""
 }
+
+func (n *AlwaysInlineAttr) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

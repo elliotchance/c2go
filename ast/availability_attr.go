@@ -43,3 +43,7 @@ func parseAvailabilityAttr(line string) *AvailabilityAttr {
 func (n *AvailabilityAttr) render(ast *Ast) (string, string) {
 	return "", ""
 }
+
+func (n *AvailabilityAttr) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

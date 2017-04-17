@@ -24,3 +24,7 @@ func parseRestrictAttr(line string) *RestrictAttr {
 func (n *RestrictAttr) render(ast *Ast) (string, string) {
 	return "", ""
 }
+
+func (n *RestrictAttr) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

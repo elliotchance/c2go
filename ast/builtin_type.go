@@ -22,3 +22,7 @@ func parseBuiltinType(line string) *BuiltinType {
 func (n *BuiltinType) render(ast *Ast) (string, string) {
 	return "", ""
 }
+
+func (n *BuiltinType) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

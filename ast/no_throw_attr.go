@@ -22,3 +22,7 @@ func parseNoThrowAttr(line string) *NoThrowAttr {
 func (n *NoThrowAttr) render(ast *Ast) (string, string) {
 	return "", ""
 }
+
+func (n *NoThrowAttr) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

@@ -31,3 +31,7 @@ func (n *CompoundStmt) render(ast *Ast) (string, string) {
 
 	return out.String(), ""
 }
+
+func (n *CompoundStmt) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

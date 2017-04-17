@@ -31,3 +31,7 @@ func (n *DeclStmt) render(ast *Ast) (string, string) {
 
 	return out.String(), ""
 }
+
+func (n *DeclStmt) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

@@ -22,3 +22,7 @@ func parseRecord(line string) *Record {
 func (n *Record) render(ast *Ast) (string, string) {
 	return "", ""
 }
+
+func (n *Record) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

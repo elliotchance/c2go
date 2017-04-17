@@ -22,3 +22,7 @@ func parsePointerType(line string) *PointerType {
 func (n *PointerType) render(ast *Ast) (string, string) {
 	return "", ""
 }
+
+func (n *PointerType) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

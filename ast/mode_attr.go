@@ -24,3 +24,7 @@ func parseModeAttr(line string) *ModeAttr {
 func (n *ModeAttr) render(ast *Ast) (string, string) {
 	return "", ""
 }
+
+func (n *ModeAttr) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

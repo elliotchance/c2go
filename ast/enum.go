@@ -22,3 +22,7 @@ func parseEnum(line string) *Enum {
 func (n *Enum) render(ast *Ast) (string, string) {
 	return "", ""
 }
+
+func (n *Enum) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

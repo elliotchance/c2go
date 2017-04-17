@@ -27,3 +27,7 @@ func (n *CStyleCastExpr) render(ast *Ast) (string, string) {
 	children := n.Children
 	return renderExpression(ast, children[0])
 }
+
+func (n *CStyleCastExpr) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

@@ -49,6 +49,7 @@ func (a *Ast) importType(name string) string {
 
 type Node interface {
 	render(ast *Ast) (string, string)
+	AddChild(node Node)
 }
 
 func Parse(line string) Node {

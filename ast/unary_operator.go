@@ -65,3 +65,7 @@ func (n *UnaryOperator) render(ast *Ast) (string, string) {
 
 	return fmt.Sprintf("%s%s", operator, expr), exprType
 }
+
+func (n *UnaryOperator) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

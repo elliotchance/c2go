@@ -22,3 +22,7 @@ func parseNonNullAttr(line string) *NonNullAttr {
 func (n *NonNullAttr) render(ast *Ast) (string, string) {
 	return "", ""
 }
+
+func (n *NonNullAttr) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

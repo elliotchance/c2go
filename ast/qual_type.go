@@ -24,3 +24,7 @@ func parseQualType(line string) *QualType {
 func (n *QualType) render(ast *Ast) (string, string) {
 	return "", ""
 }
+
+func (n *QualType) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

@@ -24,3 +24,7 @@ func parseFunctionProtoType(line string) *FunctionProtoType {
 func (n *FunctionProtoType) render(ast *Ast) (string, string) {
 	return "", ""
 }
+
+func (n *FunctionProtoType) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

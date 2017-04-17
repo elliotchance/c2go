@@ -28,3 +28,7 @@ func parseEnumDecl(line string) *EnumDecl {
 func (n *EnumDecl) render(ast *Ast) (string, string) {
 	return "", ""
 }
+
+func (n *EnumDecl) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

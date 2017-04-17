@@ -84,3 +84,7 @@ func (n *IfStmt) render(ast *Ast) (string, string) {
 
 	return out.String(), ""
 }
+
+func (n *IfStmt) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}

@@ -22,3 +22,7 @@ func parseBreakStmt(line string) *BreakStmt {
 func (n *BreakStmt) render(ast *Ast) (string, string) {
 	return "break", ""
 }
+
+func (n *BreakStmt) AddChild(node Node) {
+	n.Children = append(n.Children, node)
+}
