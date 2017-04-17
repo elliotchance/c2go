@@ -54,7 +54,7 @@ func parseFunctionDecl(line string) *FunctionDecl {
 func (n *FunctionDecl) render(ast *Ast) (string, string) {
 	out := bytes.NewBuffer([]byte{})
 
-	ast.functionName = strings.TrimSpace(n.Name)
+	ast.functionName = n.Name
 
 	if ast.functionName == "__istype" ||
 		ast.functionName == "__isctype" ||

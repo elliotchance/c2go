@@ -31,7 +31,3 @@ func (n *CompoundStmt) render(ast *Ast) (string, string) {
 
 	return out.String(), ""
 }
-
-func (n *CompoundStmt) RenderLine(out *bytes.Buffer, functionName string, indent int, returnType string) {
-
-}

@@ -75,7 +75,6 @@ func typeIsNowDefined(typeName string) {
 }
 
 func resolveType(ast *Ast, s string) string {
-
 	// Remove any whitespace or attributes that are not relevant to Go.
 	s = strings.Replace(s, "const ", "", -1)
 	s = strings.Replace(s, "*__restrict", "*", -1)

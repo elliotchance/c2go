@@ -47,12 +47,3 @@ func getFunctionReturnType(f string) string {
 	// return type ('int' in this case)
 	return strings.TrimSpace(strings.Split(f, "(")[0])
 }
-
-// func Render(out *bytes.Buffer, node interface{}, functionName string, indent int, returnType string) {
-// 	if n, ok := node.(LineRenderer); ok {
-// 		n.RenderLine(out, functionName, indent, returnType)
-// 		return
-// 	}
-
-// 	printLine(out, renderExpression(node)[0], indent)
-// }
