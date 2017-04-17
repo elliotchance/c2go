@@ -12,7 +12,7 @@ import (
 
 	"go/format"
 
-	"github.com/bongo227/c2go/ast"
+	"github.com/elliotchance/c2go/ast"
 )
 
 var (
