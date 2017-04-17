@@ -86,6 +86,11 @@ func resolveType(s string) string {
 	s = strings.Replace(s, "*restrict", "*", -1)
 	s = strings.Trim(s, " \t\n\r")
 
+	// FIXME: This is a hack to avoid casting in some situations.
+	if s == "" {
+		return s
+	}
+
 	if s == "fpos_t" {
 		return "int"
 	}

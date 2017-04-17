@@ -10,6 +10,11 @@ func cast(expr, fromType, toType string) string {
 	fromType = resolveType(fromType)
 	toType = resolveType(toType)
 
+	// FIXME: This is a hack to avoid casting in some situations.
+	if fromType == "" || toType == "" {
+		return expr
+	}
+
 	if fromType == toType {
 		return expr
 	}
@@ -21,7 +26,7 @@ func cast(expr, fromType, toType string) string {
 		"float32", "float64",
 
 		// Darwin specific:
-		"__darwin_ct_rune_t", "github.com/elliotchance/c2go/darwin.Darwin_ct_rune_t",
+		"__darwin_ct_rune_t", "darwin.Darwin_ct_rune_t",
 	}
 	for _, v := range types {
 		if fromType == v && toType == "bool" {

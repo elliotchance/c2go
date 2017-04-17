@@ -39,14 +39,16 @@ func (n *MemberExpr) Render() []string {
 	lhs := renderExpression(children[0])
 	lhs_type := resolveType(lhs[1])
 	rhs := n.Name
+	rhsType := ""
 
 	// FIXME: This is just a hack
 	if inStrings(lhs_type, []string{"darwin.Float2", "darwin.Double2"}) {
 		rhs = getExportedName(rhs)
+		rhsType = "int"
 	}
 
 	return []string{
 		fmt.Sprintf("%s.%s", lhs[0], rhs),
-		"int",
+		rhsType,
 	}
 }
