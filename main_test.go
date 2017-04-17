@@ -11,10 +11,10 @@ import (
 )
 
 var (
-	cPath  = "build/a.out"
+	cPath = "build/a.out"
 	goPath = "build/go.out"
-	stdin  = "7"
-	args   = []string{"some", "args"}
+	stdin = "7"
+	args = []string{"some", "args"}
 )
 
 type programOut struct {
@@ -23,25 +23,17 @@ type programOut struct {
 	isZero bool
 }
 
-// TestIntegrationScripts tests all programs in the tests directory
+// TestIntegrationScripts tests all programs in the tests directory.
+//
+// It can be painful to run all the tests all of the time. You can provide a
+// regexp to run a single test:
+//
+//     go test -run TestIntegrationScripts/tests/ctype/isxdigit.c
+//
 func TestIntegrationScripts(t *testing.T) {
-	var files []string
-
-	// It can be painful to run all the tests all of the time. If the `T`
-	// environment variable is set it will only test that specific file,
-	// like:
-	//
-	//     T=tests/ctype/isalnum.c go test
-	//
-	onlyRunSpecificFile := os.Getenv("T")
-	if onlyRunSpecificFile != "" {
-		files = []string{onlyRunSpecificFile}
-	} else {
-		var err error
-		files, err = filepath.Glob("tests/*/*.c")
-		if err != nil {
-			t.Fatal(err)
-		}
+	files, err := filepath.Glob("tests/*/*.c")
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	for _, file := range files {
