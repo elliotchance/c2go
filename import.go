@@ -2,7 +2,11 @@ package main
 
 import "strings"
 
-var Imports = []string{"fmt"}
+var Imports []string
+
+func init() {
+	initImports()
+}
 
 func addImport(importName string) {
 	for _, i := range Imports {
@@ -24,4 +28,8 @@ func importType(typeName string) string {
 	}
 
 	return typeName
+}
+
+func initImports() {
+	Imports = []string{"fmt"}
 }

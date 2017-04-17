@@ -106,37 +106,8 @@ func main() {
 
 # What Is Supported?
 
-This table represents what is supported. If you see anything missing (there is a
-lot missing!) please add it with a pull request.
-
-| Function      | Supported?    | Notes                      |
-| ------------- | ------------- | -------------------------- |
-| **assert.h**  | Yes           |                            |
-| assert        | Yes           | This is actually a macro.  |
-| **math.h**    | Partly        | All of the C99 functions.  |
-| acos          | Yes           |                            |
-| asin          | Yes           |                            |
-| atan          | Yes           |                            |
-| atan2         | Yes           |                            |
-| ceil          | Yes           |                            |
-| cos           | Yes           |                            |
-| cosh          | Yes           |                            |
-| exp           | Yes           |                            |
-| fabs          | Yes           |                            |
-| floor         | Yes           |                            |
-| fmod          | Yes           |                            |
-| ldexp         | Yes           |                            |
-| log           | Yes           |                            |
-| log10         | Yes           |                            |
-| pow           | Yes           |                            |
-| sin           | Yes           |                            |
-| sinh          | Yes           |                            |
-| sqrt          | Yes           |                            |
-| tan           | Yes           |                            |
-| tanh          | Yes           |                            |
-| **stdio.h**   | Partly        |                            |
-| printf        | Yes           |                            |
-| scanf         | Yes           |                            |
+See the
+[Project Progress](https://github.com/elliotchance/c2go/wiki/Project-Progress).
 
 # How It Works
 
@@ -170,20 +141,15 @@ For each of those files:
 4. Both binaries are executed and the output is compared. All C files will
 contain some output so the results can be verified.
 
-The test suite is run with
-[run-tests.sh](https://github.com/elliotchance/c2go/blob/master/run-tests.sh).
+The test suite is run with `go test`.
 
 # Contributing
 
-As I said it is still very early days (sorry for all the hacky Python). And
-eventually the build chain can be converted to pure Go since we don't need any
-clang APIs.
-
 Contributing is done with pull requests. There is no help that is too small! :)
+
 If you're looking for where to start I can suggest
 [finding a simple C program](http://www.programmingsimplified.com/c-program-examples)
-(like the other examples) that does not successful translate into Go and fixing
-up the Python so that it does.
+(like the other examples) that do not successfully translate into Go.
 
 Or, if you don't want to do that you can submit it as an issue so that it can be
 picked up by someone else.

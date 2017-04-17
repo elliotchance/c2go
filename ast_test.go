@@ -365,6 +365,24 @@ var nodes = map[string]interface{}{
 		Referenced: true,
 		Children:   []interface{}{},
 	},
+	`0x7f9bc9083d00 <line:91:5, line:97:8> line:91:5 'unsigned short'`: &FieldDecl{
+		Address:    "0x7f9bc9083d00",
+		Position:   "line:91:5, line:97:8",
+		Position2:  "line:91:5",
+		Name:       "",
+		Type:       "unsigned short",
+		Referenced: false,
+		Children:   []interface{}{},
+	},
+	`0x30363a0 <col:18, col:29> __val 'int [2]'`: &FieldDecl{
+		Address:    "0x30363a0",
+		Position:   "col:18, col:29",
+		Position2:  "",
+		Name:       "__val",
+		Type:       "int [2]",
+		Referenced: false,
+		Children:   []interface{}{},
+	},
 
 	// FloatingLiteral
 	`0x7febe106f5e8 <col:24> 'double' 1.230000e+00`: &FloatingLiteral{
@@ -851,6 +869,18 @@ var nodes = map[string]interface{}{
 		Position2:    "",
 		Name:         "__io_read_fn",
 		Type:         "__ssize_t (void *, char *, size_t)",
+		Type2:        "",
+		IsImplicit:   false,
+		IsReferenced: false,
+		Children:     []interface{}{},
+	},
+	// Issue: #26
+	`0x55b9da8784b0 <line:341:1, line:342:16> line:341:19 __io_write_fn '__ssize_t (void *, const char *, size_t)'`: &TypedefDecl{
+		Address:      "0x55b9da8784b0",
+		Position:     "line:341:1, line:342:16",
+		Position2:    "line:341:19",
+		Name:         "__io_write_fn",
+		Type:         "__ssize_t (void *, const char *, size_t)",
 		Type2:        "",
 		IsImplicit:   false,
 		IsReferenced: false,
