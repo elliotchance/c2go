@@ -155,6 +155,10 @@ func resolveType(s string) string {
 		return "*" + resolveType(strings.TrimSpace(s[:len(s)-2]))
 	}
 
+	if regexp.MustCompile(`[\w ]+\*\[\d+\]$`).MatchString(s) {
+		return "[]string"
+	}
+
 	// Function pointers are not yet supported. In th mean time they will be
 	// replaced with a type that certainly wont work until we can fix this
 	// properly.
