@@ -190,9 +190,10 @@ func Start(args []string) string {
 }
 
 func main() {
-	//flag.Usage = func() {
-	//	flag.Usage()
-	//}
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: %s [options] <file.c>\n", os.Args[0])
+		flag.PrintDefaults()
+	}
 	flag.Parse()
 
 	if flag.NArg() < 1 {
