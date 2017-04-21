@@ -35,6 +35,7 @@ before_install:
       fi
 
 script:
+  - . ./.travis.gofmt.sh
   # Run the unit tests first
   - |
       set -e
