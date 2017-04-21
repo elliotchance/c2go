@@ -32,7 +32,7 @@ func (n *BinaryOperator) render(ast *Ast) (string, string) {
 	right, rightType := renderExpression(ast, n.Children[1])
 
 	return_type := "bool"
-	if inStrings(operator, []string{"|", "&", "+", "-", "*", "/", "="}) {
+	if inStrings(operator, []string{"|", "&", "+", "-", "*", "/", "=", "<<", ">>"}) {
 		// TODO: The left and right type might be different
 		return_type = leftType
 	}

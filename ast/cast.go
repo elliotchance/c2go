@@ -22,8 +22,11 @@ func cast(ast *Ast, expr, fromType, toType string) string {
 	// Compatible integer types
 	types := []string{
 		// General types:
-		"int", "int64", "uint16", "uint32", "byte",
+		"int", "int64", "uint16", "uint32", "byte", "uint64",
 		"float32", "float64",
+
+		// Known aliases
+		"__uint16_t",
 
 		// Darwin specific:
 		"__darwin_ct_rune_t", "darwin.Darwin_ct_rune_t",
@@ -116,5 +119,5 @@ func cast(ast *Ast, expr, fromType, toType string) string {
 	}
 
 	return fmt.Sprintf("noarch.%sTo%s(%s)",
-		ucfirst(leftName), ucfirst(rightName), expr)
+		getExportedName(leftName), getExportedName(rightName), expr)
 }
