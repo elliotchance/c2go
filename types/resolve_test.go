@@ -16,6 +16,7 @@ var resolveTestCases = []resolveTestCase{
 	{"int", "int"},
 	{"char *[13]", "[]string"},
 	{"__uint16_t", "uint16"},
+	{"void *", "interface{}"},
 }
 
 func TestResolve(t *testing.T) {

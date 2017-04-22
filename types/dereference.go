@@ -22,5 +22,5 @@ func GetDereferenceType(cType string) (string, error) {
 	// until that no longer works.
 	//
 	//     return "", errors.New(cType)
-	return "interface{}", nil
+	return "void *", nil
 }
