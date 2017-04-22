@@ -1,6 +1,11 @@
 package ast
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/util"
+)
 
 type CharacterLiteral struct {
 	Address  string
@@ -20,12 +25,12 @@ func parseCharacterLiteral(line string) *CharacterLiteral {
 		Address:  groups["address"],
 		Position: groups["position"],
 		Type:     groups["type"],
-		Value:    atoi(groups["value"]),
+		Value:    util.Atoi(groups["value"]),
 		Children: []Node{},
 	}
 }
 
-func (n *CharacterLiteral) render(ast *Ast) (string, string) {
+func (n *CharacterLiteral) render(program *program.Program) (string, string) {
 	var s string
 
 	switch n.Value {

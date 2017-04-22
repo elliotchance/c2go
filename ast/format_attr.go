@@ -1,5 +1,10 @@
 package ast
 
+import (
+	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/util"
+)
+
 type FormatAttr struct {
 	Address      string
 	Position     string
@@ -28,13 +33,13 @@ func parseFormatAttr(line string) *FormatAttr {
 		Implicit:     len(groups["implicit"]) > 0,
 		Inherited:    len(groups["inherited"]) > 0,
 		FunctionName: groups["function"],
-		Unknown1:     atoi(groups["unknown1"]),
-		Unknown2:     atoi(groups["unknown2"]),
+		Unknown1:     util.Atoi(groups["unknown1"]),
+		Unknown2:     util.Atoi(groups["unknown2"]),
 		Children:     []Node{},
 	}
 }
 
-func (n *FormatAttr) render(ast *Ast) (string, string) {
+func (n *FormatAttr) render(program *program.Program) (string, string) {
 	return "", ""
 }
 

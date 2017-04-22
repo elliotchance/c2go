@@ -1,6 +1,10 @@
 package ast
 
-import "bytes"
+import (
+	"bytes"
+
+	"github.com/elliotchance/c2go/program"
+)
 
 type CompoundStmt struct {
 	Address  string
@@ -21,12 +25,12 @@ func parseCompoundStmt(line string) *CompoundStmt {
 	}
 }
 
-func (n *CompoundStmt) render(ast *Ast) (string, string) {
+func (n *CompoundStmt) render(program *program.Program) (string, string) {
 	out := bytes.NewBuffer([]byte{})
 
 	for _, c := range n.Children {
-		src, _ := renderExpression(ast, c)
-		printLine(out, src, ast.indent)
+		src, _ := renderExpression(program, c)
+		printLine(out, src, program.Indent)
 	}
 
 	return out.String(), ""

@@ -1,5 +1,9 @@
 package ast
 
+import (
+	"github.com/elliotchance/c2go/program"
+)
+
 type NoThrowAttr struct {
 	Address  string
 	Position string
@@ -19,7 +23,7 @@ func parseNoThrowAttr(line string) *NoThrowAttr {
 	}
 }
 
-func (n *NoThrowAttr) render(ast *Ast) (string, string) {
+func (n *NoThrowAttr) render(program *program.Program) (string, string) {
 	return "", ""
 }
 

@@ -2,6 +2,8 @@ package ast
 
 import (
 	"bytes"
+
+	"github.com/elliotchance/c2go/program"
 )
 
 type TranslationUnitDecl struct {
@@ -18,11 +20,11 @@ func parseTranslationUnitDecl(line string) *TranslationUnitDecl {
 	}
 }
 
-func (n *TranslationUnitDecl) render(ast *Ast) (string, string) {
+func (n *TranslationUnitDecl) render(program *program.Program) (string, string) {
 	out := bytes.NewBuffer([]byte{})
 	for _, c := range n.Children {
-		src, _ := renderExpression(ast, c)
-		printLine(out, src, ast.indent)
+		src, _ := renderExpression(program, c)
+		printLine(out, src, program.Indent)
 	}
 
 	return out.String(), ""

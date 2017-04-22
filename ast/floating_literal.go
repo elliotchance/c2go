@@ -1,6 +1,10 @@
 package ast
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/elliotchance/c2go/program"
+)
 
 type FloatingLiteral struct {
 	Address  string
@@ -25,7 +29,7 @@ func parseFloatingLiteral(line string) *FloatingLiteral {
 	}
 }
 
-func (n *FloatingLiteral) render(ast *Ast) (string, string) {
+func (n *FloatingLiteral) render(program *program.Program) (string, string) {
 	return fmt.Sprintf("%f", n.Value), "double"
 }
 

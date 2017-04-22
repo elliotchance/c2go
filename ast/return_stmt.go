@@ -2,6 +2,9 @@ package ast
 
 import (
 	"bytes"
+
+	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/types"
 )
 
 type ReturnStmt struct {
@@ -23,16 +26,16 @@ func parseReturnStmt(line string) *ReturnStmt {
 	}
 }
 
-func (n *ReturnStmt) render(ast *Ast) (string, string) {
+func (n *ReturnStmt) render(program *program.Program) (string, string) {
 	out := bytes.NewBuffer([]byte{})
 	r := "return"
 
-	if len(n.Children) > 0 && ast.functionName != "main" {
-		re, reType := renderExpression(ast, n.Children[0])
-		r = "return " + cast(ast, re, reType, "int")
+	if len(n.Children) > 0 && program.FunctionName != "main" {
+		re, reType := renderExpression(program, n.Children[0])
+		r = "return " + types.Cast(program, re, reType, "int")
 	}
 
-	printLine(out, r, ast.indent)
+	printLine(out, r, program.Indent)
 
 	return out.String(), ""
 }

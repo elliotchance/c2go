@@ -3,6 +3,9 @@ package ast
 import (
 	"bytes"
 	"fmt"
+
+	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/types"
 )
 
 type IfStmt struct {
@@ -24,7 +27,7 @@ func parseIfStmt(line string) *IfStmt {
 	}
 }
 
-func (n *IfStmt) render(ast *Ast) (string, string) {
+func (n *IfStmt) render(program *program.Program) (string, string) {
 	out := bytes.NewBuffer([]byte{})
 	children := n.Children
 
@@ -65,22 +68,22 @@ func (n *IfStmt) render(ast *Ast) (string, string) {
 		panic("non-nil child 0 in ForStmt")
 	}
 
-	conditional, conditionalType := renderExpression(ast, children[1])
+	conditional, conditionalType := renderExpression(program, children[1])
 
 	// The condition in Go must always be a bool.
-	boolCondition := cast(ast, conditional, conditionalType, "bool")
+	boolCondition := types.Cast(program, conditional, conditionalType, "bool")
 
-	printLine(out, fmt.Sprintf("if %s {", boolCondition), ast.indent)
-	body, _ := renderExpression(ast, children[2])
-	printLine(out, body, ast.indent+1)
+	printLine(out, fmt.Sprintf("if %s {", boolCondition), program.Indent)
+	body, _ := renderExpression(program, children[2])
+	printLine(out, body, program.Indent+1)
 
 	if children[3] != nil {
-		printLine(out, "} else {", ast.indent)
-		body, _ := renderExpression(ast, children[3])
-		printLine(out, body, ast.indent+1)
+		printLine(out, "} else {", program.Indent)
+		body, _ := renderExpression(program, children[3])
+		printLine(out, body, program.Indent+1)
 	}
 
-	printLine(out, "}", ast.indent)
+	printLine(out, "}", program.Indent)
 
 	return out.String(), ""
 }

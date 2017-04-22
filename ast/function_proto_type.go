@@ -1,5 +1,9 @@
 package ast
 
+import (
+	"github.com/elliotchance/c2go/program"
+)
+
 type FunctionProtoType struct {
 	Address  string
 	Type     string
@@ -21,7 +25,7 @@ func parseFunctionProtoType(line string) *FunctionProtoType {
 	}
 }
 
-func (n *FunctionProtoType) render(ast *Ast) (string, string) {
+func (n *FunctionProtoType) render(program *program.Program) (string, string) {
 	return "", ""
 }
 

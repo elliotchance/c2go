@@ -1,5 +1,9 @@
 package ast
 
+import (
+	"github.com/elliotchance/c2go/program"
+)
+
 type RestrictAttr struct {
 	Address  string
 	Position string
@@ -21,7 +25,7 @@ func parseRestrictAttr(line string) *RestrictAttr {
 	}
 }
 
-func (n *RestrictAttr) render(ast *Ast) (string, string) {
+func (n *RestrictAttr) render(program *program.Program) (string, string) {
 	return "", ""
 }
 

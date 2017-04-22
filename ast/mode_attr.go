@@ -1,5 +1,9 @@
 package ast
 
+import (
+	"github.com/elliotchance/c2go/program"
+)
+
 type ModeAttr struct {
 	Address  string
 	Position string
@@ -21,7 +25,7 @@ func parseModeAttr(line string) *ModeAttr {
 	}
 }
 
-func (n *ModeAttr) render(ast *Ast) (string, string) {
+func (n *ModeAttr) render(program *program.Program) (string, string) {
 	return "", ""
 }
 

@@ -17,29 +17,6 @@ func ucfirst(word string) string {
 	return strings.ToUpper(string(word[0])) + word[1:]
 }
 
-func getExportedName(field string) string {
-	return ucfirst(strings.TrimLeft(field, "_"))
-}
-
-func inStrings(item string, items []string) bool {
-	for _, v := range items {
-		if item == v {
-			return true
-		}
-	}
-
-	return false
-}
-
-func atoi(s string) int {
-	i, err := strconv.Atoi(s)
-	if err != nil {
-		panic(err)
-	}
-
-	return i
-}
-
 func removeQuotes(s string) string {
 	s = strings.TrimSpace(s)
 

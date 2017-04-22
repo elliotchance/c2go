@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
+
+	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/types"
 )
 
 type TypedefDecl struct {
@@ -48,17 +51,17 @@ func parseTypedefDecl(line string) *TypedefDecl {
 	}
 }
 
-func (n *TypedefDecl) render(ast *Ast) (string, string) {
+func (n *TypedefDecl) render(program *program.Program) (string, string) {
 	out := bytes.NewBuffer([]byte{})
 	name := n.Name
 
-	if typeIsAlreadyDefined(name) {
+	if types.TypeIsAlreadyDefined(name) {
 		return "", ""
 	}
 
-	typeIsNowDefined(name)
+	types.TypeIsNowDefined(name)
 
-	resolvedType := resolveType(ast, n.Type)
+	resolvedType := types.ResolveType(program, n.Type)
 	// There is a case where the name of the type is also the definition,
 	// like:
 	//
@@ -80,11 +83,11 @@ func (n *TypedefDecl) render(ast *Ast) (string, string) {
 	}
 
 	if name == "__mbstate_t" {
-		resolvedType = ast.importType("github.com/elliotchance/c2go/darwin.C__mbstate_t")
+		resolvedType = program.ImportType("github.com/elliotchance/c2go/darwin.C__mbstate_t")
 	}
 
 	if name == "__darwin_ct_rune_t" {
-		resolvedType = ast.importType("github.com/elliotchance/c2go/darwin.Darwin_ct_rune_t")
+		resolvedType = program.ImportType("github.com/elliotchance/c2go/darwin.Darwin_ct_rune_t")
 	}
 
 	// A bunch of random stuff to ignore... I really should deal with these.
@@ -94,7 +97,7 @@ func (n *TypedefDecl) render(ast *Ast) (string, string) {
 		return "", ""
 	}
 
-	printLine(out, fmt.Sprintf("type %s %s\n", name, resolvedType), ast.indent)
+	printLine(out, fmt.Sprintf("type %s %s\n", name, resolvedType), program.Indent)
 
 	return out.String(), ""
 }

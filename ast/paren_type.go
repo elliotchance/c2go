@@ -1,5 +1,9 @@
 package ast
 
+import (
+	"github.com/elliotchance/c2go/program"
+)
+
 type ParenType struct {
 	Address  string
 	Type     string
@@ -18,7 +22,7 @@ func parseParenType(line string) *ParenType {
 	}
 }
 
-func (n *ParenType) render(ast *Ast) (string, string) {
+func (n *ParenType) render(program *program.Program) (string, string) {
 	return "", ""
 }
 

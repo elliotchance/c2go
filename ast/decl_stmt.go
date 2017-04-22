@@ -1,6 +1,10 @@
 package ast
 
-import "bytes"
+import (
+	"bytes"
+
+	"github.com/elliotchance/c2go/program"
+)
 
 type DeclStmt struct {
 	Address  string
@@ -21,12 +25,12 @@ func parseDeclStmt(line string) *DeclStmt {
 	}
 }
 
-func (n *DeclStmt) render(ast *Ast) (string, string) {
+func (n *DeclStmt) render(program *program.Program) (string, string) {
 	out := bytes.NewBuffer([]byte{})
 
 	for _, child := range n.Children {
-		src, _ := renderExpression(ast, child)
-		printLine(out, src, ast.indent)
+		src, _ := renderExpression(program, child)
+		printLine(out, src, program.Indent)
 	}
 
 	return out.String(), ""

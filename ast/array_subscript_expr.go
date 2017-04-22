@@ -1,6 +1,11 @@
 package ast
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/types"
+)
 
 type ArraySubscriptExpr struct {
 	Address  string
@@ -25,13 +30,13 @@ func parseArraySubscriptExpr(line string) *ArraySubscriptExpr {
 	}
 }
 
-func (n *ArraySubscriptExpr) render(ast *Ast) (string, string) {
+func (n *ArraySubscriptExpr) render(program *program.Program) (string, string) {
 	children := n.Children
-	expression, expressionType := renderExpression(ast, children[0])
-	index, _ := renderExpression(ast, children[1])
+	expression, expressionType := renderExpression(program, children[0])
+	index, _ := renderExpression(program, children[1])
 	src := fmt.Sprintf("%s[%s]", expression, index)
 
-	newType, err := getDereferenceType(expressionType)
+	newType, err := types.GetDereferenceType(expressionType)
 	if err != nil {
 		panic(fmt.Sprintf("Cannot dereference type '%s' for the expression '%s'",
 			expressionType, expression))

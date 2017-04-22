@@ -1,5 +1,7 @@
 package ast
 
+import "github.com/elliotchance/c2go/program"
+
 type WarnUnusedResultAttr struct {
 	Address  string
 	Position string
@@ -16,7 +18,7 @@ func parseWarnUnusedResultAttr(line string) *WarnUnusedResultAttr {
 	}
 }
 
-func (n *WarnUnusedResultAttr) render(ast *Ast) (string, string) {
+func (n *WarnUnusedResultAttr) render(program *program.Program) (string, string) {
 	return "", ""
 }
 

@@ -1,5 +1,10 @@
 package ast
 
+import (
+	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/util"
+)
+
 type AvailabilityAttr struct {
 	Address     string
 	Position    string
@@ -32,7 +37,7 @@ func parseAvailabilityAttr(line string) *AvailabilityAttr {
 		OS:          groups["os"],
 		Version:     groups["version"],
 		Unknown1:    atof(groups["unknown1"]),
-		Unknown2:    atoi(groups["unknown2"]),
+		Unknown2:    util.Atoi(groups["unknown2"]),
 		Unavailable: len(groups["unavalable"]) > 0,
 		Message1:    removeQuotes(groups["message1"]),
 		Message2:    removeQuotes(groups["message2"]),
@@ -40,7 +45,7 @@ func parseAvailabilityAttr(line string) *AvailabilityAttr {
 	}
 }
 
-func (n *AvailabilityAttr) render(ast *Ast) (string, string) {
+func (n *AvailabilityAttr) render(program *program.Program) (string, string) {
 	return "", ""
 }
 

@@ -3,6 +3,9 @@ package ast
 import (
 	"fmt"
 	"strings"
+
+	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/types"
 )
 
 type CallExpr struct {
@@ -26,9 +29,9 @@ func parseCallExpr(line string) *CallExpr {
 	}
 }
 
-func (n *CallExpr) render(ast *Ast) (string, string) {
+func (n *CallExpr) render(program *program.Program) (string, string) {
 	children := n.Children
-	functionName, _ := renderExpression(ast, children[0])
+	functionName, _ := renderExpression(program, children[0])
 	functionDef := getFunctionDefinition(functionName)
 
 	if functionDef == nil {
@@ -37,7 +40,7 @@ func (n *CallExpr) render(ast *Ast) (string, string) {
 
 	if functionDef.Substitution != "" {
 		parts := strings.Split(functionDef.Substitution, ".")
-		ast.addImport(strings.Join(parts[:len(parts)-1], "."))
+		program.AddImport(strings.Join(parts[:len(parts)-1], "."))
 
 		parts2 := strings.Split(functionDef.Substitution, "/")
 		functionName = parts2[len(parts2)-1]
@@ -46,7 +49,7 @@ func (n *CallExpr) render(ast *Ast) (string, string) {
 	args := []string{}
 	i := 0
 	for _, arg := range children[1:] {
-		e, eType := renderExpression(ast, arg)
+		e, eType := renderExpression(program, arg)
 
 		if i > len(functionDef.ArgumentTypes)-1 {
 			// This means the argument is one of the varargs
@@ -54,7 +57,7 @@ func (n *CallExpr) render(ast *Ast) (string, string) {
 			// cast to.
 			args = append(args, e)
 		} else {
-			args = append(args, cast(ast, e, eType, functionDef.ArgumentTypes[i]))
+			args = append(args, types.Cast(program, e, eType, functionDef.ArgumentTypes[i]))
 		}
 
 		i++

@@ -1,6 +1,12 @@
 package ast
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/types"
+	"github.com/elliotchance/c2go/util"
+)
 
 type MemberExpr struct {
 	Address  string
@@ -33,17 +39,17 @@ func parseMemberExpr(line string) *MemberExpr {
 	}
 }
 
-func (n *MemberExpr) render(ast *Ast) (string, string) {
+func (n *MemberExpr) render(program *program.Program) (string, string) {
 	children := n.Children
 
-	lhs, lhsType := renderExpression(ast, children[0])
-	lhsResolvedType := resolveType(ast, lhsType)
+	lhs, lhsType := renderExpression(program, children[0])
+	lhsResolvedType := types.ResolveType(program, lhsType)
 	rhs := n.Name
 	rhsType := ""
 
 	// FIXME: This is just a hack
-	if inStrings(lhsResolvedType, []string{"darwin.Float2", "darwin.Double2"}) {
-		rhs = getExportedName(rhs)
+	if util.InStrings(lhsResolvedType, []string{"darwin.Float2", "darwin.Double2"}) {
+		rhs = util.GetExportedName(rhs)
 		rhsType = "int"
 	}
 

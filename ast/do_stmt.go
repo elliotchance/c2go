@@ -1,5 +1,9 @@
 package ast
 
+import (
+	"github.com/elliotchance/c2go/program"
+)
+
 type DoStmt struct {
 	Address  string
 	Position string
@@ -19,7 +23,7 @@ func parseDoStmt(line string) *DoStmt {
 	}
 }
 
-func (n *DoStmt) render(ast *Ast) (string, string) {
+func (n *DoStmt) render(program *program.Program) (string, string) {
 	return "", ""
 }
 

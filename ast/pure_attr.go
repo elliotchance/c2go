@@ -1,5 +1,7 @@
 package ast
 
+import "github.com/elliotchance/c2go/program"
+
 type PureAttr struct {
 	Address   string
 	Position  string
@@ -25,7 +27,7 @@ func parsePureAttr(line string) *PureAttr {
 	}
 }
 
-func (n *PureAttr) render(ast *Ast) (string, string) {
+func (n *PureAttr) render(program *program.Program) (string, string) {
 	return "", ""
 }
 

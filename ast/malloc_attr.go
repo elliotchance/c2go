@@ -1,5 +1,9 @@
 package ast
 
+import (
+	"github.com/elliotchance/c2go/program"
+)
+
 type MallocAttr struct {
 	Address  string
 	Position string
@@ -19,7 +23,7 @@ func parseMallocAttr(line string) *MallocAttr {
 	}
 }
 
-func (n *MallocAttr) render(ast *Ast) (string, string) {
+func (n *MallocAttr) render(program *program.Program) (string, string) {
 	return "", ""
 }
 

@@ -129,19 +129,23 @@ tree is a semi-intelligent way and producing Go. Easy, right!?
 
 # Testing
 
-Testing is done with a set of integrations tests in the form of complete C
-programs that can be found in the
+By default only unit tests are run with `go test`. You can also include the
+integration tests:
+
+```bash
+go test -tags=integration ./...
+```
+
+Integration tests in the form of complete C programs that can be found in the
 [tests](https://github.com/elliotchance/c2go/tree/master/tests) directory.
 
-For each of those files:
+Integration tests work like this:
 
 1. Clang compiles the C to a binary as normal.
 2. c2go converts the C file to Go.
 3. The Go is built to produce another binary.
 4. Both binaries are executed and the output is compared. All C files will
 contain some output so the results can be verified.
-
-The test suite is run with `go test`.
 
 # Contributing
 

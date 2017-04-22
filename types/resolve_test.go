@@ -1,8 +1,9 @@
-// FIXME: Should be ast_test
-package ast
+package types_test
 
 import (
 	"testing"
+
+	"github.com/elliotchance/c2go/types"
 )
 
 type resolveTestCase struct {
@@ -17,7 +18,7 @@ var resolveTestCases = []resolveTestCase{
 
 func TestResolve(t *testing.T) {
 	for _, testCase := range resolveTestCases {
-		goType := resolveType(testCase.cType)
+		goType := types.ResolveType(nil, testCase.cType)
 		if goType != testCase.goType {
 			t.Errorf("Expected '%s' -> '%s', got '%s'",
 				testCase.cType, testCase.goType, goType)

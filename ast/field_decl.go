@@ -3,6 +3,9 @@ package ast
 import (
 	"fmt"
 	"strings"
+
+	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/types"
 )
 
 type FieldDecl struct {
@@ -36,8 +39,8 @@ func parseFieldDecl(line string) *FieldDecl {
 	}
 }
 
-func (n *FieldDecl) render(ast *Ast) (string, string) {
-	fieldType := resolveType(ast, n.Type)
+func (n *FieldDecl) render(program *program.Program) (string, string) {
+	fieldType := types.ResolveType(program, n.Type)
 	name := n.Name
 
 	// FIXME: There are some cases where the name is empty. We need to
@@ -50,6 +53,20 @@ func (n *FieldDecl) render(ast *Ast) (string, string) {
 	// moment I will rename this to avoid the error.
 	if name == "type" {
 		name = "type_"
+	}
+
+	// It may have a default value.
+	suffix := ""
+	if len(n.Children) > 0 {
+		src, _ := renderExpression(program, n.Children[0])
+		suffix = fmt.Sprintf(" = %s", src)
+	}
+
+	// NULL is a macro that one rendered looks like "(0)" we have to be
+	// sensitive to catch this as Go would complain that 0 (int) is not
+	// compatible with the type we are setting it to.
+	if suffix == " = (0)" {
+		suffix = " = nil"
 	}
 
 	return fmt.Sprintf("%s %s", name, fieldType), "unknown3"

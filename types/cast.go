@@ -1,14 +1,17 @@
-package ast
+package types
 
 import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/util"
 )
 
-func cast(ast *Ast, expr, fromType, toType string) string {
-	fromType = resolveType(ast, fromType)
-	toType = resolveType(ast, toType)
+func Cast(program *program.Program, expr, fromType, toType string) string {
+	fromType = ResolveType(program, fromType)
+	toType = ResolveType(program, toType)
 
 	// FIXME: This is a hack to avoid casting in some situations.
 	if fromType == "" || toType == "" {
@@ -80,9 +83,9 @@ func cast(ast *Ast, expr, fromType, toType string) string {
 	if (len(match1) > 0 || len(match2) > 0) && toType == "string" {
 		size := 0
 		if len(match1) > 0 {
-			size = atoi(match1[1])
+			size = util.Atoi(match1[1])
 		} else {
-			size = atoi(match2[1])
+			size = util.Atoi(match2[1])
 		}
 
 		return fmt.Sprintf("string(%s[:%d])", expr, size-1)
@@ -100,11 +103,11 @@ func cast(ast *Ast, expr, fromType, toType string) string {
 		return `""`
 	}
 
-	if inStrings(fromType, types) && inStrings(toType, types) {
+	if util.InStrings(fromType, types) && util.InStrings(toType, types) {
 		return fmt.Sprintf("%s(%s)", toType, expr)
 	}
 
-	ast.addImport("github.com/elliotchance/c2go/noarch")
+	program.AddImport("github.com/elliotchance/c2go/noarch")
 
 	leftName := fromType
 	rightName := toType
@@ -119,5 +122,5 @@ func cast(ast *Ast, expr, fromType, toType string) string {
 	}
 
 	return fmt.Sprintf("noarch.%sTo%s(%s)",
-		getExportedName(leftName), getExportedName(rightName), expr)
+		util.GetExportedName(leftName), util.GetExportedName(rightName), expr)
 }
