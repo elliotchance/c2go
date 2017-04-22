@@ -1,5 +1,9 @@
 package ast
 
+import (
+	"github.com/elliotchance/c2go/program"
+)
+
 type PointerType struct {
 	Address  string
 	Type     string
@@ -19,7 +23,7 @@ func parsePointerType(line string) *PointerType {
 	}
 }
 
-func (n *PointerType) render(ast *Ast) (string, string) {
+func (n *PointerType) render(program *program.Program) (string, string) {
 	return "", ""
 }
 

@@ -1,5 +1,9 @@
 package ast
 
+import (
+	"github.com/elliotchance/c2go/program"
+)
+
 type EnumConstantDecl struct {
 	Address   string
 	Position  string
@@ -28,7 +32,7 @@ func parseEnumConstantDecl(line string) *EnumConstantDecl {
 	}
 }
 
-func (n *EnumConstantDecl) render(ast *Ast) (string, string) {
+func (n *EnumConstantDecl) render(program *program.Program) (string, string) {
 	return "", ""
 }
 

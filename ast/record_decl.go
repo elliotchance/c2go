@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
+
+	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/types"
 )
 
 type RecordDecl struct {
@@ -50,28 +53,28 @@ func parseRecordDecl(line string) *RecordDecl {
 	}
 }
 
-func (n *RecordDecl) render(ast *Ast) (string, string) {
+func (n *RecordDecl) render(program *program.Program) (string, string) {
 	out := bytes.NewBuffer([]byte{})
 	name := strings.TrimSpace(n.Name)
-	if name == "" || typeIsAlreadyDefined(name) {
+	if name == "" || types.TypeIsAlreadyDefined(name) {
 		return "", ""
 	}
 
-	typeIsNowDefined(name)
+	types.TypeIsNowDefined(name)
 
 	if n.Kind == "union" {
 		return "", ""
 	}
 
-	printLine(out, fmt.Sprintf("type %s %s {", name, n.Kind), ast.indent)
+	printLine(out, fmt.Sprintf("type %s %s {", name, n.Kind), program.Indent)
 	if len(n.Children) > 0 {
 		for _, c := range n.Children {
-			src, _ := renderExpression(ast, c)
-			printLine(out, src, ast.indent)
+			src, _ := renderExpression(program, c)
+			printLine(out, src, program.Indent)
 		}
 	}
 
-	printLine(out, "}\n", ast.indent)
+	printLine(out, "}\n", program.Indent)
 	return out.String(), ""
 }
 

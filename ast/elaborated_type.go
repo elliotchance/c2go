@@ -1,5 +1,9 @@
 package ast
 
+import (
+	"github.com/elliotchance/c2go/program"
+)
+
 type ElaboratedType struct {
 	Address  string
 	Type     string
@@ -21,7 +25,7 @@ func parseElaboratedType(line string) *ElaboratedType {
 	}
 }
 
-func (n *ElaboratedType) render(ast *Ast) (string, string) {
+func (n *ElaboratedType) render(program *program.Program) (string, string) {
 	return "", ""
 }
 

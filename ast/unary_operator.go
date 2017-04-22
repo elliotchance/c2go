@@ -1,6 +1,11 @@
 package ast
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/util"
+)
 
 type UnaryOperator struct {
 	Address  string
@@ -34,17 +39,17 @@ func parseUnaryOperator(line string) *UnaryOperator {
 	}
 }
 
-func (n *UnaryOperator) render(ast *Ast) (string, string) {
+func (n *UnaryOperator) render(program *program.Program) (string, string) {
 	operator := n.Operator
-	expr, exprType := renderExpression(ast, n.Children[0])
+	expr, exprType := renderExpression(program, n.Children[0])
 
 	if operator == "!" {
 		if exprType == "bool" {
 			return fmt.Sprintf("!(%s)", expr), exprType
 		}
 
-		ast.addImport("github.com/elliotchance/c2go/noarch")
-		return fmt.Sprintf("%s(%s)", fmt.Sprintf("noarch.Not%s", ucfirst(exprType)), expr), exprType
+		program.AddImport("github.com/elliotchance/c2go/noarch")
+		return fmt.Sprintf("%s(%s)", fmt.Sprintf("noarch.Not%s", util.Ucfirst(exprType)), expr), exprType
 	}
 
 	if operator == "*" {

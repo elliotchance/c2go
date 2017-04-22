@@ -1,5 +1,9 @@
 package ast
 
+import (
+	"github.com/elliotchance/c2go/program"
+)
+
 type NonNullAttr struct {
 	Address  string
 	Position string
@@ -19,7 +23,7 @@ func parseNonNullAttr(line string) *NonNullAttr {
 	}
 }
 
-func (n *NonNullAttr) render(ast *Ast) (string, string) {
+func (n *NonNullAttr) render(program *program.Program) (string, string) {
 	return "", ""
 }
 

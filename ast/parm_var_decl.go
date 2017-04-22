@@ -1,6 +1,10 @@
 package ast
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/elliotchance/c2go/program"
+)
 
 type ParmVarDecl struct {
 	Address   string
@@ -46,7 +50,7 @@ func parseParmVarDecl(line string) *ParmVarDecl {
 	}
 }
 
-func (n *ParmVarDecl) render(ast *Ast) (string, string) {
+func (n *ParmVarDecl) render(program *program.Program) (string, string) {
 	return "", ""
 }
 

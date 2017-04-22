@@ -3,6 +3,9 @@ package ast
 import (
 	"fmt"
 	"strings"
+
+	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/types"
 )
 
 type VarDecl struct {
@@ -49,8 +52,8 @@ func parseVarDecl(line string) *VarDecl {
 	}
 }
 
-func (n *VarDecl) render(ast *Ast) (string, string) {
-	theType := resolveType(ast, n.Type)
+func (n *VarDecl) render(program *program.Program) (string, string) {
+	theType := types.ResolveType(program, n.Type)
 	name := n.Name
 
 	// FIXME: These names dont seem to work when testing more than 1 file
@@ -73,7 +76,7 @@ func (n *VarDecl) render(ast *Ast) (string, string) {
 	suffix := ""
 	if len(n.Children) > 0 {
 		children := n.Children
-		src, _ := renderExpression(ast, children[0])
+		src, _ := renderExpression(program, children[0])
 		suffix = fmt.Sprintf(" = %s", src)
 	}
 

@@ -1,6 +1,10 @@
 package ast
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/elliotchance/c2go/program"
+)
 
 type EnumDecl struct {
 	Address   string
@@ -25,7 +29,7 @@ func parseEnumDecl(line string) *EnumDecl {
 	}
 }
 
-func (n *EnumDecl) render(ast *Ast) (string, string) {
+func (n *EnumDecl) render(program *program.Program) (string, string) {
 	return "", ""
 }
 

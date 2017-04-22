@@ -1,6 +1,10 @@
 package ast
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/elliotchance/c2go/program"
+)
 
 type ArraySubscriptExpr struct {
 	Address  string
@@ -25,10 +29,10 @@ func parseArraySubscriptExpr(line string) *ArraySubscriptExpr {
 	}
 }
 
-func (n *ArraySubscriptExpr) render(ast *Ast) (string, string) {
+func (n *ArraySubscriptExpr) render(program *program.Program) (string, string) {
 	children := n.Children
-	expression, _ := renderExpression(ast, children[0])
-	index, _ := renderExpression(ast, children[1])
+	expression, _ := renderExpression(program, children[0])
+	index, _ := renderExpression(program, children[1])
 	src := fmt.Sprintf("%s[%s]", expression, index)
 	return src, "unknown1"
 }

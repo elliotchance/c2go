@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
+
+	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/types"
 )
 
 type TypedefDecl struct {
@@ -48,15 +51,15 @@ func parseTypedefDecl(line string) *TypedefDecl {
 	}
 }
 
-func (n *TypedefDecl) render(ast *Ast) (string, string) {
+func (n *TypedefDecl) render(program *program.Program) (string, string) {
 	out := bytes.NewBuffer([]byte{})
 	name := strings.TrimSpace(n.Name)
 
-	if typeIsAlreadyDefined(name) {
+	if types.TypeIsAlreadyDefined(name) {
 		return "", ""
 	}
 
-	typeIsNowDefined(name)
+	types.TypeIsNowDefined(name)
 
 	// FIXME: All of the logic here is just to avoid errors, it
 	// needs to be fixed up.
@@ -64,15 +67,15 @@ func (n *TypedefDecl) render(ast *Ast) (string, string) {
 	//     return
 	n.Type = strings.Replace(n.Type, "unsigned", "", -1)
 
-	resolvedType := resolveType(ast, n.Type)
+	resolvedType := types.ResolveType(program, n.Type)
 
 	if name == "__mbstate_t" {
-		ast.addImport("github.com/elliotchance/c2go/darwin")
+		program.AddImport("github.com/elliotchance/c2go/darwin")
 		resolvedType = "darwin.C__mbstate_t"
 	}
 
 	if name == "__darwin_ct_rune_t" {
-		ast.addImport("github.com/elliotchance/c2go/darwin")
+		program.AddImport("github.com/elliotchance/c2go/darwin")
 		resolvedType = "darwin.C__darwin_ct_rune_t"
 	}
 
@@ -82,7 +85,7 @@ func (n *TypedefDecl) render(ast *Ast) (string, string) {
 		return "", ""
 	}
 
-	printLine(out, fmt.Sprintf("type %s %s\n", name, resolvedType), ast.indent)
+	printLine(out, fmt.Sprintf("type %s %s\n", name, resolvedType), program.Indent)
 
 	return out.String(), ""
 }

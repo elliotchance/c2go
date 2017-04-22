@@ -1,5 +1,9 @@
 package ast
 
+import (
+	"github.com/elliotchance/c2go/program"
+)
+
 type CharacterLiteral struct {
 	Address  string
 	Position string
@@ -23,7 +27,7 @@ func parseCharacterLiteral(line string) *CharacterLiteral {
 	}
 }
 
-func (n *CharacterLiteral) render(ast *Ast) (string, string) {
+func (n *CharacterLiteral) render(program *program.Program) (string, string) {
 	return "", ""
 }
 

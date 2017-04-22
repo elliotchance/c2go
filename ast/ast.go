@@ -1,54 +1,16 @@
 package ast
 
 import (
+	"bytes"
+	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/elliotchance/c2go/program"
 )
 
-type Ast struct {
-	imports []string
-
-	// for rendering go src
-	functionName string
-	indent       int
-	returnType   string
-}
-
-func NewAst() *Ast {
-	return &Ast{
-		imports: []string{"fmt"},
-	}
-}
-
-func (a *Ast) Imports() []string {
-	return a.imports
-}
-
-func (a *Ast) addImport(name string) {
-	for _, i := range a.imports {
-		if i == name {
-			// already imported
-			return
-		}
-	}
-
-	a.imports = append(a.imports, name)
-}
-
-func (a *Ast) importType(name string) string {
-	if strings.Index(name, ".") != -1 {
-		parts := strings.Split(name, ".")
-		a.addImport(strings.Join(parts[:len(parts)-1], "."))
-
-		parts2 := strings.Split(name, "/")
-		return parts2[len(parts2)-1]
-	}
-
-	return name
-}
-
 type Node interface {
-	render(ast *Ast) (string, string)
+	render(program *program.Program) (string, string)
 	AddChild(node Node)
 }
 
@@ -194,4 +156,46 @@ func groupsFromRegex(rx, line string) map[string]string {
 	}
 
 	return result
+}
+
+func printLine(out *bytes.Buffer, line string, indent int) {
+	out.WriteString(fmt.Sprintf("%s%s\n", strings.Repeat("\t", indent), line))
+}
+
+func Render(program *program.Program, node Node) string {
+	src, _ := node.render(program)
+	return src
+}
+
+func renderExpression(program *program.Program, node Node) (string, string) {
+	if node == nil {
+		return "", "unknown54"
+	}
+
+	return node.render(program)
+}
+
+func getFunctionParams(f *FunctionDecl) []*ParmVarDecl {
+	r := []*ParmVarDecl{}
+	for _, n := range f.Children {
+		if v, ok := n.(*ParmVarDecl); ok {
+			r = append(r, v)
+		}
+	}
+
+	return r
+}
+
+func getFunctionReturnType(f string) string {
+	// The type of the function will be the complete prototype, like:
+	//
+	//     __inline_isfinitef(float) int
+	//
+	// will have a type of:
+	//
+	//     int (float)
+	//
+	// The arguments will handle themselves, we only care about the
+	// return type ('int' in this case)
+	return strings.TrimSpace(strings.Split(f, "(")[0])
 }

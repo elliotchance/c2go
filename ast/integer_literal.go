@@ -1,6 +1,10 @@
 package ast
 
-import "strconv"
+import (
+	"strconv"
+
+	"github.com/elliotchance/c2go/program"
+)
 
 type IntegerLiteral struct {
 	Address  string
@@ -25,7 +29,7 @@ func parseIntegerLiteral(line string) *IntegerLiteral {
 	}
 }
 
-func (n *IntegerLiteral) render(ast *Ast) (string, string) {
+func (n *IntegerLiteral) render(program *program.Program) (string, string) {
 	literal := n.Value
 
 	// FIXME

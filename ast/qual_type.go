@@ -1,5 +1,9 @@
 package ast
 
+import (
+	"github.com/elliotchance/c2go/program"
+)
+
 type QualType struct {
 	Address  string
 	Type     string
@@ -21,7 +25,7 @@ func parseQualType(line string) *QualType {
 	}
 }
 
-func (n *QualType) render(ast *Ast) (string, string) {
+func (n *QualType) render(program *program.Program) (string, string) {
 	return "", ""
 }
 

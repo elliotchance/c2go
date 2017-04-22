@@ -3,6 +3,9 @@ package ast
 import (
 	"fmt"
 	"strings"
+
+	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/types"
 )
 
 type FieldDecl struct {
@@ -36,8 +39,8 @@ func parseFieldDecl(line string) *FieldDecl {
 	}
 }
 
-func (n *FieldDecl) render(ast *Ast) (string, string) {
-	fieldType := resolveType(ast, n.Type)
+func (n *FieldDecl) render(program *program.Program) (string, string) {
+	fieldType := types.ResolveType(program, n.Type)
 	name := n.Name
 
 	//if name == "" {
@@ -53,7 +56,7 @@ func (n *FieldDecl) render(ast *Ast) (string, string) {
 	// It may have a default value.
 	suffix := ""
 	if len(n.Children) > 0 {
-		src, _ := renderExpression(ast, n.Children[0])
+		src, _ := renderExpression(program, n.Children[0])
 		suffix = fmt.Sprintf(" = %s", src)
 	}
 

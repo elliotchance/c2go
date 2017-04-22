@@ -1,5 +1,9 @@
 package ast
 
+import (
+	"github.com/elliotchance/c2go/program"
+)
+
 type ConstAttr struct {
 	Address  string
 	Position string
@@ -21,7 +25,7 @@ func parseConstAttr(line string) *ConstAttr {
 	}
 }
 
-func (n *ConstAttr) render(ast *Ast) (string, string) {
+func (n *ConstAttr) render(program *program.Program) (string, string) {
 	return "", ""
 }
 

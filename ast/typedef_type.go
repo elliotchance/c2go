@@ -1,5 +1,9 @@
 package ast
 
+import (
+	"github.com/elliotchance/c2go/program"
+)
+
 type TypedefType struct {
 	Address  string
 	Type     string
@@ -21,7 +25,7 @@ func parseTypedefType(line string) *TypedefType {
 	}
 }
 
-func (n *TypedefType) render(ast *Ast) (string, string) {
+func (n *TypedefType) render(program *program.Program) (string, string) {
 	return "", ""
 }
 
