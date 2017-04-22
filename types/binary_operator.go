@@ -5,7 +5,12 @@ import (
 )
 
 func ResolveTypeForBinaryOperator(p *program.Program, operator, leftType, rightType string) string {
-	if operator == "==" || operator == "!=" {
+	if operator == "==" ||
+		operator == "!=" ||
+		operator == ">" ||
+		operator == ">=" ||
+		operator == "<" ||
+		operator == "<=" {
 		return "bool"
 	}
 

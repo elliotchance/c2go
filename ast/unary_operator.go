@@ -70,6 +70,10 @@ func (n *UnaryOperator) render(program *program.Program) (string, string) {
 		operator = "^"
 	}
 
+	if operator == "&" {
+		exprType += " *"
+	}
+
 	return fmt.Sprintf("%s%s", operator, expr), exprType
 }
 

@@ -37,8 +37,11 @@ func (n *BinaryOperator) render(program *program.Program) (string, string) {
 	returnType := types.ResolveTypeForBinaryOperator(program, operator, leftType, rightType)
 
 	if operator == "&&" {
-		left = types.Cast(program, left, leftType, returnType)
-		right = types.Cast(program, right, rightType, returnType)
+		left = types.Cast(program, left, leftType, "bool")
+		right = types.Cast(program, right, rightType, "bool")
+
+		src := fmt.Sprintf("%s %s %s", left, operator, right)
+		return types.Cast(program, src, "bool", returnType), returnType
 	}
 
 	if (operator == "!=" || operator == "==") && right == "(0)" {

@@ -32,6 +32,15 @@ func TestResolveTypeForBinaryOperator(t *testing.T) {
 		{args{"!=", "int", "int"}, "bool"},
 		{args{"!=", "float", "int"}, "bool"},
 
+		{args{">", "int", "int"}, "bool"},
+		{args{">", "float", "int"}, "bool"},
+		{args{">=", "int", "int"}, "bool"},
+		{args{">=", "float", "int"}, "bool"},
+		{args{"<", "int", "int"}, "bool"},
+		{args{"<", "float", "int"}, "bool"},
+		{args{"<=", "int", "int"}, "bool"},
+		{args{"<=", "float", "int"}, "bool"},
+
 		// Arithmetic
 		{args{"+", "int", "int"}, "int"},
 		{args{"+", "float", "float"}, "float"},
