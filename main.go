@@ -134,6 +134,9 @@ func Start(args []string) string {
 	// 1. Compile it first (checking for errors)
 	cFilePath := args[0]
 
+	_, err := os.Stat(cFilePath)
+	Check(err)
+
 	// 2. Preprocess
 	pp, err := exec.Command("clang", "-E", cFilePath).Output()
 	Check(err)
