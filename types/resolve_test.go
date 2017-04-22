@@ -15,6 +15,7 @@ type resolveTestCase struct {
 var resolveTestCases = []resolveTestCase{
 	{"int", "int"},
 	{"char *[13]", "[]string"},
+	{"__uint16_t", "uint16"},
 }
 
 func TestResolve(t *testing.T) {

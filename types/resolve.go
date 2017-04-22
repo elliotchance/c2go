@@ -43,6 +43,7 @@ var simpleResolveTypes = map[string]string{
 	// Are these built into some compilers?
 	"uint32":     "uint32",
 	"uint64":     "uint64",
+	"__uint16_t": "uint16",
 	"__uint32_t": "uint32",
 	"__uint64_t": "uint64",
 

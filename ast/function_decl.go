@@ -62,8 +62,8 @@ func (n *FunctionDecl) render(program *program.Program) (string, string) {
 	// we be allowed to refer to the function.
 	if getFunctionDefinition(program.FunctionName) == nil {
 		addFunctionDefinition(FunctionDefinition{
-			Name:       program.FunctionName,
-			ReturnType: program.ReturnType,
+			Name:       n.Name,
+			ReturnType: getFunctionReturnType(n.Type),
 			// FIXME
 			ArgumentTypes: []string{},
 			Substitution:  "",

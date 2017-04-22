@@ -205,5 +205,11 @@ func getFunctionReturnType(f string) string {
 	//
 	// The arguments will handle themselves, we only care about the
 	// return type ('int' in this case)
-	return strings.TrimSpace(strings.Split(f, "(")[0])
+	returnType := strings.TrimSpace(strings.Split(f, "(")[0])
+
+	if returnType == "" {
+		panic(fmt.Sprintf("unable to extract the return type from: %s", f))
+	}
+
+	return returnType
 }

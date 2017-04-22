@@ -45,6 +45,10 @@ func (n *BinaryOperator) render(program *program.Program) (string, string) {
 		right = "nil"
 	}
 
+	if operator == "=" {
+		right = types.Cast(program, right, rightType, returnType)
+	}
+
 	src := fmt.Sprintf("%s %s %s", left, operator, right)
 	return src, returnType
 }
