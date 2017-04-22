@@ -1,5 +1,9 @@
 package ast
 
+import (
+	"github.com/elliotchance/c2go/program"
+)
+
 type AsmLabelAttr struct {
 	Address      string
 	Position     string
@@ -21,7 +25,7 @@ func parseAsmLabelAttr(line string) *AsmLabelAttr {
 	}
 }
 
-func (n *AsmLabelAttr) render(ast *Ast) (string, string) {
+func (n *AsmLabelAttr) render(program *program.Program) (string, string) {
 	return "", ""
 }
 

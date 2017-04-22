@@ -1,6 +1,12 @@
 package ast
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/types"
+	"github.com/elliotchance/c2go/util"
+)
 
 type BinaryOperator struct {
 	Address  string
@@ -25,21 +31,21 @@ func parseBinaryOperator(line string) *BinaryOperator {
 	}
 }
 
-func (n *BinaryOperator) render(ast *Ast) (string, string) {
+func (n *BinaryOperator) render(program *program.Program) (string, string) {
 	operator := n.Operator
 
-	left, leftType := renderExpression(ast, n.Children[0])
-	right, rightType := renderExpression(ast, n.Children[1])
+	left, leftType := renderExpression(program, n.Children[0])
+	right, rightType := renderExpression(program, n.Children[1])
 
 	return_type := "bool"
-	if inStrings(operator, []string{"|", "&", "+", "-", "*", "/"}) {
+	if util.InStrings(operator, []string{"|", "&", "+", "-", "*", "/"}) {
 		// TODO: The left and right type might be different
 		return_type = leftType
 	}
 
 	if operator == "&&" {
-		left = cast(ast, left, leftType, return_type)
-		right = cast(ast, right, rightType, return_type)
+		left = types.Cast(program, left, leftType, return_type)
+		right = types.Cast(program, right, rightType, return_type)
 	}
 
 	if (operator == "!=" || operator == "==") && right == "(0)" {

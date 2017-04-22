@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
+
+	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/types"
 )
 
 type FunctionDecl struct {
@@ -51,18 +54,18 @@ func parseFunctionDecl(line string) *FunctionDecl {
 	}
 }
 
-func (n *FunctionDecl) render(ast *Ast) (string, string) {
+func (n *FunctionDecl) render(program *program.Program) (string, string) {
 	out := bytes.NewBuffer([]byte{})
 
-	ast.functionName = n.Name
+	program.FunctionName = n.Name
 
-	if ast.functionName == "__istype" ||
-		ast.functionName == "__isctype" ||
-		ast.functionName == "__wcwidth" ||
-		ast.functionName == "__sputc" ||
-		ast.functionName == "__inline_signbitf" ||
-		ast.functionName == "__inline_signbitd" ||
-		ast.functionName == "__inline_signbitl" {
+	if program.FunctionName == "__istype" ||
+		program.FunctionName == "__isctype" ||
+		program.FunctionName == "__wcwidth" ||
+		program.FunctionName == "__sputc" ||
+		program.FunctionName == "__inline_signbitf" ||
+		program.FunctionName == "__inline_signbitd" ||
+		program.FunctionName == "__inline_signbitl" {
 		return "", ""
 	}
 
@@ -77,28 +80,28 @@ func (n *FunctionDecl) render(ast *Ast) (string, string) {
 
 	args := []string{}
 	for _, a := range getFunctionParams(n) {
-		args = append(args, fmt.Sprintf("%s %s", a.Name, resolveType(ast, a.Type)))
+		args = append(args, fmt.Sprintf("%s %s", a.Name, types.ResolveType(program, a.Type)))
 	}
 
 	if hasBody {
 		returnType := getFunctionReturnType(n.Type)
 
-		if ast.functionName == "main" {
-			printLine(out, "func main() {", ast.indent)
+		if program.FunctionName == "main" {
+			printLine(out, "func main() {", program.Indent)
 		} else {
 			printLine(out, fmt.Sprintf("func %s(%s) %s {",
-				ast.functionName, strings.Join(args, ", "),
-				resolveType(ast, returnType)), ast.indent)
+				program.FunctionName, strings.Join(args, ", "),
+				types.ResolveType(program, returnType)), program.Indent)
 		}
 
 		for _, c := range n.Children {
 			if _, ok := c.(*CompoundStmt); ok {
-				src, _ := renderExpression(ast, c)
-				printLine(out, src, ast.indent+1)
+				src, _ := renderExpression(program, c)
+				printLine(out, src, program.Indent+1)
 			}
 		}
 
-		printLine(out, "}\n", ast.indent)
+		printLine(out, "}\n", program.Indent)
 
 		params := []string{}
 		for _, v := range getFunctionParams(n) {

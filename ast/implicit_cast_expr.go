@@ -1,5 +1,9 @@
 package ast
 
+import (
+	"github.com/elliotchance/c2go/program"
+)
+
 type ImplicitCastExpr struct {
 	Address  string
 	Position string
@@ -23,8 +27,8 @@ func parseImplicitCastExpr(line string) *ImplicitCastExpr {
 	}
 }
 
-func (n *ImplicitCastExpr) render(ast *Ast) (string, string) {
-	return renderExpression(ast, n.Children[0])
+func (n *ImplicitCastExpr) render(program *program.Program) (string, string) {
+	return renderExpression(program, n.Children[0])
 }
 
 func (n *ImplicitCastExpr) AddChild(node Node) {

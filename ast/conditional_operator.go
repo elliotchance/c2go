@@ -1,6 +1,10 @@
 package ast
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/elliotchance/c2go/program"
+)
 
 type ConditionalOperator struct {
 	Address  string
@@ -23,12 +27,12 @@ func parseConditionalOperator(line string) *ConditionalOperator {
 	}
 }
 
-func (n *ConditionalOperator) render(ast *Ast) (string, string) {
-	a, _ := renderExpression(ast, n.Children[0])
-	b, _ := renderExpression(ast, n.Children[1])
-	c, _ := renderExpression(ast, n.Children[2])
+func (n *ConditionalOperator) render(program *program.Program) (string, string) {
+	a, _ := renderExpression(program, n.Children[0])
+	b, _ := renderExpression(program, n.Children[1])
+	c, _ := renderExpression(program, n.Children[2])
 
-	ast.addImport("github.com/elliotchance/c2go/noarch")
+	program.AddImport("github.com/elliotchance/c2go/noarch")
 	src := fmt.Sprintf("noarch.Ternary(%s, func () interface{} { return %s }, func () interface{} { return %s })", a, b, c)
 	return src, n.Type
 }

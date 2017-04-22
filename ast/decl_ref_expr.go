@@ -1,5 +1,9 @@
 package ast
 
+import (
+	"github.com/elliotchance/c2go/program"
+)
+
 type DeclRefExpr struct {
 	Address  string
 	Position string
@@ -38,15 +42,15 @@ func parseDeclRefExpr(line string) *DeclRefExpr {
 	}
 }
 
-func (n *DeclRefExpr) render(ast *Ast) (string, string) {
+func (n *DeclRefExpr) render(program *program.Program) (string, string) {
 	name := n.Name
 
 	if name == "argc" {
 		name = "len(os.Args)"
-		ast.addImport("os")
+		program.AddImport("os")
 	} else if name == "argv" {
 		name = "os.Args"
-		ast.addImport("os")
+		program.AddImport("os")
 	}
 
 	return name, n.Type

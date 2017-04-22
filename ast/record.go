@@ -1,5 +1,9 @@
 package ast
 
+import (
+	"github.com/elliotchance/c2go/program"
+)
+
 type Record struct {
 	Address  string
 	Type     string
@@ -19,7 +23,7 @@ func parseRecord(line string) *Record {
 	}
 }
 
-func (n *Record) render(ast *Ast) (string, string) {
+func (n *Record) render(program *program.Program) (string, string) {
 	return "", ""
 }
 

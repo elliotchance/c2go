@@ -36,12 +36,13 @@ before_install:
 
 script:
   - . ./.travis.gofmt.sh
+
   # Run the unit tests first
   - |
       set -e
       echo "" > coverage.txt
 
-      go test -race -coverprofile=profile.out -coverpkg ./...
+      go test -tags=integration -race -coverprofile=profile.out -coverpkg ./...
       if [ -f profile.out ]; then
         cat profile.out >> coverage.txt
         rm profile.out

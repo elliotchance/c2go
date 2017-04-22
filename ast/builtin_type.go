@@ -1,5 +1,9 @@
 package ast
 
+import (
+	"github.com/elliotchance/c2go/program"
+)
+
 type BuiltinType struct {
 	Address  string
 	Type     string
@@ -19,7 +23,7 @@ func parseBuiltinType(line string) *BuiltinType {
 	}
 }
 
-func (n *BuiltinType) render(ast *Ast) (string, string) {
+func (n *BuiltinType) render(program *program.Program) (string, string) {
 	return "", ""
 }
 

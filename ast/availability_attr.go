@@ -1,5 +1,9 @@
 package ast
 
+import (
+	"github.com/elliotchance/c2go/program"
+)
+
 type AvailabilityAttr struct {
 	Address     string
 	Position    string
@@ -40,7 +44,7 @@ func parseAvailabilityAttr(line string) *AvailabilityAttr {
 	}
 }
 
-func (n *AvailabilityAttr) render(ast *Ast) (string, string) {
+func (n *AvailabilityAttr) render(program *program.Program) (string, string) {
 	return "", ""
 }
 

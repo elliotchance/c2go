@@ -1,6 +1,10 @@
 package ast
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/elliotchance/c2go/program"
+)
 
 type PredefinedExpr struct {
 	Address  string
@@ -27,7 +31,7 @@ func parsePredefinedExpr(line string) *PredefinedExpr {
 	}
 }
 
-func (n *PredefinedExpr) render(ast *Ast) (string, string) {
+func (n *PredefinedExpr) render(program *program.Program) (string, string) {
 	if n.Name == "__PRETTY_FUNCTION__" {
 		// FIXME
 		return "\"void print_number(int *)\"", "const char*"

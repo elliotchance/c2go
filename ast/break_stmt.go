@@ -1,5 +1,9 @@
 package ast
 
+import (
+	"github.com/elliotchance/c2go/program"
+)
+
 type BreakStmt struct {
 	Address  string
 	Position string
@@ -19,7 +23,7 @@ func parseBreakStmt(line string) *BreakStmt {
 	}
 }
 
-func (n *BreakStmt) render(ast *Ast) (string, string) {
+func (n *BreakStmt) render(program *program.Program) (string, string) {
 	return "break", ""
 }
 

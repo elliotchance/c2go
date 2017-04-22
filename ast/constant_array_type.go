@@ -1,5 +1,9 @@
 package ast
 
+import (
+	"github.com/elliotchance/c2go/program"
+)
+
 type ConstantArrayType struct {
 	Address  string
 	Type     string
@@ -21,7 +25,7 @@ func parseConstantArrayType(line string) *ConstantArrayType {
 	}
 }
 
-func (n *ConstantArrayType) render(ast *Ast) (string, string) {
+func (n *ConstantArrayType) render(program *program.Program) (string, string) {
 	return "", ""
 }
 

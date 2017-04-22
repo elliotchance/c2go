@@ -13,6 +13,7 @@ import (
 	"go/format"
 
 	"github.com/elliotchance/c2go/ast"
+	"github.com/elliotchance/c2go/program"
 )
 
 var (
@@ -169,8 +170,8 @@ func Start(args []string) string {
 	//go_file_path := fmt.Sprintf("%s.go", parts[len(parts) - 1][:len(parts) - 2])
 
 	// Render(go_out, tree[0], "", 0, "")
-	astTree := ast.NewAst()
-	goOut := ast.Render(astTree, tree[0].(ast.Node))
+	p := program.NewProgram()
+	goOut := ast.Render(p, tree[0].(ast.Node))
 
 	// Format the code
 	goOutFmt, err := format.Source([]byte(goOut))
@@ -181,7 +182,7 @@ func Start(args []string) string {
 	// Put together the whole file
 	all := "package main\n\nimport (\n"
 
-	for _, importName := range astTree.Imports() {
+	for _, importName := range p.Imports() {
 		all += fmt.Sprintf("\t\"%s\"\n", importName)
 	}
 

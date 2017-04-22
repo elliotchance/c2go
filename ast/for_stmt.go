@@ -3,6 +3,8 @@ package ast
 import (
 	"bytes"
 	"fmt"
+
+	"github.com/elliotchance/c2go/program"
 )
 
 type ForStmt struct {
@@ -24,7 +26,7 @@ func parseForStmt(line string) *ForStmt {
 	}
 }
 
-func (n *ForStmt) render(ast *Ast) (string, string) {
+func (n *ForStmt) render(program *program.Program) (string, string) {
 	out := bytes.NewBuffer([]byte{})
 
 	children := n.Children
@@ -52,20 +54,20 @@ func (n *ForStmt) render(ast *Ast) (string, string) {
 		panic("non-nil child 1 in ForStmt")
 	}
 
-	init, _ := renderExpression(ast, children[0])
-	conditional, _ := renderExpression(ast, children[2])
-	step, _ := renderExpression(ast, children[3])
-	body, _ := renderExpression(ast, children[4])
+	init, _ := renderExpression(program, children[0])
+	conditional, _ := renderExpression(program, children[2])
+	step, _ := renderExpression(program, children[3])
+	body, _ := renderExpression(program, children[4])
 
 	if init == "" && conditional == "" && step == "" {
-		printLine(out, "for {", ast.indent)
+		printLine(out, "for {", program.Indent)
 	} else {
 		printLine(out, fmt.Sprintf("for %s; %s; %s {",
-			init, conditional, step), ast.indent)
+			init, conditional, step), program.Indent)
 	}
 
-	printLine(out, body, ast.indent+1)
-	printLine(out, "}", ast.indent)
+	printLine(out, body, program.Indent+1)
+	printLine(out, "}", program.Indent)
 
 	return out.String(), ""
 }

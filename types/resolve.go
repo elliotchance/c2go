@@ -1,9 +1,12 @@
-package ast
+package types
 
 import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/util"
 )
 
 // TODO: Some of these are based on assumptions that may not be true for all
@@ -66,15 +69,15 @@ var TypesAlreadyDefined = []string{
 	"__double2",
 }
 
-func typeIsAlreadyDefined(typeName string) bool {
-	return inStrings(typeName, TypesAlreadyDefined)
+func TypeIsAlreadyDefined(typeName string) bool {
+	return util.InStrings(typeName, TypesAlreadyDefined)
 }
 
-func typeIsNowDefined(typeName string) {
+func TypeIsNowDefined(typeName string) {
 	TypesAlreadyDefined = append(TypesAlreadyDefined, typeName)
 }
 
-func resolveType(ast *Ast, s string) string {
+func ResolveType(program *program.Program, s string) string {
 	// Remove any whitespace or attributes that are not relevant to Go.
 	s = strings.Replace(s, "const ", "", -1)
 	s = strings.Replace(s, "*__restrict", "*", -1)
@@ -93,14 +96,14 @@ func resolveType(ast *Ast, s string) string {
 	// equivalent. For example float, int, etc.
 	for k, v := range simpleResolveTypes {
 		if k == s {
-			return ast.importType(v)
+			return program.ImportType(v)
 		}
 	}
 
 	// If the type is already defined we can proceed with the same name.
 	for _, v := range TypesAlreadyDefined {
 		if v == s {
-			return ast.importType(s)
+			return program.ImportType(s)
 		}
 	}
 
@@ -111,7 +114,7 @@ func resolveType(ast *Ast, s string) string {
 
 			for _, v := range simpleResolveTypes {
 				if v == s {
-					return "*" + ast.importType(simpleResolveTypes[s])
+					return "*" + program.ImportType(simpleResolveTypes[s])
 				}
 			}
 
@@ -121,7 +124,7 @@ func resolveType(ast *Ast, s string) string {
 
 			for _, v := range simpleResolveTypes {
 				if v == s {
-					return ast.importType(simpleResolveTypes[s])
+					return program.ImportType(simpleResolveTypes[s])
 				}
 			}
 
@@ -146,10 +149,14 @@ func resolveType(ast *Ast, s string) string {
 	// It may be a pointer of a simple type. For example, float *, int *,
 	// etc.
 	if regexp.MustCompile("[\\w ]+\\*+$").MatchString(s) {
-		return "*" + resolveType(ast, strings.TrimSpace(s[:len(s)-2]))
+		return "*" + ResolveType(program, strings.TrimSpace(s[:len(s)-2]))
 	}
 
-	// Function pointers are not yet supported. In th mean time they will be
+	if regexp.MustCompile(`[\w ]+\*\[\d+\]$`).MatchString(s) {
+		return "[]string"
+	}
+
+	// Function pointers are not yet supported. In the mean time they will be
 	// replaced with a type that certainly wont work until we can fix this
 	// properly.
 	search := regexp.MustCompile("[\\w ]+\\(\\*.*?\\)\\(.*\\)").MatchString(s)
@@ -165,7 +172,7 @@ func resolveType(ast *Ast, s string) string {
 	// It could be an array of fixed length.
 	search2 := regexp.MustCompile("([\\w ]+)\\[(\\d+)\\]").FindStringSubmatch(s)
 	if len(search2) > 0 {
-		return fmt.Sprintf("[%s]%s", search2[2], resolveType(ast, search2[1]))
+		return fmt.Sprintf("[%s]%s", search2[2], ResolveType(program, search2[1]))
 	}
 
 	panic(fmt.Sprintf("'%s'", s))

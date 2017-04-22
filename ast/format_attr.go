@@ -1,5 +1,9 @@
 package ast
 
+import (
+	"github.com/elliotchance/c2go/program"
+)
+
 type FormatAttr struct {
 	Address      string
 	Position     string
@@ -34,7 +38,7 @@ func parseFormatAttr(line string) *FormatAttr {
 	}
 }
 
-func (n *FormatAttr) render(ast *Ast) (string, string) {
+func (n *FormatAttr) render(program *program.Program) (string, string) {
 	return "", ""
 }
 

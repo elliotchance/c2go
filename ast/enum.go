@@ -1,5 +1,9 @@
 package ast
 
+import (
+	"github.com/elliotchance/c2go/program"
+)
+
 type Enum struct {
 	Address  string
 	Name     string
@@ -19,7 +23,7 @@ func parseEnum(line string) *Enum {
 	}
 }
 
-func (n *Enum) render(ast *Ast) (string, string) {
+func (n *Enum) render(program *program.Program) (string, string) {
 	return "", ""
 }
 
