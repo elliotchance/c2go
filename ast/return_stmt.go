@@ -33,10 +33,6 @@ func (n *ReturnStmt) render(program *program.Program) (string, string) {
 	if len(n.Children) > 0 && program.FunctionName != "main" {
 		re, reType := renderExpression(program, n.Children[0])
 		funcDef := getFunctionDefinition(program.FunctionName)
-
-		// if program.FunctionName == "isascii" {
-		// 	panic(fmt.Sprintf("%#v", funcDef))
-		// }
 		r = "return " + types.Cast(program, re, reType, funcDef.ReturnType)
 	}
 
