@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/elliotchance/c2go/program"
-	"github.com/elliotchance/c2go/types"
 )
 
 type RecordDecl struct {
@@ -56,11 +55,11 @@ func parseRecordDecl(line string) *RecordDecl {
 func (n *RecordDecl) render(program *program.Program) (string, string) {
 	out := bytes.NewBuffer([]byte{})
 	name := strings.TrimSpace(n.Name)
-	if name == "" || types.TypeIsAlreadyDefined(name) {
+	if name == "" || program.TypeIsAlreadyDefined(name) {
 		return "", ""
 	}
 
-	types.TypeIsNowDefined(name)
+	program.TypeIsNowDefined(name)
 
 	if n.Kind == "union" {
 		return "", ""

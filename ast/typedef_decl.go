@@ -55,11 +55,11 @@ func (n *TypedefDecl) render(program *program.Program) (string, string) {
 	out := bytes.NewBuffer([]byte{})
 	name := n.Name
 
-	if types.TypeIsAlreadyDefined(name) {
+	if program.TypeIsAlreadyDefined(name) {
 		return "", ""
 	}
 
-	types.TypeIsNowDefined(name)
+	program.TypeIsNowDefined(name)
 
 	resolvedType := types.ResolveType(program, n.Type)
 	// There is a case where the name of the type is also the definition,

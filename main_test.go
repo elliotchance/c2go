@@ -27,10 +27,15 @@ type programOut struct {
 
 // TestIntegrationScripts tests all programs in the tests directory.
 //
-// It can be painful to run all the tests all of the time. You can provide a
-// regexp to run a single test:
+// Integration tests are not run by default (only unit tests). These are
+// indicated by the build flags at the top of the file. To include integration
+// tests use:
 //
-//     go test -run TestIntegrationScripts/tests/ctype/isxdigit.c
+//     go test -tags=integration
+//
+// You can also run a single file with:
+//
+//     go test -tags=integration -run=TestIntegrationScripts/tests/ctype/isalnum.c
 //
 func TestIntegrationScripts(t *testing.T) {
 	files, err := filepath.Glob("tests/*/*.c")

@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/elliotchance/c2go/program"
-	"github.com/elliotchance/c2go/util"
 )
 
 // TODO: Some of these are based on assumptions that may not be true for all
@@ -72,16 +71,6 @@ var simpleResolveTypes = map[string]string{
 	"union __sigaction_u":          "int",
 }
 
-var TypesAlreadyDefined []string
-
-func TypeIsAlreadyDefined(typeName string) bool {
-	return util.InStrings(typeName, TypesAlreadyDefined)
-}
-
-func TypeIsNowDefined(typeName string) {
-	TypesAlreadyDefined = append(TypesAlreadyDefined, typeName)
-}
-
 func ResolveType(program *program.Program, s string) string {
 	// Remove any whitespace or attributes that are not relevant to Go.
 	s = strings.Replace(s, "const ", "", -1)
@@ -111,7 +100,7 @@ func ResolveType(program *program.Program, s string) string {
 	}
 
 	// If the type is already defined we can proceed with the same name.
-	for _, v := range TypesAlreadyDefined {
+	for _, v := range program.TypesAlreadyDefined {
 		if v == s {
 			return program.ImportType(s)
 		}
