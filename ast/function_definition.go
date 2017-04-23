@@ -51,6 +51,9 @@ var builtInFunctionDefinitions = []string{
 	"__darwin_ct_rune_t __toupper(__darwin_ct_rune_t) -> darwin.ToUpper",
 	"uint32 __maskrune(__darwin_ct_rune_t, uint32) -> darwin.MaskRune",
 
+	// linux/ctype.h
+	"const unsigned short int** __ctype_b_loc() -> linux.CtypeLoc",
+
 	// darwin/math.h
 	"double __builtin_fabs(double) -> darwin.Fabs",
 	"float __builtin_fabsf(float) -> darwin.Fabsf",

@@ -91,9 +91,17 @@ func (n *TypedefDecl) render(program *program.Program) (string, string) {
 	}
 
 	// A bunch of random stuff to ignore... I really should deal with these.
-	if name == "__builtin_va_list" || name == "__qaddr_t" || name == "definition" || name ==
-		"_IO_lock_t" || name == "va_list" || name == "fpos_t" || name == "__NSConstantString" || name ==
-		"__darwin_va_list" || name == "__fsid_t" || name == "_G_fpos_t" || name == "_G_fpos64_t" {
+	if name == "__builtin_va_list" ||
+		name == "__qaddr_t" ||
+		name == "definition" ||
+		name == "_IO_lock_t" ||
+		name == "va_list" ||
+		name == "fpos_t" ||
+		name == "__NSConstantString" ||
+		name == "__darwin_va_list" ||
+		name == "__fsid_t" ||
+		name == "_G_fpos_t" ||
+		name == "_G_fpos64_t" || name == "__locale_t" || name == "locale_t" {
 		return "", ""
 	}
 

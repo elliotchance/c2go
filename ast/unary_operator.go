@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/types"
 	"github.com/elliotchance/c2go/util"
 )
 
@@ -59,7 +60,12 @@ func (n *UnaryOperator) render(program *program.Program) (string, string) {
 			return fmt.Sprintf("%s[0]", expr), "char"
 		}
 
-		return fmt.Sprintf("*%s", expr), "int"
+		t, err := types.GetDereferenceType(exprType)
+		if err != nil {
+			panic(err)
+		}
+
+		return fmt.Sprintf("*%s", expr), t
 	}
 
 	if operator == "++" {

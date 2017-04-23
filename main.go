@@ -10,8 +10,6 @@ import (
 	"regexp"
 	"strings"
 
-	"go/format"
-
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
 )
@@ -173,12 +171,6 @@ func Start(args []string) string {
 	p := program.NewProgram()
 	goOut := ast.Render(p, tree[0].(ast.Node))
 
-	// Format the code
-	goOutFmt, err := format.Source([]byte(goOut))
-	if err != nil {
-		panic(err)
-	}
-
 	// Put together the whole file
 	all := "package main\n\nimport (\n"
 
@@ -186,9 +178,9 @@ func Start(args []string) string {
 		all += fmt.Sprintf("\t\"%s\"\n", importName)
 	}
 
-	all += ")\n\n" + string(goOutFmt)
+	all += ")\n\n" + string(goOut)
 
-	return all
+	return string(all)
 }
 
 func main() {

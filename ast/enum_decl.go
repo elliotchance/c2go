@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/elliotchance/c2go/program"
@@ -30,6 +31,7 @@ func parseEnumDecl(line string) *EnumDecl {
 }
 
 func (n *EnumDecl) render(program *program.Program) (string, string) {
+	panic(fmt.Sprintf("%#v", n))
 	return "", ""
 }
 

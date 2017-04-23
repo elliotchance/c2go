@@ -121,6 +121,8 @@ func Parse(line string) Node {
 		return parseStringLiteral(line)
 	case "TranslationUnitDecl":
 		return parseTranslationUnitDecl(line)
+	case "TransparentUnionAttr":
+		return parseTransparentUnionAttr(line)
 	case "Typedef":
 		return parseTypedef(line)
 	case "TypedefDecl":

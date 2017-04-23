@@ -65,6 +65,10 @@ func (n *RecordDecl) render(program *program.Program) (string, string) {
 		return "", ""
 	}
 
+	if name == "__locale_struct" {
+		return "", ""
+	}
+
 	printLine(out, fmt.Sprintf("type %s %s {", name, n.Kind), program.Indent)
 	if len(n.Children) > 0 {
 		for _, c := range n.Children {

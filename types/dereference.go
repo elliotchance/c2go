@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"regexp"
 	"strings"
 )
@@ -18,9 +19,5 @@ func GetDereferenceType(cType string) (string, error) {
 		return search[1] + search[2][0:len(search[2])-1], nil
 	}
 
-	// This should really throw an error, but for now we will use interface{}
-	// until that no longer works.
-	//
-	//     return "", errors.New(cType)
-	return "void *", nil
+	return "", errors.New(cType)
 }

@@ -34,6 +34,7 @@ var simpleResolveTypes = map[string]string{
 	"unsigned long long": "uint64",
 	"unsigned long":      "uint32",
 	"unsigned short":     "uint16",
+	"unsigned short int": "uint16",
 	"void *":             "interface{}",
 	"void":               "",
 
@@ -69,11 +70,23 @@ var simpleResolveTypes = map[string]string{
 	"FILE":                         "int64",
 	"union sigval":                 "int",
 	"union __sigaction_u":          "int",
+
+	// Linux specific
+	"union __WAIT_STATUS":         "interface{}",
+	"union pthread_mutex_t":       "interface{}",
+	"union pthread_mutexattr_t":   "interface{}",
+	"union pthread_cond_t":        "interface{}",
+	"union pthread_condattr_t":    "interface{}",
+	"union pthread_rwlock_t":      "interface{}",
+	"union pthread_rwlockattr_t":  "interface{}",
+	"union pthread_barrier_t":     "interface{}",
+	"union pthread_barrierattr_t": "interface{}",
 }
 
 func ResolveType(program *program.Program, s string) string {
 	// Remove any whitespace or attributes that are not relevant to Go.
 	s = strings.Replace(s, "const ", "", -1)
+	s = strings.Replace(s, "volatile ", "", -1)
 	s = strings.Replace(s, "*__restrict", "*", -1)
 	s = strings.Replace(s, "*restrict", "*", -1)
 	s = strings.Trim(s, " \t\n\r")

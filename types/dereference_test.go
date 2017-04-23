@@ -14,9 +14,6 @@ func TestGetDereferenceType(t *testing.T) {
 	}{
 		{args{"char [8]"}, "char", false},
 		{args{"char**"}, "char*", false},
-
-		// FIXME
-		{args{"(*__ctype_b_loc())"}, "void *", false},
 	}
 	for _, tt := range tests {
 		name := fmt.Sprintf("%#v", tt.args)
