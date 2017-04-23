@@ -65,7 +65,9 @@ func (n *RecordDecl) render(program *program.Program) (string, string) {
 		return "", ""
 	}
 
-	if name == "__locale_struct" {
+	if name == "__locale_struct" ||
+		name == "__sigaction" ||
+		name == "sigaction" {
 		return "", ""
 	}
 

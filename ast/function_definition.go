@@ -53,6 +53,8 @@ var builtInFunctionDefinitions = []string{
 
 	// linux/ctype.h
 	"const unsigned short int** __ctype_b_loc() -> linux.CtypeLoc",
+	"int tolower(int) -> linux.ToLower",
+	"int toupper(int) -> linux.ToUpper",
 
 	// darwin/math.h
 	"double __builtin_fabs(double) -> darwin.Fabs",

@@ -101,7 +101,11 @@ func (n *TypedefDecl) render(program *program.Program) (string, string) {
 		name == "__darwin_va_list" ||
 		name == "__fsid_t" ||
 		name == "_G_fpos_t" ||
-		name == "_G_fpos64_t" || name == "__locale_t" || name == "locale_t" {
+		name == "_G_fpos64_t" ||
+		name == "__locale_t" ||
+		name == "locale_t" ||
+		name == "fsid_t" ||
+		name == "sigset_t" {
 		return "", ""
 	}
 

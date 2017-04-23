@@ -51,7 +51,8 @@ func (n *UnaryOperator) render(program *program.Program) (string, string) {
 
 		program.AddImport("github.com/elliotchance/c2go/noarch")
 
-		functionName := fmt.Sprintf("noarch.Not%s", util.Ucfirst(exprType))
+		t := types.ResolveType(program, exprType)
+		functionName := fmt.Sprintf("noarch.Not%s", util.Ucfirst(t))
 		return fmt.Sprintf("%s(%s)", functionName, expr), exprType
 	}
 

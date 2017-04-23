@@ -1,7 +1,7 @@
 package ast
 
 import (
-	"fmt"
+	"bytes"
 	"strings"
 
 	"github.com/elliotchance/c2go/program"
@@ -31,8 +31,16 @@ func parseEnumDecl(line string) *EnumDecl {
 }
 
 func (n *EnumDecl) render(program *program.Program) (string, string) {
-	panic(fmt.Sprintf("%#v", n))
-	return "", ""
+	out := bytes.NewBuffer([]byte{})
+
+	out.WriteString("const (\n")
+	for _, c := range n.Children {
+		e, _ := c.render(program)
+		out.WriteString(e + "\n")
+	}
+	out.WriteString(")\n")
+
+	return out.String(), "unknown17"
 }
 
 func (n *EnumDecl) AddChild(node Node) {
