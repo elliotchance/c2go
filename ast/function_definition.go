@@ -97,6 +97,7 @@ var builtInFunctionDefinitions = []string{
 	"int printf() -> fmt.Printf",
 	"int scanf() -> fmt.Scanf",
 	"int putchar(int) -> darwin.Putchar",
+	"int puts(const char *) -> fmt.Println",
 	"FILE* fopen(const char *, const char *) -> noarch.Fopen",
 	"int fclose(int) -> noarch.Fclose",
 
