@@ -25,7 +25,18 @@ type programOut struct {
 	isZero bool
 }
 
-// TestIntegrationScripts tests all programs in the tests directory
+// TestIntegrationScripts tests all programs in the tests directory.
+//
+// Integration tests are not run by default (only unit tests). These are
+// indicated by the build flags at the top of the file. To include integration
+// tests use:
+//
+//     go test -tags=integration
+//
+// You can also run a single file with:
+//
+//     go test -tags=integration -run=TestIntegrationScripts/tests/ctype/isalnum.c
+//
 func TestIntegrationScripts(t *testing.T) {
 	files, err := filepath.Glob("tests/*/*.c")
 	if err != nil {

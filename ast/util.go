@@ -3,21 +3,18 @@ package ast
 import (
 	"strconv"
 	"strings"
-
-	"github.com/elliotchance/c2go/util"
 )
 
-func getExportedName(field string) string {
-	return util.Ucfirst(strings.TrimLeft(field, "_"))
-}
-
-func atoi(s string) int {
-	i, err := strconv.Atoi(s)
-	if err != nil {
-		panic(err)
+func ucfirst(word string) string {
+	if len(word) == 0 {
+		return ""
 	}
 
-	return i
+	if len(word) == 1 {
+		strings.ToUpper(word)
+	}
+
+	return strings.ToUpper(string(word[0])) + word[1:]
 }
 
 func removeQuotes(s string) string {

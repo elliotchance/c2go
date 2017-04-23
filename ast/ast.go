@@ -53,6 +53,8 @@ func Parse(line string) Node {
 		return parseDeclStmt(line)
 	case "DeprecatedAttr":
 		return parseDeprecatedAttr(line)
+	case "DoStmt":
+		return parseDoStmt(line)
 	case "ElaboratedType":
 		return parseElaboratedType(line)
 	case "Enum":
@@ -93,12 +95,16 @@ func Parse(line string) Node {
 		return parseNonNullAttr(line)
 	case "ParenExpr":
 		return parseParenExpr(line)
+	case "ParenType":
+		return parseParenType(line)
 	case "ParmVarDecl":
 		return parseParmVarDecl(line)
 	case "PointerType":
 		return parsePointerType(line)
 	case "PredefinedExpr":
 		return parsePredefinedExpr(line)
+	case "PureAttr":
+		return parsePureAttr(line)
 	case "QualType":
 		return parseQualType(line)
 	case "Record":
@@ -115,6 +121,8 @@ func Parse(line string) Node {
 		return parseStringLiteral(line)
 	case "TranslationUnitDecl":
 		return parseTranslationUnitDecl(line)
+	case "TransparentUnionAttr":
+		return parseTransparentUnionAttr(line)
 	case "Typedef":
 		return parseTypedef(line)
 	case "TypedefDecl":
@@ -125,12 +133,14 @@ func Parse(line string) Node {
 		return parseUnaryOperator(line)
 	case "VarDecl":
 		return parseVarDecl(line)
+	case "WarnUnusedResultAttr":
+		return parseWarnUnusedResultAttr(line)
 	case "WhileStmt":
 		return parseWhileStmt(line)
 	case "NullStmt":
 		return nil
 	default:
-		panic("Unknown node type: '" + line + "'")
+		panic("unknown node type: '" + line + "'")
 	}
 }
 
@@ -197,5 +207,11 @@ func getFunctionReturnType(f string) string {
 	//
 	// The arguments will handle themselves, we only care about the
 	// return type ('int' in this case)
-	return strings.TrimSpace(strings.Split(f, "(")[0])
+	returnType := strings.TrimSpace(strings.Split(f, "(")[0])
+
+	if returnType == "" {
+		panic(fmt.Sprintf("unable to extract the return type from: %s", f))
+	}
+
+	return returnType
 }

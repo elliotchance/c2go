@@ -2,20 +2,24 @@ package program
 
 import (
 	"strings"
+
+	"github.com/elliotchance/c2go/util"
 )
 
 type Program struct {
 	imports []string
 
 	// for rendering go src
-	FunctionName string
-	Indent       int
-	ReturnType   string
+	TypesAlreadyDefined []string
+	FunctionName        string
+	Indent              int
+	ReturnType          string
 }
 
 func NewProgram() *Program {
 	return &Program{
-		imports: []string{"fmt"},
+		imports:             []string{},
+		TypesAlreadyDefined: []string{},
 	}
 }
 
@@ -44,4 +48,12 @@ func (a *Program) ImportType(name string) string {
 	}
 
 	return name
+}
+
+func (a *Program) TypeIsAlreadyDefined(typeName string) bool {
+	return util.InStrings(typeName, a.TypesAlreadyDefined)
+}
+
+func (a *Program) TypeIsNowDefined(typeName string) {
+	a.TypesAlreadyDefined = append(a.TypesAlreadyDefined, typeName)
 }

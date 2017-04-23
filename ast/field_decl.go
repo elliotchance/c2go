@@ -43,9 +43,11 @@ func (n *FieldDecl) render(program *program.Program) (string, string) {
 	fieldType := types.ResolveType(program, n.Type)
 	name := n.Name
 
-	//if name == "" {
-	//	return []string{"", "unknown71"}
-	//}
+	// FIXME: There are some cases where the name is empty. We need to
+	// investigate this further. For now I will just exclude them.
+	if name == "" {
+		return "", "unknown72"
+	}
 
 	// Go does not allow the name of a variable to be called "type". For the
 	// moment I will rename this to avoid the error.
@@ -67,8 +69,7 @@ func (n *FieldDecl) render(program *program.Program) (string, string) {
 		suffix = " = nil"
 	}
 
-	src := fmt.Sprintf("%s %s%s", name, fieldType, suffix)
-	return src, "unknown3"
+	return fmt.Sprintf("%s %s", name, fieldType), "unknown3"
 }
 
 func (n *FieldDecl) AddChild(node Node) {

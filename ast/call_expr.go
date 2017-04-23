@@ -31,16 +31,19 @@ func parseCallExpr(line string) *CallExpr {
 
 func (n *CallExpr) render(program *program.Program) (string, string) {
 	children := n.Children
-	func_name, _ := renderExpression(program, children[0])
+	functionName, _ := renderExpression(program, children[0])
+	functionDef := getFunctionDefinition(functionName)
 
-	func_def := getFunctionDefinition(func_name)
+	if functionDef == nil {
+		panic(fmt.Sprintf("unknown function: %s", functionName))
+	}
 
-	if func_def.Substitution != "" {
-		parts := strings.Split(func_def.Substitution, ".")
+	if functionDef.Substitution != "" {
+		parts := strings.Split(functionDef.Substitution, ".")
 		program.AddImport(strings.Join(parts[:len(parts)-1], "."))
 
-		parts2 := strings.Split(func_def.Substitution, "/")
-		func_name = parts2[len(parts2)-1]
+		parts2 := strings.Split(functionDef.Substitution, "/")
+		functionName = parts2[len(parts2)-1]
 	}
 
 	args := []string{}
@@ -48,13 +51,13 @@ func (n *CallExpr) render(program *program.Program) (string, string) {
 	for _, arg := range children[1:] {
 		e, eType := renderExpression(program, arg)
 
-		if i > len(func_def.ArgumentTypes)-1 {
+		if i > len(functionDef.ArgumentTypes)-1 {
 			// This means the argument is one of the varargs
 			// so we don't know what type it needs to be
 			// cast to.
 			args = append(args, e)
 		} else {
-			args = append(args, types.Cast(program, e, eType, func_def.ArgumentTypes[i]))
+			args = append(args, types.Cast(program, e, eType, functionDef.ArgumentTypes[i]))
 		}
 
 		i++
@@ -66,8 +69,8 @@ func (n *CallExpr) render(program *program.Program) (string, string) {
 		parts = append(parts, v)
 	}
 
-	src := fmt.Sprintf("%s(%s)", func_name, strings.Join(parts, ", "))
-	return src, func_def.ReturnType
+	src := fmt.Sprintf("%s(%s)", functionName, strings.Join(parts, ", "))
+	return src, functionDef.ReturnType
 }
 
 func (n *CallExpr) AddChild(node Node) {

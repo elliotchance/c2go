@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/types"
 	"github.com/elliotchance/c2go/util"
 )
 
@@ -49,7 +50,10 @@ func (n *UnaryOperator) render(program *program.Program) (string, string) {
 		}
 
 		program.AddImport("github.com/elliotchance/c2go/noarch")
-		return fmt.Sprintf("%s(%s)", fmt.Sprintf("noarch.Not%s", util.Ucfirst(exprType)), expr), exprType
+
+		t := types.ResolveType(program, exprType)
+		functionName := fmt.Sprintf("noarch.Not%s", util.Ucfirst(t))
+		return fmt.Sprintf("%s(%s)", functionName, expr), exprType
 	}
 
 	if operator == "*" {
@@ -57,7 +61,12 @@ func (n *UnaryOperator) render(program *program.Program) (string, string) {
 			return fmt.Sprintf("%s[0]", expr), "char"
 		}
 
-		return fmt.Sprintf("*%s", expr), "int"
+		t, err := types.GetDereferenceType(exprType)
+		if err != nil {
+			panic(err)
+		}
+
+		return fmt.Sprintf("*%s", expr), t
 	}
 
 	if operator == "++" {
@@ -66,6 +75,10 @@ func (n *UnaryOperator) render(program *program.Program) (string, string) {
 
 	if operator == "~" {
 		operator = "^"
+	}
+
+	if operator == "&" {
+		exprType += " *"
 	}
 
 	return fmt.Sprintf("%s%s", operator, expr), exprType

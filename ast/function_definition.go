@@ -23,7 +23,7 @@ type FunctionDefinition struct {
 	Substitution string
 }
 
-var functionDefinitions = map[string]FunctionDefinition{}
+var functionDefinitions map[string]FunctionDefinition
 
 var builtInFunctionDefinitionsHaveBeenLoaded = false
 
@@ -45,11 +45,16 @@ var builtInFunctionDefinitions = []string{
 	"bool __assert_rtn(const char*, const char*, int, const char*) -> darwin.AssertRtn",
 
 	// darwin/ctype.h
-	"uint32 __istype(__darwin_ct_rune_t, uint32)",
-	"__darwin_ct_rune_t __isctype(__darwin_ct_rune_t, uint32)",
-	"__darwin_ct_rune_t __tolower(__darwin_ct_rune_t)",
-	"__darwin_ct_rune_t __toupper(__darwin_ct_rune_t)",
-	"uint32 __maskrune(__darwin_ct_rune_t, uint32)",
+	"uint32 __istype(__darwin_ct_rune_t, uint32) -> darwin.IsType",
+	"__darwin_ct_rune_t __isctype(__darwin_ct_rune_t, uint32) -> darwin.IsCType",
+	"__darwin_ct_rune_t __tolower(__darwin_ct_rune_t) -> darwin.ToLower",
+	"__darwin_ct_rune_t __toupper(__darwin_ct_rune_t) -> darwin.ToUpper",
+	"uint32 __maskrune(__darwin_ct_rune_t, uint32) -> darwin.MaskRune",
+
+	// linux/ctype.h
+	"const unsigned short int** __ctype_b_loc() -> linux.CtypeLoc",
+	"int tolower(int) -> linux.ToLower",
+	"int toupper(int) -> linux.ToUpper",
 
 	// darwin/math.h
 	"double __builtin_fabs(double) -> darwin.Fabs",
@@ -91,17 +96,30 @@ var builtInFunctionDefinitions = []string{
 	// stdio.h
 	"int printf() -> fmt.Printf",
 	"int scanf() -> fmt.Scanf",
+	"int putchar(int) -> darwin.Putchar",
 	"int puts(const char *) -> fmt.Println",
+	"FILE* fopen(const char *, const char *) -> noarch.Fopen",
+	"int fclose(int) -> noarch.Fclose",
+
+	// stdlib.h
+	"int atoi(const char*) -> noarch.Atoi",
+	"long strtol(const char *, char **, int) -> noarch.Strtol",
+
+	// I'm not sure which header file these comes from?
+	"uint32 __builtin_bswap32(uint32) -> darwin.BSwap32",
+	"uint64 __builtin_bswap64(uint64) -> darwin.BSwap64",
 }
 
 // getFunctionDefinition will return nil if the function does not exist (is not
 // registered).
-func getFunctionDefinition(functionName string) FunctionDefinition {
+func getFunctionDefinition(functionName string) *FunctionDefinition {
 	loadFunctionDefinitions()
 
-	//fmt.Printf("%#v", functionDefinitions)
+	if f, ok := functionDefinitions[functionName]; ok {
+		return &f
+	}
 
-	return functionDefinitions[functionName]
+	return nil
 }
 
 // addFunctionDefinition registers a function definition. If the definition
@@ -117,6 +135,7 @@ func loadFunctionDefinitions() {
 		return
 	}
 
+	functionDefinitions = map[string]FunctionDefinition{}
 	builtInFunctionDefinitionsHaveBeenLoaded = true
 
 	for _, f := range builtInFunctionDefinitions {

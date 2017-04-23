@@ -269,6 +269,13 @@ var nodes = map[string]Node{
 		Children: []Node{},
 	},
 
+	// DoStmt
+	`0x7ff36d0a0938 <line:11:5, line:14:23>`: &DoStmt{
+		Address:  "0x7ff36d0a0938",
+		Position: "line:11:5, line:14:23",
+		Children: []interface{}{},
+	},
+
 	// ElaboratedType
 	`0x7f873686c120 'union __mbstate_t' sugar`: &ElaboratedType{
 		Address:  "0x7f873686c120",
@@ -610,11 +617,29 @@ var nodes = map[string]Node{
 	`0x7fa1488273b0 <line:7:4, line:11:4> 1`: &NonNullAttr{
 		Address:  "0x7fa1488273b0",
 		Position: "line:7:4, line:11:4",
+		A:        1,
+		B:        0,
 		Children: []Node{},
 	},
 	`0x2cce280 </sys/cdefs.h:286:44, /bits/mathcalls.h:115:69> 1`: &NonNullAttr{
 		Address:  "0x2cce280",
 		Position: "/sys/cdefs.h:286:44, /bits/mathcalls.h:115:69",
+		A:        1,
+		B:        0,
+		Children: []Node{},
+	},
+	`0x201ede0 <line:145:79, col:93> 0`: &NonNullAttr{
+		Address:  "0x201ede0",
+		Position: "line:145:79, col:93",
+		A:        0,
+		B:        0,
+		Children: []Node{},
+	},
+	`0x1b89b20 <col:76, col:93> 2 3`: &NonNullAttr{
+		Address:  "0x1b89b20",
+		Position: "col:76, col:93",
+		A:        2,
+		B:        3,
 		Children: []Node{},
 	},
 
@@ -624,6 +649,14 @@ var nodes = map[string]Node{
 		Position: "col:10, col:25",
 		Type:     "unsigned char",
 		Children: []Node{},
+	},
+
+	// ParenType
+	`0x7faf820a4c60 'void (int)' sugar`: &ParenType{
+		Address:  "0x7faf820a4c60",
+		Type:     "void (int)",
+		Sugar:    true,
+		Children: []interface{}{},
 	},
 
 	// ParmVarDecl
@@ -715,6 +748,22 @@ var nodes = map[string]Node{
 		Children: []Node{},
 	},
 
+	// PureAttr
+	`0x7fe9eb899198 <col:1> Implicit`: &PureAttr{
+		Address:   "0x7fe9eb899198",
+		Position:  "col:1",
+		Implicit:  true,
+		Inherited: false,
+		Children:  []interface{}{},
+	},
+	`0x7fe8d60992a0 <col:1> Inherited Implicit`: &PureAttr{
+		Address:   "0x7fe8d60992a0",
+		Position:  "col:1",
+		Implicit:  true,
+		Inherited: true,
+		Children:  []interface{}{},
+	},
+
 	// QualType
 	`0x7fa3b88bbb31 'struct _opaque_pthread_t *' foo`: &QualType{
 		Address:  "0x7fa3b88bbb31",
@@ -800,6 +849,13 @@ var nodes = map[string]Node{
 		Children: []Node{},
 	},
 
+	// TransparentUnionAttr
+	`0x304f700 <col:35>`: &TransparentUnionAttr{
+		Address:  "0x304f700",
+		Position: "col:35",
+		Children: []Node{},
+	},
+
 	// Typedef
 	`0x7f84d10dc1d0 '__darwin_ssize_t'`: &Typedef{
 		Address:  "0x7f84d10dc1d0",
@@ -874,7 +930,6 @@ var nodes = map[string]Node{
 		IsReferenced: false,
 		Children:     []Node{},
 	},
-	// Issue: #26
 	`0x55b9da8784b0 <line:341:1, line:342:16> line:341:19 __io_write_fn '__ssize_t (void *, const char *, size_t)'`: &TypedefDecl{
 		Address:      "0x55b9da8784b0",
 		Position:     "line:341:1, line:342:16",
@@ -984,6 +1039,18 @@ var nodes = map[string]Node{
 		IsUsed:    true,
 		IsCInit:   true,
 		Children:  []Node{},
+	},
+
+	// WarnUnusedResultAttr
+	`0x7fa1d704d420 <col:60> warn_unused_result`: &WarnUnusedResultAttr{
+		Address:  "0x7fa1d704d420",
+		Position: "col:60",
+		Children: []interface{}{},
+	},
+	`0x1fac810 <line:481:52>`: &WarnUnusedResultAttr{
+		Address:  "0x1fac810",
+		Position: "line:481:52",
+		Children: []interface{}{},
 	},
 
 	// WhileStmt

@@ -53,35 +53,59 @@ func parseTypedefDecl(line string) *TypedefDecl {
 
 func (n *TypedefDecl) render(program *program.Program) (string, string) {
 	out := bytes.NewBuffer([]byte{})
-	name := strings.TrimSpace(n.Name)
+	name := n.Name
 
-	if types.TypeIsAlreadyDefined(name) {
+	if program.TypeIsAlreadyDefined(name) {
 		return "", ""
 	}
 
-	types.TypeIsNowDefined(name)
-
-	// FIXME: All of the logic here is just to avoid errors, it
-	// needs to be fixed up.
-	// if ("struct" in node["type"] or "union" in node["type"]) and :
-	//     return
-	n.Type = strings.Replace(n.Type, "unsigned", "", -1)
+	program.TypeIsNowDefined(name)
 
 	resolvedType := types.ResolveType(program, n.Type)
+	// There is a case where the name of the type is also the definition,
+	// like:
+	//
+	//     type _RuneEntry _RuneEntry
+	//
+	// This of course is impossible and will cause the Go not to compile.
+	// It itself is caused by lack of understanding (at this time) about
+	// certain scenarios that types are defined as. The above example comes
+	// from:
+	//
+	//     typedef struct {
+	//        // ... some fields
+	//     } _RuneEntry;
+	//
+	// Until which time that we actually need this to work I am going to
+	// suppress these.
+	if name == resolvedType {
+		return "", ""
+	}
 
 	if name == "__mbstate_t" {
-		program.AddImport("github.com/elliotchance/c2go/darwin")
-		resolvedType = "darwin.C__mbstate_t"
+		resolvedType = program.ImportType("github.com/elliotchance/c2go/darwin.C__mbstate_t")
 	}
 
 	if name == "__darwin_ct_rune_t" {
-		program.AddImport("github.com/elliotchance/c2go/darwin")
-		resolvedType = "darwin.C__darwin_ct_rune_t"
+		resolvedType = program.ImportType("github.com/elliotchance/c2go/darwin.Darwin_ct_rune_t")
 	}
 
-	if name == "__builtin_va_list" || name == "__qaddr_t" || name == "definition" || name ==
-		"_IO_lock_t" || name == "va_list" || name == "fpos_t" || name == "__NSConstantString" || name ==
-		"__darwin_va_list" || name == "__fsid_t" || name == "_G_fpos_t" || name == "_G_fpos64_t" {
+	// A bunch of random stuff to ignore... I really should deal with these.
+	if name == "__builtin_va_list" ||
+		name == "__qaddr_t" ||
+		name == "definition" ||
+		name == "_IO_lock_t" ||
+		name == "va_list" ||
+		name == "fpos_t" ||
+		name == "__NSConstantString" ||
+		name == "__darwin_va_list" ||
+		name == "__fsid_t" ||
+		name == "_G_fpos_t" ||
+		name == "_G_fpos64_t" ||
+		name == "__locale_t" ||
+		name == "locale_t" ||
+		name == "fsid_t" ||
+		name == "sigset_t" {
 		return "", ""
 	}
 

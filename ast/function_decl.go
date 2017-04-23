@@ -56,8 +56,26 @@ func parseFunctionDecl(line string) *FunctionDecl {
 
 func (n *FunctionDecl) render(program *program.Program) (string, string) {
 	out := bytes.NewBuffer([]byte{})
-
 	program.FunctionName = n.Name
+
+	// Always register the new function. Only from this point onwards will
+	// we be allowed to refer to the function.
+	if getFunctionDefinition(program.FunctionName) == nil {
+		addFunctionDefinition(FunctionDefinition{
+			Name:       n.Name,
+			ReturnType: getFunctionReturnType(n.Type),
+			// FIXME
+			ArgumentTypes: []string{},
+			Substitution:  "",
+		})
+	}
+
+	// If the function has a direct substitute in Go we do not want to
+	// output the C definition of it.
+	if f := getFunctionDefinition(program.FunctionName); f != nil &&
+		f.Substitution != "" {
+		return "", ""
+	}
 
 	if program.FunctionName == "__istype" ||
 		program.FunctionName == "__isctype" ||

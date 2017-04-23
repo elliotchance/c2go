@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/elliotchance/c2go/program"
-	"github.com/elliotchance/c2go/util"
 )
 
 // TODO: Some of these are based on assumptions that may not be true for all
@@ -35,54 +34,68 @@ var simpleResolveTypes = map[string]string{
 	"unsigned long long": "uint64",
 	"unsigned long":      "uint32",
 	"unsigned short":     "uint16",
+	"unsigned short int": "uint16",
 	"void *":             "interface{}",
 	"void":               "",
 
 	"const char *": "string",
 
+	// Are these built into some compilers?
+	"uint32":     "uint32",
+	"uint64":     "uint64",
+	"__uint16_t": "uint16",
+	"__uint32_t": "uint32",
+	"__uint64_t": "uint64",
+
 	// Darwin specific
-	"__darwin_ct_rune_t": "__darwin_ct_rune_t",
+	"__darwin_ct_rune_t": "github.com/elliotchance/c2go/darwin.Darwin_ct_rune_t",
 	"union __mbstate_t":  "__mbstate_t",
 	"fpos_t":             "int",
 	"struct __float2":    "github.com/elliotchance/c2go/darwin.Float2",
 	"struct __double2":   "github.com/elliotchance/c2go/darwin.Double2",
+	"Float2":             "github.com/elliotchance/c2go/darwin.Float2",
+	"Double2":            "github.com/elliotchance/c2go/darwin.Double2",
 
-	// These are special cases that almost certainly don"t work. I've put
+	// These are special cases that almost certainly don't work. I've put
 	// them here because for whatever reason there is no suitable type or we
 	// don't need these platform specific things to be implemented yet.
 	"__builtin_va_list":            "int64",
 	"__darwin_pthread_handler_rec": "int64",
+	"unsigned __int128":            "uint64",
 	"__int128":                     "int64",
 	"__mbstate_t":                  "int64",
 	"__sbuf":                       "int64",
 	"__sFILEX":                     "interface{}",
 	"__va_list_tag":                "interface{}",
 	"FILE":                         "int64",
-}
+	"union sigval":                 "int",
+	"union __sigaction_u":          "int",
 
-var TypesAlreadyDefined = []string{
-	// Linux specific.
-	"_LIB_VERSION_TYPE",
-
-	// Darwin specific.
-	"__float2",
-	"__double2",
-}
-
-func TypeIsAlreadyDefined(typeName string) bool {
-	return util.InStrings(typeName, TypesAlreadyDefined)
-}
-
-func TypeIsNowDefined(typeName string) {
-	TypesAlreadyDefined = append(TypesAlreadyDefined, typeName)
+	// Linux specific
+	"union __WAIT_STATUS":         "interface{}",
+	"union pthread_mutex_t":       "interface{}",
+	"union pthread_mutexattr_t":   "interface{}",
+	"union pthread_cond_t":        "interface{}",
+	"union pthread_condattr_t":    "interface{}",
+	"union pthread_rwlock_t":      "interface{}",
+	"union pthread_rwlockattr_t":  "interface{}",
+	"union pthread_barrier_t":     "interface{}",
+	"union pthread_barrierattr_t": "interface{}",
+	"union pthread_attr_t":        "interface{}",
 }
 
 func ResolveType(program *program.Program, s string) string {
 	// Remove any whitespace or attributes that are not relevant to Go.
 	s = strings.Replace(s, "const ", "", -1)
+	s = strings.Replace(s, "volatile ", "", -1)
 	s = strings.Replace(s, "*__restrict", "*", -1)
 	s = strings.Replace(s, "*restrict", "*", -1)
 	s = strings.Trim(s, " \t\n\r")
+
+	// FIXME: This is a hack to avoid casting in some situations.
+	if s == "" {
+		return s
+	}
 
 	if s == "char *[]" {
 		return "interface{}"
@@ -101,7 +114,7 @@ func ResolveType(program *program.Program, s string) string {
 	}
 
 	// If the type is already defined we can proceed with the same name.
-	for _, v := range TypesAlreadyDefined {
+	for _, v := range program.TypesAlreadyDefined {
 		if v == s {
 			return program.ImportType(s)
 		}
@@ -175,5 +188,5 @@ func ResolveType(program *program.Program, s string) string {
 		return fmt.Sprintf("[%s]%s", search2[2], ResolveType(program, search2[1]))
 	}
 
-	panic(fmt.Sprintf("'%s'", s))
+	panic(fmt.Sprintf("I couldn't find an appropriate Go type for the C type '%s'.", s))
 }

@@ -45,13 +45,16 @@ func (n *MemberExpr) render(program *program.Program) (string, string) {
 	lhs, lhsType := renderExpression(program, children[0])
 	lhsResolvedType := types.ResolveType(program, lhsType)
 	rhs := n.Name
+	rhsType := ""
 
+	// FIXME: This is just a hack
 	if util.InStrings(lhsResolvedType, []string{"darwin.Float2", "darwin.Double2"}) {
-		rhs = getExportedName(rhs)
+		rhs = util.GetExportedName(rhs)
+		rhsType = "int"
 	}
 
 	src := fmt.Sprintf("%s.%s", lhs, rhs)
-	return src, children[0].(*DeclRefExpr).Type
+	return src, rhsType
 }
 
 func (n *MemberExpr) AddChild(node Node) {

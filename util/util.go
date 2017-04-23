@@ -1,6 +1,9 @@
 package util
 
-import "strings"
+import (
+	"strconv"
+	"strings"
+)
 
 func InStrings(item string, items []string) bool {
 	for _, v := range items {
@@ -14,4 +17,17 @@ func InStrings(item string, items []string) bool {
 
 func Ucfirst(word string) string {
 	return strings.ToUpper(string(word[0])) + word[1:]
+}
+
+func Atoi(s string) int {
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		panic(err)
+	}
+
+	return i
+}
+
+func GetExportedName(field string) string {
+	return Ucfirst(strings.TrimLeft(field, "_"))
 }

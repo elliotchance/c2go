@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/types"
 )
 
 type ArraySubscriptExpr struct {
@@ -31,10 +32,17 @@ func parseArraySubscriptExpr(line string) *ArraySubscriptExpr {
 
 func (n *ArraySubscriptExpr) render(program *program.Program) (string, string) {
 	children := n.Children
-	expression, _ := renderExpression(program, children[0])
+	expression, expressionType := renderExpression(program, children[0])
 	index, _ := renderExpression(program, children[1])
 	src := fmt.Sprintf("%s[%s]", expression, index)
-	return src, "unknown1"
+
+	newType, err := types.GetDereferenceType(expressionType)
+	if err != nil {
+		panic(fmt.Sprintf("Cannot dereference type '%s' for the expression '%s'",
+			expressionType, expression))
+	}
+
+	return src, newType
 }
 
 func (n *ArraySubscriptExpr) AddChild(node Node) {
