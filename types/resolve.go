@@ -81,6 +81,7 @@ var simpleResolveTypes = map[string]string{
 	"union pthread_rwlockattr_t":  "interface{}",
 	"union pthread_barrier_t":     "interface{}",
 	"union pthread_barrierattr_t": "interface{}",
+	"union pthread_attr_t":        "interface{}",
 }
 
 func ResolveType(program *program.Program, s string) string {
