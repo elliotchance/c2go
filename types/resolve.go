@@ -37,6 +37,7 @@ var simpleResolveTypes = map[string]string{
 	"unsigned short int": "uint16",
 	"void *":             "interface{}",
 	"void":               "",
+	"_Bool":              "bool",
 
 	"const char *": "string",
 
