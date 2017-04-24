@@ -52,8 +52,8 @@ script:
   # documented.
   - cd /tmp
   - export C2GO=$GOPATH/src/github.com/elliotchance/c2go
-  - c2go $C2GO/tests/misc/hello-world.c > hello-world.go
-  - go run hello-world.go
+  - c2go $C2GO/tests/misc/prime.c > prime.go
+  - go run prime.go
   - cd -
 
 after_success:
