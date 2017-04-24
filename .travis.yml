@@ -53,7 +53,9 @@ script:
   - cd /tmp
   - export C2GO=$GOPATH/src/github.com/elliotchance/c2go
   - c2go $C2GO/tests/prime.c > prime.go
-  - go run prime.go
+  - echo "47" | go run prime.go
+
+  # Revert the cwd for any cleanup commands.
   - cd -
 
 after_success:
