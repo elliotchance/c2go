@@ -18,6 +18,7 @@ var resolveTestCases = []resolveTestCase{
 	{"__uint16_t", "uint16"},
 	{"void *", "interface{}"},
 	{"unsigned short int", "uint16"},
+	{"_Bool", "bool"},
 }
 
 func TestResolve(t *testing.T) {
