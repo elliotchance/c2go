@@ -52,7 +52,7 @@ script:
   # documented.
   - cd /tmp
   - export C2GO=$GOPATH/src/github.com/elliotchance/c2go
-  - c2go $C2GO/tests/misc/prime.c > prime.go
+  - c2go $C2GO/tests/prime.c > prime.go
   - go run prime.go
   - cd -
 
