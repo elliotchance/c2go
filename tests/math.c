@@ -1,3 +1,5 @@
+// Test for math.h.
+
 #include <stdio.h>
 #include <math.h>
 

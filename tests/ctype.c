@@ -1,4 +1,5 @@
-/* isalnum example */
+// Tests for ctype.h.
+
 #include <stdio.h>
 #include <ctype.h>
 
@@ -196,6 +197,6 @@ int main()
   test_isxdigit();
   test_tolower();
   test_toupper();
-  
+
   return 0;
 }
