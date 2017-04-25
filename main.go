@@ -121,9 +121,9 @@ func ToJSON(tree []interface{}) []map[string]interface{} {
 	return r
 }
 
-func Check(e error) {
+func Check(prefix string, e error) {
 	if e != nil {
-		panic(e)
+		panic(prefix + e.Error())
 	}
 }
 
@@ -136,19 +136,25 @@ func Start(args []string) string {
 	cFilePath := args[0]
 
 	_, err := os.Stat(cFilePath)
-	Check(err)
+	Check("", err)
 
 	// 2. Preprocess
 	pp, err := exec.Command("clang", "-E", cFilePath).Output()
-	Check(err)
+	Check("preprocess failed: ", err)
 
 	pp_file_path := "/tmp/pp.c"
 	err = ioutil.WriteFile(pp_file_path, pp, 0644)
-	Check(err)
+	Check("writing to /tmp/pp.c failed: ", err)
 
 	// 3. Generate JSON from AST
 	ast_pp, err := exec.Command("clang", "-Xclang", "-ast-dump", "-fsyntax-only", pp_file_path).Output()
-	Check(err)
+	if err != nil {
+		// If clang fails it still prints out the AST, so we have to run it
+		// again to get the real error.
+		errBody, _ := exec.Command("clang", pp_file_path).CombinedOutput()
+
+		panic("clang failed: " + err.Error() + ":\n\n" + string(errBody))
+	}
 
 	lines := readAST(ast_pp)
 	if *printAst {
