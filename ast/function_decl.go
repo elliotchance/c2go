@@ -54,14 +54,14 @@ func parseFunctionDecl(line string) *FunctionDecl {
 	}
 }
 
-func (n *FunctionDecl) render(program *program.Program) (string, string) {
+func (n *FunctionDecl) render(p *program.Program) (string, string) {
 	out := bytes.NewBuffer([]byte{})
-	program.FunctionName = n.Name
+	p.FunctionName = n.Name
 
 	// Always register the new function. Only from this point onwards will
 	// we be allowed to refer to the function.
-	if getFunctionDefinition(program.FunctionName) == nil {
-		addFunctionDefinition(FunctionDefinition{
+	if program.GetFunctionDefinition(p.FunctionName) == nil {
+		program.AddFunctionDefinition(program.FunctionDefinition{
 			Name:       n.Name,
 			ReturnType: getFunctionReturnType(n.Type),
 			// FIXME
@@ -72,18 +72,18 @@ func (n *FunctionDecl) render(program *program.Program) (string, string) {
 
 	// If the function has a direct substitute in Go we do not want to
 	// output the C definition of it.
-	if f := getFunctionDefinition(program.FunctionName); f != nil &&
+	if f := program.GetFunctionDefinition(p.FunctionName); f != nil &&
 		f.Substitution != "" {
 		return "", ""
 	}
 
-	if program.FunctionName == "__istype" ||
-		program.FunctionName == "__isctype" ||
-		program.FunctionName == "__wcwidth" ||
-		program.FunctionName == "__sputc" ||
-		program.FunctionName == "__inline_signbitf" ||
-		program.FunctionName == "__inline_signbitd" ||
-		program.FunctionName == "__inline_signbitl" {
+	if p.FunctionName == "__istype" ||
+		p.FunctionName == "__isctype" ||
+		p.FunctionName == "__wcwidth" ||
+		p.FunctionName == "__sputc" ||
+		p.FunctionName == "__inline_signbitf" ||
+		p.FunctionName == "__inline_signbitd" ||
+		p.FunctionName == "__inline_signbitl" {
 		return "", ""
 	}
 
@@ -98,35 +98,35 @@ func (n *FunctionDecl) render(program *program.Program) (string, string) {
 
 	args := []string{}
 	for _, a := range getFunctionParams(n) {
-		args = append(args, fmt.Sprintf("%s %s", a.Name, types.ResolveType(program, a.Type)))
+		args = append(args, fmt.Sprintf("%s %s", a.Name, types.ResolveType(p, a.Type)))
 	}
 
 	if hasBody {
 		returnType := getFunctionReturnType(n.Type)
 
-		if program.FunctionName == "main" {
-			printLine(out, "func main() {", program.Indent)
+		if p.FunctionName == "main" {
+			printLine(out, "func main() {", p.Indent)
 		} else {
 			printLine(out, fmt.Sprintf("func %s(%s) %s {",
-				program.FunctionName, strings.Join(args, ", "),
-				types.ResolveType(program, returnType)), program.Indent)
+				p.FunctionName, strings.Join(args, ", "),
+				types.ResolveType(p, returnType)), p.Indent)
 		}
 
 		for _, c := range n.Children {
 			if _, ok := c.(*CompoundStmt); ok {
-				src, _ := renderExpression(program, c)
-				printLine(out, src, program.Indent+1)
+				src, _ := renderExpression(p, c)
+				printLine(out, src, p.Indent+1)
 			}
 		}
 
-		printLine(out, "}\n", program.Indent)
+		printLine(out, "}\n", p.Indent)
 
 		params := []string{}
 		for _, v := range getFunctionParams(n) {
 			params = append(params, v.Type)
 		}
 
-		addFunctionDefinition(FunctionDefinition{
+		program.AddFunctionDefinition(program.FunctionDefinition{
 			Name:          n.Name,
 			ReturnType:    getFunctionReturnType(n.Type),
 			ArgumentTypes: params,
