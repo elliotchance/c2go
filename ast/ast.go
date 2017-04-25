@@ -35,6 +35,8 @@ func Parse(line string) Node {
 		return parseBuiltinType(line)
 	case "CallExpr":
 		return parseCallExpr(line)
+	case "CaseStmt":
+		return parseCaseStmt(line)
 	case "CharacterLiteral":
 		return parseCharacterLiteral(line)
 	case "CompoundStmt":
@@ -51,6 +53,8 @@ func Parse(line string) Node {
 		return parseDeclRefExpr(line)
 	case "DeclStmt":
 		return parseDeclStmt(line)
+	case "DefaultStmt":
+		return parseDefaultStmt(line)
 	case "DeprecatedAttr":
 		return parseDeprecatedAttr(line)
 	case "DoStmt":
@@ -119,6 +123,8 @@ func Parse(line string) Node {
 		return parseReturnStmt(line)
 	case "StringLiteral":
 		return parseStringLiteral(line)
+	case "SwitchStmt":
+		return parseSwitchStmt(line)
 	case "TranslationUnitDecl":
 		return parseTranslationUnitDecl(line)
 	case "TransparentUnionAttr":
