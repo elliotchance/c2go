@@ -26,17 +26,17 @@ func parseReturnStmt(line string) *ReturnStmt {
 	}
 }
 
-func (n *ReturnStmt) render(program *program.Program) (string, string) {
+func (n *ReturnStmt) render(p *program.Program) (string, string) {
 	out := bytes.NewBuffer([]byte{})
 	r := "return"
 
-	if len(n.Children) > 0 && program.FunctionName != "main" {
-		re, reType := renderExpression(program, n.Children[0])
-		funcDef := getFunctionDefinition(program.FunctionName)
-		r = "return " + types.Cast(program, re, reType, funcDef.ReturnType)
+	if len(n.Children) > 0 && p.FunctionName != "main" {
+		re, reType := renderExpression(p, n.Children[0])
+		funcDef := program.GetFunctionDefinition(p.FunctionName)
+		r = "return " + types.Cast(p, re, reType, funcDef.ReturnType)
 	}
 
-	printLine(out, r, program.Indent)
+	printLine(out, r, p.Indent)
 
 	return out.String(), ""
 }

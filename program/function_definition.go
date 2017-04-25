@@ -1,4 +1,4 @@
-package ast
+package program
 
 import (
 	"regexp"
@@ -112,7 +112,7 @@ var builtInFunctionDefinitions = []string{
 
 // getFunctionDefinition will return nil if the function does not exist (is not
 // registered).
-func getFunctionDefinition(functionName string) *FunctionDefinition {
+func GetFunctionDefinition(functionName string) *FunctionDefinition {
 	loadFunctionDefinitions()
 
 	if f, ok := functionDefinitions[functionName]; ok {
@@ -124,7 +124,7 @@ func getFunctionDefinition(functionName string) *FunctionDefinition {
 
 // addFunctionDefinition registers a function definition. If the definition
 // already exists it will be replaced.
-func addFunctionDefinition(f FunctionDefinition) {
+func AddFunctionDefinition(f FunctionDefinition) {
 	loadFunctionDefinitions()
 
 	functionDefinitions[f.Name] = f
@@ -162,7 +162,7 @@ func loadFunctionDefinitions() {
 			substitution = "github.com/elliotchance/c2go/" + substitution
 		}
 
-		addFunctionDefinition(FunctionDefinition{
+		AddFunctionDefinition(FunctionDefinition{
 			Name:          match[2],
 			ReturnType:    match[1],
 			ArgumentTypes: argumentTypes,
