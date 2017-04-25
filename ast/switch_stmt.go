@@ -27,6 +27,11 @@ func (n *SwitchStmt) render(program *program.Program) (string, string) {
 	// for. It looks like the number of children is also not reliable, but we
 	// know that we need the last two.
 
+	if len(n.Children) < 2 {
+		// I don't know what causes this condition. Need to investigate.
+		return "", ""
+	}
+
 	condition, _ := n.Children[len(n.Children)-2].render(program)
 
 	n.Children[3].(*CompoundStmt).belongsToSwitch = true
