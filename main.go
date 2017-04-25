@@ -3,14 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"go/format"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"reflect"
 	"regexp"
 	"strings"
-
-	"go/format"
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
@@ -182,7 +181,7 @@ func Start(args []string) string {
 	// Format the code
 	goOutFmt, err := format.Source([]byte(goOut))
 	if err != nil {
-		panic(err)
+		panic(err.Error() + "\n\n" + goOut)
 	}
 
 	// Put together the whole file

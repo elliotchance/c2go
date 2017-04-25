@@ -158,6 +158,13 @@ var nodes = map[string]Node{
 		Children: []Node{},
 	},
 
+	// CaseStmt
+	`0x7fc8b5094688 <line:11:5, line:12:21>`: &CaseStmt{
+		Address:  "0x7fc8b5094688",
+		Position: "line:11:5, line:12:21",
+		Children: []Node{},
+	},
+
 	// CharacterLiteral
 	`0x7f980b858308 <col:62> 'int' 10`: &CharacterLiteral{
 		Address:  "0x7f980b858308",
@@ -257,6 +264,13 @@ var nodes = map[string]Node{
 	`0x7fb791846e80 <line:11:4, col:31>`: &DeclStmt{
 		Address:  "0x7fb791846e80",
 		Position: "line:11:4, col:31",
+		Children: []Node{},
+	},
+
+	// DefaultStmt
+	`0x7f951308bfb0 <line:17:5, line:18:34>`: &DefaultStmt{
+		Address:  "0x7f951308bfb0",
+		Position: "line:17:5, line:18:34",
 		Children: []Node{},
 	},
 
@@ -840,6 +854,13 @@ var nodes = map[string]Node{
 		Type:     "char [45]",
 		Lvalue:   true,
 		Value:    "Number of command line arguments passed: %d\n",
+		Children: []Node{},
+	},
+
+	// SwitchStmt
+	`0x7fbca3894638 <line:9:5, line:20:5>`: &SwitchStmt{
+		Address:  "0x7fbca3894638",
+		Position: "line:9:5, line:20:5",
 		Children: []Node{},
 	},
 
