@@ -20,11 +20,20 @@ void test_printf()
     printf("Hello World\n");
 }
 
+void test_remove()
+{
+    if (remove("myfile.txt") != 0)
+        puts("Error deleting file");
+    else
+        puts("File successfully deleted");
+}
+
 int main()
 {
     test_putchar();
     test_puts();
     test_printf();
+    test_remove();
 
     return 0;
 }

@@ -100,6 +100,7 @@ var builtInFunctionDefinitions = []string{
 	"int puts(const char *) -> fmt.Println",
 	"FILE* fopen(const char *, const char *) -> noarch.Fopen",
 	"int fclose(int) -> noarch.Fclose",
+	"int remove(const char*) -> noarch.Remove",
 
 	// stdlib.h
 	"int atoi(const char*) -> noarch.Atoi",
