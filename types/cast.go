@@ -103,6 +103,10 @@ func Cast(program *program.Program, expr, fromType, toType string) string {
 		return `""`
 	}
 
+	if fromType == "_Bool" && toType == "bool" {
+		return expr
+	}
+
 	if util.InStrings(fromType, types) && util.InStrings(toType, types) {
 		return fmt.Sprintf("%s(%s)", toType, expr)
 	}

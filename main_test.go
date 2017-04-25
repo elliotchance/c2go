@@ -38,7 +38,7 @@ type programOut struct {
 //     go test -tags=integration -run=TestIntegrationScripts/tests/ctype/isalnum.c
 //
 func TestIntegrationScripts(t *testing.T) {
-	files, err := filepath.Glob("tests/*/*.c")
+	files, err := filepath.Glob("tests/*.c")
 	if err != nil {
 		t.Fatal(err)
 	}
