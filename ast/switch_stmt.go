@@ -26,10 +26,10 @@ func (n *SwitchStmt) render(program *program.Program) (string, string) {
 	// The first two children are nil. I don't know what they are supposed to be
 	// for. Raise an error so we can work it out.
 	if n.Children[0] != nil {
-		panic(n.Children[0])
+		panic(fmt.Sprintf("SwitchStmt 0: %#v", n.Children[0]))
 	}
 	if n.Children[1] != nil {
-		panic(n.Children[1])
+		panic(fmt.Sprintf("SwitchStmt 1: %#v", n.Children[1]))
 	}
 
 	condition, _ := n.Children[2].render(program)
