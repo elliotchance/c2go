@@ -24,12 +24,13 @@ func parseSwitchStmt(line string) *SwitchStmt {
 
 func (n *SwitchStmt) render(program *program.Program) (string, string) {
 	// The first two children are nil. I don't know what they are supposed to be
-	// for.
+	// for. It looks like the number of children is also not reliable, but we
+	// know that we need the last two.
 
-	condition, _ := n.Children[2].render(program)
+	condition, _ := n.Children[len(n.Children)-2].render(program)
 
 	n.Children[3].(*CompoundStmt).belongsToSwitch = true
-	body, _ := n.Children[3].render(program)
+	body, _ := n.Children[len(n.Children)-1].render(program)
 
 	out := fmt.Sprintf("switch %s {\n%s\n}\n", condition, body)
 
