@@ -15,10 +15,11 @@ import (
 	"github.com/elliotchance/c2go/program"
 )
 
-const VERSION = "0.9.3"
+const Version = "0.9.3"
 
 var (
 	printAst = flag.Bool("print-ast", false, "Print AST before translated Go code.")
+	version  = flag.Bool("version", false, "Print the version and exit.")
 )
 
 func readAST(data []byte) []string {
@@ -203,12 +204,11 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [options] <file.c>\n", os.Args[0])
 		flag.PrintDefaults()
 	}
-
-	versionFlag := flag.Bool("version", false, "version")
 	flag.Parse()
 
-	if *versionFlag {
-		fmt.Println(VERSION)
+	if *version {
+		// Simply print out the version and exit.
+		fmt.Println(Version)
 		return
 	}
 
