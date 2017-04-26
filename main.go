@@ -15,6 +15,8 @@ import (
 	"github.com/elliotchance/c2go/program"
 )
 
+const VERSION = "0.9.3"
+
 var (
 	printAst = flag.Bool("print-ast", false, "Print AST before translated Go code.")
 )
@@ -201,7 +203,14 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [options] <file.c>\n", os.Args[0])
 		flag.PrintDefaults()
 	}
+
+	versionFlag := flag.Bool("version", false, "version")
 	flag.Parse()
+
+	if *versionFlag {
+		fmt.Println(VERSION)
+		return
+	}
 
 	if flag.NArg() < 1 {
 		flag.Usage()
