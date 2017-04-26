@@ -3,6 +3,8 @@ package ast
 import (
 	"bytes"
 	"fmt"
+	goast "go/ast"
+	"go/token"
 	"strings"
 
 	"github.com/elliotchance/c2go/program"
@@ -134,6 +136,36 @@ func (n *FunctionDecl) render(p *program.Program) (string, string) {
 	}
 
 	return out.String(), ""
+}
+
+func getFunctionReturnTypes(f string) *goast.FieldList {
+	// The type of the function will be the complete prototype, like:
+	//
+	//     __inline_isfinitef(float) int
+	//
+	// will have a type of:
+	//
+	//     int (float)
+	//
+	// The arguments will handle themselves, we only care about the
+	// return type ('int' in this case)
+	returnType := strings.TrimSpace(strings.Split(f, "(")[0])
+
+	if returnType == "" {
+		panic(fmt.Sprintf("unable to extract the return type from: %s", f))
+	}
+
+	return &goast.FieldList{
+		Opening: token.NoPos,
+		List: []*goast.Field{&goast.Field{
+			Doc:     nil,
+			Names:   nil,
+			Type:    goast.NewIdent(returnType),
+			Tag:     nil,
+			Comment: nil,
+		}},
+		Closing: token.NoPos,
+	}
 }
 
 func (n *FunctionDecl) AddChild(node Node) {

@@ -2,12 +2,17 @@ package types
 
 import (
 	"fmt"
+	"go/ast"
 	"regexp"
 	"strings"
 
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/util"
 )
+
+func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Expr {
+	return expr
+}
 
 func Cast(program *program.Program, expr, fromType, toType string) string {
 	fromType = ResolveType(program, fromType)

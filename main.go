@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"go/format"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/transpiler"
 )
 
 var (
@@ -165,6 +167,19 @@ func Start(args []string) string {
 	nodes := convertLinesToNodes(lines)
 	tree := buildTree(nodes, 0)
 
+	p := program.NewProgram()
+	err = transpiler.TranspileAST(cFilePath, p, tree[0].(ast.Node))
+	if err != nil {
+		panic(err)
+	}
+
+	var buf bytes.Buffer
+	if err := format.Node(&buf, p.FileSet, p.File); err != nil {
+		panic(err)
+	}
+
+	return buf.String()
+
 	// TODO: allow the user to print the JSON tree:
 	//jsonTree := ToJSON(tree)
 	//_, err := json.MarshalIndent(jsonTree, " ", "  ")
@@ -175,7 +190,7 @@ func Start(args []string) string {
 	//go_file_path := fmt.Sprintf("%s.go", parts[len(parts) - 1][:len(parts) - 2])
 
 	// Render(go_out, tree[0], "", 0, "")
-	p := program.NewProgram()
+	// p := program.NewProgram()
 	goOut := ast.Render(p, tree[0].(ast.Node))
 
 	// Format the code
