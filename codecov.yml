@@ -1,0 +1,16 @@
+coverage:
+  status:
+    project:
+      default:
+        threshold: 100%
+        if_no_uploads: error
+        if_not_found: success
+        if_ci_failed: error
+
+    patch:
+      default:
+        enabled: yes
+        target: 0%
+        if_no_uploads: error
+        if_not_found: success
+        if_ci_failed: error
