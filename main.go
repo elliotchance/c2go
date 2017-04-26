@@ -144,7 +144,7 @@ func Start(args []string) string {
 	pp, err := exec.Command("clang", "-E", cFilePath).Output()
 	Check("preprocess failed: ", err)
 
-	pp_file_path := "/tmp/pp.c"
+	pp_file_path := os.TempDir() + "pp.c"
 	err = ioutil.WriteFile(pp_file_path, pp, 0644)
 	Check("writing to /tmp/pp.c failed: ", err)
 
