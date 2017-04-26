@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+	"path"
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
@@ -144,7 +145,7 @@ func Start(args []string) string {
 	pp, err := exec.Command("clang", "-E", cFilePath).Output()
 	Check("preprocess failed: ", err)
 
-	pp_file_path := os.TempDir() + "pp.c"
+	pp_file_path := path.Join(os.TempDir(), "pp.c")
 	err = ioutil.WriteFile(pp_file_path, pp, 0644)
 	Check("writing to /tmp/pp.c failed: ", err)
 
