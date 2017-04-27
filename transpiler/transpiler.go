@@ -34,6 +34,23 @@ func transpileToExpr(node ast.Node, p *program.Program) (goast.Expr, string, err
 	case *ast.StringLiteral:
 		return transpileStringLiteral(n), "", nil
 
+	case *ast.ArraySubscriptExpr:
+		children := n.Children
+		expression, expressionType, err := transpileToExpr(children[0], p)
+		if err != nil {
+			return nil, "", err
+		}
+
+		index, _, err := transpileToExpr(children[1], p)
+		if err != nil {
+			return nil, "", err
+		}
+
+		return &goast.IndexExpr{
+			X:     expression,
+			Index: index,
+		}, expressionType, nil
+
 	case *ast.BinaryOperator:
 		left, _, err := transpileToExpr(n.Children[0], p)
 		if err != nil {
