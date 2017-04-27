@@ -28,6 +28,8 @@ func getTokenForOperator(operator string) token.Token {
 	// Bitwise
 	case "&":
 		return token.AND
+	case "|":
+		return token.OR
 
 	// Comparison
 	case ">=":
@@ -44,6 +46,8 @@ func getTokenForOperator(operator string) token.Token {
 		return token.EQL
 
 	// Logical
+	case "!":
+		return token.NOT
 	case "&&":
 		return token.LAND
 	case "||":

@@ -34,6 +34,45 @@ func transpileToExpr(node ast.Node, p *program.Program) (goast.Expr, string, err
 	case *ast.StringLiteral:
 		return transpileStringLiteral(n), "", nil
 
+	case *ast.PredefinedExpr:
+		if n.Name == "__PRETTY_FUNCTION__" {
+			// FIXME
+			return &goast.BasicLit{
+				Kind:  token.STRING,
+				Value: "\"void print_number(int *)\"",
+			}, "const char*", nil
+		}
+
+		if n.Name == "__func__" {
+			// FIXME
+			src := fmt.Sprintf("\"%s\"", "print_number")
+			return &goast.BasicLit{
+				Kind:  token.STRING,
+				Value: src,
+			}, "const char*", nil
+		}
+
+		panic(fmt.Sprintf("renderExpression: unknown PredefinedExpr: %s", n.Name))
+
+	case *ast.ConditionalOperator:
+		// TODO: check errors for these
+		a, _, _ := transpileToExpr(n.Children[0], p)
+		b, _, _ := transpileToExpr(n.Children[1], p)
+		c, _, _ := transpileToExpr(n.Children[2], p)
+
+		p.AddImport("github.com/elliotchance/c2go/noarch")
+
+		return &goast.CallExpr{
+			Fun:      goast.NewIdent("noarch.Ternary"),
+			Lparen:   token.NoPos,
+			Args:     []goast.Expr{a, b, c},
+			Ellipsis: token.NoPos,
+			Rparen:   token.NoPos,
+		}, "", nil
+
+		// src := fmt.Sprintf("noarch.Ternary(%s, func () interface{} { return %s }, func () interface{} { return %s })", a, b, c)
+		// return src, n.Type
+
 	case *ast.ArraySubscriptExpr:
 		children := n.Children
 		expression, expressionType, err := transpileToExpr(children[0], p)
