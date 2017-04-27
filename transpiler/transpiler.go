@@ -30,6 +30,10 @@ func TranspileAST(fileName string, p *program.Program, root ast.Node) error {
 }
 
 func transpileToExpr(node ast.Node, p *program.Program) (goast.Expr, string, error) {
+	if node == nil {
+		return nil, "", nil
+	}
+
 	switch n := node.(type) {
 	case *ast.StringLiteral:
 		return transpileStringLiteral(n), "", nil
@@ -229,6 +233,10 @@ func transpileToExpr(node ast.Node, p *program.Program) (goast.Expr, string, err
 }
 
 func transpileToStmt(node ast.Node, p *program.Program) (goast.Stmt, error) {
+	if node == nil {
+		return nil, nil
+	}
+
 	switch n := node.(type) {
 	case *ast.WhileStmt:
 		// TODO: The first child of a WhileStmt appears to always be null.
@@ -405,7 +413,9 @@ func transpileToStmt(node ast.Node, p *program.Program) (goast.Stmt, error) {
 				return nil, err
 			}
 
-			stmts = append(stmts, result)
+			if result != nil {
+				stmts = append(stmts, result)
+			}
 		}
 
 		return &goast.BlockStmt{
