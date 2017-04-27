@@ -230,6 +230,28 @@ func transpileToExpr(node ast.Node, p *program.Program) (goast.Expr, string, err
 
 func transpileToStmt(node ast.Node, p *program.Program) (goast.Stmt, error) {
 	switch n := node.(type) {
+	case *ast.WhileStmt:
+		// TODO: The first child of a WhileStmt appears to always be null.
+		// Are there any cases where it is used?
+		children := n.Children[1:]
+
+		// TODO: Check errors here
+		body, _ := transpileToBlockStmt(children[1], p)
+		e, _, _ := transpileToExpr(children[0], p)
+
+		return &goast.ForStmt{
+			Cond: e,
+			Body: body,
+		}, nil
+
+		// printLine(out, fmt.Sprintf("for %s {", types.Cast(program, e, eType, "bool")), program.Indent)
+
+		// printLine(out, body, program.Indent+1)
+
+		// printLine(out, "}", program.Indent)
+
+		// return out.String(), ""
+
 	case *ast.IfStmt:
 		children := n.Children
 
