@@ -23,11 +23,6 @@ func parseCaseStmt(line string) *CaseStmt {
 }
 
 func (n *CaseStmt) render(program *program.Program) (string, string) {
-	// panic(n.Children[2])
-
-	// if n == 0 {
-	// 	out += "fallthrough\n"
-	// })
 	c, _ := n.Children[0].render(program)
 	c += ":"
 

@@ -34,7 +34,7 @@ func (n *SwitchStmt) render(program *program.Program) (string, string) {
 
 	condition, _ := n.Children[len(n.Children)-2].render(program)
 
-	n.Children[len(n.Children)-1].(*CompoundStmt).belongsToSwitch = true
+	n.Children[len(n.Children)-1].(*CompoundStmt).BelongsToSwitch = true
 	body, _ := n.Children[len(n.Children)-1].render(program)
 
 	out := fmt.Sprintf("switch %s {\n%s\n}\n", condition, body)

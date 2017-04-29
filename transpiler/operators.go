@@ -16,10 +16,12 @@ func getTokenForOperator(operator string) token.Token {
 		return token.ADD
 	case "-":
 		return token.SUB
-	case "%":
-		return token.REM
 	case "*":
 		return token.MUL
+	case "/":
+		return token.QUO
+	case "%":
+		return token.REM
 
 	// Assignment
 	case "=":

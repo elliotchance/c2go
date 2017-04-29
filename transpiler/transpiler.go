@@ -38,6 +38,9 @@ func transpileToExpr(node ast.Node, p *program.Program) (goast.Expr, string, err
 	case *ast.StringLiteral:
 		return transpileStringLiteral(n), "", nil
 
+	case *ast.FloatingLiteral:
+		return transpileFloatingLiteral(n), "", nil
+
 	case *ast.PredefinedExpr:
 		if n.Name == "__PRETTY_FUNCTION__" {
 			// FIXME
@@ -238,6 +241,20 @@ func transpileToStmt(node ast.Node, p *program.Program) (goast.Stmt, error) {
 	}
 
 	switch n := node.(type) {
+	case *ast.DefaultStmt:
+		return transpileDefaultStmt(n, p)
+
+	case *ast.CaseStmt:
+		return transpileCaseStmt(n, p)
+
+	case *ast.SwitchStmt:
+		return transpileSwitchStmt(n, p)
+
+	case *ast.BreakStmt:
+		return &goast.BranchStmt{
+			Tok: token.BREAK,
+		}, nil
+
 	case *ast.WhileStmt:
 		// TODO: The first child of a WhileStmt appears to always be null.
 		// Are there any cases where it is used?
@@ -373,7 +390,12 @@ func transpileToStmt(node ast.Node, p *program.Program) (goast.Stmt, error) {
 		names := []*goast.Ident{}
 
 		for _, c := range n.Children {
-			names = append(names, goast.NewIdent(c.(*ast.VarDecl).Name))
+			if a, ok := c.(*ast.RecordDecl); ok {
+				names = append(names, goast.NewIdent(a.Name))
+			}
+			if a, ok := c.(*ast.VarDecl); ok {
+				names = append(names, goast.NewIdent(a.Name))
+			}
 		}
 
 		return &goast.DeclStmt{
@@ -397,11 +419,6 @@ func transpileToStmt(node ast.Node, p *program.Program) (goast.Stmt, error) {
 		return &goast.ReturnStmt{
 			Return:  token.NoPos,
 			Results: nil,
-		}, nil
-
-	case *ast.BreakStmt:
-		return &goast.BranchStmt{
-			Tok: token.BREAK,
 		}, nil
 
 	case *ast.CompoundStmt:
