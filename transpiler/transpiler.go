@@ -29,6 +29,38 @@ func TranspileAST(fileName string, p *program.Program, root ast.Node) error {
 	return err
 }
 
+func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (*goast.BinaryExpr, string, error) {
+	left, _, err := transpileToExpr(n.Children[0], p)
+	if err != nil {
+		return nil, "", err
+	}
+
+	right, _, err := transpileToExpr(n.Children[1], p)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return &goast.BinaryExpr{
+		X:     left,
+		OpPos: token.NoPos,
+		Op:    getTokenForOperator(n.Operator),
+		Y:     right,
+	}, "", nil
+}
+
+func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (*goast.UnaryExpr, string, error) {
+	left, _, err := transpileToExpr(n.Children[0], p)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return &goast.UnaryExpr{
+		X:     left,
+		OpPos: token.NoPos,
+		Op:    getTokenForOperator(n.Operator),
+	}, "", nil
+}
+
 func transpileToExpr(node ast.Node, p *program.Program) (goast.Expr, string, error) {
 	if node == nil {
 		return nil, "", nil
@@ -42,24 +74,7 @@ func transpileToExpr(node ast.Node, p *program.Program) (goast.Expr, string, err
 		return transpileFloatingLiteral(n), "", nil
 
 	case *ast.PredefinedExpr:
-		if n.Name == "__PRETTY_FUNCTION__" {
-			// FIXME
-			return &goast.BasicLit{
-				Kind:  token.STRING,
-				Value: "\"void print_number(int *)\"",
-			}, "const char*", nil
-		}
-
-		if n.Name == "__func__" {
-			// FIXME
-			src := fmt.Sprintf("\"%s\"", "print_number")
-			return &goast.BasicLit{
-				Kind:  token.STRING,
-				Value: src,
-			}, "const char*", nil
-		}
-
-		panic(fmt.Sprintf("renderExpression: unknown PredefinedExpr: %s", n.Name))
+		return transpilePredefinedExpr(n, p)
 
 	case *ast.ConditionalOperator:
 		// TODO: check errors for these
@@ -98,34 +113,10 @@ func transpileToExpr(node ast.Node, p *program.Program) (goast.Expr, string, err
 		}, expressionType, nil
 
 	case *ast.BinaryOperator:
-		left, _, err := transpileToExpr(n.Children[0], p)
-		if err != nil {
-			return nil, "", err
-		}
-
-		right, _, err := transpileToExpr(n.Children[1], p)
-		if err != nil {
-			return nil, "", err
-		}
-
-		return &goast.BinaryExpr{
-			X:     left,
-			OpPos: token.NoPos,
-			Op:    getTokenForOperator(n.Operator),
-			Y:     right,
-		}, "", nil
+		return transpileBinaryOperator(n, p)
 
 	case *ast.UnaryOperator:
-		left, _, err := transpileToExpr(n.Children[0], p)
-		if err != nil {
-			return nil, "", err
-		}
-
-		return &goast.UnaryExpr{
-			X:     left,
-			OpPos: token.NoPos,
-			Op:    getTokenForOperator(n.Operator),
-		}, "", nil
+		return transpileUnaryOperator(n, p)
 
 	case *ast.MemberExpr:
 		lhs, _, err := transpileToExpr(n.Children[0], p)
@@ -558,4 +549,21 @@ func getFieldList(f *ast.FunctionDecl) *goast.FieldList {
 	}
 
 	return &goast.FieldList{Opening: token.NoPos, List: r, Closing: token.NoPos}
+}
+
+func transpileStmts(nodes []ast.Node, p *program.Program) ([]goast.Stmt, error) {
+	stmts := []goast.Stmt{}
+
+	for _, s := range nodes {
+		if s != nil {
+			a, err := transpileToStmt(s, p)
+			if err != nil {
+				return nil, err
+			}
+
+			stmts = append(stmts, a)
+		}
+	}
+
+	return stmts, nil
 }
