@@ -59,7 +59,7 @@ func transpileToExpr(node ast.Node, p *program.Program) (goast.Expr, string, err
 		return transpileToExpr(n.Children[0], p)
 
 	case *ast.DeclRefExpr:
-		return goast.NewIdent(n.Name), "", nil
+		return transpileDeclRefExpr(n, p)
 
 	case *ast.IntegerLiteral:
 		return transpileIntegerLiteral(n), "", nil

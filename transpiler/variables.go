@@ -9,8 +9,21 @@ import (
 	goast "go/ast"
 )
 
+func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (*goast.Ident, string, error) {
+	if n.Name == "argc" {
+		n.Name = "len(os.Args)"
+		p.AddImport("os")
+	} else if n.Name == "argv" {
+		n.Name = "os.Args"
+		p.AddImport("os")
+	}
+
+	return goast.NewIdent(n.Name), "", nil
+}
+
 func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) (*goast.DeclStmt, error) {
 	names := []*goast.Ident{}
+	var theType string
 
 	for _, c := range n.Children {
 		if a, ok := c.(*ast.RecordDecl); ok {
@@ -18,8 +31,11 @@ func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) (*goast.DeclStmt, er
 		}
 		if a, ok := c.(*ast.VarDecl); ok {
 			names = append(names, goast.NewIdent(a.Name))
+			theType = a.Type
 		}
 	}
+
+	// panic(fmt.Sprintf("%#v", n.Children))
 
 	return &goast.DeclStmt{
 		Decl: &goast.GenDecl{
@@ -30,7 +46,7 @@ func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) (*goast.DeclStmt, er
 			Specs: []goast.Spec{&goast.ValueSpec{
 				Doc:     nil,
 				Names:   names,
-				Type:    nil,
+				Type:    goast.NewIdent(theType),
 				Values:  nil,
 				Comment: nil,
 			}},

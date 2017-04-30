@@ -108,12 +108,17 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 	}
 
 	if hasBody {
+		fieldList, err := getFieldList(n, p)
+		if err != nil {
+			return err
+		}
+
 		p.File.Decls = append(p.File.Decls, &goast.FuncDecl{
 			Doc:  nil,
 			Recv: nil,
 			Name: goast.NewIdent(n.Name),
 			Type: &goast.FuncType{
-				Params:  getFieldList(n),
+				Params:  fieldList,
 				Results: nil,
 			},
 			Body: body,
@@ -123,21 +128,28 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 	return nil
 }
 
-func getFieldList(f *ast.FunctionDecl) *goast.FieldList {
+func getFieldList(f *ast.FunctionDecl, p *program.Program) (*goast.FieldList, error) {
+	// The main() function does not have arguments or a return value.
+	if f.Name == "main" {
+		return &goast.FieldList{}, nil
+	}
+
 	r := []*goast.Field{}
 	for _, n := range f.Children {
 		if v, ok := n.(*ast.ParmVarDecl); ok {
 			r = append(r, &goast.Field{
 				Doc:     nil,
 				Names:   []*goast.Ident{goast.NewIdent(v.Name)},
-				Type:    goast.NewIdent(v.Type),
+				Type:    goast.NewIdent(types.ResolveType(p, v.Type)),
 				Tag:     nil,
 				Comment: nil,
 			})
 		}
 	}
 
-	return &goast.FieldList{Opening: token.NoPos, List: r, Closing: token.NoPos}
+	return &goast.FieldList{
+		List: r,
+	}, nil
 }
 
 func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (*goast.ReturnStmt, error) {

@@ -29,16 +29,43 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (*goast.
 	}, "", nil
 }
 
-func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (*goast.UnaryExpr, string, error) {
+func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (goast.Expr, string, error) {
+	// Unfortunately we cannot use the Go increment operators because we are not
+	// providing any position information for tokens. This means that the ++/--
+	// would be placed before the expression and would be invalid in Go.
+	//
+	// Until it can be properly fixed (can we trick Go into to placing it after
+	// the expression with a magic position?) we will have to return a
+	// BinaryExpr with the same functionality.
+	operator := getTokenForOperator(n.Operator)
+	if operator == token.INC || operator == token.DEC {
+		binaryOperator := "+="
+		if operator == token.DEC {
+			binaryOperator = "-="
+		}
+
+		return transpileBinaryOperator(&ast.BinaryOperator{
+			Type:     n.Type,
+			Operator: binaryOperator,
+			Children: []ast.Node{
+				n.Children[0], &ast.IntegerLiteral{
+					Type:     "int",
+					Value:    1,
+					Children: []ast.Node{},
+				},
+			},
+		}, p)
+	}
+
+	// Otherwise handle like a unary operator.
 	left, _, err := transpileToExpr(n.Children[0], p)
 	if err != nil {
 		return nil, "", err
 	}
 
 	return &goast.UnaryExpr{
-		X:     left,
-		OpPos: token.NoPos,
-		Op:    getTokenForOperator(n.Operator),
+		X:  left,
+		Op: operator,
 	}, "", nil
 }
 
@@ -96,6 +123,10 @@ func getTokenForOperator(operator string) token.Token {
 	// Assignment
 	case "=":
 		return token.ASSIGN
+	case "+=":
+		return token.ADD_ASSIGN
+	case "-=":
+		return token.SUB_ASSIGN
 
 	// Bitwise
 	case "&":
