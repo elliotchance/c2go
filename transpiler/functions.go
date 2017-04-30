@@ -34,7 +34,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (*goast.CallExpr, st
 	for _, arg := range n.Children[1:] {
 		e, eType, err := transpileToExpr(arg, p)
 		if err != nil {
-			return nil, "", err
+			return nil, "unknown2", err
 		}
 
 		if i > len(functionDef.ArgumentTypes)-1 {
@@ -55,7 +55,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (*goast.CallExpr, st
 		Args:     args,
 		Ellipsis: token.NoPos,
 		Rparen:   token.NoPos,
-	}, "", nil
+	}, "unknown1", nil
 
 	// src := fmt.Sprintf("%s(%s)", functionName, strings.Join(parts, ", "))
 	// return src, functionDef.ReturnType

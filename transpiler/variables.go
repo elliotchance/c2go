@@ -23,21 +23,36 @@ func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (*goast.Ident,
 		p.AddImport("os")
 	}
 
-	return goast.NewIdent(n.Name), "", nil
+	return goast.NewIdent(n.Name), n.Type, nil
 }
 
-func newDeclStmt(name, cType string, p *program.Program) *goast.DeclStmt {
+func newDeclStmt(a *ast.VarDecl, p *program.Program) (*goast.DeclStmt, error) {
+	var values []goast.Expr = nil
+	if len(a.Children) > 0 {
+		defaultValue, defaultValueType, err := transpileToExpr(a.Children[0], p)
+		if err != nil {
+			return nil, err
+		}
+
+		if !isNullAST(defaultValue) {
+			values = []goast.Expr{
+				types.CastExpr(p, defaultValue, defaultValueType, a.Type),
+			}
+		}
+	}
+
 	return &goast.DeclStmt{
 		Decl: &goast.GenDecl{
 			Tok: token.VAR,
 			Specs: []goast.Spec{
 				&goast.ValueSpec{
-					Names: []*goast.Ident{goast.NewIdent(name)},
-					Type:  goast.NewIdent(types.ResolveType(p, cType)),
+					Names:  []*goast.Ident{goast.NewIdent(a.Name)},
+					Type:   goast.NewIdent(types.ResolveType(p, a.Type)),
+					Values: values,
 				},
 			},
 		},
-	}
+	}, nil
 }
 
 func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) ([]goast.Stmt, error) {
@@ -51,11 +66,16 @@ func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) ([]goast.Stmt, error
 	for _, c := range n.Children {
 		switch a := c.(type) {
 		case *ast.RecordDecl:
-			// TODO: "int" is just a placeholder until a real fix is made.
-			decls = append(decls, newDeclStmt(a.Name, "int", p))
+			// TODO:
+			// decls = append(decls, newDeclStmt(a, p))
 
 		case *ast.VarDecl:
-			decls = append(decls, newDeclStmt(a.Name, a.Type, p))
+			e, err := newDeclStmt(a, p)
+			if err != nil {
+				return nil, err
+			}
+
+			decls = append(decls, e)
 
 		default:
 			panic(a)
@@ -102,5 +122,5 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (*goast.Selector
 	return &goast.SelectorExpr{
 		X:   lhs,
 		Sel: goast.NewIdent(rhs),
-	}, "", nil
+	}, "unknown8", nil
 }

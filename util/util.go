@@ -29,5 +29,5 @@ func Atoi(s string) int {
 }
 
 func GetExportedName(field string) string {
-	return Ucfirst(strings.TrimLeft(field, "_"))
+	return Ucfirst(strings.TrimLeft(field, "*_"))
 }

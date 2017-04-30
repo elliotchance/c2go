@@ -8,28 +8,47 @@ import (
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/types"
 )
 
+func isNullAST(n goast.Expr) bool {
+	if p1, ok := n.(*goast.ParenExpr); ok {
+		if p2, ok := p1.X.(*goast.BasicLit); ok && p2.Value == "0" {
+			return true
+		}
+	}
+
+	return false
+}
+
 func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (*goast.BinaryExpr, string, error) {
-	left, _, err := transpileToExpr(n.Children[0], p)
+	left, leftType, err := transpileToExpr(n.Children[0], p)
 	if err != nil {
 		return nil, "", err
 	}
 
-	right, _, err := transpileToExpr(n.Children[1], p)
+	right, rightType, err := transpileToExpr(n.Children[1], p)
 	if err != nil {
 		return nil, "", err
+	}
+
+	operator := getTokenForOperator(n.Operator)
+
+	// Convert "(0)" to "nil".
+	if (operator == token.NEQ || operator == token.EQL) && isNullAST(right) {
+		right = goast.NewIdent("nil")
 	}
 
 	return &goast.BinaryExpr{
-		X:     left,
-		OpPos: token.NoPos,
-		Op:    getTokenForOperator(n.Operator),
-		Y:     right,
-	}, "", nil
+		X:  left,
+		Op: operator,
+		Y:  right,
+	}, types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType), nil
 }
 
 func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (goast.Expr, string, error) {
+	operator := getTokenForOperator(n.Operator)
+
 	// Unfortunately we cannot use the Go increment operators because we are not
 	// providing any position information for tokens. This means that the ++/--
 	// would be placed before the expression and would be invalid in Go.
@@ -37,7 +56,6 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (goast.Exp
 	// Until it can be properly fixed (can we trick Go into to placing it after
 	// the expression with a magic position?) we will have to return a
 	// BinaryExpr with the same functionality.
-	operator := getTokenForOperator(n.Operator)
 	if operator == token.INC || operator == token.DEC {
 		binaryOperator := "+="
 		if operator == token.DEC {
@@ -58,39 +76,169 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (goast.Exp
 	}
 
 	// Otherwise handle like a unary operator.
-	left, _, err := transpileToExpr(n.Children[0], p)
+	e, eType, err := transpileToExpr(n.Children[0], p)
 	if err != nil {
 		return nil, "", err
 	}
 
+	if operator == token.NOT {
+		if eType == "bool" || eType == "_Bool" {
+			return &goast.UnaryExpr{
+				X:  e,
+				Op: operator,
+			}, "bool", nil
+		}
+	}
+
+	if operator == token.MUL {
+		if eType == "const char *" {
+			return &goast.IndexExpr{
+				X: e,
+				Index: &goast.BasicLit{
+					Kind:  token.INT,
+					Value: "0",
+				},
+			}, "char", nil
+		}
+
+		t, err := types.GetDereferenceType(eType)
+		if err != nil {
+			panic(err)
+		}
+
+		return &goast.StarExpr{
+			X: e,
+		}, t, nil
+	}
+
+	// if operator == "~" {
+	// 	operator = "^"
+	// }
+
+	if operator == token.AND {
+		eType += " *"
+	}
+
+	// p.AddImport("github.com/elliotchance/c2go/noarch")
+
+	// t := types.ResolveType(p, eType)
+	// functionName := fmt.Sprintf("noarch.Not%s", util.GetExportedName(t))
+
+	// return &goast.CallExpr{
+	// 	Fun:  goast.NewIdent(functionName),
+	// 	Args: []goast.Expr{e},
+	// }, eType, nil
+
+	/*
+		if operator == "!" {
+		if exprType == "bool" || exprType == "_Bool" {
+			return fmt.Sprintf("!(%s)", expr), exprType
+		}
+
+		program.AddImport("github.com/elliotchance/c2go/noarch")
+
+		t := types.ResolveType(program, exprType)
+		functionName := fmt.Sprintf("noarch.Not%s", util.Ucfirst(t))
+		return fmt.Sprintf("%s(%s)", functionName, expr), exprType
+	}*/
+
 	return &goast.UnaryExpr{
-		X:  left,
+		X:  e,
 		Op: operator,
-	}, "", nil
+	}, "unknown4", nil
 }
 
 func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program) (*goast.CallExpr, string, error) {
-	// TODO: check errors for these
-	a, _, _ := transpileToExpr(n.Children[0], p)
-	b, _, _ := transpileToExpr(n.Children[1], p)
-	c, _, _ := transpileToExpr(n.Children[2], p)
+	a, _, err := transpileToExpr(n.Children[0], p)
+	if err != nil {
+		return nil, "", err
+	}
+
+	b, _, err := transpileToExpr(n.Children[1], p)
+	if err != nil {
+		return nil, "", err
+	}
+
+	c, _, err := transpileToExpr(n.Children[2], p)
+	if err != nil {
+		return nil, "", err
+	}
 
 	p.AddImport("github.com/elliotchance/c2go/noarch")
 
+	// The following code will generate the Go AST that will simulate a
+	// conditional (ternary) operator, in the form of:
+	//
+	//     noarch.Ternary(
+	//         $1,
+	//         func () interface{} {
+	//             return $2
+	//         },
+	//         func () interface{} {
+	//             return $3
+	//         },
+	//     )
+	//
+	// $2 and $3 (the true and false condition respectively) must be wrapped in
+	// a closure so that they are not both executed.
 	return &goast.CallExpr{
-		Fun:      goast.NewIdent("noarch.Ternary"),
-		Lparen:   token.NoPos,
-		Args:     []goast.Expr{a, b, c},
-		Ellipsis: token.NoPos,
-		Rparen:   token.NoPos,
-	}, "", nil
+		Fun: goast.NewIdent("noarch.Ternary"),
+		Args: []goast.Expr{
+			a,
+			newTernaryWrapper(b),
+			newTernaryWrapper(c),
+		},
+	}, "unknown5", nil
 
 	// src := fmt.Sprintf("noarch.Ternary(%s, func () interface{} { return %s }, func () interface{} { return %s })", a, b, c)
+
+	/*Body: *ast.BlockStmt {
+	  53  .  .  .  .  .  .  .  .  Lbrace: 4:27
+	  54  .  .  .  .  .  .  .  .  List: []ast.Stmt (len = 1) {
+	  55  .  .  .  .  .  .  .  .  .  0: *ast.ReturnStmt {
+	  56  .  .  .  .  .  .  .  .  .  .  Return: 4:29
+	  57  .  .  .  .  .  .  .  .  .  .  Results: []ast.Expr (len = 1) {
+	  58  .  .  .  .  .  .  .  .  .  .  .  0: *ast.BasicLit {
+	  59  .  .  .  .  .  .  .  .  .  .  .  .  ValuePos: 4:36
+	  60  .  .  .  .  .  .  .  .  .  .  .  .  Kind: INT
+	  61  .  .  .  .  .  .  .  .  .  .  .  .  Value: "1"
+	  62  .  .  .  .  .  .  .  .  .  .  .  }
+	  63  .  .  .  .  .  .  .  .  .  .  }
+	  64  .  .  .  .  .  .  .  .  .  }
+	  65  .  .  .  .  .  .  .  .  }
+	  66  .  .  .  .  .  .  .  .  Rbrace: 4:38
+	  67  .  .  .  .  .  .  .  }
+	*/
+
 	// return src, n.Type
 }
 
+func newTernaryWrapper(e goast.Expr) *goast.FuncLit {
+	return &goast.FuncLit{
+		Type: &goast.FuncType{
+			Params: &goast.FieldList{},
+			Results: &goast.FieldList{
+				List: []*goast.Field{
+					&goast.Field{
+						Type: &goast.InterfaceType{
+							Methods: &goast.FieldList{},
+						},
+					},
+				},
+			},
+		},
+		Body: &goast.BlockStmt{
+			List: []goast.Stmt{
+				&goast.ReturnStmt{
+					Results: []goast.Expr{e},
+				},
+			},
+		},
+	}
+}
+
 func transpileParenExpr(n *ast.ParenExpr, p *program.Program) (*goast.ParenExpr, string, error) {
-	e, _, err := transpileToExpr(n.Children[0], p)
+	e, eType, err := transpileToExpr(n.Children[0], p)
 	if err != nil {
 		return nil, "", err
 	}
@@ -99,7 +247,7 @@ func transpileParenExpr(n *ast.ParenExpr, p *program.Program) (*goast.ParenExpr,
 		Lparen: token.NoPos,
 		X:      e,
 		Rparen: token.NoPos,
-	}, "", nil
+	}, eType, nil
 }
 
 func getTokenForOperator(operator string) token.Token {
