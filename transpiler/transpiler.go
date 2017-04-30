@@ -84,13 +84,13 @@ func transpileCompoundStmt(n *ast.CompoundStmt, p *program.Program) (*goast.Bloc
 	stmts := []goast.Stmt{}
 
 	for _, x := range n.Children {
-		result, err := transpileToStmt(x, p)
+		result, err := transpileToStmts(x, p)
 		if err != nil {
 			return nil, err
 		}
 
 		if result != nil {
-			stmts = append(stmts, result)
+			stmts = append(stmts, result...)
 		}
 	}
 
@@ -99,6 +99,20 @@ func transpileCompoundStmt(n *ast.CompoundStmt, p *program.Program) (*goast.Bloc
 		List:   stmts,
 		Rbrace: token.NoPos,
 	}, nil
+}
+
+func transpileToStmts(node ast.Node, p *program.Program) ([]goast.Stmt, error) {
+	if node == nil {
+		return nil, nil
+	}
+
+	switch n := node.(type) {
+	case *ast.DeclStmt:
+		return transpileDeclStmt(n, p)
+	}
+
+	stmt, err := transpileToStmt(node, p)
+	return []goast.Stmt{stmt}, err
 }
 
 func transpileToStmt(node ast.Node, p *program.Program) (goast.Stmt, error) {
@@ -129,9 +143,6 @@ func transpileToStmt(node ast.Node, p *program.Program) (goast.Stmt, error) {
 
 	case *ast.ForStmt:
 		return transpileForStmt(n, p)
-
-	case *ast.DeclStmt:
-		return transpileDeclStmt(n, p)
 
 	case *ast.ReturnStmt:
 		return transpileReturnStmt(n, p)
