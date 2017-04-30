@@ -22,6 +22,24 @@ func TranspileAST(fileName string, p *program.Program, root ast.Node) error {
 
 	// Now begin building the Go AST.
 	err = transpileToNode(root, p)
+
+	// Add the imports after everything else so we can ensure that they are all
+	// placed at the top.
+	for _, quotedImportPath := range p.Imports() {
+		importSpec := &goast.ImportSpec{
+			Path: &goast.BasicLit{
+				Kind:  token.IMPORT,
+				Value: quotedImportPath,
+			},
+		}
+		importDecl := &goast.GenDecl{
+			Tok: token.IMPORT,
+		}
+
+		importDecl.Specs = append(importDecl.Specs, importSpec)
+		p.File.Decls = append([]goast.Decl{importDecl}, p.File.Decls...)
+	}
+
 	return err
 }
 

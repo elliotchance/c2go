@@ -145,7 +145,7 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (goast.Exp
 	return &goast.UnaryExpr{
 		X:  e,
 		Op: operator,
-	}, "unknown4", nil
+	}, eType, nil
 }
 
 func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program) (*goast.CallExpr, string, error) {

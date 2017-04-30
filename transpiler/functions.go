@@ -55,7 +55,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (*goast.CallExpr, st
 		Args:     args,
 		Ellipsis: token.NoPos,
 		Rparen:   token.NoPos,
-	}, "unknown1", nil
+	}, functionDef.ReturnType, nil
 
 	// src := fmt.Sprintf("%s(%s)", functionName, strings.Join(parts, ", "))
 	// return src, functionDef.ReturnType

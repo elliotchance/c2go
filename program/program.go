@@ -5,8 +5,6 @@ import (
 	"go/token"
 	"strings"
 
-	goast "go/ast"
-
 	"strconv"
 
 	"github.com/elliotchance/c2go/util"
@@ -38,28 +36,14 @@ func (a *Program) Imports() []string {
 func (p *Program) AddImport(importPath string) {
 	quotedImportPath := strconv.Quote(importPath)
 
-	for _, i := range p.File.Imports {
-		if i.Path.Value == quotedImportPath {
+	for _, i := range p.imports {
+		if i == quotedImportPath {
 			// already imported
 			return
 		}
 	}
 
-	importDecl := &goast.GenDecl{
-		Tok: token.IMPORT,
-	}
-
-	importSpec := &goast.ImportSpec{
-		Path: &goast.BasicLit{
-			Kind:  token.IMPORT,
-			Value: quotedImportPath,
-		},
-	}
-
-	importDecl.Specs = append(importDecl.Specs, importSpec)
-
-	p.File.Imports = append(p.File.Imports, importSpec)
-	p.File.Decls = append(p.File.Decls, importDecl)
+	p.imports = append(p.imports, quotedImportPath)
 }
 
 func (a *Program) ImportType(name string) string {
