@@ -26,6 +26,22 @@ func transpileStringLiteral(n *ast.StringLiteral) *goast.BasicLit {
 	}
 }
 
+func transpileIntegerLiteral(n *ast.IntegerLiteral) *goast.BasicLit {
+	return &goast.BasicLit{
+		ValuePos: token.NoPos,
+		Kind:     token.INT,
+		Value:    strconv.Itoa(n.Value),
+	}
+}
+
+func transpileCharacterLiteral(n *ast.CharacterLiteral) *goast.BasicLit {
+	return &goast.BasicLit{
+		ValuePos: token.NoPos,
+		Kind:     token.CHAR,
+		Value:    fmt.Sprintf("%c", n.Value),
+	}
+}
+
 func transpilePredefinedExpr(n *ast.PredefinedExpr, p *program.Program) (*goast.BasicLit, string, error) {
 	// A predefined expression is a literal that is not given a value until
 	// compile time.
