@@ -45,7 +45,7 @@ func TranspileAST(fileName string, p *program.Program, root ast.Node) error {
 
 func transpileToExpr(node ast.Node, p *program.Program) (goast.Expr, string, error) {
 	if node == nil {
-		return nil, "", nil
+		return nil, "unknown1", nil
 	}
 
 	switch n := node.(type) {
@@ -81,7 +81,7 @@ func transpileToExpr(node ast.Node, p *program.Program) (goast.Expr, string, err
 		return transpileDeclRefExpr(n, p)
 
 	case *ast.IntegerLiteral:
-		return transpileIntegerLiteral(n), "", nil
+		return transpileIntegerLiteral(n), "int", nil
 
 	case *ast.ParenExpr:
 		return transpileParenExpr(n, p)
@@ -90,7 +90,7 @@ func transpileToExpr(node ast.Node, p *program.Program) (goast.Expr, string, err
 		return transpileToExpr(n.Children[0], p)
 
 	case *ast.CharacterLiteral:
-		return transpileCharacterLiteral(n), "", nil
+		return transpileCharacterLiteral(n), "char", nil
 
 	case *ast.CallExpr:
 		return transpileCallExpr(n, p)

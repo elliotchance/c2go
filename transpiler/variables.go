@@ -35,7 +35,7 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (*goast.DeclStmt, error) {
 			return nil, err
 		}
 
-		if !isNullAST(defaultValue) {
+		if !types.IsNullExpr(defaultValue) {
 			values = []goast.Expr{
 				types.CastExpr(p, defaultValue, defaultValueType, a.Type),
 			}

@@ -110,6 +110,17 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 			return err
 		}
 
+		returnTypes := []*goast.Field{
+			&goast.Field{
+				Type: goast.NewIdent(types.ResolveType(p, f.ReturnType)),
+			},
+		}
+
+		// main() function does not have a return type.
+		if p.FunctionName == "main" {
+			returnTypes = []*goast.Field{}
+		}
+
 		p.File.Decls = append(p.File.Decls, &goast.FuncDecl{
 			Doc:  nil,
 			Recv: nil,
@@ -117,11 +128,7 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 			Type: &goast.FuncType{
 				Params: fieldList,
 				Results: &goast.FieldList{
-					List: []*goast.Field{
-						&goast.Field{
-							Type: goast.NewIdent(types.ResolveType(p, f.ReturnType)),
-						},
-					},
+					List: returnTypes,
 				},
 			},
 			Body: body,
@@ -160,8 +167,17 @@ func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (*goast.ReturnSt
 
 	f := program.GetFunctionDefinition(p.FunctionName)
 
+	results := []goast.Expr{types.CastExpr(p, e, eType, f.ReturnType)}
+
+	// main() function is not allow to return a result.
+	// TODO: We need to check the return value and translate it into the correct
+	// exit status.
+	if p.FunctionName == "main" {
+		results = []goast.Expr{}
+	}
+
 	return &goast.ReturnStmt{
-		Results: []goast.Expr{types.CastExpr(p, e, eType, f.ReturnType)},
+		Results: results,
 	}, nil
 }
 

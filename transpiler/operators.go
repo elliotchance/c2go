@@ -12,16 +12,6 @@ import (
 	"github.com/elliotchance/c2go/util"
 )
 
-func isNullAST(n goast.Expr) bool {
-	if p1, ok := n.(*goast.ParenExpr); ok {
-		if p2, ok := p1.X.(*goast.BasicLit); ok && p2.Value == "0" {
-			return true
-		}
-	}
-
-	return false
-}
-
 func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (*goast.BinaryExpr, string, error) {
 	left, leftType, err := transpileToExpr(n.Children[0], p)
 	if err != nil {
@@ -36,8 +26,14 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (*goast.
 	operator := getTokenForOperator(n.Operator)
 
 	// Convert "(0)" to "nil".
-	if (operator == token.NEQ || operator == token.EQL) && isNullAST(right) {
+	if (operator == token.NEQ || operator == token.EQL) &&
+		types.IsNullExpr(right) {
 		right = goast.NewIdent("nil")
+	}
+
+	returnType := types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType)
+	if operator == token.ASSIGN {
+		right = types.CastExpr(p, right, rightType, returnType)
 	}
 
 	return &goast.BinaryExpr{
@@ -125,19 +121,6 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (goast.Exp
 	if operator == token.AND {
 		eType += " *"
 	}
-
-	/*
-		if operator == "!" {
-		if exprType == "bool" || exprType == "_Bool" {
-			return fmt.Sprintf("!(%s)", expr), exprType
-		}
-
-		program.AddImport("github.com/elliotchance/c2go/noarch")
-
-		t := types.ResolveType(program, exprType)
-		functionName := fmt.Sprintf("noarch.Not%s", util.Ucfirst(t))
-		return fmt.Sprintf("%s(%s)", functionName, expr), exprType
-	}*/
 
 	return &goast.UnaryExpr{
 		X:  e,

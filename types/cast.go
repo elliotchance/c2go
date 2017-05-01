@@ -20,12 +20,25 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Ex
 	toType = ResolveType(p, toType)
 
 	// FIXME: This is a hack to avoid casting in some situations.
-	if fromType == "" || toType == "" {
+	if fromType == "" && toType == "" {
 		return expr
+	}
+
+	// FIXME: This should be removed, it was just for debugging.
+	if fromType == "" || toType == "" {
+		panic(expr)
 	}
 
 	if fromType == toType {
 		return expr
+	}
+
+	// TODO: The toType could be any type of string.
+	if IsNullExpr(expr) && toType == "char **" {
+		return &goast.BasicLit{
+			Kind:  token.STRING,
+			Value: `""`,
+		}
 	}
 
 	// Compatible integer types
@@ -184,6 +197,16 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Ex
 			util.GetExportedName(leftName), util.GetExportedName(rightName))),
 		Args: []goast.Expr{expr},
 	}
+}
+
+func IsNullExpr(n goast.Expr) bool {
+	if p1, ok := n.(*goast.ParenExpr); ok {
+		if p2, ok := p1.X.(*goast.BasicLit); ok && p2.Value == "0" {
+			return true
+		}
+	}
+
+	return false
 }
 
 func Cast(program *program.Program, expr, fromType, toType string) string {
