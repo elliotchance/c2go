@@ -9,6 +9,7 @@ import (
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/types"
+	"github.com/elliotchance/c2go/util"
 )
 
 func isNullAST(n goast.Expr) bool {
@@ -88,6 +89,16 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (goast.Exp
 				Op: operator,
 			}, "bool", nil
 		}
+
+		p.AddImport("github.com/elliotchance/c2go/noarch")
+
+		t := types.ResolveType(p, eType)
+		functionName := fmt.Sprintf("noarch.Not%s", util.Ucfirst(t))
+
+		return &goast.CallExpr{
+			Fun:  goast.NewIdent(functionName),
+			Args: []goast.Expr{e},
+		}, eType, nil
 	}
 
 	if operator == token.MUL {
@@ -103,7 +114,7 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (goast.Exp
 
 		t, err := types.GetDereferenceType(eType)
 		if err != nil {
-			panic(err)
+			return nil, "", err
 		}
 
 		return &goast.StarExpr{
@@ -111,23 +122,9 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (goast.Exp
 		}, t, nil
 	}
 
-	// if operator == "~" {
-	// 	operator = "^"
-	// }
-
 	if operator == token.AND {
 		eType += " *"
 	}
-
-	// p.AddImport("github.com/elliotchance/c2go/noarch")
-
-	// t := types.ResolveType(p, eType)
-	// functionName := fmt.Sprintf("noarch.Not%s", util.GetExportedName(t))
-
-	// return &goast.CallExpr{
-	// 	Fun:  goast.NewIdent(functionName),
-	// 	Args: []goast.Expr{e},
-	// }, eType, nil
 
 	/*
 		if operator == "!" {
@@ -188,29 +185,7 @@ func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program
 			newTernaryWrapper(b),
 			newTernaryWrapper(c),
 		},
-	}, "unknown5", nil
-
-	// src := fmt.Sprintf("noarch.Ternary(%s, func () interface{} { return %s }, func () interface{} { return %s })", a, b, c)
-
-	/*Body: *ast.BlockStmt {
-	  53  .  .  .  .  .  .  .  .  Lbrace: 4:27
-	  54  .  .  .  .  .  .  .  .  List: []ast.Stmt (len = 1) {
-	  55  .  .  .  .  .  .  .  .  .  0: *ast.ReturnStmt {
-	  56  .  .  .  .  .  .  .  .  .  .  Return: 4:29
-	  57  .  .  .  .  .  .  .  .  .  .  Results: []ast.Expr (len = 1) {
-	  58  .  .  .  .  .  .  .  .  .  .  .  0: *ast.BasicLit {
-	  59  .  .  .  .  .  .  .  .  .  .  .  .  ValuePos: 4:36
-	  60  .  .  .  .  .  .  .  .  .  .  .  .  Kind: INT
-	  61  .  .  .  .  .  .  .  .  .  .  .  .  Value: "1"
-	  62  .  .  .  .  .  .  .  .  .  .  .  }
-	  63  .  .  .  .  .  .  .  .  .  .  }
-	  64  .  .  .  .  .  .  .  .  .  }
-	  65  .  .  .  .  .  .  .  .  }
-	  66  .  .  .  .  .  .  .  .  Rbrace: 4:38
-	  67  .  .  .  .  .  .  .  }
-	*/
-
-	// return src, n.Type
+	}, n.Type, nil
 }
 
 func newTernaryWrapper(e goast.Expr) *goast.FuncLit {
@@ -281,6 +256,12 @@ func getTokenForOperator(operator string) token.Token {
 		return token.AND
 	case "|":
 		return token.OR
+	case "~":
+		return token.XOR
+	case ">>":
+		return token.SHR
+	case "<<":
+		return token.SHL
 
 	// Comparison
 	case ">=":

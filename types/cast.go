@@ -9,6 +9,8 @@ import (
 
 	goast "go/ast"
 
+	"strconv"
+
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/util"
 )
@@ -54,53 +56,78 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Ex
 	// In the forms of:
 	// - `string` -> `[8]byte`
 	// - `string` -> `char *[13]`
-	// match1 := regexp.MustCompile(`\[(\d+)\]byte`).FindStringSubmatch(toType)
-	// match2 := regexp.MustCompile(`char \*\[(\d+)\]`).FindStringSubmatch(toType)
-	// if fromType == "string" && (len(match1) > 0 || len(match2) > 0) {
-	// 	// Construct a byte array from "first":
-	// 	//
-	// 	//     var str [5]byte = [5]byte{'f','i','r','s','t'}
+	match1 := regexp.MustCompile(`\[(\d+)\]byte`).FindStringSubmatch(toType)
+	match2 := regexp.MustCompile(`char \*\[(\d+)\]`).FindStringSubmatch(toType)
+	if fromType == "string" && (len(match1) > 0 || len(match2) > 0) {
+		// Construct a byte array from "first":
+		//
+		//     var str [5]byte = [5]byte{'f','i','r','s','t'}
 
-	// 	s := ""
-	// 	for i := 1; i < len(expr)-1; i++ {
-	// 		if i > 1 {
-	// 			s += "','"
-	// 		}
+		value := &goast.CompositeLit{
+			Type: &goast.ArrayType{
+				Len: &goast.BasicLit{
+					Kind:  token.INT,
+					Value: match1[1],
+				},
+				Elt: goast.NewIdent("byte"),
+			},
+			Elts: []goast.Expr{},
+		}
 
-	// 		// Watch out for escape characters.
-	// 		if expr[i] == '\\' {
-	// 			s += fmt.Sprintf("\\%c", expr[i+1])
-	// 			i += 1
-	// 		} else {
-	// 			s += string(expr[i])
-	// 		}
-	// 	}
+		strValue := expr.(*goast.BasicLit).Value
+		for i := 1; i < len(strValue)-1; i++ {
+			s := strValue[i : i+1]
 
-	// 	size := "0"
-	// 	if len(match1) > 0 {
-	// 		size = match1[1]
-	// 	} else {
-	// 		size = match2[1]
-	// 	}
+			if s == "\\" {
+				s = strValue[i : i+2]
+				i += 1
+			}
 
-	// 	return fmt.Sprintf("[%s]byte{'%s', 0}", size, s)
-	// }
+			// TODO: This does not handle characters that need to be escaped.
+			value.Elts = append(value.Elts, &goast.BasicLit{
+				Kind:  token.CHAR,
+				Value: "'" + s + "'",
+			})
+		}
+
+		value.Elts = append(value.Elts, &goast.BasicLit{
+			Kind:  token.INT,
+			Value: "0",
+		})
+
+		return value
+	}
 
 	// In the forms of:
 	// - `[7]byte` -> `string`
 	// - `char *[12]` -> `string`
-	// match1 = regexp.MustCompile(`\[(\d+)\]byte`).FindStringSubmatch(fromType)
-	// match2 = regexp.MustCompile(`char \*\[(\d+)\]`).FindStringSubmatch(fromType)
-	// if (len(match1) > 0 || len(match2) > 0) && toType == "string" {
-	// 	size := 0
-	// 	if len(match1) > 0 {
-	// 		size = util.Atoi(match1[1])
-	// 	} else {
-	// 		size = util.Atoi(match2[1])
-	// 	}
+	match1 = regexp.MustCompile(`\[(\d+)\]byte`).FindStringSubmatch(fromType)
+	match2 = regexp.MustCompile(`char \*\[(\d+)\]`).FindStringSubmatch(fromType)
+	if (len(match1) > 0 || len(match2) > 0) && toType == "string" {
+		size := 0
+		if len(match1) > 0 {
+			size = util.Atoi(match1[1])
+		} else {
+			size = util.Atoi(match2[1])
+		}
 
-	// 	return fmt.Sprintf("string(%s[:%d])", expr, size-1)
-	// }
+		// The following code builds this:
+		//
+		//     string(expr[:size - 1])
+		//
+		return &goast.CallExpr{
+			Fun: goast.NewIdent("string"),
+			Args: []goast.Expr{
+				&goast.SliceExpr{
+					X: expr,
+					High: &goast.BasicLit{
+						Kind:  token.INT,
+						Value: strconv.Itoa(size - 1),
+					},
+				},
+			},
+		}
+	}
 
 	// Anything that is a pointer can be compared to nil
 	if fromType[0] == '*' && toType == "bool" {
@@ -133,7 +160,7 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Ex
 
 	if util.InStrings(fromType, types) && util.InStrings(toType, types) {
 		return &goast.CallExpr{
-			Fun:  goast.NewIdent("a" + toType),
+			Fun:  goast.NewIdent(toType),
 			Args: []goast.Expr{expr},
 		}
 	}

@@ -35,10 +35,19 @@ func transpileIntegerLiteral(n *ast.IntegerLiteral) *goast.BasicLit {
 }
 
 func transpileCharacterLiteral(n *ast.CharacterLiteral) *goast.BasicLit {
+	var s string
+
+	// TODO: There are other characters to escape.
+	switch n.Value {
+	case '\n':
+		s = "\\n"
+	default:
+		s = fmt.Sprintf("%c", n.Value)
+	}
+
 	return &goast.BasicLit{
-		ValuePos: token.NoPos,
-		Kind:     token.CHAR,
-		Value:    fmt.Sprintf("%c", n.Value),
+		Kind:  token.CHAR,
+		Value: fmt.Sprintf("'%s'", s),
 	}
 }
 

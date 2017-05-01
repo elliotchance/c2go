@@ -49,11 +49,12 @@ func transpileToExpr(node ast.Node, p *program.Program) (goast.Expr, string, err
 	}
 
 	switch n := node.(type) {
+	// TODO: It would be much easier if all of these returned three arguments.
 	case *ast.StringLiteral:
-		return transpileStringLiteral(n), "", nil
+		return transpileStringLiteral(n), "const char *", nil
 
 	case *ast.FloatingLiteral:
-		return transpileFloatingLiteral(n), "", nil
+		return transpileFloatingLiteral(n), "double", nil
 
 	case *ast.PredefinedExpr:
 		return transpilePredefinedExpr(n, p)

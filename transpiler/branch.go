@@ -110,13 +110,13 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (*goast.ForStmt, error
 	}
 
 	init, _ := transpileToStmt(children[0], p)
-	conditional, _, _ := transpileToExpr(children[2], p)
+	conditional, conditionalType, _ := transpileToExpr(children[2], p)
 	post, _ := transpileToStmt(children[3], p)
 	body, _ := transpileToBlockStmt(children[4], p)
 
 	return &goast.ForStmt{
 		Init: init,
-		Cond: conditional,
+		Cond: types.CastExpr(p, conditional, conditionalType, "bool"),
 		Post: post,
 		Body: body,
 	}, nil
@@ -129,18 +129,10 @@ func transpileWhileStmt(n *ast.WhileStmt, p *program.Program) (*goast.ForStmt, e
 
 	// TODO: Check errors here
 	body, _ := transpileToBlockStmt(children[1], p)
-	e, _, _ := transpileToExpr(children[0], p)
+	condition, conditionType, _ := transpileToExpr(children[0], p)
 
 	return &goast.ForStmt{
-		Cond: e,
+		Cond: types.CastExpr(p, condition, conditionType, "bool"),
 		Body: body,
 	}, nil
-
-	// printLine(out, fmt.Sprintf("for %s {", types.Cast(program, e, eType, "bool")), program.Indent)
-
-	// printLine(out, body, program.Indent+1)
-
-	// printLine(out, "}", program.Indent)
-
-	// return out.String(), ""
 }

@@ -2,7 +2,6 @@ package transpiler
 
 import (
 	"fmt"
-	"go/token"
 	"strings"
 
 	"github.com/elliotchance/c2go/ast"
@@ -38,9 +37,8 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (*goast.CallExpr, st
 		}
 
 		if i > len(functionDef.ArgumentTypes)-1 {
-			// This means the argument is one of the varargs
-			// so we don't know what type it needs to be
-			// cast to.
+			// This means the argument is one of the varargs so we don't know
+			// what type it needs to be cast to.
 			args = append(args, e)
 		} else {
 			args = append(args, types.CastExpr(p, e, eType, functionDef.ArgumentTypes[i]))
@@ -50,36 +48,35 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (*goast.CallExpr, st
 	}
 
 	return &goast.CallExpr{
-		Fun:      goast.NewIdent(functionName),
-		Lparen:   token.NoPos,
-		Args:     args,
-		Ellipsis: token.NoPos,
-		Rparen:   token.NoPos,
+		Fun:  goast.NewIdent(functionName),
+		Args: args,
 	}, functionDef.ReturnType, nil
-
-	// src := fmt.Sprintf("%s(%s)", functionName, strings.Join(parts, ", "))
-	// return src, functionDef.ReturnType
 }
 
 func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 	var body *goast.BlockStmt
 
+	// This is set at the start of the function declaration so when the
+	// ReturnStmt comes alone it will know what the current function is, and
+	// therefore be able to lookup what the real return type should be. I'm sure
+	// there is a much better way of doing this.
+	p.FunctionName = n.Name
+
 	// Always register the new function. Only from this point onwards will
 	// we be allowed to refer to the function.
 	if program.GetFunctionDefinition(n.Name) == nil {
 		program.AddFunctionDefinition(program.FunctionDefinition{
-			Name:       n.Name,
-			ReturnType: "int",
-			// FIXME
-			ArgumentTypes: []string{},
+			Name:          n.Name,
+			ReturnType:    getFunctionReturnType(n.Type),
+			ArgumentTypes: getFunctionArgumentTypes(n),
 			Substitution:  "",
 		})
 	}
 
 	// If the function has a direct substitute in Go we do not want to
 	// output the C definition of it.
-	if f := program.GetFunctionDefinition(n.Name); f != nil &&
-		f.Substitution != "" {
+	f := program.GetFunctionDefinition(n.Name)
+	if f != nil && f.Substitution != "" {
 		return nil
 	}
 
@@ -118,8 +115,14 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 			Recv: nil,
 			Name: goast.NewIdent(n.Name),
 			Type: &goast.FuncType{
-				Params:  fieldList,
-				Results: nil,
+				Params: fieldList,
+				Results: &goast.FieldList{
+					List: []*goast.Field{
+						&goast.Field{
+							Type: goast.NewIdent(types.ResolveType(p, f.ReturnType)),
+						},
+					},
+				},
 			},
 			Body: body,
 		})
@@ -138,11 +141,8 @@ func getFieldList(f *ast.FunctionDecl, p *program.Program) (*goast.FieldList, er
 	for _, n := range f.Children {
 		if v, ok := n.(*ast.ParmVarDecl); ok {
 			r = append(r, &goast.Field{
-				Doc:     nil,
-				Names:   []*goast.Ident{goast.NewIdent(v.Name)},
-				Type:    goast.NewIdent(types.ResolveType(p, v.Type)),
-				Tag:     nil,
-				Comment: nil,
+				Names: []*goast.Ident{goast.NewIdent(v.Name)},
+				Type:  goast.NewIdent(types.ResolveType(p, v.Type)),
 			})
 		}
 	}
@@ -153,8 +153,45 @@ func getFieldList(f *ast.FunctionDecl, p *program.Program) (*goast.FieldList, er
 }
 
 func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (*goast.ReturnStmt, error) {
+	e, eType, err := transpileToExpr(n.Children[0], p)
+	if err != nil {
+		return nil, err
+	}
+
+	f := program.GetFunctionDefinition(p.FunctionName)
+
 	return &goast.ReturnStmt{
-		Return:  token.NoPos,
-		Results: nil,
+		Results: []goast.Expr{types.CastExpr(p, e, eType, f.ReturnType)},
 	}, nil
+}
+
+func getFunctionReturnType(f string) string {
+	// The type of the function will be the complete prototype, like:
+	//
+	//     __inline_isfinitef(float) int
+	//
+	// will have a type of:
+	//
+	//     int (float)
+	//
+	// The arguments will handle themselves, we only care about the
+	// return type ('int' in this case)
+	returnType := strings.TrimSpace(strings.Split(f, "(")[0])
+
+	if returnType == "" {
+		panic(fmt.Sprintf("unable to extract the return type from: %s", f))
+	}
+
+	return returnType
+}
+
+func getFunctionArgumentTypes(f *ast.FunctionDecl) []string {
+	r := []string{}
+	for _, n := range f.Children {
+		if v, ok := n.(*ast.ParmVarDecl); ok {
+			r = append(r, v.Type)
+		}
+	}
+
+	return r
 }

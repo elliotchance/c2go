@@ -1,6 +1,7 @@
 package transpiler
 
 import (
+	"fmt"
 	"go/token"
 
 	"github.com/elliotchance/c2go/ast"
@@ -97,10 +98,16 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program) 
 		return nil, "", err
 	}
 
+	newType, err := types.GetDereferenceType(expressionType)
+	if err != nil {
+		panic(fmt.Sprintf("Cannot dereference type '%s' for the expression '%s'",
+			expressionType, expression))
+	}
+
 	return &goast.IndexExpr{
 		X:     expression,
 		Index: index,
-	}, expressionType, nil
+	}, newType, nil
 }
 
 func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (*goast.SelectorExpr, string, error) {
