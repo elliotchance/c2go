@@ -8,6 +8,7 @@ import (
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/types"
 )
 
 func TranspileAST(fileName string, p *program.Program, root ast.Node) error {
@@ -196,6 +197,235 @@ func transpileToBlockStmt(node ast.Node, p *program.Program) (*goast.BlockStmt, 
 	}, nil
 }
 
+func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, string) {
+	fieldType := types.ResolveType(p, n.Type)
+	name := n.Name
+
+	// FIXME: There are some cases where the name is empty. We need to
+	// investigate this further. For now I will just exclude them.
+	if name == "" {
+		return nil, "unknown72"
+	}
+
+	// Go does not allow the name of a variable to be called "type". For the
+	// moment I will rename this to avoid the error.
+	if name == "type" {
+		name = "type_"
+	}
+
+	// It may have a default value.
+	// var defaultValue goast.Expr
+	// if len(n.Children) > 0 {
+	// 	defaultValue, _, err := transpileToExpr(n.Children[0], p)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// }
+
+	// NULL is a macro that once rendered looks like "(0)" we have to be
+	// sensitive to catch this as Go would complain that 0 (int) is not
+	// compatible with the type we are setting it to.
+	// if types.IsNullExpr(defaultValue) {
+	// 	defaultValue = goast.NewIdent("nil")
+	// }
+
+	return &goast.Field{
+		Names: []*goast.Ident{goast.NewIdent(name)},
+		Type:  goast.NewIdent(fieldType),
+	}, "unknown3"
+}
+
+func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
+	name := n.Name
+	if name == "" || p.TypeIsAlreadyDefined(name) {
+		return nil
+	}
+
+	p.TypeIsNowDefined(name)
+
+	if n.Kind == "union" {
+		return nil
+	}
+
+	if name == "__locale_struct" ||
+		name == "__sigaction" ||
+		name == "sigaction" {
+		return nil
+	}
+
+	var fields []*goast.Field
+	for _, c := range n.Children {
+		f, _ := transpileFieldDecl(p, c.(*ast.FieldDecl))
+		fields = append(fields, f)
+	}
+
+	p.File.Decls = append(p.File.Decls, &goast.GenDecl{
+		Tok: token.TYPE,
+		Specs: []goast.Spec{
+			&goast.TypeSpec{
+				Name: goast.NewIdent(name),
+				Type: &goast.StructType{
+					Fields: &goast.FieldList{
+						List: fields,
+					},
+				},
+			},
+		},
+	})
+
+	return nil
+
+	// printLine(out, fmt.Sprintf("type %s %s {", name, n.Kind), program.Indent)
+	// if len(n.Children) > 0 {
+	// 	for _, c := range n.Children {
+	// 		src, _ := renderExpression(program, c)
+	// 		printLine(out, src, program.Indent)
+	// 	}
+	// }
+
+	// printLine(out, "}\n", program.Indent)
+	// return out.String(), ""
+}
+
+func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
+	name := n.Name
+
+	if p.TypeIsAlreadyDefined(name) {
+		return nil
+	}
+
+	p.TypeIsNowDefined(name)
+
+	resolvedType := types.ResolveType(p, n.Type)
+
+	// There is a case where the name of the type is also the definition,
+	// like:
+	//
+	//     type _RuneEntry _RuneEntry
+	//
+	// This of course is impossible and will cause the Go not to compile.
+	// It itself is caused by lack of understanding (at this time) about
+	// certain scenarios that types are defined as. The above example comes
+	// from:
+	//
+	//     typedef struct {
+	//        // ... some fields
+	//     } _RuneEntry;
+	//
+	// Until which time that we actually need this to work I am going to
+	// suppress these.
+	if name == resolvedType {
+		return nil
+	}
+
+	if name == "__mbstate_t" {
+		resolvedType = p.ImportType("github.com/elliotchance/c2go/darwin.C__mbstate_t")
+	}
+
+	if name == "__darwin_ct_rune_t" {
+		resolvedType = p.ImportType("github.com/elliotchance/c2go/darwin.Darwin_ct_rune_t")
+	}
+
+	// A bunch of random stuff to ignore... I really should deal with these.
+	if name == "__builtin_va_list" ||
+		name == "__qaddr_t" ||
+		name == "definition" ||
+		name == "_IO_lock_t" ||
+		name == "va_list" ||
+		name == "fpos_t" ||
+		name == "__NSConstantString" ||
+		name == "__darwin_va_list" ||
+		name == "__fsid_t" ||
+		name == "_G_fpos_t" ||
+		name == "_G_fpos64_t" ||
+		name == "__locale_t" ||
+		name == "locale_t" ||
+		name == "fsid_t" ||
+		name == "sigset_t" {
+		return nil
+	}
+
+	p.File.Decls = append(p.File.Decls, &goast.GenDecl{
+		Tok: token.TYPE,
+		Specs: []goast.Spec{
+			&goast.TypeSpec{
+				Name: goast.NewIdent(name),
+				Type: goast.NewIdent(resolvedType),
+			},
+		},
+	})
+
+	return nil
+}
+
+func transpileVarDecl(p *program.Program, n *ast.VarDecl) string {
+	theType := types.ResolveType(p, n.Type)
+	name := n.Name
+
+	// FIXME: These names don't seem to work when testing more than 1 file
+	if name == "_LIB_VERSION" ||
+		name == "_IO_2_1_stdin_" ||
+		name == "_IO_2_1_stdout_" ||
+		name == "_IO_2_1_stderr_" ||
+		name == "stdin" ||
+		name == "stdout" ||
+		name == "stderr" ||
+		name == "_DefaultRuneLocale" ||
+		name == "_CurrentRuneLocale" {
+		return "unknown10"
+	}
+
+	// Go does not allow the name of a variable to be called "type".
+	// For the moment I will rename this to avoid the error.
+	if name == "type" {
+		name = "type_"
+	}
+
+	var defaultValues []goast.Expr
+	if len(n.Children) > 0 {
+		defaultValue, defaultValueType, err := transpileToExpr(n.Children[0], p)
+		if err != nil {
+			panic(err)
+		}
+
+		defaultValues = []goast.Expr{
+			types.CastExpr(p, defaultValue, defaultValueType, n.Type),
+			// &goast.BasicLit{
+			// 	// TODO: It this safe to always be a STRING?
+			// 	Kind:  token.STRING,
+			// 	Value: types.CastExpr(p, defaultValue, defaultValueType, n.Type),
+			// },
+		}
+	}
+
+	// if suffix == " = (0)" {
+	// 	suffix = " = nil"
+	// }
+
+	p.File.Decls = append(p.File.Decls, &goast.GenDecl{
+		Tok: token.VAR,
+		Specs: []goast.Spec{
+			&goast.ValueSpec{
+				Names: []*goast.Ident{
+					goast.NewIdent(name),
+					// 38  .  .  .  .  .  .  .  .  .  .  .  Obj: *ast.Object {
+					// 39  .  .  .  .  .  .  .  .  .  .  .  .  Kind: var
+					// 40  .  .  .  .  .  .  .  .  .  .  .  .  Name: "a"
+					// 41  .  .  .  .  .  .  .  .  .  .  .  .  Decl: *(obj @ 33)
+					// 42  .  .  .  .  .  .  .  .  .  .  .  .  Data: 0
+					// 43  .  .  .  .  .  .  .  .  .  .  .  }
+				},
+				Type:   goast.NewIdent(theType),
+				Values: defaultValues,
+			},
+		},
+	})
+
+	return n.Type
+
+	// return fmt.Sprintf("var %s %s%s", name, theType, suffix), n.Type
+}
+
 func transpileToNode(node ast.Node, p *program.Program) error {
 	switch n := node.(type) {
 	case *ast.TranslationUnitDecl:
@@ -209,8 +439,15 @@ func transpileToNode(node ast.Node, p *program.Program) error {
 			return err
 		}
 
-	case *ast.TypedefDecl, *ast.RecordDecl, *ast.VarDecl:
-		// do nothing
+	case *ast.TypedefDecl:
+		return transpileTypedefDecl(p, n)
+
+	case *ast.RecordDecl:
+		return transpileRecordDecl(p, n)
+
+	case *ast.VarDecl:
+		transpileVarDecl(p, n)
+		return nil
 
 	default:
 		panic(fmt.Sprintf("cannot transpile to node: %#v", node))
