@@ -20,14 +20,14 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Ex
 	toType = ResolveType(p, toType)
 
 	// FIXME: This is a hack to avoid casting in some situations.
-	if fromType == "" && toType == "" {
+	if fromType == "" || toType == "" {
 		return expr
 	}
 
 	// FIXME: This should be removed, it was just for debugging.
-	if fromType == "" || toType == "" {
-		panic(expr)
-	}
+	// if fromType == "" || toType == "" {
+	// 	panic(expr)
+	// }
 
 	if fromType == toType {
 		return expr
@@ -60,7 +60,7 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Ex
 				Op: token.NEQ,
 				Y: &goast.BasicLit{
 					Kind:  token.STRING,
-					Value: "1",
+					Value: "0",
 				},
 			}
 		}

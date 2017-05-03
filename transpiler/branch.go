@@ -110,13 +110,21 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (*goast.ForStmt, error
 	}
 
 	init, _ := transpileToStmt(children[0], p)
-	conditional, conditionalType, _ := transpileToExpr(children[2], p)
 	post, _ := transpileToStmt(children[3], p)
 	body, _ := transpileToBlockStmt(children[4], p)
 
+	// The condition can be nil. This means an infinite loop and will be
+	// rendered in Go as "for {".
+	var condition goast.Expr = nil
+	if children[2] != nil {
+		var conditionType string
+		condition, conditionType, _ = transpileToExpr(children[2], p)
+		condition = types.CastExpr(p, condition, conditionType, "bool")
+	}
+
 	return &goast.ForStmt{
 		Init: init,
-		Cond: types.CastExpr(p, conditional, conditionalType, "bool"),
+		Cond: condition,
 		Post: post,
 		Body: body,
 	}, nil

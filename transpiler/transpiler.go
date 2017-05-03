@@ -45,6 +45,7 @@ func TranspileAST(fileName string, p *program.Program, root ast.Node) error {
 
 func transpileToExpr(node ast.Node, p *program.Program) (goast.Expr, string, error) {
 	if node == nil {
+		panic(node)
 		return nil, "unknown1", nil
 	}
 
