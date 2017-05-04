@@ -45,7 +45,7 @@ func (n *UnaryOperator) render(program *program.Program) (string, string) {
 	expr, exprType := renderExpression(program, n.Children[0])
 
 	if operator == "!" {
-		if exprType == "bool" {
+		if exprType == "bool" || exprType == "_Bool" {
 			return fmt.Sprintf("!(%s)", expr), exprType
 		}
 

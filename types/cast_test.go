@@ -1,9 +1,8 @@
 package types
 
 import (
-	"testing"
-
 	"fmt"
+	"testing"
 
 	"github.com/elliotchance/c2go/program"
 )
@@ -38,6 +37,8 @@ func TestCast(t *testing.T) {
 
 		// String types
 		// {args{"foo", "[3]char", "const char*"}, "1 != 0"},
+
+		{args{"false", "_Bool", "bool"}, "false"},
 	}
 
 	for _, tt := range tests {

@@ -3,21 +3,24 @@ package main
 import (
 	"flag"
 	"fmt"
+	"go/format"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path"
 	"reflect"
 	"regexp"
 	"strings"
-
-	"go/format"
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
 )
 
+const Version = "0.9.3"
+
 var (
 	printAst = flag.Bool("print-ast", false, "Print AST before translated Go code.")
+	version  = flag.Bool("version", false, "Print the version and exit.")
 )
 
 func readAST(data []byte) []string {
@@ -121,9 +124,9 @@ func ToJSON(tree []interface{}) []map[string]interface{} {
 	return r
 }
 
-func Check(e error) {
+func Check(prefix string, e error) {
 	if e != nil {
-		panic(e)
+		panic(prefix + e.Error())
 	}
 }
 
@@ -136,19 +139,25 @@ func Start(args []string) string {
 	cFilePath := args[0]
 
 	_, err := os.Stat(cFilePath)
-	Check(err)
+	Check("", err)
 
 	// 2. Preprocess
 	pp, err := exec.Command("clang", "-E", cFilePath).Output()
-	Check(err)
+	Check("preprocess failed: ", err)
 
-	pp_file_path := "/tmp/pp.c"
+	pp_file_path := path.Join(os.TempDir(), "pp.c")
 	err = ioutil.WriteFile(pp_file_path, pp, 0644)
-	Check(err)
+	Check("writing to /tmp/pp.c failed: ", err)
 
 	// 3. Generate JSON from AST
 	ast_pp, err := exec.Command("clang", "-Xclang", "-ast-dump", "-fsyntax-only", pp_file_path).Output()
-	Check(err)
+	if err != nil {
+		// If clang fails it still prints out the AST, so we have to run it
+		// again to get the real error.
+		errBody, _ := exec.Command("clang", pp_file_path).CombinedOutput()
+
+		panic("clang failed: " + err.Error() + ":\n\n" + string(errBody))
+	}
 
 	lines := readAST(ast_pp)
 	if *printAst {
@@ -176,7 +185,7 @@ func Start(args []string) string {
 	// Format the code
 	goOutFmt, err := format.Source([]byte(goOut))
 	if err != nil {
-		panic(err)
+		panic(err.Error() + "\n\n" + goOut)
 	}
 
 	// Put together the whole file
@@ -197,6 +206,12 @@ func main() {
 		flag.PrintDefaults()
 	}
 	flag.Parse()
+
+	if *version {
+		// Simply print out the version and exit.
+		fmt.Println(Version)
+		return
+	}
 
 	if flag.NArg() < 1 {
 		flag.Usage()

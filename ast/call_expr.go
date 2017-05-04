@@ -29,10 +29,10 @@ func parseCallExpr(line string) *CallExpr {
 	}
 }
 
-func (n *CallExpr) render(program *program.Program) (string, string) {
+func (n *CallExpr) render(p *program.Program) (string, string) {
 	children := n.Children
-	functionName, _ := renderExpression(program, children[0])
-	functionDef := getFunctionDefinition(functionName)
+	functionName, _ := renderExpression(p, children[0])
+	functionDef := program.GetFunctionDefinition(functionName)
 
 	if functionDef == nil {
 		panic(fmt.Sprintf("unknown function: %s", functionName))
@@ -40,7 +40,7 @@ func (n *CallExpr) render(program *program.Program) (string, string) {
 
 	if functionDef.Substitution != "" {
 		parts := strings.Split(functionDef.Substitution, ".")
-		program.AddImport(strings.Join(parts[:len(parts)-1], "."))
+		p.AddImport(strings.Join(parts[:len(parts)-1], "."))
 
 		parts2 := strings.Split(functionDef.Substitution, "/")
 		functionName = parts2[len(parts2)-1]
@@ -49,7 +49,7 @@ func (n *CallExpr) render(program *program.Program) (string, string) {
 	args := []string{}
 	i := 0
 	for _, arg := range children[1:] {
-		e, eType := renderExpression(program, arg)
+		e, eType := renderExpression(p, arg)
 
 		if i > len(functionDef.ArgumentTypes)-1 {
 			// This means the argument is one of the varargs
@@ -57,7 +57,7 @@ func (n *CallExpr) render(program *program.Program) (string, string) {
 			// cast to.
 			args = append(args, e)
 		} else {
-			args = append(args, types.Cast(program, e, eType, functionDef.ArgumentTypes[i]))
+			args = append(args, types.Cast(p, e, eType, functionDef.ArgumentTypes[i]))
 		}
 
 		i++
