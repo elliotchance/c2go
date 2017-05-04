@@ -1,9 +1,5 @@
 package ast
 
-import (
-	"github.com/elliotchance/c2go/program"
-)
-
 type QualType struct {
 	Address  string
 	Type     string
@@ -23,10 +19,6 @@ func parseQualType(line string) *QualType {
 		Kind:     groups["kind"],
 		Children: []Node{},
 	}
-}
-
-func (n *QualType) render(program *program.Program) (string, string) {
-	return "", ""
 }
 
 func (n *QualType) AddChild(node Node) {

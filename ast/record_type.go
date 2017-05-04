@@ -1,9 +1,5 @@
 package ast
 
-import (
-	"github.com/elliotchance/c2go/program"
-)
-
 type RecordType struct {
 	Address  string
 	Type     string
@@ -21,10 +17,6 @@ func parseRecordType(line string) *RecordType {
 		Type:     groups["type"],
 		Children: []Node{},
 	}
-}
-
-func (n *RecordType) render(program *program.Program) (string, string) {
-	return "", ""
 }
 
 func (n *RecordType) AddChild(node Node) {

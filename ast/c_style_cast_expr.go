@@ -1,9 +1,5 @@
 package ast
 
-import (
-	"github.com/elliotchance/c2go/program"
-)
-
 type CStyleCastExpr struct {
 	Address  string
 	Position string
@@ -25,11 +21,6 @@ func parseCStyleCastExpr(line string) *CStyleCastExpr {
 		Kind:     groups["kind"],
 		Children: []Node{},
 	}
-}
-
-func (n *CStyleCastExpr) render(program *program.Program) (string, string) {
-	children := n.Children
-	return renderExpression(program, children[0])
 }
 
 func (n *CStyleCastExpr) AddChild(node Node) {

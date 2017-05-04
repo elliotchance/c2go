@@ -1,11 +1,7 @@
 package ast
 
 import (
-	"fmt"
 	"strings"
-
-	"github.com/elliotchance/c2go/program"
-	"github.com/elliotchance/c2go/types"
 )
 
 type VarDecl struct {
@@ -50,43 +46,6 @@ func parseVarDecl(line string) *VarDecl {
 		IsCInit:   len(groups["cinit"]) > 0,
 		Children:  []Node{},
 	}
-}
-
-func (n *VarDecl) render(program *program.Program) (string, string) {
-	theType := types.ResolveType(program, n.Type)
-	name := n.Name
-
-	// FIXME: These names don't seem to work when testing more than 1 file
-	if name == "_LIB_VERSION" ||
-		name == "_IO_2_1_stdin_" ||
-		name == "_IO_2_1_stdout_" ||
-		name == "_IO_2_1_stderr_" ||
-		name == "stdin" ||
-		name == "stdout" ||
-		name == "stderr" ||
-		name == "_DefaultRuneLocale" ||
-		name == "_CurrentRuneLocale" {
-		return "", ""
-	}
-
-	// Go does not allow the name of a variable to be called "type".
-	// For the moment I will rename this to avoid the error.
-	if name == "type" {
-		name = "type_"
-	}
-
-	suffix := ""
-	if len(n.Children) > 0 {
-		children := n.Children
-		defaultValue, defaultValueType := renderExpression(program, children[0])
-		suffix = fmt.Sprintf(" = %s", types.Cast(program, defaultValue, defaultValueType, n.Type))
-	}
-
-	if suffix == " = (0)" {
-		suffix = " = nil"
-	}
-
-	return fmt.Sprintf("var %s %s%s", name, theType, suffix), n.Type
 }
 
 func (n *VarDecl) AddChild(node Node) {

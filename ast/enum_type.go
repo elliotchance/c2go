@@ -1,9 +1,5 @@
 package ast
 
-import (
-	"github.com/elliotchance/c2go/program"
-)
-
 type EnumType struct {
 	Address  string
 	Name     string
@@ -21,10 +17,6 @@ func parseEnumType(line string) *EnumType {
 		Name:     groups["name"],
 		Children: []Node{},
 	}
-}
-
-func (n *EnumType) render(program *program.Program) (string, string) {
-	return "", ""
 }
 
 func (n *EnumType) AddChild(node Node) {

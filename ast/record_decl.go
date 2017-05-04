@@ -1,11 +1,7 @@
 package ast
 
 import (
-	"bytes"
-	"fmt"
 	"strings"
-
-	"github.com/elliotchance/c2go/program"
 )
 
 type RecordDecl struct {
@@ -50,37 +46,6 @@ func parseRecordDecl(line string) *RecordDecl {
 		Definition: definition,
 		Children:   []Node{},
 	}
-}
-
-func (n *RecordDecl) render(program *program.Program) (string, string) {
-	out := bytes.NewBuffer([]byte{})
-	name := strings.TrimSpace(n.Name)
-	if name == "" || program.TypeIsAlreadyDefined(name) {
-		return "", ""
-	}
-
-	program.TypeIsNowDefined(name)
-
-	if n.Kind == "union" {
-		return "", ""
-	}
-
-	if name == "__locale_struct" ||
-		name == "__sigaction" ||
-		name == "sigaction" {
-		return "", ""
-	}
-
-	printLine(out, fmt.Sprintf("type %s %s {", name, n.Kind), program.Indent)
-	if len(n.Children) > 0 {
-		for _, c := range n.Children {
-			src, _ := renderExpression(program, c)
-			printLine(out, src, program.Indent)
-		}
-	}
-
-	printLine(out, "}\n", program.Indent)
-	return out.String(), ""
 }
 
 func (n *RecordDecl) AddChild(node Node) {

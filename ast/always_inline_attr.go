@@ -1,7 +1,5 @@
 package ast
 
-import "github.com/elliotchance/c2go/program"
-
 type AlwaysInlineAttr struct {
 	Address  string
 	Position string
@@ -19,10 +17,6 @@ func parseAlwaysInlineAttr(line string) *AlwaysInlineAttr {
 		Position: groups["position"],
 		Children: []Node{},
 	}
-}
-
-func (n *AlwaysInlineAttr) render(program *program.Program) (string, string) {
-	return "", ""
 }
 
 func (n *AlwaysInlineAttr) AddChild(node Node) {

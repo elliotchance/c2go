@@ -1,11 +1,5 @@
 package ast
 
-import (
-	"fmt"
-
-	"github.com/elliotchance/c2go/program"
-)
-
 type CaseStmt struct {
 	Address  string
 	Position string
@@ -20,20 +14,6 @@ func parseCaseStmt(line string) *CaseStmt {
 		Position: groups["position"],
 		Children: []Node{},
 	}
-}
-
-func (n *CaseStmt) render(program *program.Program) (string, string) {
-	c, _ := n.Children[0].render(program)
-	c += ":"
-
-	for _, s := range n.Children[1:] {
-		if s != nil {
-			line, _ := s.render(program)
-			c += "\n" + line
-		}
-	}
-
-	return fmt.Sprintf("case %s", c), ""
 }
 
 func (n *CaseStmt) AddChild(node Node) {

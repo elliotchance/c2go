@@ -1,11 +1,5 @@
 package ast
 
-import (
-	"bytes"
-
-	"github.com/elliotchance/c2go/program"
-)
-
 type DeclStmt struct {
 	Address  string
 	Position string
@@ -23,17 +17,6 @@ func parseDeclStmt(line string) *DeclStmt {
 		Position: groups["position"],
 		Children: []Node{},
 	}
-}
-
-func (n *DeclStmt) render(program *program.Program) (string, string) {
-	out := bytes.NewBuffer([]byte{})
-
-	for _, child := range n.Children {
-		src, _ := renderExpression(program, child)
-		printLine(out, src, program.Indent)
-	}
-
-	return out.String(), ""
 }
 
 func (n *DeclStmt) AddChild(node Node) {

@@ -1,9 +1,5 @@
 package ast
 
-import (
-	"github.com/elliotchance/c2go/program"
-)
-
 type MallocAttr struct {
 	Address  string
 	Position string
@@ -21,10 +17,6 @@ func parseMallocAttr(line string) *MallocAttr {
 		Position: groups["position"],
 		Children: []Node{},
 	}
-}
-
-func (n *MallocAttr) render(program *program.Program) (string, string) {
-	return "", ""
 }
 
 func (n *MallocAttr) AddChild(node Node) {

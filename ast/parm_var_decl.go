@@ -2,8 +2,6 @@ package ast
 
 import (
 	"strings"
-
-	"github.com/elliotchance/c2go/program"
 )
 
 type ParmVarDecl struct {
@@ -48,10 +46,6 @@ func parseParmVarDecl(line string) *ParmVarDecl {
 		IsUsed:    len(groups["used"]) > 0,
 		Children:  []Node{},
 	}
-}
-
-func (n *ParmVarDecl) render(program *program.Program) (string, string) {
-	return "", ""
 }
 
 func (n *ParmVarDecl) AddChild(node Node) {
