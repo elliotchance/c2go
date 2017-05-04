@@ -1,3 +1,6 @@
+// This file contains functions transpiling unary and binary operator
+// expressions.
+
 package transpiler
 
 import (
@@ -37,7 +40,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (*goast.
 		}, "bool", nil
 	}
 
-	// Convert "(0)" to "nil".
+	// Convert "(0)" to "nil" when we are dealing with equality.
 	if (operator == token.NEQ || operator == token.EQL) &&
 		types.IsNullExpr(right) {
 		right = goast.NewIdent("nil")
@@ -139,6 +142,20 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (goast.Exp
 	}, eType, nil
 }
 
+// transpileConditionalOperator transpiles a conditional (also known as a
+// ternary) operator:
+//
+//     a ? b : c
+//
+// We cannot simply convert these to an "if" statement becuase they by inside
+// another expression.
+//
+// Since Go does not support the ternary operator or inline "if" statements we
+// use a function, noarch.Ternary() to work the same way.
+//
+// It is also important to note that C only evaulates the "b" or "c" condition
+// based on the result of "a" (from the above example). So we wrap the "b" and
+// "c" in closures so that the Ternary function will only evaluate one of them.
 func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program) (*goast.CallExpr, string, error) {
 	a, _, err := transpileToExpr(n.Children[0], p)
 	if err != nil {
@@ -182,6 +199,8 @@ func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program
 	}, n.Type, nil
 }
 
+// newTernaryWrapper is a helper method used by transpileConditionalOperator().
+// It will wrap an expression in a closure.
 func newTernaryWrapper(e goast.Expr) *goast.FuncLit {
 	return &goast.FuncLit{
 		Type: &goast.FuncType{

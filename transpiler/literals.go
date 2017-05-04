@@ -1,3 +1,6 @@
+// This file contains transpiling functions for literals and constants. Literals
+// are single values like 123 or "hello".
+
 package transpiler
 
 import (
@@ -28,16 +31,16 @@ func transpileStringLiteral(n *ast.StringLiteral) *goast.BasicLit {
 
 func transpileIntegerLiteral(n *ast.IntegerLiteral) *goast.BasicLit {
 	return &goast.BasicLit{
-		ValuePos: token.NoPos,
-		Kind:     token.INT,
-		Value:    strconv.Itoa(n.Value),
+		Kind:  token.INT,
+		Value: strconv.Itoa(n.Value),
 	}
 }
 
 func transpileCharacterLiteral(n *ast.CharacterLiteral) *goast.BasicLit {
 	var s string
 
-	// TODO: There are other characters to escape.
+	// TODO: Transpile special character literals
+	// https://github.com/elliotchance/c2go/issues/80
 	switch n.Value {
 	case '\n':
 		s = "\\n"
@@ -54,19 +57,21 @@ func transpileCharacterLiteral(n *ast.CharacterLiteral) *goast.BasicLit {
 func transpilePredefinedExpr(n *ast.PredefinedExpr, p *program.Program) (*goast.BasicLit, string, error) {
 	// A predefined expression is a literal that is not given a value until
 	// compile time.
+	//
+	// TODO: Predefined expressions are not evaluated
+	// https://github.com/elliotchance/c2go/issues/81
 
 	var value string
 
 	switch n.Name {
 	case "__PRETTY_FUNCTION__":
-		// FIXME
 		value = "\"void print_number(int *)\""
 
 	case "__func__":
-		// FIXME
 		value = fmt.Sprintf("\"%s\"", "print_number")
 
 	default:
+		// There are many more.
 		panic(fmt.Sprintf("unknown PredefinedExpr: %s", n.Name))
 	}
 

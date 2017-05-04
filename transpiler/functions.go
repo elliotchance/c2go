@@ -24,7 +24,13 @@ import (
 // returned by the function) and any error. If there is an error returned you
 // can assume the first two arguments will not contain any useful information.
 func transpileCallExpr(n *ast.CallExpr, p *program.Program) (*goast.CallExpr, string, error) {
-	functionName := n.Children[0].(*ast.ImplicitCastExpr).Children[0].(*ast.DeclRefExpr).Name
+	// The first child will always contain the name of the function being
+	// called.
+	firstChild := n.Children[0].(*ast.ImplicitCastExpr).Children[0]
+	functionName := firstChild.(*ast.DeclRefExpr).Name
+
+	// Get the function definition from it's name. The case where it is not
+	// defined is handled below (we haven't seen the prototype yet).
 	functionDef := program.GetFunctionDefinition(functionName)
 
 	if functionDef == nil {
