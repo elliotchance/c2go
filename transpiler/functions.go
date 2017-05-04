@@ -16,7 +16,7 @@ import (
 	goast "go/ast"
 )
 
-// transpileCallExpr transpiles expressions that call a functions, for example:
+// transpileCallExpr transpiles expressions that calls a function, for example:
 //
 //     foo("bar")
 //

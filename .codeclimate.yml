@@ -1,0 +1,18 @@
+engines:
+  # The FIXME engine will be disabled for the timebeing because there will be a
+  # lot of these initially.
+  fixme:
+    enabled: true
+
+  gofmt:
+    enabled: true
+
+  golint:
+    enabled: true
+    
+  govet:
+    enabled: true
+
+ratings:
+  paths:
+    - "**.go"

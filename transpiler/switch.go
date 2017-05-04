@@ -1,3 +1,5 @@
+// This file contains functions for transpiling a "switch" statement.
+
 package transpiler
 
 import (
