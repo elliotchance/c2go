@@ -1,6 +1,11 @@
+// This file contains functions for declaring function prototypes, expressions
+// that call functions, returning from function and the coordination of
+// processing the function bodies.
+
 package transpiler
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -11,12 +16,20 @@ import (
 	goast "go/ast"
 )
 
+// transpileCallExpr transpiles expressions that call a functions, for example:
+//
+//     foo("bar")
+//
+// It returns three arguments; the Go AST expression, the C type (that is
+// returned by the function) and any error. If there is an error returned you
+// can assume the first two arguments will not contain any useful information.
 func transpileCallExpr(n *ast.CallExpr, p *program.Program) (*goast.CallExpr, string, error) {
 	functionName := n.Children[0].(*ast.ImplicitCastExpr).Children[0].(*ast.DeclRefExpr).Name
 	functionDef := program.GetFunctionDefinition(functionName)
 
 	if functionDef == nil {
-		panic(fmt.Sprintf("unknown function: %s", functionName))
+		errorMessage := fmt.Sprintf("unknown function: %s", functionName)
+		return nil, "", errors.New(errorMessage)
 	}
 
 	if functionDef.Substitution != "" {
@@ -53,6 +66,15 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (*goast.CallExpr, st
 	}, functionDef.ReturnType, nil
 }
 
+// transpileFunctionDecl transpiles the function prototype.
+//
+// The function prototype may also have a body. If it does have a body the whole
+// function will be transpiled into Go.
+//
+// If there is no function body we register the function interally (actually
+// either way the function is registered internally) but we do not do anything
+// becuase Go does not use or have any use for forward declarations of
+// functions.
 func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 	var body *goast.BlockStmt
 
@@ -80,6 +102,13 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 		return nil
 	}
 
+	// Test if the function has a body. This is identified by a child node that
+	// is a CompoundStmt (since it is not valid to have a function body without
+	// curly brackets).
+	//
+	// It's possible that the last node is the CompoundStmt (after all the
+	// parameter declarations) - but I don't know this for certain so we will
+	// look at all the children for now.
 	hasBody := false
 	for _, c := range n.Children {
 		if b, ok := c.(*ast.CompoundStmt); ok {
@@ -94,6 +123,11 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 		}
 	}
 
+	// These functions cause us trouble for whatever reason. Some of them might
+	// even work now.
+	//
+	// TODO: Some functions are ignored because they are too much trouble
+	// https://github.com/elliotchance/c2go/issues/78
 	if n.Name == "__istype" ||
 		n.Name == "__isctype" ||
 		n.Name == "__wcwidth" ||
@@ -138,6 +172,7 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 	return nil
 }
 
+// getFieldList returns the paramaters of a C function as a Go AST FieldList.
 func getFieldList(f *ast.FunctionDecl, p *program.Program) (*goast.FieldList, error) {
 	// The main() function does not have arguments or a return value.
 	if f.Name == "main" {
@@ -170,8 +205,9 @@ func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (*goast.ReturnSt
 	results := []goast.Expr{types.CastExpr(p, e, eType, f.ReturnType)}
 
 	// main() function is not allow to return a result.
-	// TODO: We need to check the return value and translate it into the correct
-	// exit status.
+	//
+	// TODO: Correctly handle the exit code returned from main()
+	// https://github.com/elliotchance/c2go/issues/79
 	if p.FunctionName == "main" {
 		results = []goast.Expr{}
 	}
@@ -182,16 +218,16 @@ func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (*goast.ReturnSt
 }
 
 func getFunctionReturnType(f string) string {
-	// The type of the function will be the complete prototype, like:
+	// The C type of the function will be the complete prototype, like:
 	//
 	//     __inline_isfinitef(float) int
 	//
-	// will have a type of:
+	// will have a C type of:
 	//
 	//     int (float)
 	//
-	// The arguments will handle themselves, we only care about the
-	// return type ('int' in this case)
+	// The arguments will handle themselves, we only care about the return type
+	// ('int' in this case)
 	returnType := strings.TrimSpace(strings.Split(f, "(")[0])
 
 	if returnType == "" {
@@ -201,6 +237,7 @@ func getFunctionReturnType(f string) string {
 	return returnType
 }
 
+// getFunctionArgumentTypes returns the C types of the arguments in a function.
 func getFunctionArgumentTypes(f *ast.FunctionDecl) []string {
 	r := []string{}
 	for _, n := range f.Children {

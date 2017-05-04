@@ -1,3 +1,7 @@
+// This file contains functions for transpiling common branching and control
+// flow, such as "if", "while" and "for". The more complicated control flows
+// like "switch" will be put into their own file of the same or sensible name.
+
 package transpiler
 
 import (
@@ -115,7 +119,7 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (*goast.ForStmt, error
 
 	// The condition can be nil. This means an infinite loop and will be
 	// rendered in Go as "for {".
-	var condition goast.Expr = nil
+	var condition goast.Expr
 	if children[2] != nil {
 		var conditionType string
 		condition, conditionType, _ = transpileToExpr(children[2], p)
@@ -135,9 +139,15 @@ func transpileWhileStmt(n *ast.WhileStmt, p *program.Program) (*goast.ForStmt, e
 	// Are there any cases where it is used?
 	children := n.Children[1:]
 
-	// TODO: Check errors here
-	body, _ := transpileToBlockStmt(children[1], p)
-	condition, conditionType, _ := transpileToExpr(children[0], p)
+	body, err := transpileToBlockStmt(children[1], p)
+	if err != nil {
+		return nil, err
+	}
+
+	condition, conditionType, err := transpileToExpr(children[0], p)
+	if err != nil {
+		return nil, err
+	}
 
 	return &goast.ForStmt{
 		Cond: types.CastExpr(p, condition, conditionType, "bool"),
