@@ -37,20 +37,9 @@ func transpileIntegerLiteral(n *ast.IntegerLiteral) *goast.BasicLit {
 }
 
 func transpileCharacterLiteral(n *ast.CharacterLiteral) *goast.BasicLit {
-	var s string
-
-	// TODO: Transpile special character literals
-	// https://github.com/elliotchance/c2go/issues/80
-	switch n.Value {
-	case '\n':
-		s = "\\n"
-	default:
-		s = fmt.Sprintf("%c", n.Value)
-	}
-
 	return &goast.BasicLit{
 		Kind:  token.CHAR,
-		Value: fmt.Sprintf("'%s'", s),
+		Value: fmt.Sprintf("%q", n.Value),
 	}
 }
 
