@@ -13,9 +13,8 @@ import (
 )
 
 func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (*goast.Ident, string, error) {
-	// TODO: These are special hard coded values. It needs to be more
-	// intelligent about capturing the actual names of the arguments sent to
-	// main().
+	// TODO: System arguments are fixed variable names.
+	// https://github.com/elliotchance/c2go/issues/86
 	if n.Name == "argc" {
 		n.Name = "len(os.Args)"
 		p.AddImport("os")
@@ -68,8 +67,8 @@ func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) ([]goast.Stmt, error
 	for _, c := range n.Children {
 		switch a := c.(type) {
 		case *ast.RecordDecl:
-			// TODO:
-			// decls = append(decls, newDeclStmt(a, p))
+			// I'm not sure why this is ignored. Maybe we haven't found a
+			// situation where this is needed yet?
 
 		case *ast.VarDecl:
 			e, err := newDeclStmt(a, p)
@@ -120,7 +119,7 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (*goast.Selector
 	lhsResolvedType := types.ResolveType(p, lhsType)
 	rhs := n.Name
 
-	// TODO: This should not be empty. We need some fallback type to catch
+	// FIXME: This should not be empty. We need some fallback type to catch
 	// errors like "unknown8".
 	rhsType := ""
 

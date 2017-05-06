@@ -36,10 +36,14 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 
 	p.TypeIsNowDefined(name)
 
+	// TODO: Unions are not supported.
+	// https://github.com/elliotchance/c2go/issues/84
 	if n.Kind == "union" {
 		return nil
 	}
 
+	// TODO: Some platform structs are ignored.
+	// https://github.com/elliotchance/c2go/issues/85
 	if name == "__locale_struct" ||
 		name == "__sigaction" ||
 		name == "sigaction" {
@@ -108,7 +112,8 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 		resolvedType = p.ImportType("github.com/elliotchance/c2go/darwin.Darwin_ct_rune_t")
 	}
 
-	// A bunch of random stuff to ignore... I really should deal with these.
+	// TODO: Some platform structs are ignored.
+	// https://github.com/elliotchance/c2go/issues/85
 	if name == "__builtin_va_list" ||
 		name == "__qaddr_t" ||
 		name == "definition" ||
@@ -144,7 +149,8 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) string {
 	theType := types.ResolveType(p, n.Type)
 	name := n.Name
 
-	// FIXME: These names don't seem to work when testing more than 1 file
+	// TODO: Some platform structs are ignored.
+	// https://github.com/elliotchance/c2go/issues/85
 	if name == "_LIB_VERSION" ||
 		name == "_IO_2_1_stdin_" ||
 		name == "_IO_2_1_stdout_" ||
@@ -157,8 +163,8 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) string {
 		return "unknown10"
 	}
 
-	// Go does not allow the name of a variable to be called "type".
-	// For the moment I will rename this to avoid the error.
+	// TODO: The name of a variable or field cannot be "type"
+	// https://github.com/elliotchance/c2go/issues/83
 	if name == "type" {
 		name = "type_"
 	}
@@ -172,17 +178,8 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) string {
 
 		defaultValues = []goast.Expr{
 			types.CastExpr(p, defaultValue, defaultValueType, n.Type),
-			// &goast.BasicLit{
-			// 	// TODO: It this safe to always be a STRING?
-			// 	Kind:  token.STRING,
-			// 	Value: types.CastExpr(p, defaultValue, defaultValueType, n.Type),
-			// },
 		}
 	}
-
-	// if suffix == " = (0)" {
-	// 	suffix = " = nil"
-	// }
 
 	p.File.Decls = append(p.File.Decls, &goast.GenDecl{
 		Tok: token.VAR,
