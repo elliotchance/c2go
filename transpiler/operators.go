@@ -225,6 +225,7 @@ func newTernaryWrapper(e goast.Expr) *goast.FuncLit {
 	}
 }
 
+// transpileParenExpr transpiles an expression that is wrapped in parentheses.
 func transpileParenExpr(n *ast.ParenExpr, p *program.Program) (*goast.ParenExpr, string, error) {
 	e, eType, err := transpileToExpr(n.Children[0], p)
 	if err != nil {
@@ -238,6 +239,8 @@ func transpileParenExpr(n *ast.ParenExpr, p *program.Program) (*goast.ParenExpr,
 	}, eType, nil
 }
 
+// getTokenForOperator returns the Go operator token for the provided C
+// operator.
 func getTokenForOperator(operator string) token.Token {
 	switch operator {
 	// Arithmetic
