@@ -18,7 +18,8 @@ type EnumConstantDecl struct {
 func parseEnumConstantDecl(line string) *EnumConstantDecl {
 	groups := groupsFromRegex(
 		`<(?P<position>.*)>
-		(?P<position2> [^ ]+)?
+		( (?P<position2>[^ ]+))?
+		( (?P<referenced>referenced))?
 		 (?P<name>.+)
 		 '(?P<type>.+?)'`,
 		line,

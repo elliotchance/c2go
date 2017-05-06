@@ -14,6 +14,14 @@ func TestEnumConstantDecl(t *testing.T) {
 			Type:      "int",
 			Children:  []Node{},
 		},
+		`0x3c77ba8 <line:59:3, col:65> col:3 referenced _ISalnum 'int'`: &EnumConstantDecl{
+			Address:   "0x3c77ba8",
+			Position:  "line:59:3, col:65",
+			Position2: "col:3",
+			Name:      "_ISalnum",
+			Type:      "int",
+			Children:  []Node{},
+		},
 	}
 
 	runNodeTests(t, nodes)
