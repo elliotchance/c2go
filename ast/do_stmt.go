@@ -3,7 +3,7 @@ package ast
 type DoStmt struct {
 	Address  string
 	Position string
-	Children []interface{}
+	Children []Node
 }
 
 func parseDoStmt(line string) *DoStmt {
@@ -15,7 +15,7 @@ func parseDoStmt(line string) *DoStmt {
 	return &DoStmt{
 		Address:  groups["address"],
 		Position: groups["position"],
-		Children: []interface{}{},
+		Children: []Node{},
 	}
 }
 
