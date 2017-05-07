@@ -1,9 +1,5 @@
 package ast
 
-import (
-	"github.com/elliotchance/c2go/program"
-)
-
 type PointerType struct {
 	Address  string
 	Type     string
@@ -21,10 +17,6 @@ func parsePointerType(line string) *PointerType {
 		Type:     groups["type"],
 		Children: []Node{},
 	}
-}
-
-func (n *PointerType) render(program *program.Program) (string, string) {
-	return "", ""
 }
 
 func (n *PointerType) AddChild(node Node) {

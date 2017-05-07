@@ -1,9 +1,5 @@
 package ast
 
-import (
-	"github.com/elliotchance/c2go/program"
-)
-
 type ModeAttr struct {
 	Address  string
 	Position string
@@ -23,10 +19,6 @@ func parseModeAttr(line string) *ModeAttr {
 		Name:     groups["name"],
 		Children: []Node{},
 	}
-}
-
-func (n *ModeAttr) render(program *program.Program) (string, string) {
-	return "", ""
 }
 
 func (n *ModeAttr) AddChild(node Node) {

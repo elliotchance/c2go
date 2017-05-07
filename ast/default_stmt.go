@@ -1,9 +1,5 @@
 package ast
 
-import (
-	"github.com/elliotchance/c2go/program"
-)
-
 type DefaultStmt struct {
 	Address  string
 	Position string
@@ -18,17 +14,6 @@ func parseDefaultStmt(line string) *DefaultStmt {
 		Position: groups["position"],
 		Children: []Node{},
 	}
-}
-
-func (n *DefaultStmt) render(program *program.Program) (string, string) {
-	d := "default:"
-
-	for _, s := range n.Children {
-		line, _ := s.render(program)
-		d += "\n" + line
-	}
-
-	return d, ""
 }
 
 func (n *DefaultStmt) AddChild(node Node) {

@@ -1,11 +1,5 @@
 package ast
 
-import (
-	"fmt"
-
-	"github.com/elliotchance/c2go/program"
-)
-
 type PredefinedExpr struct {
 	Address  string
 	Position string
@@ -29,21 +23,6 @@ func parsePredefinedExpr(line string) *PredefinedExpr {
 		Lvalue:   true,
 		Children: []Node{},
 	}
-}
-
-func (n *PredefinedExpr) render(program *program.Program) (string, string) {
-	if n.Name == "__PRETTY_FUNCTION__" {
-		// FIXME
-		return "\"void print_number(int *)\"", "const char*"
-	}
-
-	if n.Name == "__func__" {
-		// FIXME
-		src := fmt.Sprintf("\"%s\"", "print_number")
-		return src, "const char*"
-	}
-
-	panic(fmt.Sprintf("renderExpression: unknown PredefinedExpr: %s", n.Name))
 }
 
 func (n *PredefinedExpr) AddChild(node Node) {

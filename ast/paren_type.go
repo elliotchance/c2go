@@ -1,9 +1,5 @@
 package ast
 
-import (
-	"github.com/elliotchance/c2go/program"
-)
-
 type ParenType struct {
 	Address  string
 	Type     string
@@ -20,10 +16,6 @@ func parseParenType(line string) *ParenType {
 		Sugar:    true,
 		Children: []interface{}{},
 	}
-}
-
-func (n *ParenType) render(program *program.Program) (string, string) {
-	return "", ""
 }
 
 func (n *ParenType) AddChild(node Node) {

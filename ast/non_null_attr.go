@@ -3,7 +3,6 @@ package ast
 import (
 	"strings"
 
-	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/util"
 )
 
@@ -33,10 +32,6 @@ func parseNonNullAttr(line string) *NonNullAttr {
 		B:        b,
 		Children: []Node{},
 	}
-}
-
-func (n *NonNullAttr) render(program *program.Program) (string, string) {
-	return "", ""
 }
 
 func (n *NonNullAttr) AddChild(node Node) {

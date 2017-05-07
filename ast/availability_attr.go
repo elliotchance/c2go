@@ -1,7 +1,6 @@
 package ast
 
 import (
-	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/util"
 )
 
@@ -43,10 +42,6 @@ func parseAvailabilityAttr(line string) *AvailabilityAttr {
 		Message2:    removeQuotes(groups["message2"]),
 		Children:    []Node{},
 	}
-}
-
-func (n *AvailabilityAttr) render(program *program.Program) (string, string) {
-	return "", ""
 }
 
 func (n *AvailabilityAttr) AddChild(node Node) {
