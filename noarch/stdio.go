@@ -19,3 +19,11 @@ func Remove(filePath string) int {
 
 	return 0
 }
+
+func Rename(from, to string) int {
+	if os.Rename(from, to) != nil {
+		return -1
+	}
+
+	return 0
+}
