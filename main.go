@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path"
 	"reflect"
 	"regexp"
 	"strings"
@@ -17,8 +18,11 @@ import (
 	"github.com/elliotchance/c2go/transpiler"
 )
 
+const Version = "0.10.0"
+
 var (
 	printAst = flag.Bool("print-ast", false, "Print AST before translated Go code.")
+	version  = flag.Bool("version", false, "Print the version and exit.")
 )
 
 func readAST(data []byte) []string {
@@ -143,7 +147,7 @@ func Start(args []string) string {
 	pp, err := exec.Command("clang", "-E", cFilePath).Output()
 	Check("preprocess failed: ", err)
 
-	pp_file_path := "/tmp/pp.c"
+	pp_file_path := path.Join(os.TempDir(), "pp.c")
 	err = ioutil.WriteFile(pp_file_path, pp, 0644)
 	Check("writing to /tmp/pp.c failed: ", err)
 
@@ -187,6 +191,12 @@ func main() {
 		flag.PrintDefaults()
 	}
 	flag.Parse()
+
+	if *version {
+		// Simply print out the version and exit.
+		fmt.Println(Version)
+		return
+	}
 
 	if flag.NArg() < 1 {
 		flag.Usage()
