@@ -42,6 +42,17 @@ void test_rename()
         puts("Error renaming file");
 }
 
+void test_fopen()
+{
+    FILE *pFile;
+    pFile = fopen("/tmp/myfile.txt", "w");
+    if (pFile != NULL)
+    {
+        fputs("fopen example", pFile);
+        fclose(pFile);
+    }
+}
+
 int main()
 {
     test_putchar();
@@ -49,6 +60,7 @@ int main()
     test_printf();
     test_remove();
     test_rename();
+    test_fopen();
 
     return 0;
 }

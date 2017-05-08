@@ -68,7 +68,7 @@ var simpleResolveTypes = map[string]string{
 	"__sbuf":                       "int64",
 	"__sFILEX":                     "interface{}",
 	"__va_list_tag":                "interface{}",
-	"FILE":                         "int64",
+	"FILE":                         "github.com/elliotchance/c2go/noarch.File",
 	"union sigval":                 "int",
 	"union __sigaction_u":          "int",
 
@@ -163,7 +163,10 @@ func ResolveType(program *program.Program, s string) string {
 	// It may be a pointer of a simple type. For example, float *, int *,
 	// etc.
 	if regexp.MustCompile("[\\w ]+\\*+$").MatchString(s) {
-		return "*" + ResolveType(program, strings.TrimSpace(s[:len(s)-2]))
+		// The "-1" is important because there may or may not be a space between
+		// the name and the "*". If there is an extra space it will be trimmed
+		// off.
+		return "*" + ResolveType(program, strings.TrimSpace(s[:len(s)-1]))
 	}
 
 	if regexp.MustCompile(`[\w ]+\*\[\d+\]$`).MatchString(s) {
