@@ -244,17 +244,23 @@ func newTernaryWrapper(e goast.Expr) *goast.FuncLit {
 }
 
 // transpileParenExpr transpiles an expression that is wrapped in parentheses.
+// There is a special case where "(0)" is treated as a NULL (since that's what
+// the macro expands to). We have to return the type as "null" since we don't
+// know at this point what the NULL expression will be used in conjuction with.
 func transpileParenExpr(n *ast.ParenExpr, p *program.Program) (*goast.ParenExpr, string, error) {
 	e, eType, err := transpileToExpr(n.Children[0], p)
 	if err != nil {
 		return nil, "", err
 	}
 
-	return &goast.ParenExpr{
-		Lparen: token.NoPos,
-		X:      e,
-		Rparen: token.NoPos,
-	}, eType, nil
+	r := &goast.ParenExpr{
+		X: e,
+	}
+	if types.IsNullExpr(r) {
+		eType = "null"
+	}
+
+	return r, eType, nil
 }
 
 // getTokenForOperator returns the Go operator token for the provided C

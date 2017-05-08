@@ -39,6 +39,10 @@ var simpleResolveTypes = map[string]string{
 	"void":               "",
 	"_Bool":              "bool",
 
+	// null is a special case (it should probably have a less ambiguos name)
+	// when using the NULL macro.
+	"null": "null",
+
 	"const char *": "string",
 
 	// Are these built into some compilers?

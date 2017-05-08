@@ -161,3 +161,9 @@ func NewFile(f *os.File) *File {
 		RealHandle: f,
 	}
 }
+
+func Tmpnam(buffer string) string {
+	// TODO: The buffer is not currently used becuase it has to be passed in by
+	// reference.
+	return "foo"
+}

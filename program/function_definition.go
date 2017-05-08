@@ -107,6 +107,7 @@ var builtInFunctionDefinitions = []string{
 	"char* fgets(char*, int, FILE*) -> noarch.Fgets",
 	"void rewind(FILE*) -> noarch.Rewind",
 	"int feof(FILE*) -> noarch.Feof",
+	"char* tmpnam(char*) -> noarch.Tmpnam",
 
 	// string.h
 	"size_t strlen(const char*) -> noarch.Strlen",

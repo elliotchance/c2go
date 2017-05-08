@@ -67,6 +67,25 @@ void test_tmpfile()
     fclose(pFile);
 }
 
+void test_tmpnam()
+{
+    // TODO: This is a tricky one to test because the output of tmpnam() in C
+    // and Go will be different. I will keep the test here so at least it tries
+    // to run the code but the test itself is not actually proving anything.
+
+    char *pointer;
+
+    // FIXME: We cannot pass variables by reference yet, which is a legitimate
+    // way to use tmpnam(). I have to leave this disabled for now.
+    //
+    //     char buffer[L_tmpnam];
+    //     tmpnam(buffer);
+    //     assert(buffer != NULL);
+
+    pointer = tmpnam(NULL);
+    assert(pointer != NULL);
+}
+
 int main()
 {
     test_putchar();
@@ -76,6 +95,7 @@ int main()
     test_rename();
     test_fopen();
     test_tmpfile();
+    test_tmpnam();
 
     return 0;
 }

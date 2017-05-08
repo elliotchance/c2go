@@ -24,6 +24,13 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Ex
 		return expr
 	}
 
+	if fromType == "null" && toType == "string" {
+		return &goast.BasicLit{
+			Kind:  token.STRING,
+			Value: `""`,
+		}
+	}
+
 	// FIXME: This should be removed, it was just for debugging.
 	// if fromType == "" || toType == "" {
 	// 	panic(expr)
@@ -34,12 +41,12 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Ex
 	}
 
 	// TODO: The toType could be any type of string.
-	if IsNullExpr(expr) && toType == "char **" {
-		return &goast.BasicLit{
-			Kind:  token.STRING,
-			Value: `""`,
-		}
-	}
+	// if IsNullExpr(expr) && toType == "char **" {
+	// 	return &goast.BasicLit{
+	// 		Kind:  token.STRING,
+	// 		Value: `""`,
+	// 	}
+	// }
 
 	// Compatible integer types
 	types := []string{
