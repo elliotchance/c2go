@@ -13,7 +13,7 @@ import (
 type File struct {
 	// This is not part of the original struct but it is needed for internal
 	// calls in Go.
-	RealHandle *os.File
+	OsFile *os.File
 
 	// unsigned char *_p;
 	// int _r;
@@ -41,7 +41,8 @@ func Fopen(filePath, mode string) *File {
 	var file *os.File
 	var err error
 
-	// TODO: There are lots of other file modes to handle.
+	// TODO: Only some modes are supported by fopen()
+	// https://github.com/elliotchance/c2go/issues/89
 	switch mode {
 	case "r":
 		file, err = os.Open(filePath)
@@ -55,13 +56,11 @@ func Fopen(filePath, mode string) *File {
 		return nil
 	}
 
-	return &File{
-		RealHandle: file,
-	}
+	return NewFile(file)
 }
 
 func Fclose(f *File) int {
-	err := f.RealHandle.Close()
+	err := f.OsFile.Close()
 	if err != nil {
 		// Is this the correct error code?
 		return 1
@@ -97,7 +96,7 @@ func Fputs(content string, f *File) int {
 		length++
 	}
 
-	n, err := f.RealHandle.WriteString(content[:length])
+	n, err := f.OsFile.WriteString(content[:length])
 	if err != nil {
 		panic(err)
 	}
@@ -111,31 +110,28 @@ func Tmpfile() *File {
 		return nil
 	}
 
-	return &File{
-		RealHandle: f,
-	}
+	return NewFile(f)
 }
 
 func Fgets(dest string, num int, f *File) string {
 	buf := make([]byte, num)
-	n, err := f.RealHandle.Read(buf)
+	n, err := f.OsFile.Read(buf)
 
 	// FIXME: Is this the right thing to do in this case?
 	if err != nil {
 		return ""
 	}
 
-	// TODO: The result should go onto the dest. For that to work the dest needs
-	// to be passed by reference.
-	//
-	//     *dest = string(buf)
+	// TODO: Allow arguments to be passed by reference.
+	// https://github.com/elliotchance/c2go/issues/90
+	// This appears in multiple locations.
 
 	// Be careful to crop the buffer to the real number of bytes read.
 	return string(buf[:n])
 }
 
 func Rewind(f *File) {
-	f.RealHandle.Seek(0, 0)
+	f.OsFile.Seek(0, 0)
 }
 
 func Feof(f *File) int {
@@ -143,7 +139,7 @@ func Feof(f *File) int {
 	// FIXME: This is a really bad way of doing this. Basically try and peek
 	// ahead to test for EOF.
 	buf := make([]byte, 1)
-	_, err := f.RealHandle.Read(buf)
+	_, err := f.OsFile.Read(buf)
 
 	result := 0
 	if err == io.EOF {
@@ -151,19 +147,31 @@ func Feof(f *File) int {
 	}
 
 	// Undo cursor before returning.
-	f.RealHandle.Seek(-1, 1)
+	f.OsFile.Seek(-1, 1)
 
 	return result
 }
 
 func NewFile(f *os.File) *File {
 	return &File{
-		RealHandle: f,
+		OsFile: f,
 	}
 }
 
 func Tmpnam(buffer string) string {
-	// TODO: The buffer is not currently used becuase it has to be passed in by
-	// reference.
-	return "foo"
+	// TODO: Allow arguments to be passed by reference.
+	// https://github.com/elliotchance/c2go/issues/90
+	// This appears in multiple locations.
+
+	// TODO: There must be a better way of doing this. This way allows the same
+	// great distinct Go temp file generation (that also checks for existing
+	// files), but unfortunately creates the file in the process; even if you
+	// don't intend to use it.
+	f, err := ioutil.TempFile("", "")
+	if err != nil {
+		return ""
+	}
+
+	f.Close()
+	return f.Name()
 }
