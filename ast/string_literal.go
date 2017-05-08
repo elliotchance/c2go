@@ -1,12 +1,5 @@
 package ast
 
-import (
-	"fmt"
-	"strings"
-
-	"github.com/elliotchance/c2go/program"
-)
-
 type StringLiteral struct {
 	Address  string
 	Position string
@@ -30,11 +23,6 @@ func parseStringLiteral(line string) *StringLiteral {
 		Lvalue:   true,
 		Children: []Node{},
 	}
-}
-
-func (n *StringLiteral) render(program *program.Program) (string, string) {
-	src := fmt.Sprintf("\"%s\"", strings.Replace(n.Value, "\n", "\\n", -1))
-	return src, "const char *"
 }
 
 func (n *StringLiteral) AddChild(node Node) {

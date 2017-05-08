@@ -1,9 +1,5 @@
 package ast
 
-import (
-	"github.com/elliotchance/c2go/program"
-)
-
 type BuiltinType struct {
 	Address  string
 	Type     string
@@ -21,10 +17,6 @@ func parseBuiltinType(line string) *BuiltinType {
 		Type:     groups["type"],
 		Children: []Node{},
 	}
-}
-
-func (n *BuiltinType) render(program *program.Program) (string, string) {
-	return "", ""
 }
 
 func (n *BuiltinType) AddChild(node Node) {

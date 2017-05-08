@@ -1,9 +1,5 @@
 package ast
 
-import (
-	"github.com/elliotchance/c2go/program"
-)
-
 type RestrictAttr struct {
 	Address  string
 	Position string
@@ -23,10 +19,6 @@ func parseRestrictAttr(line string) *RestrictAttr {
 		Name:     groups["name"],
 		Children: []Node{},
 	}
-}
-
-func (n *RestrictAttr) render(program *program.Program) (string, string) {
-	return "", ""
 }
 
 func (n *RestrictAttr) AddChild(node Node) {

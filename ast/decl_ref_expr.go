@@ -1,9 +1,5 @@
 package ast
 
-import (
-	"github.com/elliotchance/c2go/program"
-)
-
 type DeclRefExpr struct {
 	Address  string
 	Position string
@@ -40,20 +36,6 @@ func parseDeclRefExpr(line string) *DeclRefExpr {
 		Type2:    groups["type2"],
 		Children: []Node{},
 	}
-}
-
-func (n *DeclRefExpr) render(program *program.Program) (string, string) {
-	name := n.Name
-
-	if name == "argc" {
-		name = "len(os.Args)"
-		program.AddImport("os")
-	} else if name == "argv" {
-		name = "os.Args"
-		program.AddImport("os")
-	}
-
-	return name, n.Type
 }
 
 func (n *DeclRefExpr) AddChild(node Node) {

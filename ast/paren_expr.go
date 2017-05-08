@@ -1,11 +1,5 @@
 package ast
 
-import (
-	"fmt"
-
-	"github.com/elliotchance/c2go/program"
-)
-
 type ParenExpr struct {
 	Address  string
 	Position string
@@ -25,12 +19,6 @@ func parseParenExpr(line string) *ParenExpr {
 		Type:     groups["type"],
 		Children: []Node{},
 	}
-}
-
-func (n *ParenExpr) render(program *program.Program) (string, string) {
-	a, aType := renderExpression(program, n.Children[0])
-	src := fmt.Sprintf("(%s)", a)
-	return src, aType
 }
 
 func (n *ParenExpr) AddChild(node Node) {

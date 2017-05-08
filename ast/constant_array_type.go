@@ -1,7 +1,6 @@
 package ast
 
 import (
-	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/util"
 )
 
@@ -24,10 +23,6 @@ func parseConstantArrayType(line string) *ConstantArrayType {
 		Size:     util.Atoi(groups["size"]),
 		Children: []Node{},
 	}
-}
-
-func (n *ConstantArrayType) render(program *program.Program) (string, string) {
-	return "", ""
 }
 
 func (n *ConstantArrayType) AddChild(node Node) {

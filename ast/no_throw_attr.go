@@ -1,9 +1,5 @@
 package ast
 
-import (
-	"github.com/elliotchance/c2go/program"
-)
-
 type NoThrowAttr struct {
 	Address  string
 	Position string
@@ -21,10 +17,6 @@ func parseNoThrowAttr(line string) *NoThrowAttr {
 		Position: groups["position"],
 		Children: []Node{},
 	}
-}
-
-func (n *NoThrowAttr) render(program *program.Program) (string, string) {
-	return "", ""
 }
 
 func (n *NoThrowAttr) AddChild(node Node) {

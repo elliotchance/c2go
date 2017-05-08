@@ -1,9 +1,5 @@
 package ast
 
-import (
-	"github.com/elliotchance/c2go/program"
-)
-
 type ConstAttr struct {
 	Address  string
 	Position string
@@ -23,10 +19,6 @@ func parseConstAttr(line string) *ConstAttr {
 		Tags:     groups["tags"],
 		Children: []Node{},
 	}
-}
-
-func (n *ConstAttr) render(program *program.Program) (string, string) {
-	return "", ""
 }
 
 func (n *ConstAttr) AddChild(node Node) {

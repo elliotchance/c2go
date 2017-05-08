@@ -1,13 +1,19 @@
 package program
 
 import (
+	"go/ast"
+	"go/token"
 	"strings"
+
+	"strconv"
 
 	"github.com/elliotchance/c2go/util"
 )
 
 type Program struct {
 	imports []string
+	FileSet *token.FileSet
+	File    *ast.File
 
 	// for rendering go src
 	TypesAlreadyDefined []string
@@ -27,15 +33,17 @@ func (a *Program) Imports() []string {
 	return a.imports
 }
 
-func (a *Program) AddImport(name string) {
-	for _, i := range a.imports {
-		if i == name {
+func (p *Program) AddImport(importPath string) {
+	quotedImportPath := strconv.Quote(importPath)
+
+	for _, i := range p.imports {
+		if i == quotedImportPath {
 			// already imported
 			return
 		}
 	}
 
-	a.imports = append(a.imports, name)
+	p.imports = append(p.imports, quotedImportPath)
 }
 
 func (a *Program) ImportType(name string) string {

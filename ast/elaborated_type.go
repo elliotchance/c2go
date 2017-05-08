@@ -1,9 +1,5 @@
 package ast
 
-import (
-	"github.com/elliotchance/c2go/program"
-)
-
 type ElaboratedType struct {
 	Address  string
 	Type     string
@@ -23,10 +19,6 @@ func parseElaboratedType(line string) *ElaboratedType {
 		Tags:     groups["tags"],
 		Children: []Node{},
 	}
-}
-
-func (n *ElaboratedType) render(program *program.Program) (string, string) {
-	return "", ""
 }
 
 func (n *ElaboratedType) AddChild(node Node) {

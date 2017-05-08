@@ -1,9 +1,5 @@
 package ast
 
-import (
-	"github.com/elliotchance/c2go/program"
-)
-
 type TransparentUnionAttr struct {
 	Address  string
 	Position string
@@ -18,10 +14,6 @@ func parseTransparentUnionAttr(line string) *TransparentUnionAttr {
 		Position: groups["position"],
 		Children: []Node{},
 	}
-}
-
-func (n *TransparentUnionAttr) render(program *program.Program) (string, string) {
-	return "", ""
 }
 
 func (n *TransparentUnionAttr) AddChild(node Node) {
