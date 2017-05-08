@@ -43,7 +43,14 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (*goast.
 	// Convert "(0)" to "nil" when we are dealing with equality.
 	if (operator == token.NEQ || operator == token.EQL) &&
 		types.IsNullExpr(right) {
-		right = goast.NewIdent("nil")
+		if types.ResolveType(p, leftType) == "string" {
+			right = &goast.BasicLit{
+				Kind:  token.STRING,
+				Value: `""`,
+			}
+		} else {
+			right = goast.NewIdent("nil")
+		}
 	}
 
 	if operator == token.ASSIGN {
@@ -100,9 +107,20 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (goast.Exp
 			}, "bool", nil
 		}
 
+		t := types.ResolveType(p, eType)
+		if t == "string" {
+			return &goast.BinaryExpr{
+				X:  e,
+				Op: token.EQL,
+				Y: &goast.BasicLit{
+					Kind:  token.STRING,
+					Value: `""`,
+				},
+			}, "bool", nil
+		}
+
 		p.AddImport("github.com/elliotchance/c2go/noarch")
 
-		t := types.ResolveType(p, eType)
 		functionName := fmt.Sprintf("noarch.Not%s", util.Ucfirst(t))
 
 		return &goast.CallExpr{

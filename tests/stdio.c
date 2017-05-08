@@ -2,6 +2,8 @@
 // here for consistency.
 
 #include <stdio.h>
+#include <string.h>
+#include <assert.h>
 
 void test_putchar()
 {
@@ -53,6 +55,18 @@ void test_fopen()
     }
 }
 
+void test_tmpfile()
+{
+    char buffer[256];
+    FILE *pFile;
+    pFile = tmpfile();
+
+    fputs("hello world", pFile);
+    rewind(pFile);
+    fputs(fgets(buffer, 256, pFile), stdout);
+    fclose(pFile);
+}
+
 int main()
 {
     test_putchar();
@@ -61,6 +75,7 @@ int main()
     test_remove();
     test_rename();
     test_fopen();
+    test_tmpfile();
 
     return 0;
 }

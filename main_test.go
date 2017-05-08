@@ -51,10 +51,10 @@ func TestIntegrationScripts(t *testing.T) {
 			cProgram := programOut{}
 			goProgram := programOut{}
 
-			// Compile C
-			err := exec.Command("clang", "-lm", "-o", cPath, file).Run()
+			// Compile C.
+			out, err := exec.Command("clang", "-lm", "-o", cPath, file).CombinedOutput()
 			if err != nil {
-				t.Fatal(err)
+				t.Fatalf("error: %s\n%s", err, out)
 			}
 
 			// Run C program

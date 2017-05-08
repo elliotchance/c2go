@@ -103,6 +103,13 @@ var builtInFunctionDefinitions = []string{
 	"int remove(const char*) -> noarch.Remove",
 	"int rename(const char*, const char*) -> noarch.Rename",
 	"int fputs(const char*, FILE*) -> noarch.Fputs",
+	"FILE* tmpfile() -> noarch.Tmpfile",
+	"char* fgets(char*, int, FILE*) -> noarch.Fgets",
+	"void rewind(FILE*) -> noarch.Rewind",
+	"int feof(FILE*) -> noarch.Feof",
+
+	// string.h
+	"size_t strlen(const char*) -> noarch.Strlen",
 
 	// stdlib.h
 	"int atoi(const char*) -> noarch.Atoi",

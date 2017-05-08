@@ -1,6 +1,7 @@
 // This file contains functions for transpiling common branching and control
-// flow, such as "if", "while" and "for". The more complicated control flows
-// like "switch" will be put into their own file of the same or sensible name.
+// flow, such as "if", "while", "do" and "for". The more complicated control
+// flows like "switch" will be put into their own file of the same or sensible
+// name.
 
 package transpiler
 
@@ -145,6 +146,23 @@ func transpileWhileStmt(n *ast.WhileStmt, p *program.Program) (*goast.ForStmt, e
 	}
 
 	condition, conditionType, err := transpileToExpr(children[0], p)
+	if err != nil {
+		return nil, err
+	}
+
+	return &goast.ForStmt{
+		Cond: types.CastExpr(p, condition, conditionType, "bool"),
+		Body: body,
+	}, nil
+}
+
+func transpileDoStmt(n *ast.DoStmt, p *program.Program) (*goast.ForStmt, error) {
+	body, err := transpileToBlockStmt(n.Children[0].(*ast.CompoundStmt), p)
+	if err != nil {
+		return nil, err
+	}
+
+	condition, conditionType, err := transpileToExpr(n.Children[1].(ast.Node), p)
 	if err != nil {
 		return nil, err
 	}

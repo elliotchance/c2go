@@ -156,14 +156,22 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 			},
 		}
 
-		// main() function does not have a return type.
 		if p.FunctionName == "main" {
+			// main() function does not have a return type.
 			returnTypes = []*goast.Field{}
+
+			// We also need to append a setup function that will instantiate
+			// some things that are expected to be available at runtime.
+			body.List = append([]goast.Stmt{
+				&goast.ExprStmt{
+					X: &goast.CallExpr{
+						Fun: goast.NewIdent("__init"),
+					},
+				},
+			}, body.List...)
 		}
 
 		p.File.Decls = append(p.File.Decls, &goast.FuncDecl{
-			Doc:  nil,
-			Recv: nil,
 			Name: goast.NewIdent(n.Name),
 			Type: &goast.FuncType{
 				Params: fieldList,
@@ -210,7 +218,7 @@ func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (*goast.ReturnSt
 
 	results := []goast.Expr{types.CastExpr(p, e, eType, f.ReturnType)}
 
-	// main() function is not allow to return a result.
+	// main() function is not allowed to return a result.
 	//
 	// TODO: Correctly handle the exit code returned from main()
 	// https://github.com/elliotchance/c2go/issues/79

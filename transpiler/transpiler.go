@@ -23,6 +23,48 @@ func TranspileAST(fileName string, p *program.Program, root ast.Node) error {
 	// Now begin building the Go AST.
 	err = transpileToNode(root, p)
 
+	// Now we need to build the __init() function. This sets up certain state
+	// and variables that the runtime expects to be ready.
+	p.AddImport("github.com/elliotchance/c2go/noarch")
+	p.AddImport("os")
+	p.File.Decls = append(p.File.Decls, &goast.FuncDecl{
+		Name: goast.NewIdent("__init"),
+		Type: &goast.FuncType{
+			Params: &goast.FieldList{
+				List: []*goast.Field{},
+			},
+			Results: nil,
+		},
+		Body: &goast.BlockStmt{
+			List: []goast.Stmt{
+				&goast.ExprStmt{
+					X: &goast.BinaryExpr{
+						X:  goast.NewIdent("__stdinp"),
+						Op: token.ASSIGN,
+						Y: &goast.CallExpr{
+							Fun: goast.NewIdent("noarch.NewFile"),
+							Args: []goast.Expr{
+								goast.NewIdent("os.Stdin"),
+							},
+						},
+					},
+				},
+				&goast.ExprStmt{
+					X: &goast.BinaryExpr{
+						X:  goast.NewIdent("__stdoutp"),
+						Op: token.ASSIGN,
+						Y: &goast.CallExpr{
+							Fun: goast.NewIdent("noarch.NewFile"),
+							Args: []goast.Expr{
+								goast.NewIdent("os.Stdout"),
+							},
+						},
+					},
+				},
+			},
+		},
+	})
+
 	// Add the imports after everything else so we can ensure that they are all
 	// placed at the top.
 	for _, quotedImportPath := range p.Imports() {
@@ -133,6 +175,9 @@ func transpileToStmt(node ast.Node, p *program.Program) (goast.Stmt, error) {
 		return &goast.BranchStmt{
 			Tok: token.BREAK,
 		}, nil
+
+	case *ast.DoStmt:
+		return transpileDoStmt(n, p)
 
 	case *ast.WhileStmt:
 		return transpileWhileStmt(n, p)
