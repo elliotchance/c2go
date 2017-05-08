@@ -86,6 +86,14 @@ void test_tmpnam()
     assert(pointer != NULL);
 }
 
+void test_fclose()
+{
+    FILE *pFile;
+    pFile = fopen("/tmp/myfile.txt", "w");
+    fputs("fclose example", pFile);
+    fclose(pFile);
+}
+
 int main()
 {
     test_putchar();
@@ -96,6 +104,7 @@ int main()
     test_fopen();
     test_tmpfile();
     test_tmpnam();
+    test_fclose();
 
     return 0;
 }
