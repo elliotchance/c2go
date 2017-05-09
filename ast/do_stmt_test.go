@@ -9,7 +9,7 @@ func TestDoStmt(t *testing.T) {
 		`0x7ff36d0a0938 <line:11:5, line:14:23>`: &DoStmt{
 			Address:  "0x7ff36d0a0938",
 			Position: "line:11:5, line:14:23",
-			Children: []interface{}{},
+			Children: []Node{},
 		},
 	}
 
