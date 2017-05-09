@@ -121,7 +121,7 @@ var builtInFunctionDefinitions = []string{
 	"uint64 __builtin_bswap64(uint64) -> darwin.BSwap64",
 }
 
-// getFunctionDefinition will return nil if the function does not exist (is not
+// GetFunctionDefinition will return nil if the function does not exist (is not
 // registered).
 func GetFunctionDefinition(functionName string) *FunctionDefinition {
 	loadFunctionDefinitions()
@@ -133,7 +133,7 @@ func GetFunctionDefinition(functionName string) *FunctionDefinition {
 	return nil
 }
 
-// addFunctionDefinition registers a function definition. If the definition
+// AddFunctionDefinition registers a function definition. If the definition
 // already exists it will be replaced.
 func AddFunctionDefinition(f FunctionDefinition) {
 	loadFunctionDefinitions()
