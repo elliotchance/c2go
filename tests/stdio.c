@@ -94,6 +94,23 @@ void test_fclose()
     fclose(pFile);
 }
 
+void test_fflush()
+{
+    char mybuffer[80];
+    FILE *pFile;
+    pFile = fopen("example.txt", "r+");
+    if (pFile == NULL)
+        printf("Error opening file");
+    else
+    {
+        fputs("test", pFile);
+        fflush(pFile); // flushing or repositioning required
+        fgets(mybuffer, 80, pFile);
+        puts(mybuffer);
+        fclose(pFile);
+    }
+}
+
 int main()
 {
     test_putchar();
@@ -105,6 +122,7 @@ int main()
     test_tmpfile();
     test_tmpnam();
     test_fclose();
+    test_fflush();
 
     return 0;
 }

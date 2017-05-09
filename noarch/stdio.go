@@ -46,8 +46,10 @@ func Fopen(filePath, mode string) *File {
 	switch mode {
 	case "r":
 		file, err = os.Open(filePath)
+	case "r+":
+		file, err = os.Open(filePath)
 	case "w":
-		file, err = os.Create(filePath)
+		file, err = os.OpenFile(filePath, os.O_RDWR, 0)
 	default:
 		panic(fmt.Sprintf("unsupported file mode: %s", mode))
 	}
@@ -174,4 +176,13 @@ func Tmpnam(buffer string) string {
 
 	f.Close()
 	return f.Name()
+}
+
+func Fflush(f *File) int {
+	err := f.OsFile.Sync()
+	if err != nil {
+		return 1
+	}
+
+	return 0
 }

@@ -108,6 +108,7 @@ var builtInFunctionDefinitions = []string{
 	"void rewind(FILE*) -> noarch.Rewind",
 	"int feof(FILE*) -> noarch.Feof",
 	"char* tmpnam(char*) -> noarch.Tmpnam",
+	"int fflush(FILE*) -> noarch.Fflush",
 
 	// string.h
 	"size_t strlen(const char*) -> noarch.Strlen",
