@@ -182,6 +182,9 @@ func transpileToStmt(node ast.Node, p *program.Program) (goast.Stmt, error) {
 	case *ast.WhileStmt:
 		return transpileWhileStmt(n, p)
 
+	case *ast.DoStmt:
+		return transpileDoStmt(n, p)
+
 	case *ast.IfStmt:
 		return transpileIfStmt(n, p)
 

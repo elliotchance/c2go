@@ -157,18 +157,30 @@ func transpileWhileStmt(n *ast.WhileStmt, p *program.Program) (*goast.ForStmt, e
 }
 
 func transpileDoStmt(n *ast.DoStmt, p *program.Program) (*goast.ForStmt, error) {
-	body, err := transpileToBlockStmt(n.Children[0].(*ast.CompoundStmt), p)
+	children := n.Children
+
+	body, err := transpileToBlockStmt(children[0], p)
 	if err != nil {
 		return nil, err
 	}
 
-	condition, conditionType, err := transpileToExpr(n.Children[1].(ast.Node), p)
+	condition, conditionType, err := transpileToExpr(children[1], p)
 	if err != nil {
 		return nil, err
 	}
+
+	// Add IfStmt to the end of the loop to check the condition
+	body.List = append(body.List, &goast.IfStmt{
+		Cond: &goast.UnaryExpr{
+			Op: token.NOT,
+			X:  types.CastExpr(p, condition, conditionType, "bool"),
+		},
+		Body: &goast.BlockStmt{
+			List: []goast.Stmt{&goast.BranchStmt{Tok: token.BREAK}},
+		},
+	})
 
 	return &goast.ForStmt{
-		Cond: types.CastExpr(p, condition, conditionType, "bool"),
 		Body: body,
 	}, nil
 }
