@@ -4,7 +4,9 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
+	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -23,6 +25,34 @@ type programOut struct {
 	stdout bytes.Buffer
 	stderr bytes.Buffer
 	isZero bool
+}
+
+// showDiff will print two strings vertically next to each other so that line
+// differences are easier to read.
+func showDiff(a, b string) string {
+	aLines := strings.Split(a, "\n")
+	bLines := strings.Split(b, "\n")
+	maxLines := int(math.Max(float64(len(aLines)), float64(len(bLines))))
+	out := "\n"
+
+	for lineNumber := 0; lineNumber < maxLines; lineNumber++ {
+		aLine := ""
+		bLine := ""
+		if lineNumber < len(aLines) {
+			aLine = aLines[lineNumber]
+		}
+		if lineNumber < len(bLines) {
+			bLine = bLines[lineNumber]
+		}
+
+		diffFlag := " "
+		if aLine != bLine {
+			diffFlag = "*"
+		}
+		out += fmt.Sprintf("%s %3d %-40s%-40s\n", diffFlag, lineNumber+1, aLine, bLine)
+	}
+
+	return out
 }
 
 // TestIntegrationScripts tests all programs in the tests directory.
@@ -94,7 +124,7 @@ func TestIntegrationScripts(t *testing.T) {
 
 			// Check stdout
 			if cProgram.stdout.String() != goProgram.stdout.String() {
-				t.Fatalf("Expected %q, Got: %q", cProgram.stdout.String(), goProgram.stdout.String())
+				t.Fatalf(showDiff(cProgram.stdout.String(), goProgram.stdout.String()))
 			}
 		})
 	}

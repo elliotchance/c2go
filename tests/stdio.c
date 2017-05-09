@@ -5,6 +5,8 @@
 #include <string.h>
 #include <assert.h>
 
+#define START_TEST(t) printf("--- %s\n", #t); test_##t();
+
 void test_putchar()
 {
     char c;
@@ -19,7 +21,17 @@ void test_puts()
 
 void test_printf()
 {
-    printf("Hello World\n");
+    // TODO: printf() has a different syntax to Go
+    // https://github.com/elliotchance/c2go/issues/94
+
+    printf("Characters: %c %c \n", 'a', 65);
+    //printf("Decimals: %d %ld\n", 1977, 650000L);
+    printf("Preceding with blanks: %10d \n", 1977);
+    printf("Preceding with zeros: %010d \n", 1977);
+    printf("Some different radices: %d %x %o %#x %#o \n", 100, 100, 100, 100, 100);
+    printf("floats: %4.2f %+.0e %E \n", 3.1416, 3.1416, 3.1416);
+    printf("Width trick: %*d \n", 5, 10);
+    printf("%s \n", "A string");
 }
 
 void test_remove()
@@ -113,16 +125,17 @@ void test_fflush()
 
 int main()
 {
-    test_putchar();
-    test_puts();
-    test_printf();
-    test_remove();
-    test_rename();
-    test_fopen();
-    test_tmpfile();
-    test_tmpnam();
-    test_fclose();
-    test_fflush();
+    START_TEST(putchar)
+    START_TEST(puts)
+    START_TEST(printf)
+    START_TEST(remove)
+    START_TEST(rename)
+    START_TEST(fopen)
+    START_TEST(tmpfile)
+    START_TEST(tmpnam)
+    START_TEST(fclose)
+    START_TEST(fflush)
+    START_TEST(printf)
 
     return 0;
 }
