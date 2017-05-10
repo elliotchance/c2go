@@ -31,6 +31,13 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Ex
 		}
 	}
 
+	if fromType == "null" && toType == "*string" {
+		return &goast.BasicLit{
+			Kind:  token.STRING,
+			Value: "nil",
+		}
+	}
+
 	if fromType == toType {
 		return expr
 	}
@@ -189,6 +196,7 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Ex
 	functionName := fmt.Sprintf("noarch.%sTo%s",
 		util.GetExportedName(leftName), util.GetExportedName(rightName))
 
+	// FIXME: Remove this code, it was only for debugging.
 	if functionName == "noarch.NullToString" {
 		panic(fmt.Sprintf("'%s' '%s'", leftName, rightName))
 	}
