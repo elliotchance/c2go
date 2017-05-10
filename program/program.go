@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	goast "go/ast"
+
 	"github.com/elliotchance/c2go/util"
 )
 
@@ -25,6 +27,11 @@ type Program struct {
 
 	// Contains the current function name during the transpilation.
 	FunctionName string
+
+	// These are used to setup the runtime before the application begins. An
+	// example would be to setup globals with stdin file pointers on certain
+	// platforms.
+	startupStatements []goast.Stmt
 }
 
 // NewProgram creates a new blank program.
@@ -32,6 +39,7 @@ func NewProgram() *Program {
 	return &Program{
 		imports:             []string{},
 		typesAlreadyDefined: []string{},
+		startupStatements:   []goast.Stmt{},
 	}
 }
 
@@ -73,4 +81,12 @@ func (a *Program) TypeIsAlreadyDefined(typeName string) bool {
 
 func (a *Program) TypeIsNowDefined(typeName string) {
 	a.typesAlreadyDefined = append(a.typesAlreadyDefined, typeName)
+}
+
+func (a *Program) AppendStartupStatement(stmt goast.Stmt) {
+	a.startupStatements = append(a.startupStatements, stmt)
+}
+
+func (a *Program) StartupStatements() []goast.Stmt {
+	return a.startupStatements
 }

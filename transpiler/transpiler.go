@@ -25,8 +25,6 @@ func TranspileAST(fileName string, p *program.Program, root ast.Node) error {
 
 	// Now we need to build the __init() function. This sets up certain state
 	// and variables that the runtime expects to be ready.
-	p.AddImport("github.com/elliotchance/c2go/noarch")
-	p.AddImport("os")
 	p.File.Decls = append(p.File.Decls, &goast.FuncDecl{
 		Name: goast.NewIdent("__init"),
 		Type: &goast.FuncType{
@@ -36,32 +34,7 @@ func TranspileAST(fileName string, p *program.Program, root ast.Node) error {
 			Results: nil,
 		},
 		Body: &goast.BlockStmt{
-			List: []goast.Stmt{
-				&goast.ExprStmt{
-					X: &goast.BinaryExpr{
-						X:  goast.NewIdent("__stdinp"),
-						Op: token.ASSIGN,
-						Y: &goast.CallExpr{
-							Fun: goast.NewIdent("noarch.NewFile"),
-							Args: []goast.Expr{
-								goast.NewIdent("os.Stdin"),
-							},
-						},
-					},
-				},
-				&goast.ExprStmt{
-					X: &goast.BinaryExpr{
-						X:  goast.NewIdent("__stdoutp"),
-						Op: token.ASSIGN,
-						Y: &goast.CallExpr{
-							Fun: goast.NewIdent("noarch.NewFile"),
-							Args: []goast.Expr{
-								goast.NewIdent("os.Stdout"),
-							},
-						},
-					},
-				},
-			},
+			List: p.StartupStatements(),
 		},
 	})
 

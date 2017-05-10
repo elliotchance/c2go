@@ -89,6 +89,10 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 	// therefore be able to lookup what the real return type should be. I'm sure
 	// there is a much better way of doing this.
 	p.FunctionName = n.Name
+	defer func() {
+		// Reset the function name when we go out of scope.
+		p.FunctionName = ""
+	}()
 
 	// Always register the new function. Only from this point onwards will
 	// we be allowed to refer to the function.

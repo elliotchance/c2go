@@ -169,6 +169,46 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) string {
 		name = "type_"
 	}
 
+	// There may be some startup code for this global variable.
+	if p.FunctionName == "" {
+		switch name {
+		case "__stdinp":
+			p.AddImport("github.com/elliotchance/c2go/noarch")
+			p.AddImport("os")
+			p.AppendStartupStatement(&goast.ExprStmt{
+				X: &goast.BinaryExpr{
+					X:  goast.NewIdent("__stdinp"),
+					Op: token.ASSIGN,
+					Y: &goast.CallExpr{
+						Fun: goast.NewIdent("noarch.NewFile"),
+						Args: []goast.Expr{
+							goast.NewIdent("os.Stdin"),
+						},
+					},
+				},
+			})
+
+		case "__stdoutp":
+			p.AddImport("github.com/elliotchance/c2go/noarch")
+			p.AddImport("os")
+			p.AppendStartupStatement(&goast.ExprStmt{
+				X: &goast.BinaryExpr{
+					X:  goast.NewIdent("__stdoutp"),
+					Op: token.ASSIGN,
+					Y: &goast.CallExpr{
+						Fun: goast.NewIdent("noarch.NewFile"),
+						Args: []goast.Expr{
+							goast.NewIdent("os.Stdout"),
+						},
+					},
+				},
+			})
+
+		default:
+			// No init needed.
+		}
+	}
+
 	var defaultValues []goast.Expr
 	if len(n.Children) > 0 {
 		defaultValue, defaultValueType, err := transpileToExpr(n.Children[0], p)
