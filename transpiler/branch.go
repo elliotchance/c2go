@@ -70,8 +70,6 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (*goast.IfStmt, error) {
 	}
 
 	r := &goast.IfStmt{
-		If:   token.NoPos,
-		Init: nil,
 		Cond: boolCondition,
 		Body: body,
 	}

@@ -34,8 +34,13 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Ex
 	if fromType == "null" && toType == "*string" {
 		return &goast.BasicLit{
 			Kind:  token.STRING,
-			Value: "nil",
+			Value: `""`,
 		}
+	}
+
+	// This if for linux.
+	if fromType == "*_IO_FILE" && toType == "*noarch.File" {
+		return expr
 	}
 
 	if fromType == toType {
@@ -197,8 +202,8 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Ex
 		util.GetExportedName(leftName), util.GetExportedName(rightName))
 
 	// FIXME: Remove this code, it was only for debugging.
-	if functionName == "noarch.NullToString" {
-		panic(fmt.Sprintf("'%s' '%s'", leftName, rightName))
+	if functionName == "noarch.IO_FILEToFile" {
+		panic(fmt.Sprintf("'%s' '%s'", fromType, toType))
 	}
 
 	return &goast.CallExpr{

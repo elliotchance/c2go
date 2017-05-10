@@ -10,6 +10,7 @@ import (
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/types"
+	"github.com/elliotchance/c2go/util"
 )
 
 func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, string) {
@@ -155,9 +156,6 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) string {
 		name == "_IO_2_1_stdin_" ||
 		name == "_IO_2_1_stdout_" ||
 		name == "_IO_2_1_stderr_" ||
-		name == "stdin" ||
-		name == "stdout" ||
-		name == "stderr" ||
 		name == "_DefaultRuneLocale" ||
 		name == "_CurrentRuneLocale" {
 		return "unknown10"
@@ -172,37 +170,34 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) string {
 	// There may be some startup code for this global variable.
 	if p.FunctionName == "" {
 		switch name {
-		case "__stdinp":
-			p.AddImport("github.com/elliotchance/c2go/noarch")
-			p.AddImport("os")
-			p.AppendStartupStatement(&goast.ExprStmt{
-				X: &goast.BinaryExpr{
-					X:  goast.NewIdent("__stdinp"),
-					Op: token.ASSIGN,
-					Y: &goast.CallExpr{
-						Fun: goast.NewIdent("noarch.NewFile"),
-						Args: []goast.Expr{
-							goast.NewIdent("os.Stdin"),
-						},
-					},
-				},
-			})
+		// Below are for macOS.
+		case "__stdinp", "__stdoutp":
+			p.AddImports("github.com/elliotchance/c2go/noarch", "os")
+			p.AppendStartupExpr(
+				util.NewBinaryExpr(
+					util.NewIdent(name),
+					token.ASSIGN,
+					util.NewCallExpr(
+						"noarch.NewFile",
+						util.NewIdents("os."+util.Ucfirst(name[2:len(name)-1])),
+					),
+				),
+			)
 
-		case "__stdoutp":
-			p.AddImport("github.com/elliotchance/c2go/noarch")
-			p.AddImport("os")
-			p.AppendStartupStatement(&goast.ExprStmt{
-				X: &goast.BinaryExpr{
-					X:  goast.NewIdent("__stdoutp"),
-					Op: token.ASSIGN,
-					Y: &goast.CallExpr{
-						Fun: goast.NewIdent("noarch.NewFile"),
-						Args: []goast.Expr{
-							goast.NewIdent("os.Stdout"),
-						},
-					},
-				},
-			})
+		// Below are for linux.
+		case "stdout", "stdin", "stderr":
+			theType = "*noarch.File"
+			p.AddImports("github.com/elliotchance/c2go/noarch", "os")
+			p.AppendStartupExpr(
+				util.NewBinaryExpr(
+					util.NewIdent(name),
+					token.ASSIGN,
+					util.NewCallExpr(
+						"noarch.NewFile",
+						util.NewIdents("os."+util.Ucfirst(name)),
+					),
+				),
+			)
 
 		default:
 			// No init needed.
@@ -234,5 +229,5 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) string {
 		},
 	})
 
-	return n.Type
+	return theType //n.Type
 }

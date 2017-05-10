@@ -63,6 +63,12 @@ func (p *Program) AddImport(importPath string) {
 	p.imports = append(p.imports, quotedImportPath)
 }
 
+func (p *Program) AddImports(importPaths ...string) {
+	for _, importPath := range importPaths {
+		p.AddImport(importPath)
+	}
+}
+
 func (a *Program) ImportType(name string) string {
 	if strings.Index(name, ".") != -1 {
 		parts := strings.Split(name, ".")
@@ -85,6 +91,12 @@ func (a *Program) TypeIsNowDefined(typeName string) {
 
 func (a *Program) AppendStartupStatement(stmt goast.Stmt) {
 	a.startupStatements = append(a.startupStatements, stmt)
+}
+
+func (a *Program) AppendStartupExpr(e goast.Expr) {
+	a.AppendStartupStatement(&goast.ExprStmt{
+		X: e,
+	})
 }
 
 func (a *Program) StartupStatements() []goast.Stmt {
