@@ -31,22 +31,9 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Ex
 		}
 	}
 
-	// FIXME: This should be removed, it was just for debugging.
-	// if fromType == "" || toType == "" {
-	// 	panic(expr)
-	// }
-
 	if fromType == toType {
 		return expr
 	}
-
-	// TODO: The toType could be any type of string.
-	// if IsNullExpr(expr) && toType == "char **" {
-	// 	return &goast.BasicLit{
-	// 		Kind:  token.STRING,
-	// 		Value: `""`,
-	// 	}
-	// }
 
 	// Compatible integer types
 	types := []string{
@@ -199,9 +186,15 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Ex
 		rightName = parts[len(parts)-1]
 	}
 
+	functionName := fmt.Sprintf("noarch.%sTo%s",
+		util.GetExportedName(leftName), util.GetExportedName(rightName))
+
+	if functionName == "noarch.NullToString" {
+		panic(fmt.Sprintf("'%s' '%s'", leftName, rightName))
+	}
+
 	return &goast.CallExpr{
-		Fun: goast.NewIdent(fmt.Sprintf("noarch.%sTo%s",
-			util.GetExportedName(leftName), util.GetExportedName(rightName))),
+		Fun:  goast.NewIdent(functionName),
 		Args: []goast.Expr{expr},
 	}
 }
