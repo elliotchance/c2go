@@ -109,6 +109,7 @@ var builtInFunctionDefinitions = []string{
 	"int feof(FILE*) -> noarch.Feof",
 	"char* tmpnam(char*) -> noarch.Tmpnam",
 	"int fflush(FILE*) -> noarch.Fflush",
+	"int fprintf(FILE*, const char*) -> noarch.Fprintf",
 
 	// string.h
 	"size_t strlen(const char*) -> noarch.Strlen",

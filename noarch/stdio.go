@@ -47,9 +47,9 @@ func Fopen(filePath, mode string) *File {
 	case "r":
 		file, err = os.Open(filePath)
 	case "r+":
-		file, err = os.Open(filePath)
-	case "w":
 		file, err = os.OpenFile(filePath, os.O_RDWR, 0)
+	case "w":
+		file, err = os.Create(filePath)
 	default:
 		panic(fmt.Sprintf("unsupported file mode: %s", mode))
 	}
@@ -185,4 +185,13 @@ func Fflush(f *File) int {
 	}
 
 	return 0
+}
+
+func Fprintf(f *File, format string, args ...interface{}) int {
+	n, err := fmt.Fprintf(f.OsFile, format, args...)
+	if err != nil {
+		return -1
+	}
+
+	return n
 }

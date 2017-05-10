@@ -5,7 +5,9 @@
 #include <string.h>
 #include <assert.h>
 
-#define START_TEST(t) printf("--- %s\n", #t); test_##t();
+#define START_TEST(t)       \
+    printf("--- %s\n", #t); \
+    test_##t();
 
 void test_putchar()
 {
@@ -123,6 +125,23 @@ void test_fflush()
     }
 }
 
+void test_fprintf()
+{
+    FILE *pFile;
+    int n;
+    char *name = "John Smith";
+
+    pFile = fopen("/tmp/myfile1.txt", "w");
+    assert(pFile != NULL);
+
+    for (n = 0; n < 3; n++)
+    {
+        fprintf(pFile, "Name %d [%-10.10s]\n", n + 1, name);
+    }
+
+    fclose(pFile);
+}
+
 int main()
 {
     START_TEST(putchar)
@@ -136,6 +155,7 @@ int main()
     START_TEST(fclose)
     START_TEST(fflush)
     START_TEST(printf)
+    START_TEST(fprintf)
 
     return 0;
 }
