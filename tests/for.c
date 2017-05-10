@@ -25,4 +25,14 @@ int main()
         if (j > 10)
             break;
     }
+
+    // continue
+    i = 0; j = 0;
+    for(;;) {
+        printf("%d %d\n", i, j);
+        i++;
+        if (i < 3) continue;
+        j++;
+        if (j > 3) break;
+    }
 }
