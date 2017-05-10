@@ -200,7 +200,7 @@ func getFieldList(f *ast.FunctionDecl, p *program.Program) (*goast.FieldList, er
 	}, nil
 }
 
-func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (*goast.ReturnStmt, error) {
+func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (goast.Stmt, error) {
 	e, eType, err := transpileToExpr(n.Children[0], p)
 	if err != nil {
 		return nil, err
@@ -210,11 +210,18 @@ func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (*goast.ReturnSt
 
 	results := []goast.Expr{types.CastExpr(p, e, eType, f.ReturnType)}
 
-	// main() function is not allow to return a result.
-	//
-	// TODO: Correctly handle the exit code returned from main()
-	// https://github.com/elliotchance/c2go/issues/79
+	// main() function is not allowed to return a result. Use os.Exit if non-zero
 	if p.FunctionName == "main" {
+		litExpr, isLiteral := e.(*goast.BasicLit)
+		if !isLiteral || (isLiteral && litExpr.Value != "0") {
+			p.AddImport("os")
+			return &goast.ExprStmt{
+				X: &goast.CallExpr{
+					Fun:  goast.NewIdent("os.Exit"),
+					Args: results,
+				},
+			}, nil
+		}
 		results = []goast.Expr{}
 	}
 
