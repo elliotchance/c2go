@@ -10,5 +10,13 @@ int main()
         value++;
     }
 
+    // continue
+    value = 0;
+    while (value < 3) {
+	value++;
+        if (value < 3) continue;
+        printf("%d\n", value);
+    }
+
     return 0;
 }
