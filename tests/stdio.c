@@ -157,6 +157,14 @@ void test_fscanf()
     printf("I have read: %f and %s \n", f, str);
 }
 
+void test_scanf()
+{
+    int i;
+
+    scanf("%d", &i);
+    printf("You enetered: %d\n", i);
+}
+
 int main()
 {
     START_TEST(putchar)
@@ -172,6 +180,7 @@ int main()
     START_TEST(printf)
     START_TEST(fprintf)
     START_TEST(fscanf)
+    START_TEST(scanf)
 
     return 0;
 }
