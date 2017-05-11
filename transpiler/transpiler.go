@@ -95,6 +95,9 @@ func transpileToExpr(node ast.Node, p *program.Program) (goast.Expr, string, err
 
 	case *ast.CallExpr:
 		return transpileCallExpr(n, p)
+
+	case *ast.CompoundAssignOperator:
+		return transpileCompoundAssignOperator(n, p)
 	}
 
 	panic(fmt.Sprintf("cannot transpile to expr: %#v", node))

@@ -43,6 +43,8 @@ func Parse(line string) Node {
 		return parseConstantArrayType(line)
 	case "ContinueStmt":
 		return parseContinueStmt(line)
+	case "CompoundAssignOperator":
+		return parseCompoundAssignOperator(line)
 	case "CStyleCastExpr":
 		return parseCStyleCastExpr(line)
 	case "DeclRefExpr":

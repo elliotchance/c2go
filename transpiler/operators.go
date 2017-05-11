@@ -239,6 +239,24 @@ func transpileParenExpr(n *ast.ParenExpr, p *program.Program) (*goast.ParenExpr,
 	}, eType, nil
 }
 
+func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.Program) (*goast.BinaryExpr, string, error) {
+	left, _, err := transpileToExpr(n.Children[0], p)
+	if err != nil {
+		return nil, "", err
+	}
+
+	right, _, err := transpileToExpr(n.Children[1], p)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return &goast.BinaryExpr{
+		X:  left,
+		Y:  right,
+		Op: getTokenForOperator(n.Opcode),
+	}, "", nil
+}
+
 // getTokenForOperator returns the Go operator token for the provided C
 // operator.
 func getTokenForOperator(operator string) token.Token {
@@ -266,6 +284,22 @@ func getTokenForOperator(operator string) token.Token {
 		return token.ADD_ASSIGN
 	case "-=":
 		return token.SUB_ASSIGN
+	case "*=":
+		return token.MUL_ASSIGN
+	case "/=":
+		return token.QUO_ASSIGN
+	case "%=":
+		return token.REM_ASSIGN
+	case "&=":
+		return token.AND_ASSIGN
+	case "|=":
+		return token.OR_ASSIGN
+	case "^=":
+		return token.XOR_ASSIGN
+	case "<<=":
+		return token.SHL_ASSIGN
+	case ">>=":
+		return token.SHR_ASSIGN
 
 	// Bitwise
 	case "&":
