@@ -204,6 +204,14 @@ void test_fgets()
     }
 }
 
+void test_fputc()
+{
+    char c;
+
+    for (c = 'A'; c <= 'Z'; c++)
+        fputc(c, stdout);
+}
+
 int main()
 {
     START_TEST(putchar)
@@ -222,6 +230,7 @@ int main()
     START_TEST(scanf)
     START_TEST(fgetc)
     START_TEST(fgets)
+    START_TEST(fputc)
 
     return 0;
 }

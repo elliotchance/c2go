@@ -225,3 +225,12 @@ func Fgetc(f *File) int {
 
 	return int(buffer[0])
 }
+
+func Fputc(c int, f *File) int {
+	n, err := f.OsFile.Write([]byte{byte(c)})
+	if err != nil {
+		return 0
+	}
+
+	return n
+}

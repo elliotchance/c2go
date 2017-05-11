@@ -113,6 +113,7 @@ var builtInFunctionDefinitions = []string{
 	"int fscanf(FILE*, const char*) -> noarch.Fscanf",
 	"int scanf(const char*) -> fmt.Scanf",
 	"int fgetc(FILE*) -> noarch.Fgetc",
+	"int fputc(int, FILE*) -> noarch.Fputc",
 
 	// string.h
 	"size_t strlen(const char*) -> noarch.Strlen",
