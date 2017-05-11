@@ -79,7 +79,7 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (goast.Exp
 			Children: []ast.Node{
 				n.Children[0], &ast.IntegerLiteral{
 					Type:     "int",
-					Value:    1,
+					Value:    "1",
 					Children: []ast.Node{},
 				},
 			},

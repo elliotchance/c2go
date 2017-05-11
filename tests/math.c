@@ -5,6 +5,8 @@
 
 #define PI 3.14159265
 
+unsigned long long ullmax = 18446744073709551615;
+
 void test_acos()
 {
   double param, result;

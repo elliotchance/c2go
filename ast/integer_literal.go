@@ -1,14 +1,10 @@
 package ast
 
-import (
-	"github.com/elliotchance/c2go/util"
-)
-
 type IntegerLiteral struct {
 	Address  string
 	Position string
 	Type     string
-	Value    int
+	Value    string
 	Children []Node
 }
 
@@ -22,7 +18,7 @@ func parseIntegerLiteral(line string) *IntegerLiteral {
 		Address:  groups["address"],
 		Position: groups["position"],
 		Type:     groups["type"],
-		Value:    util.Atoi(groups["value"]),
+		Value:    groups["value"],
 		Children: []Node{},
 	}
 }

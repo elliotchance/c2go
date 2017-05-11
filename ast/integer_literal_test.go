@@ -10,7 +10,7 @@ func TestIntegerLiteral(t *testing.T) {
 			Address:  "0x7fbe9804bcc8",
 			Position: "col:14",
 			Type:     "int",
-			Value:    1,
+			Value:    "1",
 			Children: []Node{},
 		},
 	}
