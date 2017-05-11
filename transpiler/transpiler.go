@@ -170,11 +170,15 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 		}
 		return
 
+	case *ast.WhileStmt:
+		return transpileWhileStmt(n, p)
+
 	case *ast.DoStmt:
 		return transpileDoStmt(n, p)
 
-	case *ast.WhileStmt:
-		return transpileWhileStmt(n, p)
+	case *ast.ContinueStmt:
+		stmt, err = transpileContinueStmt(n, p)
+		return
 
 	case *ast.IfStmt:
 		return transpileIfStmt(n, p)

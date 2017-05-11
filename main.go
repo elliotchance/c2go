@@ -18,7 +18,7 @@ import (
 	"github.com/elliotchance/c2go/transpiler"
 )
 
-const Version = "0.10.0"
+const Version = "0.10.3"
 
 var (
 	printAst = flag.Bool("print-ast", false, "Print AST before translated Go code.")

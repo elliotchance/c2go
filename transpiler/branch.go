@@ -232,3 +232,9 @@ func transpileDoStmt(n *ast.DoStmt, p *program.Program) (
 		Body: body,
 	}, preStmts, postStmts, nil
 }
+
+func transpileContinueStmt(n *ast.ContinueStmt, p *program.Program) (*goast.BranchStmt, error) {
+	return &goast.BranchStmt{
+		Tok: token.CONTINUE,
+	}, nil
+}
