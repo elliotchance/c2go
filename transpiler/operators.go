@@ -52,6 +52,8 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 	if (operator == token.NEQ || operator == token.EQL) &&
 		types.IsNullExpr(right) {
 		if types.ResolveType(p, leftType) == "string" {
+			p.AddImport("github.com/elliotchance/c2go/noarch")
+			left = util.NewCallExpr("noarch.NullTerminatedString", left)
 			right = &goast.BasicLit{
 				Kind:  token.STRING,
 				Value: `""`,

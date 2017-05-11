@@ -186,6 +186,24 @@ void test_fgetc()
     }
 }
 
+void test_fgets()
+{
+    FILE *pFile;
+    char *mystring;
+    char dummy[20];
+
+    pFile = fopen("tests/stdio.c", "r");
+    if (pFile == NULL)
+        printf("Error opening file");
+    else
+    {
+        mystring = fgets(dummy, 20, pFile);
+        if (mystring != NULL)
+            puts(mystring);
+        fclose(pFile);
+    }
+}
+
 int main()
 {
     START_TEST(putchar)
@@ -203,6 +221,7 @@ int main()
     START_TEST(fscanf)
     START_TEST(scanf)
     START_TEST(fgetc)
+    START_TEST(fgets)
 
     return 0;
 }

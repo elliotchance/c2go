@@ -131,6 +131,16 @@ func Fgets(dest string, num int, f *File) string {
 	// This appears in multiple locations.
 
 	// Be careful to crop the buffer to the real number of bytes read.
+	//
+	// We do not trim off the NULL characters because we do not know if the file
+	// we are reading is in binary mode.
+	if n == num {
+		// If it is the case that we have read the entire buffer with this read
+		// we need to make sure we leave room for what would be the NULL
+		// character at the end of the string in C.
+		return string(buf[:n-1])
+	}
+
 	return string(buf[:n])
 }
 
