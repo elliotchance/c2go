@@ -205,3 +205,13 @@ func Fscanf(f *File, format string, args ...interface{}) int {
 
 	return n
 }
+
+func Fgetc(f *File) int {
+	buffer := make([]byte, 1)
+	_, err := f.OsFile.Read(buffer)
+	if err != nil {
+		return -1
+	}
+
+	return int(buffer[0])
+}

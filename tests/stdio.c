@@ -165,6 +165,27 @@ void test_scanf()
     printf("You enetered: %d\n", i);
 }
 
+void test_fgetc()
+{
+    FILE *pFile;
+    int c;
+    int n = 0;
+    pFile = fopen("tests/stdio.c", "r");
+    if (pFile == NULL)
+        printf("Error opening file");
+    else
+    {
+        do
+        {
+            c = fgetc(pFile);
+            if (c == '$')
+                n++;
+        } while (c != EOF);
+        fclose(pFile);
+        printf("The file contains %d dollar sign characters ($).\n", n);
+    }
+}
+
 int main()
 {
     START_TEST(putchar)
@@ -181,6 +202,7 @@ int main()
     START_TEST(fprintf)
     START_TEST(fscanf)
     START_TEST(scanf)
+    START_TEST(fgetc)
 
     return 0;
 }
