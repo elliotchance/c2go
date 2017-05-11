@@ -1,7 +1,6 @@
 package ast
 
 import (
-	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/util"
 )
 
@@ -37,10 +36,6 @@ func parseFormatAttr(line string) *FormatAttr {
 		Unknown2:     util.Atoi(groups["unknown2"]),
 		Children:     []Node{},
 	}
-}
-
-func (n *FormatAttr) render(program *program.Program) (string, string) {
-	return "", ""
 }
 
 func (n *FormatAttr) AddChild(node Node) {

@@ -1,7 +1,5 @@
 package ast
 
-import "github.com/elliotchance/c2go/program"
-
 type WarnUnusedResultAttr struct {
 	Address  string
 	Position string
@@ -16,10 +14,6 @@ func parseWarnUnusedResultAttr(line string) *WarnUnusedResultAttr {
 		Position: groups["position"],
 		Children: []interface{}{},
 	}
-}
-
-func (n *WarnUnusedResultAttr) render(program *program.Program) (string, string) {
-	return "", ""
 }
 
 func (n *WarnUnusedResultAttr) AddChild(node Node) {

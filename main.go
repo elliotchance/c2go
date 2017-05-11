@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"go/format"
@@ -14,9 +15,10 @@ import (
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/transpiler"
 )
 
-const Version = "0.9.3"
+const Version = "0.10.2"
 
 var (
 	printAst = flag.Bool("print-ast", false, "Print AST before translated Go code.")
@@ -169,35 +171,18 @@ func Start(args []string) string {
 	nodes := convertLinesToNodes(lines)
 	tree := buildTree(nodes, 0)
 
-	// TODO: allow the user to print the JSON tree:
-	//jsonTree := ToJSON(tree)
-	//_, err := json.MarshalIndent(jsonTree, " ", "  ")
-	//Check(err)
-
-	// 3. Parse C and output Go
-	//parts := strings.Split(cFilePath, "/")
-	//go_file_path := fmt.Sprintf("%s.go", parts[len(parts) - 1][:len(parts) - 2])
-
-	// Render(go_out, tree[0], "", 0, "")
 	p := program.NewProgram()
-	goOut := ast.Render(p, tree[0].(ast.Node))
-
-	// Format the code
-	goOutFmt, err := format.Source([]byte(goOut))
+	err = transpiler.TranspileAST(cFilePath, p, tree[0].(ast.Node))
 	if err != nil {
-		panic(err.Error() + "\n\n" + goOut)
+		panic(err)
 	}
 
-	// Put together the whole file
-	all := "package main\n\nimport (\n"
-
-	for _, importName := range p.Imports() {
-		all += fmt.Sprintf("\t\"%s\"\n", importName)
+	var buf bytes.Buffer
+	if err := format.Node(&buf, p.FileSet, p.File); err != nil {
+		panic(err)
 	}
 
-	all += ")\n\n" + string(goOutFmt)
-
-	return all
+	return buf.String()
 }
 
 func main() {

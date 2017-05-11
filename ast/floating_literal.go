@@ -1,11 +1,5 @@
 package ast
 
-import (
-	"fmt"
-
-	"github.com/elliotchance/c2go/program"
-)
-
 type FloatingLiteral struct {
 	Address  string
 	Position string
@@ -27,10 +21,6 @@ func parseFloatingLiteral(line string) *FloatingLiteral {
 		Value:    atof(groups["value"]),
 		Children: []Node{},
 	}
-}
-
-func (n *FloatingLiteral) render(program *program.Program) (string, string) {
-	return fmt.Sprintf("%f", n.Value), "double"
 }
 
 func (n *FloatingLiteral) AddChild(node Node) {

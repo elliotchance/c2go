@@ -1,10 +1,7 @@
 package ast
 
 import (
-	"bytes"
 	"strings"
-
-	"github.com/elliotchance/c2go/program"
 )
 
 type EnumDecl struct {
@@ -28,19 +25,6 @@ func parseEnumDecl(line string) *EnumDecl {
 		Name:      strings.TrimSpace(groups["name"]),
 		Children:  []Node{},
 	}
-}
-
-func (n *EnumDecl) render(program *program.Program) (string, string) {
-	out := bytes.NewBuffer([]byte{})
-
-	out.WriteString("const (\n")
-	for _, c := range n.Children {
-		e, _ := c.render(program)
-		out.WriteString(e + "\n")
-	}
-	out.WriteString(")\n")
-
-	return out.String(), "unknown17"
 }
 
 func (n *EnumDecl) AddChild(node Node) {

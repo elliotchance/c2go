@@ -1,13 +1,9 @@
 package ast
 
-import (
-	"github.com/elliotchance/c2go/program"
-)
-
 type DoStmt struct {
 	Address  string
 	Position string
-	Children []interface{}
+	Children []Node
 }
 
 func parseDoStmt(line string) *DoStmt {
@@ -19,12 +15,8 @@ func parseDoStmt(line string) *DoStmt {
 	return &DoStmt{
 		Address:  groups["address"],
 		Position: groups["position"],
-		Children: []interface{}{},
+		Children: []Node{},
 	}
-}
-
-func (n *DoStmt) render(program *program.Program) (string, string) {
-	return "", ""
 }
 
 func (n *DoStmt) AddChild(node Node) {

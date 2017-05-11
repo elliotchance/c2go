@@ -1,9 +1,6 @@
 package ast
 
 import (
-	"strconv"
-
-	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/util"
 )
 
@@ -28,16 +25,6 @@ func parseIntegerLiteral(line string) *IntegerLiteral {
 		Value:    util.Atoi(groups["value"]),
 		Children: []Node{},
 	}
-}
-
-func (n *IntegerLiteral) render(program *program.Program) (string, string) {
-	literal := n.Value
-
-	// FIXME
-	//if str(literal)[-1] == 'L':
-	//    literal = '%s(%s)' % (resolveType('long'), literal[:-1])
-
-	return strconv.FormatInt(int64(literal), 10), "int"
 }
 
 func (n *IntegerLiteral) AddChild(node Node) {

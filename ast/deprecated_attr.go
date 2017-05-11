@@ -1,9 +1,5 @@
 package ast
 
-import (
-	"github.com/elliotchance/c2go/program"
-)
-
 type DeprecatedAttr struct {
 	Address  string
 	Position string
@@ -25,10 +21,6 @@ func parseDeprecatedAttr(line string) *DeprecatedAttr {
 		Message2: removeQuotes(groups["message2"]),
 		Children: []Node{},
 	}
-}
-
-func (n *DeprecatedAttr) render(program *program.Program) (string, string) {
-	return "", ""
 }
 
 func (n *DeprecatedAttr) AddChild(node Node) {

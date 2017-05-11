@@ -1,9 +1,5 @@
 package ast
 
-import (
-	"github.com/elliotchance/c2go/program"
-)
-
 type Typedef struct {
 	Address  string
 	Type     string
@@ -21,10 +17,6 @@ func parseTypedef(line string) *Typedef {
 		Type:     groups["type"],
 		Children: []Node{},
 	}
-}
-
-func (n *Typedef) render(program *program.Program) (string, string) {
-	return "", ""
 }
 
 func (n *Typedef) AddChild(node Node) {

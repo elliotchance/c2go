@@ -1,9 +1,6 @@
 package ast
 
 import (
-	"fmt"
-
-	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/util"
 )
 
@@ -28,19 +25,6 @@ func parseCharacterLiteral(line string) *CharacterLiteral {
 		Value:    util.Atoi(groups["value"]),
 		Children: []Node{},
 	}
-}
-
-func (n *CharacterLiteral) render(program *program.Program) (string, string) {
-	var s string
-
-	switch n.Value {
-	case '\n':
-		s = "'\\n'"
-	default:
-		s = fmt.Sprintf("'%c'", n.Value)
-	}
-
-	return s, n.Type
 }
 
 func (n *CharacterLiteral) AddChild(node Node) {

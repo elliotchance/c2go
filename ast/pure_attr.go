@@ -1,7 +1,5 @@
 package ast
 
-import "github.com/elliotchance/c2go/program"
-
 type PureAttr struct {
 	Address   string
 	Position  string
@@ -25,10 +23,6 @@ func parsePureAttr(line string) *PureAttr {
 		Inherited: len(groups["inherited"]) > 0,
 		Children:  []interface{}{},
 	}
-}
-
-func (n *PureAttr) render(program *program.Program) (string, string) {
-	return "", ""
 }
 
 func (n *PureAttr) AddChild(node Node) {
