@@ -38,18 +38,22 @@ func showDiff(a, b string) string {
 	for lineNumber := 0; lineNumber < maxLines; lineNumber++ {
 		aLine := ""
 		bLine := ""
+
+		// Replace NULL characters with a dot. Otherwise the strings will look
+		// exactly the same but have different length (and therfore not be
+		// equal).
 		if lineNumber < len(aLines) {
-			aLine = aLines[lineNumber]
+			aLine = strings.Replace(aLines[lineNumber], "\x00", ".", -1)
 		}
 		if lineNumber < len(bLines) {
-			bLine = bLines[lineNumber]
+			bLine = strings.Replace(bLines[lineNumber], "\x00", ".", -1)
 		}
 
 		diffFlag := " "
 		if aLine != bLine {
 			diffFlag = "*"
 		}
-		out += fmt.Sprintf("%s %3d %-40s%-40s\n", diffFlag, lineNumber+1, aLine, bLine)
+		out += fmt.Sprintf("%s %3d %-40s%-40s\n", diffFlag, lineNumber+1, "'"+aLine+"'", "'"+bLine+"'")
 	}
 
 	return out

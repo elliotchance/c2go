@@ -12,8 +12,10 @@ import (
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/types"
+	"github.com/elliotchance/c2go/util"
 
 	goast "go/ast"
+	"go/token"
 )
 
 // transpileCallExpr transpiles expressions that calls a function, for example:
@@ -23,7 +25,11 @@ import (
 // It returns three arguments; the Go AST expression, the C type (that is
 // returned by the function) and any error. If there is an error returned you
 // can assume the first two arguments will not contain any useful information.
-func transpileCallExpr(n *ast.CallExpr, p *program.Program) (*goast.CallExpr, string, error) {
+func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
+	*goast.CallExpr, string, []goast.Stmt, []goast.Stmt, error) {
+	preStmts := []goast.Stmt{}
+	postStmts := []goast.Stmt{}
+
 	// The first child will always contain the name of the function being
 	// called.
 	firstChild := n.Children[0].(*ast.ImplicitCastExpr).Children[0]
@@ -35,7 +41,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (*goast.CallExpr, st
 
 	if functionDef == nil {
 		errorMessage := fmt.Sprintf("unknown function: %s", functionName)
-		return nil, "", errors.New(errorMessage)
+		return nil, "", nil, nil, errors.New(errorMessage)
 	}
 
 	if functionDef.Substitution != "" {
@@ -50,18 +56,63 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (*goast.CallExpr, st
 	args := []goast.Expr{}
 	i := 0
 	for _, arg := range n.Children[1:] {
-		e, eType, err := transpileToExpr(arg, p)
+		e, eType, newPre, newPost, err := transpileToExpr(arg, p)
 		if err != nil {
-			return nil, "unknown2", err
+			return nil, "unknown2", nil, nil, err
 		}
+
+		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 		if i > len(functionDef.ArgumentTypes)-1 {
 			// This means the argument is one of the varargs so we don't know
 			// what type it needs to be cast to.
-			args = append(args, e)
 		} else {
-			args = append(args, types.CastExpr(p, e, eType, functionDef.ArgumentTypes[i]))
+			e = types.CastExpr(p, e, eType, functionDef.ArgumentTypes[i])
 		}
+
+		// FIXME: This type should also be more generic.
+		if functionName == "fmt.Printf" && eType == "char [80]" {
+			p.AddImport("github.com/elliotchance/c2go/noarch")
+			e = util.NewCallExpr(
+				"noarch.NullTerminatedString",
+				util.NewCallExpr("string", &goast.SliceExpr{X: e}),
+			)
+		}
+
+		// We cannot use preallocated byte slices as strings in the same way we
+		// can do it in C. Instead we have to create a temporary string
+		// variable.
+		//
+		// FIXME: The type needs to be more generic.
+		if functionName == "noarch.Fscanf" && eType == "char [80]" {
+			// FIXME: The name of the temp variable needs to be random.
+
+			// var __temp string
+			preStmts = append(preStmts, &goast.DeclStmt{
+				&goast.GenDecl{
+					Tok: token.VAR,
+					Specs: []goast.Spec{
+						&goast.ValueSpec{
+							Names: []*goast.Ident{goast.NewIdent("__temp")},
+							Type:  goast.NewIdent("string"),
+						},
+					},
+				},
+			})
+
+			postStmts = append(postStmts, &goast.ExprStmt{
+				X: util.NewCallExpr("copy", &goast.SliceExpr{
+					X: e,
+				}, goast.NewIdent("__temp")),
+			})
+
+			e = &goast.UnaryExpr{
+				Op: token.AND,
+				X:  goast.NewIdent("__temp"),
+			}
+		}
+
+		args = append(args, e)
 
 		i++
 	}
@@ -69,7 +120,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (*goast.CallExpr, st
 	return &goast.CallExpr{
 		Fun:  goast.NewIdent(functionName),
 		Args: args,
-	}, functionDef.ReturnType, nil
+	}, functionDef.ReturnType, preStmts, postStmts, nil
 }
 
 // transpileFunctionDecl transpiles the function prototype.
@@ -82,6 +133,8 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (*goast.CallExpr, st
 // becuase Go does not use or have any use for forward declarations of
 // functions.
 func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
+	// preStmts := []goast.Stmt{}
+	// postStmts := []goast.Stmt{}
 	var body *goast.BlockStmt
 
 	// This is set at the start of the function declaration so when the
@@ -123,10 +176,18 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 	for _, c := range n.Children {
 		if b, ok := c.(*ast.CompoundStmt); ok {
 			var err error
-			body, err = transpileToBlockStmt(b, p)
+			var newPre, newPost []goast.Stmt
+
+			body, newPre, newPost, err = transpileToBlockStmt(b, p)
 			if err != nil {
 				return err
 			}
+
+			if len(newPre) > 0 || len(newPost) > 0 {
+				panic("bad")
+			}
+
+			// preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 			hasBody = true
 			break
@@ -212,10 +273,11 @@ func getFieldList(f *ast.FunctionDecl, p *program.Program) (*goast.FieldList, er
 	}, nil
 }
 
-func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (*goast.ReturnStmt, error) {
-	e, eType, err := transpileToExpr(n.Children[0], p)
+func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (
+	*goast.ReturnStmt, []goast.Stmt, []goast.Stmt, error) {
+	e, eType, preStmts, postStmts, err := transpileToExpr(n.Children[0], p)
 	if err != nil {
-		return nil, err
+		return nil, nil, nil, err
 	}
 
 	f := program.GetFunctionDefinition(p.FunctionName)
@@ -232,7 +294,7 @@ func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (*goast.ReturnSt
 
 	return &goast.ReturnStmt{
 		Results: results,
-	}, nil
+	}, preStmts, postStmts, nil
 }
 
 func getFunctionReturnType(f string) string {

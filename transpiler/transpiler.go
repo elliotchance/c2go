@@ -58,61 +58,70 @@ func TranspileAST(fileName string, p *program.Program, root ast.Node) error {
 	return err
 }
 
-func transpileToExpr(node ast.Node, p *program.Program) (goast.Expr, string, error) {
+func transpileToExpr(node ast.Node, p *program.Program) (
+	expr goast.Expr,
+	exprType string,
+	preStmts []goast.Stmt,
+	postStmts []goast.Stmt,
+	err error) {
 	if node == nil {
 		panic(node)
-		return nil, "unknown1", nil
 	}
 
 	switch n := node.(type) {
-	// TODO: It would be much easier if all of these returned three arguments.
 	case *ast.StringLiteral:
-		return transpileStringLiteral(n), "const char *", nil
+		expr = transpileStringLiteral(n)
+		exprType = "const char *"
 
 	case *ast.FloatingLiteral:
-		return transpileFloatingLiteral(n), "double", nil
+		expr = transpileFloatingLiteral(n)
+		exprType = "double"
 
 	case *ast.PredefinedExpr:
-		return transpilePredefinedExpr(n, p)
+		expr, exprType, err = transpilePredefinedExpr(n, p)
 
 	case *ast.ConditionalOperator:
-		return transpileConditionalOperator(n, p)
+		expr, exprType, preStmts, postStmts, err = transpileConditionalOperator(n, p)
 
 	case *ast.ArraySubscriptExpr:
-		return transpileArraySubscriptExpr(n, p)
+		expr, exprType, preStmts, postStmts, err = transpileArraySubscriptExpr(n, p)
 
 	case *ast.BinaryOperator:
-		return transpileBinaryOperator(n, p)
+		expr, exprType, preStmts, postStmts, err = transpileBinaryOperator(n, p)
 
 	case *ast.UnaryOperator:
-		return transpileUnaryOperator(n, p)
+		expr, exprType, preStmts, postStmts, err = transpileUnaryOperator(n, p)
 
 	case *ast.MemberExpr:
-		return transpileMemberExpr(n, p)
+		expr, exprType, preStmts, postStmts, err = transpileMemberExpr(n, p)
 
 	case *ast.ImplicitCastExpr:
-		return transpileToExpr(n.Children[0], p)
+		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children[0], p)
 
 	case *ast.DeclRefExpr:
-		return transpileDeclRefExpr(n, p)
+		expr, exprType, err = transpileDeclRefExpr(n, p)
 
 	case *ast.IntegerLiteral:
-		return transpileIntegerLiteral(n), "int", nil
+		expr, exprType, err = transpileIntegerLiteral(n), "int", nil
 
 	case *ast.ParenExpr:
-		return transpileParenExpr(n, p)
+		expr, exprType, preStmts, postStmts, err = transpileParenExpr(n, p)
 
 	case *ast.CStyleCastExpr:
-		return transpileToExpr(n.Children[0], p)
+		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children[0], p)
 
 	case *ast.CharacterLiteral:
-		return transpileCharacterLiteral(n), "char", nil
+		expr, exprType, err = transpileCharacterLiteral(n), "char", nil
 
 	case *ast.CallExpr:
-		return transpileCallExpr(n, p)
+		expr, exprType, preStmts, postStmts, err = transpileCallExpr(n, p)
+
+	default:
+		panic(fmt.Sprintf("cannot transpile to expr: %#v", node))
 	}
 
-	panic(fmt.Sprintf("cannot transpile to expr: %#v", node))
+	// Real return is through named arguments.
+	return
 }
 
 func transpileToStmts(node ast.Node, p *program.Program) ([]goast.Stmt, error) {
@@ -122,32 +131,44 @@ func transpileToStmts(node ast.Node, p *program.Program) ([]goast.Stmt, error) {
 
 	switch n := node.(type) {
 	case *ast.DeclStmt:
-		return transpileDeclStmt(n, p)
+		stmts, preStmts, postStmts, err := transpileDeclStmt(n, p)
+		stmts = append(preStmts, stmts...)
+		stmts = append(stmts, postStmts...)
+		return stmts, err
 	}
 
-	stmt, err := transpileToStmt(node, p)
-	return []goast.Stmt{stmt}, err
+	stmt, preStmts, postStmts, err := transpileToStmt(node, p)
+	stmts := append(preStmts, stmt)
+	stmts = append(stmts, postStmts...)
+	return stmts, err
 }
 
-func transpileToStmt(node ast.Node, p *program.Program) (goast.Stmt, error) {
+func transpileToStmt(node ast.Node, p *program.Program) (
+	stmt goast.Stmt, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 	if node == nil {
-		return nil, nil
+		return
 	}
+
+	var expr goast.Expr
 
 	switch n := node.(type) {
 	case *ast.DefaultStmt:
-		return transpileDefaultStmt(n, p)
+		stmt, err = transpileDefaultStmt(n, p)
+		return
 
 	case *ast.CaseStmt:
-		return transpileCaseStmt(n, p)
+		stmt, preStmts, postStmts, err = transpileCaseStmt(n, p)
+		return
 
 	case *ast.SwitchStmt:
-		return transpileSwitchStmt(n, p)
+		stmt, preStmts, postStmts, err = transpileSwitchStmt(n, p)
+		return
 
 	case *ast.BreakStmt:
-		return &goast.BranchStmt{
+		stmt = &goast.BranchStmt{
 			Tok: token.BREAK,
-		}, nil
+		}
+		return
 
 	case *ast.DoStmt:
 		return transpileDoStmt(n, p)
@@ -165,17 +186,21 @@ func transpileToStmt(node ast.Node, p *program.Program) (goast.Stmt, error) {
 		return transpileReturnStmt(n, p)
 
 	case *ast.CompoundStmt:
-		return transpileCompoundStmt(n, p)
+		stmt, preStmts, postStmts, err = transpileCompoundStmt(n, p)
+		return
 	}
 
-	e, _, err := transpileToExpr(node, p)
+	// We do not care about the return type.
+	expr, _, preStmts, postStmts, err = transpileToExpr(node, p)
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	return &goast.ExprStmt{
-		X: e,
-	}, nil
+	stmt = &goast.ExprStmt{
+		X: expr,
+	}
+
+	return
 }
 
 func transpileToNode(node ast.Node, p *program.Program) error {
@@ -213,14 +238,18 @@ func transpileToNode(node ast.Node, p *program.Program) error {
 }
 
 func transpileStmts(nodes []ast.Node, p *program.Program) ([]goast.Stmt, error) {
+	preStmts := []goast.Stmt{}
+	postStmts := []goast.Stmt{}
 	stmts := []goast.Stmt{}
 
 	for _, s := range nodes {
 		if s != nil {
-			a, err := transpileToStmt(s, p)
+			a, newPre, newPost, err := transpileToStmt(s, p)
 			if err != nil {
 				return nil, err
 			}
+
+			preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 			stmts = append(stmts, a)
 		}

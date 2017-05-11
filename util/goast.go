@@ -8,7 +8,7 @@ import (
 	"go/token"
 )
 
-func NewCallExpr(functionName string, args []goast.Expr) *goast.CallExpr {
+func NewCallExpr(functionName string, args ...goast.Expr) *goast.CallExpr {
 	return &goast.CallExpr{
 		Fun:  goast.NewIdent(functionName),
 		Args: args,

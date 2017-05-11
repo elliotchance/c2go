@@ -146,9 +146,11 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 	return nil
 }
 
-func transpileVarDecl(p *program.Program, n *ast.VarDecl) string {
+func transpileVarDecl(p *program.Program, n *ast.VarDecl) ([]goast.Stmt, []goast.Stmt, string) {
 	theType := types.ResolveType(p, n.Type)
 	name := n.Name
+	preStmts := []goast.Stmt{}
+	postStmts := []goast.Stmt{}
 
 	// TODO: Some platform structs are ignored.
 	// https://github.com/elliotchance/c2go/issues/85
@@ -158,7 +160,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) string {
 		name == "_IO_2_1_stderr_" ||
 		name == "_DefaultRuneLocale" ||
 		name == "_CurrentRuneLocale" {
-		return "unknown10"
+		return nil, nil, "unknown10"
 	}
 
 	// TODO: The name of a variable or field cannot be "type"
@@ -179,7 +181,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) string {
 					token.ASSIGN,
 					util.NewCallExpr(
 						"noarch.NewFile",
-						util.NewIdents("os."+util.Ucfirst(name[2:len(name)-1])),
+						goast.NewIdent("os."+util.Ucfirst(name[2:len(name)-1])),
 					),
 				),
 			)
@@ -194,7 +196,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) string {
 					token.ASSIGN,
 					util.NewCallExpr(
 						"noarch.NewFile",
-						util.NewIdents("os."+util.Ucfirst(name)),
+						goast.NewIdent("os."+util.Ucfirst(name)),
 					),
 				),
 			)
@@ -206,10 +208,12 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) string {
 
 	var defaultValues []goast.Expr
 	if len(n.Children) > 0 {
-		defaultValue, defaultValueType, err := transpileToExpr(n.Children[0], p)
+		defaultValue, defaultValueType, newPre, newPost, err := transpileToExpr(n.Children[0], p)
 		if err != nil {
 			panic(err)
 		}
+
+		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 		defaultValues = []goast.Expr{
 			types.CastExpr(p, defaultValue, defaultValueType, n.Type),
@@ -229,5 +233,5 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) string {
 		},
 	})
 
-	return theType //n.Type
+	return nil, nil, theType
 }

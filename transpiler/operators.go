@@ -15,16 +15,24 @@ import (
 	"github.com/elliotchance/c2go/util"
 )
 
-func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (*goast.BinaryExpr, string, error) {
-	left, leftType, err := transpileToExpr(n.Children[0], p)
+func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
+	*goast.BinaryExpr, string, []goast.Stmt, []goast.Stmt, error) {
+	preStmts := []goast.Stmt{}
+	postStmts := []goast.Stmt{}
+
+	left, leftType, newPre, newPost, err := transpileToExpr(n.Children[0], p)
 	if err != nil {
-		return nil, "", err
+		return nil, "", nil, nil, err
 	}
 
-	right, rightType, err := transpileToExpr(n.Children[1], p)
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
+	right, rightType, newPre, newPost, err := transpileToExpr(n.Children[1], p)
 	if err != nil {
-		return nil, "", err
+		return nil, "", nil, nil, err
 	}
+
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	operator := getTokenForOperator(n.Operator)
 	returnType := types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType)
@@ -37,7 +45,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (*goast.
 			X:  left,
 			Op: operator,
 			Y:  right,
-		}, "bool", nil
+		}, "bool", preStmts, postStmts, nil
 	}
 
 	// Convert "(0)" to "nil" when we are dealing with equality.
@@ -61,10 +69,13 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (*goast.
 		X:  left,
 		Op: operator,
 		Y:  right,
-	}, types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType), nil
+	}, types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType), preStmts, postStmts, nil
 }
 
-func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (goast.Expr, string, error) {
+func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
+	goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
+	preStmts := []goast.Stmt{}
+	postStmts := []goast.Stmt{}
 	operator := getTokenForOperator(n.Operator)
 
 	// Unfortunately we cannot use the Go increment operators because we are not
@@ -94,17 +105,19 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (goast.Exp
 	}
 
 	// Otherwise handle like a unary operator.
-	e, eType, err := transpileToExpr(n.Children[0], p)
+	e, eType, newPre, newPost, err := transpileToExpr(n.Children[0], p)
 	if err != nil {
-		return nil, "", err
+		return nil, "", nil, nil, err
 	}
+
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	if operator == token.NOT {
 		if eType == "bool" || eType == "_Bool" {
 			return &goast.UnaryExpr{
 				X:  e,
 				Op: operator,
-			}, "bool", nil
+			}, "bool", preStmts, postStmts, nil
 		}
 
 		t := types.ResolveType(p, eType)
@@ -116,7 +129,7 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (goast.Exp
 					Kind:  token.STRING,
 					Value: `""`,
 				},
-			}, "bool", nil
+			}, "bool", preStmts, postStmts, nil
 		}
 
 		p.AddImport("github.com/elliotchance/c2go/noarch")
@@ -126,7 +139,7 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (goast.Exp
 		return &goast.CallExpr{
 			Fun:  goast.NewIdent(functionName),
 			Args: []goast.Expr{e},
-		}, eType, nil
+		}, eType, preStmts, postStmts, nil
 	}
 
 	if operator == token.MUL {
@@ -137,17 +150,17 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (goast.Exp
 					Kind:  token.INT,
 					Value: "0",
 				},
-			}, "char", nil
+			}, "char", preStmts, postStmts, nil
 		}
 
 		t, err := types.GetDereferenceType(eType)
 		if err != nil {
-			return nil, "", err
+			return nil, "", preStmts, postStmts, err
 		}
 
 		return &goast.StarExpr{
 			X: e,
-		}, t, nil
+		}, t, preStmts, postStmts, nil
 	}
 
 	if operator == token.AND {
@@ -157,7 +170,7 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (goast.Exp
 	return &goast.UnaryExpr{
 		X:  e,
 		Op: operator,
-	}, eType, nil
+	}, eType, preStmts, postStmts, nil
 }
 
 // transpileConditionalOperator transpiles a conditional (also known as a
@@ -174,21 +187,31 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (goast.Exp
 // It is also important to note that C only evaulates the "b" or "c" condition
 // based on the result of "a" (from the above example). So we wrap the "b" and
 // "c" in closures so that the Ternary function will only evaluate one of them.
-func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program) (*goast.CallExpr, string, error) {
-	a, _, err := transpileToExpr(n.Children[0], p)
+func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program) (
+	*goast.CallExpr, string, []goast.Stmt, []goast.Stmt, error) {
+	preStmts := []goast.Stmt{}
+	postStmts := []goast.Stmt{}
+
+	a, _, newPre, newPost, err := transpileToExpr(n.Children[0], p)
 	if err != nil {
-		return nil, "", err
+		return nil, "", nil, nil, err
 	}
 
-	b, _, err := transpileToExpr(n.Children[1], p)
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
+	b, _, newPre, newPost, err := transpileToExpr(n.Children[1], p)
 	if err != nil {
-		return nil, "", err
+		return nil, "", nil, nil, err
 	}
 
-	c, _, err := transpileToExpr(n.Children[2], p)
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
+	c, _, newPre, newPost, err := transpileToExpr(n.Children[2], p)
 	if err != nil {
-		return nil, "", err
+		return nil, "", nil, nil, err
 	}
+
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	p.AddImport("github.com/elliotchance/c2go/noarch")
 
@@ -214,7 +237,7 @@ func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program
 			newTernaryWrapper(b),
 			newTernaryWrapper(c),
 		},
-	}, n.Type, nil
+	}, n.Type, preStmts, postStmts, nil
 }
 
 // newTernaryWrapper is a helper method used by transpileConditionalOperator().
@@ -247,11 +270,17 @@ func newTernaryWrapper(e goast.Expr) *goast.FuncLit {
 // There is a special case where "(0)" is treated as a NULL (since that's what
 // the macro expands to). We have to return the type as "null" since we don't
 // know at this point what the NULL expression will be used in conjuction with.
-func transpileParenExpr(n *ast.ParenExpr, p *program.Program) (*goast.ParenExpr, string, error) {
-	e, eType, err := transpileToExpr(n.Children[0], p)
+func transpileParenExpr(n *ast.ParenExpr, p *program.Program) (
+	*goast.ParenExpr, string, []goast.Stmt, []goast.Stmt, error) {
+	preStmts := []goast.Stmt{}
+	postStmts := []goast.Stmt{}
+
+	e, eType, newPre, newPost, err := transpileToExpr(n.Children[0], p)
 	if err != nil {
-		return nil, "", err
+		return nil, "", nil, nil, err
 	}
+
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	r := &goast.ParenExpr{
 		X: e,
@@ -260,7 +289,7 @@ func transpileParenExpr(n *ast.ParenExpr, p *program.Program) (*goast.ParenExpr,
 		eType = "null"
 	}
 
-	return r, eType, nil
+	return r, eType, preStmts, postStmts, nil
 }
 
 // getTokenForOperator returns the Go operator token for the provided C

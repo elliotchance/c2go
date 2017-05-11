@@ -142,6 +142,21 @@ void test_fprintf()
     fclose(pFile);
 }
 
+void test_fscanf()
+{
+    char str[80];
+    float f;
+    FILE *pFile;
+
+    pFile = fopen("/tmp/myfile2.txt", "w+");
+    fprintf(pFile, "%f %s", 3.1416, "PI");
+    rewind(pFile);
+    fscanf(pFile, "%f", &f);
+    fscanf(pFile, "%s", str);
+    fclose(pFile);
+    printf("I have read: %f and %s \n", f, str);
+}
+
 int main()
 {
     START_TEST(putchar)
@@ -156,6 +171,7 @@ int main()
     START_TEST(fflush)
     START_TEST(printf)
     START_TEST(fprintf)
+    START_TEST(fscanf)
 
     return 0;
 }

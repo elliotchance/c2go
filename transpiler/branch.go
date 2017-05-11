@@ -16,7 +16,10 @@ import (
 	goast "go/ast"
 )
 
-func transpileIfStmt(n *ast.IfStmt, p *program.Program) (*goast.IfStmt, error) {
+func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
+	*goast.IfStmt, []goast.Stmt, []goast.Stmt, error) {
+	preStmts := []goast.Stmt{}
+	postStmts := []goast.Stmt{}
 	children := n.Children
 
 	// There is always 4 or 5 children in an IfStmt. For example:
@@ -56,18 +59,20 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (*goast.IfStmt, error) {
 		panic("non-nil child 0 in IfStmt")
 	}
 
-	conditional, conditionalType, err := transpileToExpr(children[1], p)
+	conditional, conditionalType, newPre, newPost, err := transpileToExpr(children[1], p)
 	if err != nil {
-		return nil, err
+		return nil, nil, nil, err
 	}
 
 	// The condition in Go must always be a bool.
 	boolCondition := types.CastExpr(p, conditional, conditionalType, "bool")
 
-	body, err := transpileToBlockStmt(children[2], p)
+	body, newPre, newPost, err := transpileToBlockStmt(children[2], p)
 	if err != nil {
-		return nil, err
+		return nil, nil, nil, err
 	}
+
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	r := &goast.IfStmt{
 		Cond: boolCondition,
@@ -75,18 +80,24 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (*goast.IfStmt, error) {
 	}
 
 	if children[3] != nil {
-		elseBody, err := transpileToBlockStmt(children[3], p)
+		elseBody, newPre, newPost, err := transpileToBlockStmt(children[3], p)
 		if err != nil {
-			return nil, err
+			return nil, nil, nil, err
 		}
+
+		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 		r.Else = elseBody
 	}
 
-	return r, nil
+	return r, newPre, newPost, nil
 }
 
-func transpileForStmt(n *ast.ForStmt, p *program.Program) (*goast.ForStmt, error) {
+func transpileForStmt(n *ast.ForStmt, p *program.Program) (
+	*goast.ForStmt, []goast.Stmt, []goast.Stmt, error) {
+	preStmts := []goast.Stmt{}
+	postStmts := []goast.Stmt{}
+
 	children := n.Children
 
 	// There are always 5 children in a ForStmt, for example:
@@ -112,16 +123,40 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (*goast.ForStmt, error
 		panic("non-nil child 1 in ForStmt")
 	}
 
-	init, _ := transpileToStmt(children[0], p)
-	post, _ := transpileToStmt(children[3], p)
-	body, _ := transpileToBlockStmt(children[4], p)
+	init, newPre, newPost, err := transpileToStmt(children[0], p)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
+	post, newPre, newPost, err := transpileToStmt(children[3], p)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
+	body, newPre, newPost, err := transpileToBlockStmt(children[4], p)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	// The condition can be nil. This means an infinite loop and will be
 	// rendered in Go as "for {".
 	var condition goast.Expr
 	if children[2] != nil {
 		var conditionType string
-		condition, conditionType, _ = transpileToExpr(children[2], p)
+		var newPre, newPost []goast.Stmt
+		condition, conditionType, newPre, newPost, err = transpileToExpr(children[2], p)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+
+		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
 		condition = types.CastExpr(p, condition, conditionType, "bool")
 	}
 
@@ -130,42 +165,57 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (*goast.ForStmt, error
 		Cond: condition,
 		Post: post,
 		Body: body,
-	}, nil
+	}, preStmts, postStmts, nil
 }
 
-func transpileWhileStmt(n *ast.WhileStmt, p *program.Program) (*goast.ForStmt, error) {
+func transpileWhileStmt(n *ast.WhileStmt, p *program.Program) (
+	*goast.ForStmt, []goast.Stmt, []goast.Stmt, error) {
+	preStmts := []goast.Stmt{}
+	postStmts := []goast.Stmt{}
+
 	// TODO: The first child of a WhileStmt appears to always be null.
 	// Are there any cases where it is used?
 	children := n.Children[1:]
 
-	body, err := transpileToBlockStmt(children[1], p)
+	body, newPre, newPost, err := transpileToBlockStmt(children[1], p)
 	if err != nil {
-		return nil, err
+		return nil, nil, nil, err
 	}
 
-	condition, conditionType, err := transpileToExpr(children[0], p)
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
+	condition, conditionType, newPre, newPost, err := transpileToExpr(children[0], p)
 	if err != nil {
-		return nil, err
+		return nil, nil, nil, err
 	}
+
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	return &goast.ForStmt{
 		Cond: types.CastExpr(p, condition, conditionType, "bool"),
 		Body: body,
-	}, nil
+	}, preStmts, postStmts, nil
 }
 
-func transpileDoStmt(n *ast.DoStmt, p *program.Program) (*goast.ForStmt, error) {
+func transpileDoStmt(n *ast.DoStmt, p *program.Program) (
+	*goast.ForStmt, []goast.Stmt, []goast.Stmt, error) {
+	preStmts := []goast.Stmt{}
+	postStmts := []goast.Stmt{}
 	children := n.Children
 
-	body, err := transpileToBlockStmt(children[0], p)
+	body, newPre, newPost, err := transpileToBlockStmt(children[0], p)
 	if err != nil {
-		return nil, err
+		return nil, nil, nil, err
 	}
 
-	condition, conditionType, err := transpileToExpr(children[1], p)
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
+	condition, conditionType, newPre, newPost, err := transpileToExpr(children[1], p)
 	if err != nil {
-		return nil, err
+		return nil, nil, nil, err
 	}
+
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	// Add IfStmt to the end of the loop to check the condition
 	body.List = append(body.List, &goast.IfStmt{
@@ -180,5 +230,5 @@ func transpileDoStmt(n *ast.DoStmt, p *program.Program) (*goast.ForStmt, error) 
 
 	return &goast.ForStmt{
 		Body: body,
-	}, nil
+	}, preStmts, postStmts, nil
 }
