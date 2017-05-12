@@ -242,3 +242,12 @@ func Fputc(c int, f *File) int {
 func Getchar() int {
 	return getc(os.Stdin)
 }
+
+func Fseek(f *File, offset int32, origin int) int {
+	n, err := f.OsFile.Seek(int64(offset), origin)
+	if err != nil {
+		return -1
+	}
+
+	return int(n)
+}

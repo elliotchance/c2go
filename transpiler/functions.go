@@ -275,6 +275,12 @@ func getFieldList(f *ast.FunctionDecl, p *program.Program) (*goast.FieldList, er
 
 func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (
 	goast.Stmt, []goast.Stmt, []goast.Stmt, error) {
+	// There may not be a return value. Then we don't have to both ourselves
+	// with all the rest of the logic below.
+	if len(n.Children) == 0 {
+		return &goast.ReturnStmt{}, nil, nil, nil
+	}
+
 	e, eType, preStmts, postStmts, err := transpileToExpr(n.Children[0], p)
 	if err != nil {
 		return nil, nil, nil, err
