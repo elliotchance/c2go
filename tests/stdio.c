@@ -243,12 +243,17 @@ void test_getc()
     }
 }
 
-void test_getchar()
+void test_putc()
 {
-    int c;
-    puts("Enter text. Include a dot ('.') in a sentence to exit:");
-    c = getchar();
-    putchar(c);
+    FILE *pFile;
+    char c;
+
+    pFile = fopen("/tmp/whatever.txt", "w");
+    for (c = 'A'; c <= 'Z'; c++)
+    {
+        putc(c, pFile);
+    }
+    fclose(pFile);
 }
 
 int main()
@@ -272,7 +277,7 @@ int main()
     START_TEST(fputc)
     START_TEST(fputs)
     START_TEST(getc)
-    START_TEST(getchar)
+    START_TEST(putc)
 
     return 0;
 }

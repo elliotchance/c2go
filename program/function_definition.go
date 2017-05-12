@@ -116,6 +116,7 @@ var builtInFunctionDefinitions = []string{
 	"int fputc(int, FILE*) -> noarch.Fputc",
 	"int getc(FILE*) -> noarch.Fgetc",
 	"int getchar() -> noarch.Getchar",
+	"int putc(int, FILE*) -> noarch.Fputc",
 
 	// string.h
 	"size_t strlen(const char*) -> noarch.Strlen",
