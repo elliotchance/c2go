@@ -32,7 +32,7 @@ func transpileStringLiteral(n *ast.StringLiteral) *goast.BasicLit {
 func transpileIntegerLiteral(n *ast.IntegerLiteral) *goast.BasicLit {
 	return &goast.BasicLit{
 		Kind:  token.INT,
-		Value: strconv.Itoa(n.Value),
+		Value: n.Value,
 	}
 }
 
