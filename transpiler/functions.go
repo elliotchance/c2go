@@ -54,24 +54,26 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 	}
 
 	args := []goast.Expr{}
+	argTypes := []string{}
 	i := 0
 	for _, arg := range n.Children[1:] {
 		e, eType, newPre, newPost, err := transpileToExpr(arg, p)
 		if err != nil {
 			return nil, "unknown2", nil, nil, err
 		}
+		argTypes = append(argTypes, eType)
 
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-		if i > len(functionDef.ArgumentTypes)-1 {
-			// This means the argument is one of the varargs so we don't know
-			// what type it needs to be cast to.
-		} else {
-			e = types.CastExpr(p, e, eType, functionDef.ArgumentTypes[i])
-		}
+		// if i > len(functionDef.ArgumentTypes)-1 {
+		// 	// This means the argument is one of the varargs so we don't know
+		// 	// what type it needs to be cast to.
+		// } else {
+		// 	//e = types.CastExpr(p, e, eType, functionDef.ArgumentTypes[i])
+		// }
 
-		// FIXME: This type should also be more generic.
-		if functionName == "fmt.Printf" && eType == "char [80]" {
+		_, arraySize := types.GetArrayTypeAndSize(eType)
+		if functionName == "fmt.Printf" && arraySize != -1 {
 			p.AddImport("github.com/elliotchance/c2go/noarch")
 			e = util.NewCallExpr(
 				"noarch.NullTerminatedString",
@@ -82,9 +84,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 		// We cannot use preallocated byte slices as strings in the same way we
 		// can do it in C. Instead we have to create a temporary string
 		// variable.
-		//
-		// FIXME: The type needs to be more generic.
-		if functionName == "noarch.Fscanf" && eType == "char [80]" {
+		if functionName == "noarch.Fscanf" && arraySize != -1 {
 			// FIXME: The name of the temp variable needs to be random.
 
 			// var __temp string
@@ -117,9 +117,57 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 		i++
 	}
 
+	// These are the arguments once any transformations have taken place.
+	realArgs := []goast.Expr{}
+
+	// Apply transformation if needed. A transformation rearranges the return
+	// value(s) and parameters. It is also used to indicate when a variable must
+	// be passed by reference.
+	if functionDef.ReturnParameters != nil || functionDef.Parameters != nil {
+		for i, a := range functionDef.Parameters {
+			byReference := false
+
+			// Negative position means that it must be passed by reference.
+			if a < 0 {
+				byReference = true
+				a = -a
+			}
+
+			// Rearrange the arguments. The -1 is because 0 would be the return
+			// value.
+			realArg := args[a-1]
+
+			if byReference {
+				// We have to create a temporary variable to pass by reference.
+				// Then we can assign the real variable from it.
+				realArg = &goast.UnaryExpr{
+					Op: token.AND,
+					X:  args[i],
+				}
+			} else {
+				realArg = types.CastExpr(p, realArg, argTypes[i], functionDef.ArgumentTypes[i])
+			}
+
+			realArgs = append(realArgs, realArg)
+		}
+	} else {
+		// Keep all the arguments the same. But make sure we cast to the correct
+		// types.
+		for i, a := range args {
+			if i > len(functionDef.ArgumentTypes)-1 {
+				// This means the argument is one of the varargs so we don't know
+				// what type it needs to be cast to.
+			} else {
+				a = types.CastExpr(p, a, argTypes[i], functionDef.ArgumentTypes[i])
+			}
+
+			realArgs = append(realArgs, a)
+		}
+	}
+
 	return &goast.CallExpr{
 		Fun:  goast.NewIdent(functionName),
-		Args: args,
+		Args: realArgs,
 	}, functionDef.ReturnType, preStmts, postStmts, nil
 }
 
@@ -133,8 +181,6 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 // becuase Go does not use or have any use for forward declarations of
 // functions.
 func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
-	// preStmts := []goast.Stmt{}
-	// postStmts := []goast.Stmt{}
 	var body *goast.BlockStmt
 
 	// This is set at the start of the function declaration so when the
@@ -186,8 +232,6 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 			if len(newPre) > 0 || len(newPost) > 0 {
 				panic("bad")
 			}
-
-			// preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 			hasBody = true
 			break

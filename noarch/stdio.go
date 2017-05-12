@@ -251,3 +251,18 @@ func Fseek(f *File, offset int32, origin int) int {
 
 	return int(n)
 }
+
+func Ftell(f *File) int32 {
+	return int32(Fseek(f, 0, 1))
+}
+
+func Fread(buffer *[]byte, size1, size2 int, f *File) int {
+	*buffer = make([]byte, size1*size2)
+	n, err := f.OsFile.Read(*buffer)
+
+	if err != nil {
+		return -1
+	}
+
+	return n
+}

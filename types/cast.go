@@ -28,6 +28,11 @@ func GetArrayTypeAndSize(s string) (string, int) {
 }
 
 func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Expr {
+	// Let's assume that anything can be converted to a void pointer.
+	if toType == "void *" {
+		return expr
+	}
+
 	fromType = ResolveType(p, fromType)
 	toType = ResolveType(p, toType)
 
@@ -70,7 +75,7 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Ex
 		"float32", "float64",
 
 		// Known aliases
-		"__uint16_t",
+		"__uint16_t", "size_t",
 
 		// Darwin specific:
 		"__darwin_ct_rune_t", "darwin.Darwin_ct_rune_t",

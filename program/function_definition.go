@@ -21,6 +21,12 @@ type FunctionDefinition struct {
 	// of the Name. Many low level functions have an exact match with a Go
 	// function. For example, "sin()".
 	Substitution string
+
+	// Can be overriden with the substitution to rearrange the return variables
+	// and parameters. When either of these are nil the behavior is to keep the
+	// single return value and parameters the same.
+	ReturnParameters []int
+	Parameters       []int
 }
 
 var functionDefinitions map[string]FunctionDefinition
@@ -38,7 +44,21 @@ var builtInFunctionDefinitionsHaveBeenLoaded = false
 //
 //     github.com/elliotchance/c2go/darwin.Fabs
 //
-// THe substitution is optional.
+// The substitution is optional.
+//
+// The substituted function can also move the parameters and return value
+// positions. This is called a transformation. For example:
+//
+//     size_t fread(void*, size_t, size_t, FILE*) -> $0, $1 = noarch.Fread($2, $3, $4)
+//
+// Where $0 represents the C return value and $1 and above are for each of the
+// parameters.
+//
+// Transformations can also be used to specify varaible that need to be passed
+// by reference by using the prefix "&" instead of "$":
+//
+//     size_t fread(void*, size_t, size_t, FILE*) -> $0 = noarch.Fread(&1, $2, $3, $4)
+//
 var builtInFunctionDefinitions = []string{
 	// darwin/assert.h
 	"int __builtin_expect(int, int) -> darwin.BuiltinExpect",
@@ -118,6 +138,8 @@ var builtInFunctionDefinitions = []string{
 	"int getchar() -> noarch.Getchar",
 	"int putc(int, FILE*) -> noarch.Fputc",
 	"int fseek(FILE*, long int, int) -> noarch.Fseek",
+	"long ftell(FILE*) -> noarch.Ftell",
+	"int fread(void*, int, int, FILE*) -> $0 = noarch.Fread(&1, $2, $3, $4)",
 
 	// string.h
 	"size_t strlen(const char*) -> noarch.Strlen",
@@ -151,6 +173,31 @@ func AddFunctionDefinition(f FunctionDefinition) {
 	functionDefinitions[f.Name] = f
 }
 
+// dollarArgumentsToIntSlice converts a list of dollar arguments, like "$1, &2"
+// into a slice of integers; [1, -2].
+//
+// This function requires at least one argument in s, but only arguments upto
+// $9 or &9.
+func dollarArgumentsToIntSlice(s string) []int {
+	r := []int{}
+	multiplier := 1
+
+	for _, c := range s {
+		if c == '$' {
+			multiplier = 1
+		}
+		if c == '&' {
+			multiplier = -1
+		}
+
+		if c >= '0' && c <= '9' {
+			r = append(r, multiplier*(int(c)-'0'))
+		}
+	}
+
+	return r
+}
+
 func loadFunctionDefinitions() {
 	if builtInFunctionDefinitionsHaveBeenLoaded {
 		return
@@ -160,7 +207,7 @@ func loadFunctionDefinitions() {
 	builtInFunctionDefinitionsHaveBeenLoaded = true
 
 	for _, f := range builtInFunctionDefinitions {
-		match := regexp.MustCompile(`^(.+) (.+)\((.*)\)( -> .*)?$`).
+		match := regexp.MustCompile(`^(.+?) (.+?)\((.*?)\)( -> .+)?$`).
 			FindStringSubmatch(f)
 
 		// Unpack argument types.
@@ -172,11 +219,25 @@ func loadFunctionDefinitions() {
 			argumentTypes = []string{}
 		}
 
+		// Defaults for transformations.
+		var returnParameters, parameters []int
+
 		// Substitution rules.
 		substitution := match[4]
 		if substitution != "" {
 			substitution = strings.TrimLeft(substitution, " ->")
+
+			// The substitution might also rearrange the parameters (return and
+			// parameter transformation).
+			subMatch := regexp.MustCompile(`^(.*?) = (.*)\((.*)\)$`).
+				FindStringSubmatch(substitution)
+			if len(subMatch) > 0 {
+				returnParameters = dollarArgumentsToIntSlice(subMatch[1])
+				parameters = dollarArgumentsToIntSlice(subMatch[3])
+				substitution = subMatch[2]
+			}
 		}
+
 		if strings.HasPrefix(substitution, "darwin.") ||
 			strings.HasPrefix(substitution, "linux.") ||
 			strings.HasPrefix(substitution, "noarch.") {
@@ -184,10 +245,12 @@ func loadFunctionDefinitions() {
 		}
 
 		AddFunctionDefinition(FunctionDefinition{
-			Name:          match[2],
-			ReturnType:    match[1],
-			ArgumentTypes: argumentTypes,
-			Substitution:  substitution,
+			Name:             match[2],
+			ReturnType:       match[1],
+			ArgumentTypes:    argumentTypes,
+			Substitution:     substitution,
+			ReturnParameters: returnParameters,
+			Parameters:       parameters,
 		})
 	}
 }

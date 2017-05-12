@@ -266,14 +266,31 @@ void test_fseek()
     fclose(pFile);
 }
 
+void test_ftell()
+{
+    FILE *pFile;
+    long size;
+
+    pFile = fopen("tests/stdio.c", "r");
+    if (pFile == NULL)
+        printf("Error opening file");
+    else
+    {
+        fseek(pFile, 0, SEEK_END); // non-portable
+        size = ftell(pFile);
+        fclose(pFile);
+        printf("Size of myfile.txt: %d bytes.\n", size);
+    }
+}
+
 void test_fread()
 {
     FILE *pFile;
-    // long lSize;
-    // char *buffer;
-    // size_t result;
+    int lSize;
+    char buffer[1024];
+    int result;
 
-    pFile = fopen("tests/stdio.c", "r");
+    pFile = fopen("tests/getchar.c", "r");
     if (pFile == NULL)
     {
         fputs("File error", stderr);
@@ -282,30 +299,23 @@ void test_fread()
 
     // obtain file size:
     fseek(pFile, 0, SEEK_END);
-    // lSize = ftell(pFile);
-    // rewind(pFile);
+    lSize = ftell(pFile);
+    rewind(pFile);
 
-    // // allocate memory to contain the whole file:
-    // buffer = (char *)malloc(sizeof(char) * lSize);
-    // if (buffer == NULL)
-    // {
-    //     fputs("Memory error", stderr);
-    //     exit(2);
-    // }
+    // copy the file into the buffer:
+    result = fread(buffer, 1, lSize, pFile);
+    if (result != lSize)
+    {
+        fputs("Reading error", stderr);
+        return;
+    }
 
-    // // copy the file into the buffer:
-    // result = fread(buffer, 1, lSize, pFile);
-    // if (result != lSize)
-    // {
-    //     fputs("Reading error", stderr);
-    //     exit(3);
-    // }
+    printf("%s", buffer);
 
-    // /* the whole file is now loaded in the memory buffer. */
+    /* the whole file is now loaded in the memory buffer. */
 
-    // // terminate
-    // fclose(pFile);
-    // free(buffer);
+    // terminate
+    fclose(pFile);
 }
 
 int main()
@@ -331,6 +341,7 @@ int main()
     START_TEST(getc)
     START_TEST(putc)
     START_TEST(fseek)
+    START_TEST(ftell)
     START_TEST(fread)
 
     return 0;
