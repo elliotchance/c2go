@@ -146,7 +146,8 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 	return nil
 }
 
-func transpileVarDecl(p *program.Program, n *ast.VarDecl) ([]goast.Stmt, []goast.Stmt, string) {
+func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
+	[]goast.Stmt, []goast.Stmt, string) {
 	theType := types.ResolveType(p, n.Type)
 	name := n.Name
 	preStmts := []goast.Stmt{}

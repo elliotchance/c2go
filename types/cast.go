@@ -15,6 +15,18 @@ import (
 	"github.com/elliotchance/c2go/util"
 )
 
+// GetArrayTypeAndSize returns the size and type of a fixed array. If the type
+// is not an array with a fixed size then the type return will be an empty
+// string, and the size will be -1.
+func GetArrayTypeAndSize(s string) (string, int) {
+	match := regexp.MustCompile(`(.*) \[(\d+)\]`).FindStringSubmatch(s)
+	if len(match) > 0 {
+		return match[1], util.Atoi(match[2])
+	}
+
+	return "", -1
+}
+
 func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Expr {
 	fromType = ResolveType(p, fromType)
 	toType = ResolveType(p, toType)
@@ -22,6 +34,10 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Ex
 	// FIXME: This is a hack to avoid casting in some situations.
 	if fromType == "" || toType == "" {
 		return expr
+	}
+
+	if fromType == "[]byte" && toType == "string" {
+		return util.NewCallExpr("string", expr)
 	}
 
 	if fromType == "null" && toType == "string" {
@@ -73,21 +89,17 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Ex
 	}
 
 	// In the forms of:
-	// - `string` -> `[8]byte`
+	// - `string` -> `[]byte`
 	// - `string` -> `char *[13]`
-	match1 := regexp.MustCompile(`\[(\d+)\]byte`).FindStringSubmatch(toType)
+	match1 := regexp.MustCompile(`\[\]byte`).FindStringSubmatch(toType)
 	match2 := regexp.MustCompile(`char \*\[(\d+)\]`).FindStringSubmatch(toType)
 	if fromType == "string" && (len(match1) > 0 || len(match2) > 0) {
 		// Construct a byte array from "first":
 		//
-		//     var str [5]byte = [5]byte{'f','i','r','s','t'}
+		//     var str []byte = []byte{'f','i','r','s','t'}
 
 		value := &goast.CompositeLit{
 			Type: &goast.ArrayType{
-				Len: &goast.BasicLit{
-					Kind:  token.INT,
-					Value: match1[1],
-				},
 				Elt: goast.NewIdent("byte"),
 			},
 			Elts: []goast.Expr{},

@@ -188,10 +188,11 @@ func ResolveType(p *program.Program, s string) string {
 		return "interface{}"
 	}
 
-	// It could be an array of fixed length.
+	// It could be an array of fixed length. These needs to be converted to
+	// slices.
 	search2 := regexp.MustCompile("([\\w ]+)\\[(\\d+)\\]").FindStringSubmatch(s)
 	if len(search2) > 0 {
-		return fmt.Sprintf("[%s]%s", search2[2], ResolveType(p, search2[1]))
+		return fmt.Sprintf("[]%s", ResolveType(p, search2[1]))
 	}
 
 	panic(fmt.Sprintf("I couldn't find an appropriate Go type for the C type '%s'.", s))
