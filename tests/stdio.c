@@ -212,6 +212,16 @@ void test_fputc()
         fputc(c, stdout);
 }
 
+void test_fputs()
+{
+    FILE *pFile;
+    char *sentence = "Hello, World";
+
+    pFile = fopen("/tmp/mylog.txt", "w");
+    fputs(sentence, pFile);
+    fclose(pFile);
+}
+
 int main()
 {
     START_TEST(putchar)
@@ -231,6 +241,7 @@ int main()
     START_TEST(fgetc)
     START_TEST(fgets)
     START_TEST(fputc)
+    START_TEST(fputs)
 
     return 0;
 }
