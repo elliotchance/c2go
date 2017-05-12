@@ -243,6 +243,14 @@ void test_getc()
     }
 }
 
+void test_getchar()
+{
+    int c;
+    puts("Enter text. Include a dot ('.') in a sentence to exit:");
+    c = getchar();
+    putchar(c);
+}
+
 int main()
 {
     START_TEST(putchar)
@@ -264,6 +272,7 @@ int main()
     START_TEST(fputc)
     START_TEST(fputs)
     START_TEST(getc)
+    START_TEST(getchar)
 
     return 0;
 }

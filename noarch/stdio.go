@@ -216,14 +216,18 @@ func Fscanf(f *File, format string, args ...interface{}) int {
 	return n
 }
 
-func Fgetc(f *File) int {
+func getc(f *os.File) int {
 	buffer := make([]byte, 1)
-	_, err := f.OsFile.Read(buffer)
+	_, err := f.Read(buffer)
 	if err != nil {
 		return -1
 	}
 
 	return int(buffer[0])
+}
+
+func Fgetc(f *File) int {
+	return getc(f.OsFile)
 }
 
 func Fputc(c int, f *File) int {
@@ -233,4 +237,8 @@ func Fputc(c int, f *File) int {
 	}
 
 	return n
+}
+
+func Getchar() int {
+	return getc(os.Stdin)
 }
