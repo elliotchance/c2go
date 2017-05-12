@@ -5,8 +5,8 @@
 #include <string.h>
 #include <assert.h>
 
-#define START_TEST(t)       \
-    printf("--- %s\n", #t); \
+#define START_TEST(t)         \
+    printf("\n--- %s\n", #t); \
     test_##t();
 
 void test_putchar()
@@ -222,6 +222,27 @@ void test_fputs()
     fclose(pFile);
 }
 
+void test_getc()
+{
+    FILE *pFile;
+    int c;
+    int n = 0;
+    pFile = fopen("tests/stdio.c", "r");
+    if (pFile == NULL)
+        printf("Error opening file");
+    else
+    {
+        do
+        {
+            c = getc(pFile);
+            if (c == '$')
+                n++;
+        } while (c != EOF);
+        fclose(pFile);
+        printf("File contains %d$.\n", n);
+    }
+}
+
 int main()
 {
     START_TEST(putchar)
@@ -242,6 +263,7 @@ int main()
     START_TEST(fgets)
     START_TEST(fputc)
     START_TEST(fputs)
+    START_TEST(getc)
 
     return 0;
 }
