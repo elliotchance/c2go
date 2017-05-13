@@ -294,22 +294,30 @@ func transpileParenExpr(n *ast.ParenExpr, p *program.Program) (
 	return r, eType, preStmts, postStmts, nil
 }
 
-func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.Program) (*goast.BinaryExpr, string, error) {
-	left, _, err := transpileToExpr(n.Children[0], p)
+func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.Program) (
+	*goast.BinaryExpr, string, []goast.Stmt, []goast.Stmt, error) {
+	preStmts := []goast.Stmt{}
+	postStmts := []goast.Stmt{}
+
+	left, _, newPre, newPost, err := transpileToExpr(n.Children[0], p)
 	if err != nil {
-		return nil, "", err
+		return nil, "", nil, nil, err
 	}
 
-	right, _, err := transpileToExpr(n.Children[1], p)
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
+	right, _, newPre, newPost, err := transpileToExpr(n.Children[1], p)
 	if err != nil {
-		return nil, "", err
+		return nil, "", nil, nil, err
 	}
+
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	return &goast.BinaryExpr{
 		X:  left,
 		Y:  right,
 		Op: getTokenForOperator(n.Opcode),
-	}, "", nil
+	}, "", preStmts, postStmts, nil
 }
 
 // getTokenForOperator returns the Go operator token for the provided C
