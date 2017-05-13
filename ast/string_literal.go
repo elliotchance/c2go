@@ -1,5 +1,10 @@
 package ast
 
+import (
+	"fmt"
+	"strconv"
+)
+
 type StringLiteral struct {
 	Address  string
 	Position string
@@ -11,15 +16,20 @@ type StringLiteral struct {
 
 func parseStringLiteral(line string) *StringLiteral {
 	groups := groupsFromRegex(
-		`<(?P<position>.*)> '(?P<type>.*)' lvalue "(?P<value>.*)"`,
+		`<(?P<position>.*)> '(?P<type>.*)' lvalue (?P<value>".*")`,
 		line,
 	)
+
+	s, err := strconv.Unquote(groups["value"])
+	if err != nil {
+		panic(fmt.Sprintf("Unable to unquote %s\n", groups["value"]))
+	}
 
 	return &StringLiteral{
 		Address:  groups["address"],
 		Position: groups["position"],
 		Type:     groups["type"],
-		Value:    unescapeString(groups["value"]),
+		Value:    s,
 		Lvalue:   true,
 		Children: []Node{},
 	}
