@@ -111,19 +111,15 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Ex
 			Elts: []goast.Expr{},
 		}
 
-		strValue := expr.(*goast.BasicLit).Value
-		for i := 1; i < len(strValue)-1; i++ {
-			s := strValue[i : i+1]
+		strValue, err := strconv.Unquote(expr.(*goast.BasicLit).Value)
+		if err != nil {
+			panic(fmt.Sprintf("Failed to Unquote %s\n", expr.(*goast.BasicLit).Value))
+		}
 
-			if s == "\\" {
-				s = strValue[i : i+2]
-				i++
-			}
-
-			// TODO: This does not handle characters that need to be escaped.
+		for _, c := range []byte(strValue) {
 			value.Elts = append(value.Elts, &goast.BasicLit{
 				Kind:  token.CHAR,
-				Value: "'" + s + "'",
+				Value: fmt.Sprintf("%q", c),
 			})
 		}
 
