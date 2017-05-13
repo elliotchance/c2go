@@ -16,9 +16,9 @@ func InStrings(item string, items []string) bool {
 }
 
 func Ucfirst(word string) string {
-	// if word == "" {
-	// 	return ""
-	// }
+	if word == "" {
+		return ""
+	}
 
 	return strings.ToUpper(string(word[0])) + word[1:]
 }

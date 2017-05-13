@@ -266,3 +266,12 @@ func Fread(buffer *[]byte, size1, size2 int, f *File) int {
 
 	return n
 }
+
+func Fwrite(buffer string, size1, size2 int, f *File) int {
+	n, err := f.OsFile.Write([]byte(buffer[:size1*size2]))
+	if err != nil {
+		return -1
+	}
+
+	return n
+}

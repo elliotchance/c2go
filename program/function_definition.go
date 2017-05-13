@@ -140,6 +140,7 @@ var builtInFunctionDefinitions = []string{
 	"int fseek(FILE*, long int, int) -> noarch.Fseek",
 	"long ftell(FILE*) -> noarch.Ftell",
 	"int fread(void*, int, int, FILE*) -> $0 = noarch.Fread(&1, $2, $3, $4)",
+	"int fwrite(char*, int, int, FILE*) -> noarch.Fwrite",
 
 	// string.h
 	"size_t strlen(const char*) -> noarch.Strlen",

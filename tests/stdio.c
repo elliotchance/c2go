@@ -318,6 +318,15 @@ void test_fread()
     fclose(pFile);
 }
 
+void test_fwrite()
+{
+    FILE *pFile;
+    // char *buffer = ;
+    pFile = fopen("/tmp/myfile.bin", "w");
+    fwrite("xyz", 1, 3, pFile);
+    fclose(pFile);
+}
+
 int main()
 {
     START_TEST(putchar)
@@ -343,6 +352,7 @@ int main()
     START_TEST(fseek)
     START_TEST(ftell)
     START_TEST(fread)
+    START_TEST(fwrite)
 
     return 0;
 }
