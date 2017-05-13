@@ -257,9 +257,7 @@ func Ftell(f *File) int32 {
 }
 
 func Fread(buffer *[]byte, size1, size2 int, f *File) int {
-	*buffer = make([]byte, size1*size2)
 	n, err := f.OsFile.Read(*buffer)
-
 	if err != nil {
 		return -1
 	}

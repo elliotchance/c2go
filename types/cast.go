@@ -42,7 +42,8 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Ex
 	}
 
 	if fromType == "[]byte" && toType == "string" {
-		return util.NewCallExpr("string", expr)
+		p.AddImport("github.com/elliotchance/c2go/noarch")
+		return util.NewCallExpr("noarch.NullTerminatedByteSlice", expr)
 	}
 
 	if fromType == "null" && toType == "string" {

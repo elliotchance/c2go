@@ -365,6 +365,22 @@ void test_fsetpos()
     fclose(pFile);
 }
 
+void test_rewind()
+{
+    int n;
+    FILE *pFile;
+    char buffer[27];
+
+    pFile = fopen("/tmp/myfile.txt", "w+");
+    for (n = 'A'; n <= 'Z'; n++)
+        fputc(n, pFile);
+    rewind(pFile);
+    fread(buffer, 1, 26, pFile);
+    fclose(pFile);
+    buffer[26] = '\0';
+    puts(buffer);
+}
+
 int main()
 {
     START_TEST(putchar)
@@ -393,6 +409,7 @@ int main()
     START_TEST(fwrite)
     START_TEST(fgetpos)
     START_TEST(fsetpos)
+    START_TEST(rewind)
 
     return 0;
 }
