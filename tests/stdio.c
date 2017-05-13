@@ -381,6 +381,30 @@ void test_rewind()
     puts(buffer);
 }
 
+void test_feof()
+{
+    FILE *pFile;
+    int n = 0;
+    pFile = fopen("tests/stdio.c", "r");
+    if (pFile == NULL)
+        printf("Error opening file");
+    else
+    {
+        while (fgetc(pFile) != EOF)
+        {
+            ++n;
+        }
+        if (feof(pFile))
+        {
+            puts("End-of-File reached.");
+            printf("Total number of bytes read: %d\n", n);
+        }
+        else
+            puts("End-of-File was not reached.");
+        fclose(pFile);
+    }
+}
+
 int main()
 {
     START_TEST(putchar)
@@ -410,6 +434,7 @@ int main()
     START_TEST(fgetpos)
     START_TEST(fsetpos)
     START_TEST(rewind)
+    START_TEST(feof)
 
     return 0;
 }
