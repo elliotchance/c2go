@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -43,17 +44,17 @@ func showDiff(a, b string) string {
 		// exactly the same but have different length (and therfore not be
 		// equal).
 		if lineNumber < len(aLines) {
-			aLine = strings.Replace(aLines[lineNumber], "\x00", ".", -1)
+			aLine = strconv.Quote(aLines[lineNumber])
 		}
 		if lineNumber < len(bLines) {
-			bLine = strings.Replace(bLines[lineNumber], "\x00", ".", -1)
+			bLine = strconv.Quote(bLines[lineNumber])
 		}
 
 		diffFlag := " "
 		if aLine != bLine {
 			diffFlag = "*"
 		}
-		out += fmt.Sprintf("%s %3d %-40s%-40s\n", diffFlag, lineNumber+1, "'"+aLine+"'", "'"+bLine+"'")
+		out += fmt.Sprintf("%s %3d %-40s%-40s\n", diffFlag, lineNumber+1, aLine, bLine)
 	}
 
 	return out

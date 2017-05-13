@@ -91,6 +91,10 @@ var builtInFunctionDefinitions = []string{
 	// linux/assert.h
 	"bool __assert_fail(const char*, const char*, unsigned int, const char*) -> linux.AssertFail",
 
+	// linux/stdio.h
+	"int _IO_getc(FILE*) -> noarch.Fgetc",
+	"int _IO_putc(int, FILE*) -> noarch.Fputc",
+
 	// math.h
 	"double acos(double) -> math.Acos",
 	"double asin(double) -> math.Asin",
@@ -210,7 +214,7 @@ func loadFunctionDefinitions() {
 	builtInFunctionDefinitionsHaveBeenLoaded = true
 
 	for _, f := range builtInFunctionDefinitions {
-		match := regexp.MustCompile(`^(.+?) (.+?)\((.*?)\)( -> .+)?$`).
+		match := regexp.MustCompile(`^(.+) ([^ ]+)\(([, a-z*A-Z_0-9]*)\)( -> .+)?$`).
 			FindStringSubmatch(f)
 
 		// Unpack argument types.

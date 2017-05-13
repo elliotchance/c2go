@@ -257,7 +257,18 @@ func Ftell(f *File) int32 {
 }
 
 func Fread(buffer *[]byte, size1, size2 int, f *File) int {
-	n, err := f.OsFile.Read(*buffer)
+	// Create a new buffer so that we can ensure we read up to the correct
+	// number of bytes from the file.
+	newBuffer := make([]byte, size1*size2)
+	n, err := f.OsFile.Read(newBuffer)
+
+	// Despite any error we need to make sure the bytes read are copied to the
+	// destination buffer.
+	for i, b := range newBuffer {
+		(*buffer)[i] = b
+	}
+
+	// Now we can handle the success or failure.
 	if err != nil {
 		return -1
 	}

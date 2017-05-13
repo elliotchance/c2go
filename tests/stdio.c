@@ -300,6 +300,7 @@ void test_fread()
     // obtain file size:
     fseek(pFile, 0, SEEK_END);
     lSize = ftell(pFile);
+    printf("lSize = %d\n", lSize);
     rewind(pFile);
 
     // copy the file into the buffer:
@@ -310,6 +311,9 @@ void test_fread()
         return;
     }
 
+    // See issue #107
+    buffer[lSize - 1] = 0;
+    
     printf("%s", buffer);
 
     /* the whole file is now loaded in the memory buffer. */
