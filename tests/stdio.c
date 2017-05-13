@@ -327,6 +327,44 @@ void test_fwrite()
     fclose(pFile);
 }
 
+void test_fgetpos()
+{
+    FILE *pFile;
+    int c;
+    int n;
+    fpos_t pos;
+
+    pFile = fopen("tests/stdio.c", "r");
+    if (pFile == NULL)
+        printf("Error opening file");
+    else
+    {
+        c = fgetc(pFile);
+        printf("1st character is %c\n", c);
+        fgetpos(pFile, &pos);
+        for (n = 0; n < 3; n++)
+        {
+            fsetpos(pFile, &pos);
+            c = fgetc(pFile);
+            printf("2nd character is %c\n", c);
+        }
+        fclose(pFile);
+    }
+}
+
+void test_fsetpos()
+{
+    FILE *pFile;
+    fpos_t position;
+
+    pFile = fopen("/tmp/myfile.txt", "w");
+    fgetpos(pFile, &position);
+    fputs("That is a sample", pFile);
+    fsetpos(pFile, &position);
+    fputs("This", pFile);
+    fclose(pFile);
+}
+
 int main()
 {
     START_TEST(putchar)
@@ -353,6 +391,8 @@ int main()
     START_TEST(ftell)
     START_TEST(fread)
     START_TEST(fwrite)
+    START_TEST(fgetpos)
+    START_TEST(fsetpos)
 
     return 0;
 }

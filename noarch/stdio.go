@@ -275,3 +275,16 @@ func Fwrite(buffer string, size1, size2 int, f *File) int {
 
 	return n
 }
+
+func Fgetpos(f *File, pos *int) int {
+	absolutePos := Fseek(f, 0, 1)
+	if pos != nil {
+		*pos = absolutePos
+	}
+
+	return absolutePos
+}
+
+func Fsetpos(f *File, pos *int) int {
+	return Fseek(f, int32(*pos), 0)
+}
