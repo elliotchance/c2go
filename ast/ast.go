@@ -133,6 +133,8 @@ func Parse(line string) Node {
 		return parseTypedefDecl(line)
 	case "TypedefType":
 		return parseTypedefType(line)
+	case "UnaryExprOrTypeTraitExpr":
+		return parseUnaryExprOrTypeTraitExpr(line)
 	case "UnaryOperator":
 		return parseUnaryOperator(line)
 	case "VarDecl":

@@ -39,6 +39,10 @@ var simpleResolveTypes = map[string]string{
 	"void":               "",
 	"_Bool":              "bool",
 
+	// null is a special case (it should probably have a less ambiguos name)
+	// when using the NULL macro.
+	"null": "null",
+
 	"const char *": "string",
 
 	// Are these built into some compilers?
@@ -68,7 +72,7 @@ var simpleResolveTypes = map[string]string{
 	"__sbuf":                       "int64",
 	"__sFILEX":                     "interface{}",
 	"__va_list_tag":                "interface{}",
-	"FILE":                         "int64",
+	"FILE":                         "github.com/elliotchance/c2go/noarch.File",
 	"union sigval":                 "int",
 	"union __sigaction_u":          "int",
 
@@ -85,7 +89,7 @@ var simpleResolveTypes = map[string]string{
 	"union pthread_attr_t":        "interface{}",
 }
 
-func ResolveType(program *program.Program, s string) string {
+func ResolveType(p *program.Program, s string) string {
 	// Remove any whitespace or attributes that are not relevant to Go.
 	s = strings.Replace(s, "const ", "", -1)
 	s = strings.Replace(s, "volatile ", "", -1)
@@ -110,15 +114,13 @@ func ResolveType(program *program.Program, s string) string {
 	// equivalent. For example float, int, etc.
 	for k, v := range simpleResolveTypes {
 		if k == s {
-			return program.ImportType(v)
+			return p.ImportType(v)
 		}
 	}
 
 	// If the type is already defined we can proceed with the same name.
-	for _, v := range program.TypesAlreadyDefined {
-		if v == s {
-			return program.ImportType(s)
-		}
+	if p.TypeIsAlreadyDefined(s) {
+		return p.ImportType(s)
 	}
 
 	// Structures are by name.
@@ -128,7 +130,7 @@ func ResolveType(program *program.Program, s string) string {
 
 			for _, v := range simpleResolveTypes {
 				if v == s {
-					return "*" + program.ImportType(simpleResolveTypes[s])
+					return "*" + p.ImportType(simpleResolveTypes[s])
 				}
 			}
 
@@ -138,7 +140,7 @@ func ResolveType(program *program.Program, s string) string {
 
 			for _, v := range simpleResolveTypes {
 				if v == s {
-					return program.ImportType(simpleResolveTypes[s])
+					return p.ImportType(simpleResolveTypes[s])
 				}
 			}
 
@@ -163,7 +165,10 @@ func ResolveType(program *program.Program, s string) string {
 	// It may be a pointer of a simple type. For example, float *, int *,
 	// etc.
 	if regexp.MustCompile("[\\w ]+\\*+$").MatchString(s) {
-		return "*" + ResolveType(program, strings.TrimSpace(s[:len(s)-2]))
+		// The "-1" is important because there may or may not be a space between
+		// the name and the "*". If there is an extra space it will be trimmed
+		// off.
+		return "*" + ResolveType(p, strings.TrimSpace(s[:len(s)-1]))
 	}
 
 	if regexp.MustCompile(`[\w ]+\*\[\d+\]$`).MatchString(s) {
@@ -183,10 +188,11 @@ func ResolveType(program *program.Program, s string) string {
 		return "interface{}"
 	}
 
-	// It could be an array of fixed length.
+	// It could be an array of fixed length. These needs to be converted to
+	// slices.
 	search2 := regexp.MustCompile("([\\w ]+)\\[(\\d+)\\]").FindStringSubmatch(s)
 	if len(search2) > 0 {
-		return fmt.Sprintf("[%s]%s", search2[2], ResolveType(program, search2[1]))
+		return fmt.Sprintf("[]%s", ResolveType(p, search2[1]))
 	}
 
 	panic(fmt.Sprintf("I couldn't find an appropriate Go type for the C type '%s'.", s))

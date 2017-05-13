@@ -4,10 +4,13 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
+	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -23,6 +26,38 @@ type programOut struct {
 	stdout bytes.Buffer
 	stderr bytes.Buffer
 	isZero bool
+}
+
+// showDiff will print two strings vertically next to each other so that line
+// differences are easier to read.
+func showDiff(a, b string) string {
+	aLines := strings.Split(a, "\n")
+	bLines := strings.Split(b, "\n")
+	maxLines := int(math.Max(float64(len(aLines)), float64(len(bLines))))
+	out := "\n"
+
+	for lineNumber := 0; lineNumber < maxLines; lineNumber++ {
+		aLine := ""
+		bLine := ""
+
+		// Replace NULL characters with a dot. Otherwise the strings will look
+		// exactly the same but have different length (and therfore not be
+		// equal).
+		if lineNumber < len(aLines) {
+			aLine = strconv.Quote(aLines[lineNumber])
+		}
+		if lineNumber < len(bLines) {
+			bLine = strconv.Quote(bLines[lineNumber])
+		}
+
+		diffFlag := " "
+		if aLine != bLine {
+			diffFlag = "*"
+		}
+		out += fmt.Sprintf("%s %3d %-40s%-40s\n", diffFlag, lineNumber+1, aLine, bLine)
+	}
+
+	return out
 }
 
 // TestIntegrationScripts tests all programs in the tests directory.
@@ -51,10 +86,10 @@ func TestIntegrationScripts(t *testing.T) {
 			cProgram := programOut{}
 			goProgram := programOut{}
 
-			// Compile C
-			err := exec.Command("clang", "-lm", "-o", cPath, file).Run()
+			// Compile C.
+			out, err := exec.Command("clang", "-lm", "-o", cPath, file).CombinedOutput()
 			if err != nil {
-				t.Fatal(err)
+				t.Fatalf("error: %s\n%s", err, out)
 			}
 
 			// Run C program
@@ -94,7 +129,7 @@ func TestIntegrationScripts(t *testing.T) {
 
 			// Check stdout
 			if cProgram.stdout.String() != goProgram.stdout.String() {
-				t.Fatalf("Expected %q, Got: %q", cProgram.stdout.String(), goProgram.stdout.String())
+				t.Fatalf(showDiff(cProgram.stdout.String(), goProgram.stdout.String()))
 			}
 		})
 	}
