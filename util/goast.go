@@ -6,6 +6,7 @@ package util
 import (
 	goast "go/ast"
 	"go/token"
+	"strconv"
 )
 
 func NewCallExpr(functionName string, args ...goast.Expr) *goast.CallExpr {
@@ -35,4 +36,18 @@ func NewIdents(names ...string) []goast.Expr {
 	}
 
 	return idents
+}
+
+func NewStringLit(value string) *goast.BasicLit {
+	return &goast.BasicLit{
+		Kind:  token.STRING,
+		Value: value,
+	}
+}
+
+func NewIntLit(value int) *goast.BasicLit {
+	return &goast.BasicLit{
+		Kind:  token.INT,
+		Value: strconv.Itoa(value),
+	}
 }

@@ -51,10 +51,17 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 	// Allocate slice so that it operates like a fixed size array.
 	arrayType, arraySize := types.GetArrayTypeAndSize(a.Type)
 	if arraySize != -1 && values == nil {
-		// FIXME: This is lazy. Construct the Go AST properly.
+		goArrayType := types.ResolveType(p, arrayType)
+
 		values = []goast.Expr{
-			util.NewCallExpr("make", goast.NewIdent(
-				fmt.Sprintf("[]%s, %d, %d", types.ResolveType(p, arrayType), arraySize, arraySize))),
+			util.NewCallExpr(
+				"make",
+				&goast.ArrayType{
+					Elt: goast.NewIdent(goArrayType),
+				},
+				util.NewIntLit(arraySize),
+				util.NewIntLit(arraySize),
+			),
 		}
 	}
 

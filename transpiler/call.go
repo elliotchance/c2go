@@ -83,7 +83,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 		// can do it in C. Instead we have to create a temporary string
 		// variable.
 		if functionName == "noarch.Fscanf" && arraySize != -1 {
-			// FIXME: The name of the temp variable needs to be random.
+			tempVariableName := p.GetNextIdentifier("")
 
 			// var __temp string
 			preStmts = append(preStmts, &goast.DeclStmt{
@@ -91,7 +91,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 					Tok: token.VAR,
 					Specs: []goast.Spec{
 						&goast.ValueSpec{
-							Names: []*goast.Ident{goast.NewIdent("__temp")},
+							Names: []*goast.Ident{goast.NewIdent(tempVariableName)},
 							Type:  goast.NewIdent("string"),
 						},
 					},
@@ -101,12 +101,12 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 			postStmts = append(postStmts, &goast.ExprStmt{
 				X: util.NewCallExpr("copy", &goast.SliceExpr{
 					X: e,
-				}, goast.NewIdent("__temp")),
+				}, goast.NewIdent(tempVariableName)),
 			})
 
 			e = &goast.UnaryExpr{
 				Op: token.AND,
-				X:  goast.NewIdent("__temp"),
+				X:  goast.NewIdent(tempVariableName),
 			}
 		}
 

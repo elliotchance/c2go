@@ -219,11 +219,6 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Ex
 	functionName := fmt.Sprintf("noarch.%sTo%s",
 		util.GetExportedName(leftName), util.GetExportedName(rightName))
 
-	// FIXME: Remove this code, it was only for debugging.
-	if functionName == "noarch.IO_FILEToFile" {
-		panic(fmt.Sprintf("'%s' '%s'", fromType, toType))
-	}
-
 	return &goast.CallExpr{
 		Fun:  goast.NewIdent(functionName),
 		Args: []goast.Expr{expr},
