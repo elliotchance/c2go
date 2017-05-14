@@ -10,6 +10,9 @@
 #define FLOAT(type) \
     printf("%s = %d bytes\n", #type, sizeof(type));
 
+#define OTHER(type) \
+    printf("%s = %d bytes\n", #type, sizeof(type));
+
 int main(int argc, char *argv[])
 {
     // Integer types.
@@ -22,6 +25,15 @@ int main(int argc, char *argv[])
     FLOAT(float)
     FLOAT(double)
     FLOAT(long double)
+
+    // Types with qualifiers that do not effect the size.
+    OTHER(const int)
+    OTHER(volatile float)
+
+    // TODO: Pointers.
+    // TODO: Variables.
+    // TODO: Structures.
+    // TODO: Function pointers.
 
     return 0;
 }
