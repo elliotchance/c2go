@@ -119,6 +119,9 @@ func transpileToExpr(node ast.Node, p *program.Program) (
 	case *ast.CompoundAssignOperator:
 		return transpileCompoundAssignOperator(n, p)
 
+	case *ast.UnaryExprOrTypeTraitExpr:
+		return transpileUnaryExprOrTypeTraitExpr(n, p)
+
 	default:
 		panic(fmt.Sprintf("cannot transpile to expr: %#v", node))
 	}
