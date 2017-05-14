@@ -26,11 +26,18 @@ int main(int argc, char *argv[])
     FLOAT(double)
     FLOAT(long double)
 
+    // Other types.
+    OTHER(void)
+
     // Types with qualifiers that do not effect the size.
-    OTHER(const int)
-    OTHER(volatile float)
+    OTHER(const short)
+    OTHER(volatile long double)
 
     // TODO: Pointers.
+    OTHER(char*)
+    OTHER(char *)
+    OTHER(short**)
+
     // TODO: Variables.
     // TODO: Structures.
     // TODO: Function pointers.

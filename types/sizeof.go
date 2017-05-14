@@ -24,10 +24,14 @@ func SizeOf(cType string) int {
 
 	// FIXME: The pointer size will be different on different platforms. We
 	// should find out the correct size at runtime.
-	// pointerSize := 4
+	pointerSize := 8
+
+	if strings.HasSuffix(cType, "*") {
+		return pointerSize
+	}
 
 	switch cType {
-	case "char":
+	case "char", "void":
 		return 1
 
 	case "short":
