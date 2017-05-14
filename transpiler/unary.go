@@ -117,5 +117,13 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 
 func transpileUnaryExprOrTypeTraitExpr(n *ast.UnaryExprOrTypeTraitExpr, p *program.Program) (
 	*goast.BasicLit, string, []goast.Stmt, []goast.Stmt, error) {
-	return util.NewIntLit(types.SizeOf(n.Type2)), types.ResolveType(p, n.Type1), nil, nil, nil
+	t := n.Type2
+
+	// It will have children if the sizeof() is referencing a variable.
+	// Fortunately clang already has the type in the AST for us.
+	if len(n.Children) > 0 {
+		t = n.Children[0].(*ast.ParenExpr).Children[0].(*ast.DeclRefExpr).Type2
+	}
+
+	return util.NewIntLit(types.SizeOf(t)), types.ResolveType(p, n.Type1), nil, nil, nil
 }

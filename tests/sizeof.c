@@ -13,6 +13,11 @@
 #define OTHER(type) \
     printf("%s = %d bytes\n", #type, sizeof(type));
 
+// We print the variable so that the compiler doesn't complain that the variable
+// is unused.
+#define VARIABLE(v) \
+    printf("%s = (%d) %d bytes\n", #v, v, sizeof(v));
+
 int main(int argc, char *argv[])
 {
     // Integer types.
@@ -39,6 +44,12 @@ int main(int argc, char *argv[])
     OTHER(short**)
 
     // TODO: Variables.
+    short a;
+    int b;
+    
+    VARIABLE(a);
+    VARIABLE(b);
+
     // TODO: Structures.
     // TODO: Function pointers.
 
