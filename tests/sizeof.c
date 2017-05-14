@@ -2,11 +2,18 @@
 
 #include <stdio.h>
 
-#define T(type) printf("%s = %d bytes\n", #type, sizeof(type))
+#define INT(type) \
+    printf("%s = %d bytes\n", #type, sizeof(type)); \
+    printf("unsigned %s = %d bytes\n", #type, sizeof(unsigned type)); \
+    printf("signed %s = %d bytes\n", #type, sizeof(signed type));
 
 int main(int argc, char *argv[])
 {
-    T(int);
+    // Basic types
+    INT(char)
+    INT(short)
+    INT(int)
+    INT(long)
 
     return 0;
 }
