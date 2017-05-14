@@ -7,13 +7,21 @@
     printf("unsigned %s = %d bytes\n", #type, sizeof(unsigned type)); \
     printf("signed %s = %d bytes\n", #type, sizeof(signed type));
 
+#define FLOAT(type) \
+    printf("%s = %d bytes\n", #type, sizeof(type));
+
 int main(int argc, char *argv[])
 {
-    // Basic types
+    // Integer types.
     INT(char)
     INT(short)
     INT(int)
     INT(long)
+
+    // Floating-point types.
+    FLOAT(float)
+    FLOAT(double)
+    FLOAT(long double)
 
     return 0;
 }

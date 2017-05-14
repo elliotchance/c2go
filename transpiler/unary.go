@@ -1,6 +1,8 @@
 package transpiler
 
 import (
+	"fmt"
+
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/types"
@@ -21,7 +23,7 @@ func getSizeOfCType(cType string) int {
 
 	// FIXME: The pointer size will be different on different platforms. We
 	// should find out the correct size at runtime.
-	pointerSize := 4
+	// pointerSize := 4
 
 	switch cType {
 	case "char":
@@ -30,16 +32,17 @@ func getSizeOfCType(cType string) int {
 	case "short":
 		return 2
 
-	case "int":
+	case "int", "float":
 		return 4
 
-	case "long":
+	case "long", "double":
 		return 8
 
+	case "long double":
+		return 16
+
 	default:
-		// If we cannot determine the type we can assume it is a type of
-		// pointer.
-		return pointerSize
+		panic(fmt.Sprintf("cannot determine type of: %s", cType))
 	}
 }
 
