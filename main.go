@@ -24,7 +24,7 @@ import (
 //     c2go -version
 //
 // See https://github.com/elliotchance/c2go/wiki/Release-Process
-const Version = "0.11.0"
+const Version = "0.11.1"
 
 var (
 	printAst = flag.Bool("print-ast", false, "Print AST before translated Go code.")
