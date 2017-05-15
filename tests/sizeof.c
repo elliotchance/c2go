@@ -49,8 +49,8 @@ int main(int argc, char *argv[])
     OTHER(short**)
 
     // Variables.
-    short a;
-    int b;
+    short a = 123;
+    int b = 456;
     struct MyStruct s1;
     s1.b = 0;
     

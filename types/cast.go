@@ -71,14 +71,18 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Ex
 
 	// Compatible integer types
 	types := []string{
-		// General types:
-		"int", "int32", "int64", "uint16", "uint32", "byte", "uint64",
+		// Integer types
+		"byte",
+		"int", "int16", "int32", "int64",
+		"uint16", "uint32", "uint64",
+
+		// Floating-point types.
 		"float32", "float64",
 
 		// Known aliases
 		"__uint16_t", "size_t",
 
-		// Darwin specific:
+		// Darwin specific
 		"__darwin_ct_rune_t", "darwin.Darwin_ct_rune_t",
 	}
 	for _, v := range types {
