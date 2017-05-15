@@ -1,3 +1,4 @@
+// Package noarch contains low-level functions that apply to multiple platforms.
 package noarch
 
 func BoolToInt(x bool) int {

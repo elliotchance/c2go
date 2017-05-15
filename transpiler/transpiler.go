@@ -1,3 +1,5 @@
+// Package transpiler handles the conversion between the Clang AST and the Go
+// AST.
 package transpiler
 
 import (

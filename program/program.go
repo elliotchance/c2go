@@ -1,14 +1,15 @@
+// Package program contains high-level orchestration and state of the input and
+// output program during transpilation.
 package program
 
 import (
+	"fmt"
 	"go/ast"
 	"go/token"
 	"strconv"
 	"strings"
 
 	goast "go/ast"
-
-	"fmt"
 
 	"github.com/elliotchance/c2go/util"
 )
@@ -38,6 +39,10 @@ type Program struct {
 	// This is used to generate globally unique names for temporary variables
 	// and other generated code. See GetNextIdentifier().
 	nextUniqueIdentifier int
+
+	// The definitions for defined structs.
+	// TODO: This field should be protected through proper getters and setters.
+	Structs map[string]Struct
 }
 
 // NewProgram creates a new blank program.
@@ -46,6 +51,7 @@ func NewProgram() *Program {
 		imports:             []string{},
 		typesAlreadyDefined: []string{},
 		startupStatements:   []goast.Stmt{},
+		Structs:             make(map[string]Struct),
 	}
 }
 

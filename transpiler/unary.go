@@ -125,5 +125,5 @@ func transpileUnaryExprOrTypeTraitExpr(n *ast.UnaryExprOrTypeTraitExpr, p *progr
 		t = n.Children[0].(*ast.ParenExpr).Children[0].(*ast.DeclRefExpr).Type2
 	}
 
-	return util.NewIntLit(types.SizeOf(t)), types.ResolveType(p, n.Type1), nil, nil, nil
+	return util.NewIntLit(types.SizeOf(p, t)), types.ResolveType(p, n.Type1), nil, nil, nil
 }

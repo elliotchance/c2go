@@ -15,8 +15,13 @@
 
 // We print the variable so that the compiler doesn't complain that the variable
 // is unused.
-#define VARIABLE(v) \
-    printf("%s = (%d) %d bytes\n", #v, v, sizeof(v));
+#define VARIABLE(v, p) \
+    printf("%s = (%d) %d bytes\n", #v, p, sizeof(v));
+
+struct MyStruct {
+    double a;
+    char b;
+};
 
 int main(int argc, char *argv[])
 {
@@ -38,20 +43,25 @@ int main(int argc, char *argv[])
     OTHER(const short)
     OTHER(volatile long double)
 
-    // TODO: Pointers.
+    // Pointers.
     OTHER(char*)
     OTHER(char *)
     OTHER(short**)
 
-    // TODO: Variables.
+    // Variables.
     short a;
     int b;
+    struct MyStruct s1;
     
-    VARIABLE(a);
-    VARIABLE(b);
+    VARIABLE(a, a);
+    VARIABLE(b, b);
+    VARIABLE(s1, s1.b);
 
-    // TODO: Structures.
+    // Structures.
+    OTHER(struct MyStruct);
+
     // TODO: Function pointers.
+    // TODO: Unions.
 
     return 0;
 }
