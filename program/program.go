@@ -41,6 +41,10 @@ type Program struct {
 	// The definitions for defined structs.
 	// TODO: This field should be protected through proper getters and setters.
 	Structs map[string]*Struct
+
+	// If verbose is on progress messages will be printed immediately as code
+	// comments (so that they do not intefere with the program output).
+	Verbose bool
 }
 
 // NewProgram creates a new blank program.
@@ -50,6 +54,7 @@ func NewProgram() *Program {
 		typesAlreadyDefined: []string{},
 		startupStatements:   []goast.Stmt{},
 		Structs:             make(map[string]*Struct),
+		Verbose:             false,
 	}
 }
 
