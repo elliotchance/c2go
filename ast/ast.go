@@ -107,6 +107,8 @@ func Parse(line string) Node {
 		return parseLabelStmt(line)
 	case "MallocAttr":
 		return parseMallocAttr(line)
+	case "MaxFieldAlignmentAttr":
+		return parseMaxFieldAlignmentAttr(line)
 	case "MemberExpr":
 		return parseMemberExpr(line)
 	case "ModeAttr":
