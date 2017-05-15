@@ -13,6 +13,13 @@ func TestImplicitValueInitExpr(t *testing.T) {
 			Type2:    "long long",
 			Children: []Node{},
 		},
+		`0x7feecb0d6af0 <<invalid sloc>> 'char'`: &ImplicitValueInitExpr{
+			Address:  "0x7feecb0d6af0",
+			Position: "<invalid sloc>",
+			Type1:    "char",
+			Type2:    "",
+			Children: []Node{},
+		},
 	}
 
 	runNodeTests(t, nodes)

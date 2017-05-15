@@ -10,7 +10,7 @@ type ImplicitValueInitExpr struct {
 
 func parseImplicitValueInitExpr(line string) *ImplicitValueInitExpr {
 	groups := groupsFromRegex(
-		"<(?P<position>.*)> '(?P<type1>.*)':'(?P<type2>.*)'",
+		"<(?P<position>.*)> '(?P<type1>.*?)'(:'(?P<type2>.*)')?",
 		line,
 	)
 
