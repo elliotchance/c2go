@@ -99,6 +99,8 @@ func Parse(line string) Node {
 		return parseImplicitCastExpr(line)
 	case "ImplicitValueInitExpr":
 		return parseImplicitValueInitExpr(line)
+	case "IncompleteArrayType":
+		return parseIncompleteArrayType(line)
 	case "InitListExpr":
 		return parseInitListExpr(line)
 	case "IntegerLiteral":
