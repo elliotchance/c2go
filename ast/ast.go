@@ -14,6 +14,12 @@ type Node interface {
 // Parse takes the coloured output of the clang AST command and returns a root
 // node for the AST.
 func Parse(line string) Node {
+	// This is a special case. I'm not sure if it's a bug in the clang AST
+	// dumper. It should have children.
+	if line == "array filler" {
+		return parseArrayFiller(line)
+	}
+
 	nodeName := strings.SplitN(line, " ", 2)[0]
 
 	switch nodeName {
