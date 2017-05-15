@@ -153,6 +153,8 @@ func Parse(line string) Node {
 		return parseUnaryExprOrTypeTraitExpr(line)
 	case "UnaryOperator":
 		return parseUnaryOperator(line)
+	case "VAArgExpr":
+		return parseVAArgExpr(line)
 	case "VarDecl":
 		return parseVarDecl(line)
 	case "WarnUnusedResultAttr":
