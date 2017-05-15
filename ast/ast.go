@@ -121,6 +121,8 @@ func Parse(line string) Node {
 		return parseNoThrowAttr(line)
 	case "NonNullAttr":
 		return parseNonNullAttr(line)
+	case "PackedAttr":
+		return parsePackedAttr(line)
 	case "ParenExpr":
 		return parseParenExpr(line)
 	case "ParenType":
