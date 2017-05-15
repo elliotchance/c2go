@@ -145,6 +145,8 @@ func Parse(line string) Node {
 		return parseRestrictAttr(line)
 	case "ReturnStmt":
 		return parseReturnStmt(line)
+	case "ReturnsTwiceAttr":
+		return parseReturnsTwiceAttr(line)
 	case "StringLiteral":
 		return parseStringLiteral(line)
 	case "SwitchStmt":
