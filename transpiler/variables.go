@@ -1,6 +1,7 @@
 package transpiler
 
 import (
+	"errors"
 	"fmt"
 	"go/token"
 
@@ -12,7 +13,8 @@ import (
 	goast "go/ast"
 )
 
-func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (*goast.Ident, string, error) {
+func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (
+	*goast.Ident, string, error) {
 	// TODO: System arguments are fixed variable names.
 	// https://github.com/elliotchance/c2go/issues/86
 	if n.Name == "argc" {
@@ -42,8 +44,9 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 		if !types.IsNullExpr(defaultValue) {
-			values = []goast.Expr{
-				types.CastExpr(p, defaultValue, defaultValueType, a.Type),
+			t, err := types.CastExpr(p, defaultValue, defaultValueType, a.Type)
+			if !ast.IsWarning(err, a) {
+				values = []goast.Expr{t}
 			}
 		}
 	}
@@ -51,7 +54,8 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 	// Allocate slice so that it operates like a fixed size array.
 	arrayType, arraySize := types.GetArrayTypeAndSize(a.Type)
 	if arraySize != -1 && values == nil {
-		goArrayType := types.ResolveType(p, arrayType)
+		goArrayType, err := types.ResolveType(p, arrayType)
+		ast.IsWarning(err, a)
 
 		values = []goast.Expr{
 			util.NewCallExpr(
@@ -65,13 +69,16 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 		}
 	}
 
+	t, err := types.ResolveType(p, a.Type)
+	ast.IsWarning(err, a)
+
 	return &goast.DeclStmt{
 		Decl: &goast.GenDecl{
 			Tok: token.VAR,
 			Specs: []goast.Spec{
 				&goast.ValueSpec{
 					Names:  []*goast.Ident{goast.NewIdent(a.Name)},
-					Type:   goast.NewIdent(types.ResolveType(p, a.Type)),
+					Type:   goast.NewIdent(t),
 					Values: values,
 				},
 			},
@@ -137,8 +144,10 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program) 
 
 	newType, err := types.GetDereferenceType(expressionType)
 	if err != nil {
-		panic(fmt.Sprintf("Cannot dereference type '%s' for the expression '%s'",
-			expressionType, expression))
+		message := fmt.Sprintf(
+			"Cannot dereference type '%s' for the expression '%s'",
+			expressionType, expression)
+		return nil, newType, nil, nil, errors.New(message)
 	}
 
 	return &goast.IndexExpr{
@@ -159,7 +168,9 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	lhsResolvedType := types.ResolveType(p, lhsType)
+	lhsResolvedType, err := types.ResolveType(p, lhsType)
+	ast.IsWarning(err, n)
+
 	rhs := n.Name
 
 	// FIXME: This should not be empty. We need some fallback type to catch

@@ -65,7 +65,8 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
 	}
 
 	// The condition in Go must always be a bool.
-	boolCondition := types.CastExpr(p, conditional, conditionalType, "bool")
+	boolCondition, err := types.CastExpr(p, conditional, conditionalType, "bool")
+	ast.WarningOrError(err, n, boolCondition == nil)
 
 	body, newPre, newPost, err := transpileToBlockStmt(children[2], p)
 	if err != nil {
@@ -157,7 +158,8 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-		condition = types.CastExpr(p, condition, conditionType, "bool")
+		condition, err = types.CastExpr(p, condition, conditionType, "bool")
+		ast.WarningOrError(err, n, condition == nil)
 	}
 
 	return &goast.ForStmt{
@@ -191,8 +193,11 @@ func transpileWhileStmt(n *ast.WhileStmt, p *program.Program) (
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
+	cond, err := types.CastExpr(p, condition, conditionType, "bool")
+	ast.WarningOrError(err, n, cond == nil)
+
 	return &goast.ForStmt{
-		Cond: types.CastExpr(p, condition, conditionType, "bool"),
+		Cond: cond,
 		Body: body,
 	}, preStmts, postStmts, nil
 }
@@ -218,10 +223,13 @@ func transpileDoStmt(n *ast.DoStmt, p *program.Program) (
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	// Add IfStmt to the end of the loop to check the condition
+	x, err := types.CastExpr(p, condition, conditionType, "bool")
+	ast.WarningOrError(err, n, x == nil)
+
 	body.List = append(body.List, &goast.IfStmt{
 		Cond: &goast.UnaryExpr{
 			Op: token.NOT,
-			X:  types.CastExpr(p, condition, conditionType, "bool"),
+			X:  x,
 		},
 		Body: &goast.BlockStmt{
 			List: []goast.Stmt{&goast.BranchStmt{Tok: token.BREAK}},

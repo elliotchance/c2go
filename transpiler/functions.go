@@ -111,9 +111,12 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 			return err
 		}
 
+		t, err := types.ResolveType(p, f.ReturnType)
+		ast.IsWarning(err, n)
+
 		returnTypes := []*goast.Field{
 			&goast.Field{
-				Type: goast.NewIdent(types.ResolveType(p, f.ReturnType)),
+				Type: goast.NewIdent(t),
 			},
 		}
 
@@ -157,9 +160,12 @@ func getFieldList(f *ast.FunctionDecl, p *program.Program) (*goast.FieldList, er
 	r := []*goast.Field{}
 	for _, n := range f.Children {
 		if v, ok := n.(*ast.ParmVarDecl); ok {
+			t, err := types.ResolveType(p, v.Type)
+			ast.IsWarning(err, f)
+
 			r = append(r, &goast.Field{
 				Names: []*goast.Ident{goast.NewIdent(v.Name)},
-				Type:  goast.NewIdent(types.ResolveType(p, v.Type)),
+				Type:  goast.NewIdent(t),
 			})
 		}
 	}
@@ -184,7 +190,10 @@ func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (
 
 	f := program.GetFunctionDefinition(p.FunctionName)
 
-	results := []goast.Expr{types.CastExpr(p, e, eType, f.ReturnType)}
+	t, err := types.CastExpr(p, e, eType, f.ReturnType)
+	ast.WarningOrError(err, n, t == nil)
+
+	results := []goast.Expr{t}
 
 	// main() function is not allowed to return a result. Use os.Exit if non-zero
 	if p.FunctionName == "main" {

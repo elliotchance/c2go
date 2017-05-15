@@ -63,13 +63,6 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-		// if i > len(functionDef.ArgumentTypes)-1 {
-		// 	// This means the argument is one of the varargs so we don't know
-		// 	// what type it needs to be cast to.
-		// } else {
-		// 	//e = types.CastExpr(p, e, eType, functionDef.ArgumentTypes[i])
-		// }
-
 		_, arraySize := types.GetArrayTypeAndSize(eType)
 		if functionName == "fmt.Printf" && arraySize != -1 {
 			p.AddImport("github.com/elliotchance/c2go/noarch")
@@ -121,6 +114,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 	// Apply transformation if needed. A transformation rearranges the return
 	// value(s) and parameters. It is also used to indicate when a variable must
 	// be passed by reference.
+	var err error
 	if functionDef.ReturnParameters != nil || functionDef.Parameters != nil {
 		for i, a := range functionDef.Parameters {
 			byReference := false
@@ -143,7 +137,9 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 					X:  args[i],
 				}
 			} else {
-				realArg = types.CastExpr(p, realArg, argTypes[i], functionDef.ArgumentTypes[i])
+				realArg, err = types.CastExpr(p, realArg, argTypes[i],
+					functionDef.ArgumentTypes[i])
+				ast.WarningOrError(err, n, realArg == nil)
 			}
 
 			realArgs = append(realArgs, realArg)
@@ -153,10 +149,12 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 		// types.
 		for i, a := range args {
 			if i > len(functionDef.ArgumentTypes)-1 {
-				// This means the argument is one of the varargs so we don't know
-				// what type it needs to be cast to.
+				// This means the argument is one of the varargs so we don't
+				// know what type it needs to be cast to.
 			} else {
-				a = types.CastExpr(p, a, argTypes[i], functionDef.ArgumentTypes[i])
+				a, err = types.CastExpr(p, a, argTypes[i],
+					functionDef.ArgumentTypes[i])
+				ast.WarningOrError(err, n, a == nil)
 			}
 
 			realArgs = append(realArgs, a)

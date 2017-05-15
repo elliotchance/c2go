@@ -62,7 +62,9 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 			}, "bool", preStmts, postStmts, nil
 		}
 
-		t := types.ResolveType(p, eType)
+		t, err := types.ResolveType(p, eType)
+		ast.IsWarning(err, n)
+
 		if t == "string" {
 			return &goast.BinaryExpr{
 				X:  e,
@@ -122,8 +124,26 @@ func transpileUnaryExprOrTypeTraitExpr(n *ast.UnaryExprOrTypeTraitExpr, p *progr
 	// It will have children if the sizeof() is referencing a variable.
 	// Fortunately clang already has the type in the AST for us.
 	if len(n.Children) > 0 {
-		t = n.Children[0].(*ast.ParenExpr).Children[0].(*ast.DeclRefExpr).Type2
+		switch ty := n.Children[0].(*ast.ParenExpr).Children[0].(type) {
+		case *ast.DeclRefExpr:
+			t = ty.Type2
+
+		case *ast.ArraySubscriptExpr:
+			t = ty.Type
+
+		case *ast.MemberExpr:
+			t = ty.Type
+
+		default:
+			panic(fmt.Sprintf("cannot do unary on: %#v", ty))
+		}
 	}
 
-	return util.NewIntLit(types.SizeOf(p, t)), types.ResolveType(p, n.Type1), nil, nil, nil
+	ty, err := types.ResolveType(p, n.Type1)
+	ast.IsWarning(err, n)
+
+	sizeInBytes, err := types.SizeOf(p, t)
+	ast.IsWarning(err, n)
+
+	return util.NewIntLit(sizeInBytes), ty, nil, nil, nil
 }

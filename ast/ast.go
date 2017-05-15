@@ -3,6 +3,7 @@ package ast
 
 import (
 	"fmt"
+	"reflect"
 	"regexp"
 	"strings"
 )
@@ -175,19 +176,43 @@ func Position(node Node) string {
 	}
 }
 
-func Error(e error, n Node) {
+// getNicerLineNumber tries to extract a more useful line number from a
+// position. If the line number cannot be determined then the original location
+// string is returned.
+func getNicerLineNumber(s string) string {
+	matches := regexp.MustCompile(`line:(\d+)`).FindStringSubmatch(s)
+	if len(matches) > 0 {
+		return fmt.Sprintf("line %s", matches[1])
+	}
+
+	return s
+}
+
+func CheckError(e error, n Node) {
 	if e != nil {
-		fmt.Printf("// ERROR: %s: %s\n", Position(n), e.Error())
+		structName := reflect.TypeOf(n).Elem().Name()
+		fmt.Printf("// Error (%s): %s: %s\n", structName,
+			getNicerLineNumber(Position(n)), e.Error())
 		panic(e)
 	}
 }
 
-func Warning(e error, n Node) bool {
+func IsWarning(e error, n Node) bool {
 	if e != nil {
-		fmt.Printf("// WARNING: %s: %s\n", Position(n), e.Error())
+		structName := reflect.TypeOf(n).Elem().Name()
+		fmt.Printf("// Warning (%s): %s: %s\n", structName,
+			getNicerLineNumber(Position(n)), e.Error())
 	}
 
 	return e != nil
+}
+
+func WarningOrError(e error, n Node, isError bool) {
+	if isError {
+		CheckError(e, n)
+	} else {
+		IsWarning(e, n)
+	}
 }
 
 // Parse takes the coloured output of the clang AST command and returns a root
