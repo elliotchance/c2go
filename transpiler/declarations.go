@@ -29,20 +29,6 @@ func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, str
 	}, "unknown3"
 }
 
-func newStruct(n *ast.RecordDecl) program.Struct {
-	fields := make(map[string]string)
-
-	for _, field := range n.Children {
-		f := field.(*ast.FieldDecl)
-		fields[f.Name] = f.Type
-	}
-
-	return program.Struct{
-		Name:   n.Name,
-		Fields: fields,
-	}
-}
-
 func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 	name := n.Name
 	if name == "" || p.TypeIsAlreadyDefined(name) {
@@ -51,7 +37,7 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 
 	p.TypeIsNowDefined(name)
 
-	s := newStruct(n)
+	s := program.NewStruct(n)
 	p.Structs[s.Name] = s
 
 	// TODO: Unions are not supported.

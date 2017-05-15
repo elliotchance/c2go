@@ -45,6 +45,11 @@ func SizeOf(p *program.Program, cType string) int {
 		return totalBytes
 	}
 
+	// Function pointers are one byte?
+	if strings.Index(cType, "(") >= 0 {
+		return 1
+	}
+
 	if strings.HasSuffix(cType, "*") {
 		return pointerSize
 	}

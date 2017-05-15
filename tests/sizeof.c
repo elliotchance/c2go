@@ -60,7 +60,9 @@ int main(int argc, char *argv[])
     // Structures.
     OTHER(struct MyStruct);
 
-    // TODO: Function pointers.
+    // Function pointers.
+    OTHER(main);
+
     // TODO: Unions.
 
     return 0;
