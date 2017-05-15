@@ -87,6 +87,8 @@ func Parse(line string) Node {
 		return parseIfStmt(line)
 	case "ImplicitCastExpr":
 		return parseImplicitCastExpr(line)
+	case "InitListExpr":
+		return parseInitListExpr(line)
 	case "IntegerLiteral":
 		return parseIntegerLiteral(line)
 	case "MallocAttr":
