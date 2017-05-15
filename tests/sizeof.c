@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
     short a;
     int b;
     struct MyStruct s1;
+    s1.b = 0;
     
     VARIABLE(a, a);
     VARIABLE(b, b);

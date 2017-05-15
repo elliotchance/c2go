@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
-	"strconv"
-	"strings"
 
 	goast "go/ast"
 
@@ -55,65 +53,12 @@ func NewProgram() *Program {
 	}
 }
 
-// Imports returns all of the Go imports for this program.
-func (p *Program) Imports() []string {
-	return p.imports
-}
-
-// AddImport will append an absolute import if it is unique to the list of
-// imports for this program.
-func (p *Program) AddImport(importPath string) {
-	quotedImportPath := strconv.Quote(importPath)
-
-	for _, i := range p.imports {
-		if i == quotedImportPath {
-			// Already imported, ignore.
-			return
-		}
-	}
-
-	p.imports = append(p.imports, quotedImportPath)
-}
-
-// AddImports is a convienience method for adding multiple imports.
-func (p *Program) AddImports(importPaths ...string) {
-	for _, importPath := range importPaths {
-		p.AddImport(importPath)
-	}
-}
-
-func (p *Program) ImportType(name string) string {
-	if strings.Index(name, ".") != -1 {
-		parts := strings.Split(name, ".")
-		p.AddImport(strings.Join(parts[:len(parts)-1], "."))
-
-		parts2 := strings.Split(name, "/")
-		return parts2[len(parts2)-1]
-	}
-
-	return name
-}
-
 func (p *Program) TypeIsAlreadyDefined(typeName string) bool {
 	return util.InStrings(typeName, p.typesAlreadyDefined)
 }
 
 func (p *Program) TypeIsNowDefined(typeName string) {
 	p.typesAlreadyDefined = append(p.typesAlreadyDefined, typeName)
-}
-
-func (p *Program) AppendStartupStatement(stmt goast.Stmt) {
-	p.startupStatements = append(p.startupStatements, stmt)
-}
-
-func (p *Program) AppendStartupExpr(e goast.Expr) {
-	p.AppendStartupStatement(&goast.ExprStmt{
-		X: e,
-	})
-}
-
-func (p *Program) StartupStatements() []goast.Stmt {
-	return p.startupStatements
 }
 
 // GetNextIdentifier generates a new gloablly unique identifier name. This can
