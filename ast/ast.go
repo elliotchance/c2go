@@ -1,3 +1,4 @@
+// Package ast parses the clang AST output into AST structures.
 package ast
 
 import (
@@ -5,10 +6,13 @@ import (
 	"strings"
 )
 
+// Node represents any node in the AST.
 type Node interface {
 	AddChild(node Node)
 }
 
+// Parse takes the coloured output of the clang AST command and returns a root
+// node for the AST.
 func Parse(line string) Node {
 	nodeName := strings.SplitN(line, " ", 2)[0]
 

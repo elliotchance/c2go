@@ -5,16 +5,17 @@ import (
 )
 
 type FunctionDecl struct {
-	Address    string
-	Position   string
-	Prev       string
-	Position2  string
-	Name       string
-	Type       string
-	IsExtern   bool
-	IsImplicit bool
-	IsUsed     bool
-	Children   []Node
+	Address      string
+	Position     string
+	Prev         string
+	Position2    string
+	Name         string
+	Type         string
+	IsExtern     bool
+	IsImplicit   bool
+	IsUsed       bool
+	IsReferenced bool
+	Children     []Node
 }
 
 func parseFunctionDecl(line string) *FunctionDecl {
@@ -24,6 +25,7 @@ func parseFunctionDecl(line string) *FunctionDecl {
 		(?P<position2> <scratch space>[^ ]+| [^ ]+)?
 		(?P<implicit> implicit)?
 		(?P<used> used)?
+		(?P<referenced> referenced)?
 		 (?P<name>[_\w]+)
 		 '(?P<type>.*)
 		'(?P<extern> extern)?`,
@@ -36,16 +38,17 @@ func parseFunctionDecl(line string) *FunctionDecl {
 	}
 
 	return &FunctionDecl{
-		Address:    groups["address"],
-		Position:   groups["position1"],
-		Prev:       prev,
-		Position2:  strings.TrimSpace(groups["position2"]),
-		Name:       groups["name"],
-		Type:       groups["type"],
-		IsExtern:   len(groups["extern"]) > 0,
-		IsImplicit: len(groups["implicit"]) > 0,
-		IsUsed:     len(groups["used"]) > 0,
-		Children:   []Node{},
+		Address:      groups["address"],
+		Position:     groups["position1"],
+		Prev:         prev,
+		Position2:    strings.TrimSpace(groups["position2"]),
+		Name:         groups["name"],
+		Type:         groups["type"],
+		IsExtern:     len(groups["extern"]) > 0,
+		IsImplicit:   len(groups["implicit"]) > 0,
+		IsUsed:       len(groups["used"]) > 0,
+		IsReferenced: len(groups["referenced"]) > 0,
+		Children:     []Node{},
 	}
 }
 

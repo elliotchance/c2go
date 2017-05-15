@@ -10,12 +10,11 @@ type UnaryExprOrTypeTraitExpr struct {
 }
 
 func parseUnaryExprOrTypeTraitExpr(line string) *UnaryExprOrTypeTraitExpr {
-	// 0x7fccd70adf50 <col:29, col:40> 'unsigned long' sizeof 'char'
 	groups := groupsFromRegex(
 		`<(?P<position>.*)>
 		 '(?P<type1>.+?)'
-		 (?P<function>.+?)
-		 '(?P<type2>.+?)'`,
+		 (?P<function>[^ ]+)
+		(?P<type2> '.+?')?`,
 		line,
 	)
 
@@ -24,7 +23,7 @@ func parseUnaryExprOrTypeTraitExpr(line string) *UnaryExprOrTypeTraitExpr {
 		Position: groups["position"],
 		Type1:    groups["type1"],
 		Function: groups["function"],
-		Type2:    groups["type2"],
+		Type2:    removeQuotes(groups["type2"]),
 		Children: []Node{},
 	}
 }

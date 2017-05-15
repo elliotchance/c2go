@@ -1,3 +1,4 @@
+// Package c2go contains the main function for running the executable.
 package main
 
 import (
@@ -18,6 +19,11 @@ import (
 	"github.com/elliotchance/c2go/transpiler"
 )
 
+// Version can be requested through the command line with:
+//
+//     c2go -version
+//
+// See https://github.com/elliotchance/c2go/wiki/Release-Process
 const Version = "0.11.0"
 
 var (

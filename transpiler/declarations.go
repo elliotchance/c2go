@@ -37,6 +37,9 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 
 	p.TypeIsNowDefined(name)
 
+	s := program.NewStruct(n)
+	p.Structs[s.Name] = s
+
 	// TODO: Unions are not supported.
 	// https://github.com/elliotchance/c2go/issues/84
 	if n.Kind == "union" {

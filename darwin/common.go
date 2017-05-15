@@ -1,3 +1,5 @@
+// Package darwin contains low-level functions for the Darwin (macOS) operating
+// system.
 package darwin
 
 // FIXME: These are wrong.

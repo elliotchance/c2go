@@ -5,22 +5,24 @@ import (
 )
 
 type VarDecl struct {
-	Address   string
-	Position  string
-	Position2 string
-	Name      string
-	Type      string
-	Type2     string
-	IsExtern  bool
-	IsUsed    bool
-	IsCInit   bool
-	Children  []Node
+	Address      string
+	Position     string
+	Position2    string
+	Name         string
+	Type         string
+	Type2        string
+	IsExtern     bool
+	IsUsed       bool
+	IsCInit      bool
+	IsReferenced bool
+	Children     []Node
 }
 
 func parseVarDecl(line string) *VarDecl {
 	groups := groupsFromRegex(
 		`<(?P<position>.*)>(?P<position2> .+:\d+)?
 		(?P<used> used)?
+		(?P<referenced> referenced)?
 		(?P<name> \w+)?
 		 '(?P<type>.+?)'
 		(?P<type2>:'.*?')?
@@ -35,16 +37,17 @@ func parseVarDecl(line string) *VarDecl {
 	}
 
 	return &VarDecl{
-		Address:   groups["address"],
-		Position:  groups["position"],
-		Position2: strings.TrimSpace(groups["position2"]),
-		Name:      strings.TrimSpace(groups["name"]),
-		Type:      groups["type"],
-		Type2:     type2,
-		IsExtern:  len(groups["extern"]) > 0,
-		IsUsed:    len(groups["used"]) > 0,
-		IsCInit:   len(groups["cinit"]) > 0,
-		Children:  []Node{},
+		Address:      groups["address"],
+		Position:     groups["position"],
+		Position2:    strings.TrimSpace(groups["position2"]),
+		Name:         strings.TrimSpace(groups["name"]),
+		Type:         groups["type"],
+		Type2:        type2,
+		IsExtern:     len(groups["extern"]) > 0,
+		IsUsed:       len(groups["used"]) > 0,
+		IsCInit:      len(groups["cinit"]) > 0,
+		IsReferenced: len(groups["referenced"]) > 0,
+		Children:     []Node{},
 	}
 }
 
