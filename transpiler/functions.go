@@ -102,7 +102,8 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 		// immediately to stdout. This will appear at the top of the program but
 		// make it much easier to diagnose when the transpiler errors.
 		if p.Verbose {
-			fmt.Printf("// Function: %s(%s)\n", f.Name, strings.Join(f.ArgumentTypes, ", "))
+			fmt.Printf("// Function: %s(%s)\n", f.Name,
+				strings.Join(f.ArgumentTypes, ", "))
 		}
 
 		fieldList, err := getFieldList(n, p)

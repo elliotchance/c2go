@@ -4,6 +4,8 @@
 package transpiler
 
 import (
+	"errors"
+	"fmt"
 	goast "go/ast"
 	"go/token"
 
@@ -56,8 +58,13 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 
 	var fields []*goast.Field
 	for _, c := range n.Children {
-		f, _ := transpileFieldDecl(p, c.(*ast.FieldDecl))
-		fields = append(fields, f)
+		if field, ok := c.(*ast.FieldDecl); ok {
+			f, _ := transpileFieldDecl(p, field)
+			fields = append(fields, f)
+		} else {
+			message := fmt.Sprintf("could not parse %v", c)
+			ast.Warning(errors.New(message), c)
+		}
 	}
 
 	p.File.Decls = append(p.File.Decls, &goast.GenDecl{

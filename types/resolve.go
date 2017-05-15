@@ -54,7 +54,6 @@ var simpleResolveTypes = map[string]string{
 
 	// Darwin specific
 	"__darwin_ct_rune_t": "github.com/elliotchance/c2go/darwin.Darwin_ct_rune_t",
-	"union __mbstate_t":  "__mbstate_t",
 	"fpos_t":             "int",
 	"struct __float2":    "github.com/elliotchance/c2go/darwin.Float2",
 	"struct __double2":   "github.com/elliotchance/c2go/darwin.Double2",
@@ -73,20 +72,6 @@ var simpleResolveTypes = map[string]string{
 	"__sFILEX":                     "interface{}",
 	"__va_list_tag":                "interface{}",
 	"FILE":                         "github.com/elliotchance/c2go/noarch.File",
-	"union sigval":                 "int",
-	"union __sigaction_u":          "int",
-
-	// Linux specific
-	"union __WAIT_STATUS":         "interface{}",
-	"union pthread_mutex_t":       "interface{}",
-	"union pthread_mutexattr_t":   "interface{}",
-	"union pthread_cond_t":        "interface{}",
-	"union pthread_condattr_t":    "interface{}",
-	"union pthread_rwlock_t":      "interface{}",
-	"union pthread_rwlockattr_t":  "interface{}",
-	"union pthread_barrier_t":     "interface{}",
-	"union pthread_barrierattr_t": "interface{}",
-	"union pthread_attr_t":        "interface{}",
 }
 
 func ResolveType(p *program.Program, s string) string {
@@ -96,6 +81,15 @@ func ResolveType(p *program.Program, s string) string {
 	s = strings.Replace(s, "*__restrict", "*", -1)
 	s = strings.Replace(s, "*restrict", "*", -1)
 	s = strings.Trim(s, " \t\n\r")
+
+	// TODO: Unions are not supported.
+	// https://github.com/elliotchance/c2go/issues/84
+	//
+	// For now we will let them be interface{} so that it does not stop the
+	// transpilation.
+	if strings.HasPrefix(s, "union ") {
+		return "interface{}"
+	}
 
 	// FIXME: This is a hack to avoid casting in some situations.
 	if s == "" {
