@@ -23,6 +23,8 @@ func Parse(line string) Node {
 	nodeName := strings.SplitN(line, " ", 2)[0]
 
 	switch nodeName {
+	case "AlignedAttr":
+		return parseAlignedAttr(line)
 	case "AlwaysInlineAttr":
 		return parseAlwaysInlineAttr(line)
 	case "ArraySubscriptExpr":
