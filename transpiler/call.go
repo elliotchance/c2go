@@ -16,6 +16,26 @@ import (
 	"go/token"
 )
 
+func getName(firstChild ast.Node) string {
+	switch fc := firstChild.(type) {
+	case *ast.DeclRefExpr:
+		return fc.Name
+
+	case *ast.MemberExpr:
+		return fc.Name
+
+	case *ast.ParenExpr:
+		return getName(fc.Children[0])
+
+	case *ast.UnaryOperator:
+		ast.IsWarning(errors.New("cannot use UnaryOperator as function name"), firstChild)
+		return "UNKNOWN"
+
+	default:
+		panic(fmt.Sprintf("cannot CallExpr on: %#v", fc))
+	}
+}
+
 // transpileCallExpr transpiles expressions that calls a function, for example:
 //
 //     foo("bar")
@@ -30,8 +50,13 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 
 	// The first child will always contain the name of the function being
 	// called.
-	firstChild := n.Children[0].(*ast.ImplicitCastExpr).Children[0]
-	functionName := firstChild.(*ast.DeclRefExpr).Name
+	firstChild, ok := n.Children[0].(*ast.ImplicitCastExpr)
+	if !ok {
+		err := fmt.Errorf("unable to use CallExpr: %#v", n.Children[0])
+		return nil, "", nil, nil, err
+	}
+
+	functionName := getName(firstChild.Children[0])
 
 	// Get the function definition from it's name. The case where it is not
 	// defined is handled below (we haven't seen the prototype yet).
@@ -154,7 +179,10 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 			} else {
 				a, err = types.CastExpr(p, a, argTypes[i],
 					functionDef.ArgumentTypes[i])
-				ast.WarningOrError(err, n, a == nil)
+
+				if ast.IsWarning(err, n) {
+					a = util.NewStringLit("nil")
+				}
 			}
 
 			realArgs = append(realArgs, a)

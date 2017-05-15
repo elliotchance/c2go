@@ -114,6 +114,9 @@ func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) (
 
 			decls = append(decls, e)
 
+		case *ast.TypedefDecl:
+			ast.IsWarning(errors.New("cannot use TypedefDecl for DeclStmt"), c)
+
 		default:
 			panic(a)
 		}

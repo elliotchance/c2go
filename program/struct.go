@@ -28,6 +28,9 @@ func NewStruct(n *ast.RecordDecl) *Struct {
 		case *ast.RecordDecl:
 			fields[f.Name] = NewStruct(f)
 
+		case *ast.MaxFieldAlignmentAttr, *ast.AlignedAttr:
+			// FIXME: Should these really be ignored?
+
 		default:
 			panic(fmt.Sprintf("cannot decode: %#v", f))
 		}

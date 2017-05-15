@@ -198,5 +198,7 @@ func ResolveType(p *program.Program, s string) (string, error) {
 		return fmt.Sprintf("[]%s", t), err
 	}
 
-	panic(fmt.Sprintf("I couldn't find an appropriate Go type for the C type '%s'.", s))
+	errMsg := fmt.Sprintf(
+		"I couldn't find an appropriate Go type for the C type '%s'.", s)
+	return "interface{}", errors.New(errMsg)
 }

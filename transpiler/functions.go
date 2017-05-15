@@ -11,6 +11,7 @@ import (
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/types"
+	"github.com/elliotchance/c2go/util"
 
 	goast "go/ast"
 )
@@ -191,7 +192,9 @@ func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (
 	f := program.GetFunctionDefinition(p.FunctionName)
 
 	t, err := types.CastExpr(p, e, eType, f.ReturnType)
-	ast.WarningOrError(err, n, t == nil)
+	if ast.IsWarning(err, n) {
+		t = util.NewStringLit("nil")
+	}
 
 	results := []goast.Expr{t}
 
