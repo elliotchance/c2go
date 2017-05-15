@@ -28,6 +28,7 @@ const Version = "0.11.1"
 
 var (
 	printAst = flag.Bool("print-ast", false, "Print AST before translated Go code.")
+	verbose  = flag.Bool("verbose", false, "Print progress as comments.")
 	version  = flag.Bool("version", false, "Print the version and exit.")
 )
 
@@ -178,6 +179,8 @@ func Start(args []string) string {
 	tree := buildTree(nodes, 0)
 
 	p := program.NewProgram()
+	p.Verbose = *verbose
+
 	err = transpiler.TranspileAST(cFilePath, p, tree[0].(ast.Node))
 	if err != nil {
 		panic(err)
