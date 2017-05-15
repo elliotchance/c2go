@@ -89,6 +89,8 @@ func Parse(line string) Node {
 		return parseFunctionProtoType(line)
 	case "ForStmt":
 		return parseForStmt(line)
+	case "GotoStmt":
+		return parseGotoStmt(line)
 	case "IfStmt":
 		return parseIfStmt(line)
 	case "ImplicitCastExpr":
