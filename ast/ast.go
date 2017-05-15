@@ -101,6 +101,8 @@ func Parse(line string) Node {
 		return parseInitListExpr(line)
 	case "IntegerLiteral":
 		return parseIntegerLiteral(line)
+	case "LabelStmt":
+		return parseLabelStmt(line)
 	case "MallocAttr":
 		return parseMallocAttr(line)
 	case "MemberExpr":
