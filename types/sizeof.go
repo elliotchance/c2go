@@ -33,7 +33,13 @@ func SizeOf(p *program.Program, cType string) int {
 		totalBytes := 0
 
 		for _, t := range p.Structs[cType[7:]].Fields {
-			totalBytes += SizeOf(p, t)
+			switch f := t.(type) {
+			case string:
+				totalBytes += SizeOf(p, f)
+
+			case *program.Struct:
+				totalBytes += SizeOf(p, f.Name)
+			}
 		}
 
 		// The size of a struct is rounded up to fit the size of the pointer of

@@ -42,7 +42,7 @@ type Program struct {
 
 	// The definitions for defined structs.
 	// TODO: This field should be protected through proper getters and setters.
-	Structs map[string]Struct
+	Structs map[string]*Struct
 }
 
 // NewProgram creates a new blank program.
@@ -51,7 +51,7 @@ func NewProgram() *Program {
 		imports:             []string{},
 		typesAlreadyDefined: []string{},
 		startupStatements:   []goast.Stmt{},
-		Structs:             make(map[string]Struct),
+		Structs:             make(map[string]*Struct),
 	}
 }
 
