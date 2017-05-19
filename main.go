@@ -3,16 +3,18 @@ package main
 
 import (
 	"bytes"
-	"flag"
 	"fmt"
 	"go/format"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"strings"
+
+	"github.com/urfave/cli"
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
@@ -25,12 +27,6 @@ import (
 //
 // See https://github.com/elliotchance/c2go/wiki/Release-Process
 const Version = "0.11.1"
-
-var (
-	printAst = flag.Bool("print-ast", false, "Print AST before translated Go code.")
-	verbose  = flag.Bool("verbose", false, "Print progress as comments.")
-	version  = flag.Bool("version", false, "Print the version and exit.")
-)
 
 func readAST(data []byte) []string {
 	uncolored := regexp.MustCompile(`\x1b\[[\d;]+m`).ReplaceAll(data, []byte{})
@@ -139,13 +135,13 @@ func Check(prefix string, e error) {
 	}
 }
 
-func Start(args []string) string {
+func Start(c *cli.Context) {
 	if os.Getenv("GOPATH") == "" {
 		panic("The $GOPATH must be set.")
 	}
 
 	// 1. Compile it first (checking for errors)
-	cFilePath := args[0]
+	cFilePath := c.Args().Get(0)
 
 	_, err := os.Stat(cFilePath)
 	Check("", err)
@@ -169,7 +165,7 @@ func Start(args []string) string {
 	}
 
 	lines := readAST(ast_pp)
-	if *printAst {
+	if c.Bool("print-ast") {
 		for _, l := range lines {
 			fmt.Println(l)
 		}
@@ -179,7 +175,7 @@ func Start(args []string) string {
 	tree := buildTree(nodes, 0)
 
 	p := program.NewProgram()
-	p.Verbose = *verbose
+	p.Verbose = c.GlobalBool("verbose")
 
 	err = transpiler.TranspileAST(cFilePath, p, tree[0].(ast.Node))
 	if err != nil {
@@ -191,26 +187,57 @@ func Start(args []string) string {
 		panic(err)
 	}
 
-	return buf.String()
+	outputFilePath := c.String("output")
+
+	if outputFilePath == "" {
+		cleanFileName := filepath.Clean(filepath.Base(cFilePath))
+		extension := filepath.Ext(cFilePath)
+
+		outputFilePath = cleanFileName[0:len(cleanFileName)-len(extension)] + ".go"
+	}
+
+	err = ioutil.WriteFile(outputFilePath, buf.Bytes(), 0755)
+	Check("writing C output file failed: ", err)
 }
 
 func main() {
-	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: %s [options] <file.c>\n", os.Args[0])
-		flag.PrintDefaults()
-	}
-	flag.Parse()
+	app := cli.NewApp()
 
-	if *version {
-		// Simply print out the version and exit.
-		fmt.Println(Version)
-		return
+	app.Name = "c2go"
+	app.Usage = "a tool for converting C to Go"
+	app.Version = Version
+	app.Flags = []cli.Flag{
+		cli.BoolFlag{
+			Name:  "verbose, V",
+			Usage: "print progress as comments",
+		},
+	}
+	app.Commands = []cli.Command{
+		{
+			Name:      "transpile",
+			Aliases:   []string{"t"},
+			Usage:     "transpile an input C source file to Go",
+			ArgsUsage: "foo.c",
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "print-ast, a",
+					Usage: "print AST before translated Go code",
+				},
+				cli.StringFlag{
+					Name:  "output, o",
+					Usage: "specifies a file to output the Go generated code",
+				},
+			},
+			Action: func(c *cli.Context) error {
+				if c.NArg() > 0 {
+					Start(c)
+				} else {
+					cli.ShowCommandHelp(c, "transpile")
+				}
+				return nil
+			},
+		},
 	}
 
-	if flag.NArg() < 1 {
-		flag.Usage()
-		os.Exit(1)
-	}
-
-	fmt.Print(Start(flag.Args()))
+	app.Run(os.Args)
 }
