@@ -10,14 +10,19 @@ import (
 	"github.com/elliotchance/c2go/program"
 )
 
-func transpileCompoundStmt(n *ast.CompoundStmt, p *program.Program) (*goast.BlockStmt, error) {
+func transpileCompoundStmt(n *ast.CompoundStmt, p *program.Program) (
+	*goast.BlockStmt, []goast.Stmt, []goast.Stmt, error) {
+	preStmts := []goast.Stmt{}
+	postStmts := []goast.Stmt{}
 	stmts := []goast.Stmt{}
 
 	for _, x := range n.Children {
 		result, err := transpileToStmts(x, p)
 		if err != nil {
-			return nil, err
+			return nil, nil, nil, err
 		}
+
+		// preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 		if result != nil {
 			stmts = append(stmts, result...)
@@ -26,20 +31,23 @@ func transpileCompoundStmt(n *ast.CompoundStmt, p *program.Program) (*goast.Bloc
 
 	return &goast.BlockStmt{
 		List: stmts,
-	}, nil
+	}, preStmts, postStmts, nil
 }
 
-func transpileToBlockStmt(node ast.Node, p *program.Program) (*goast.BlockStmt, error) {
-	e, err := transpileToStmt(node, p)
+func transpileToBlockStmt(node ast.Node, p *program.Program) (
+	*goast.BlockStmt, []goast.Stmt, []goast.Stmt, error) {
+	stmts, err := transpileToStmts(node, p)
 	if err != nil {
-		return nil, err
+		return nil, nil, nil, err
 	}
 
-	if block, ok := e.(*goast.BlockStmt); ok {
-		return block, nil
+	if len(stmts) == 1 {
+		if block, ok := stmts[0].(*goast.BlockStmt); ok {
+			return block, nil, nil, nil
+		}
 	}
 
 	return &goast.BlockStmt{
-		List: []goast.Stmt{e},
-	}, nil
+		List: stmts,
+	}, nil, nil, nil
 }

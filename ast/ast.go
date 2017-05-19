@@ -1,3 +1,4 @@
+// Package ast parses the clang AST output into AST structures.
 package ast
 
 import (
@@ -5,14 +6,25 @@ import (
 	"strings"
 )
 
+// Node represents any node in the AST.
 type Node interface {
 	AddChild(node Node)
 }
 
+// Parse takes the coloured output of the clang AST command and returns a root
+// node for the AST.
 func Parse(line string) Node {
+	// This is a special case. I'm not sure if it's a bug in the clang AST
+	// dumper. It should have children.
+	if line == "array filler" {
+		return parseArrayFiller(line)
+	}
+
 	nodeName := strings.SplitN(line, " ", 2)[0]
 
 	switch nodeName {
+	case "AlignedAttr":
+		return parseAlignedAttr(line)
 	case "AlwaysInlineAttr":
 		return parseAlwaysInlineAttr(line)
 	case "ArraySubscriptExpr":
@@ -79,22 +91,40 @@ func Parse(line string) Node {
 		return parseFunctionProtoType(line)
 	case "ForStmt":
 		return parseForStmt(line)
+	case "GotoStmt":
+		return parseGotoStmt(line)
 	case "IfStmt":
 		return parseIfStmt(line)
 	case "ImplicitCastExpr":
 		return parseImplicitCastExpr(line)
+	case "ImplicitValueInitExpr":
+		return parseImplicitValueInitExpr(line)
+	case "IncompleteArrayType":
+		return parseIncompleteArrayType(line)
+	case "InitListExpr":
+		return parseInitListExpr(line)
 	case "IntegerLiteral":
 		return parseIntegerLiteral(line)
+	case "LabelStmt":
+		return parseLabelStmt(line)
 	case "MallocAttr":
 		return parseMallocAttr(line)
+	case "MaxFieldAlignmentAttr":
+		return parseMaxFieldAlignmentAttr(line)
 	case "MemberExpr":
 		return parseMemberExpr(line)
 	case "ModeAttr":
 		return parseModeAttr(line)
+	case "NoInlineAttr":
+		return parseNoInlineAttr(line)
 	case "NoThrowAttr":
 		return parseNoThrowAttr(line)
 	case "NonNullAttr":
 		return parseNonNullAttr(line)
+	case "OffsetOfExpr":
+		return parseOffsetOfExpr(line)
+	case "PackedAttr":
+		return parsePackedAttr(line)
 	case "ParenExpr":
 		return parseParenExpr(line)
 	case "ParenType":
@@ -119,6 +149,8 @@ func Parse(line string) Node {
 		return parseRestrictAttr(line)
 	case "ReturnStmt":
 		return parseReturnStmt(line)
+	case "ReturnsTwiceAttr":
+		return parseReturnsTwiceAttr(line)
 	case "StringLiteral":
 		return parseStringLiteral(line)
 	case "SwitchStmt":
@@ -133,8 +165,12 @@ func Parse(line string) Node {
 		return parseTypedefDecl(line)
 	case "TypedefType":
 		return parseTypedefType(line)
+	case "UnaryExprOrTypeTraitExpr":
+		return parseUnaryExprOrTypeTraitExpr(line)
 	case "UnaryOperator":
 		return parseUnaryOperator(line)
+	case "VAArgExpr":
+		return parseVAArgExpr(line)
 	case "VarDecl":
 		return parseVarDecl(line)
 	case "WarnUnusedResultAttr":

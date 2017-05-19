@@ -10,6 +10,7 @@ import (
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/types"
+	"github.com/elliotchance/c2go/util"
 )
 
 func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, string) {
@@ -35,6 +36,9 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 	}
 
 	p.TypeIsNowDefined(name)
+
+	s := program.NewStruct(n)
+	p.Structs[s.Name] = s
 
 	// TODO: Unions are not supported.
 	// https://github.com/elliotchance/c2go/issues/84
@@ -145,9 +149,12 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 	return nil
 }
 
-func transpileVarDecl(p *program.Program, n *ast.VarDecl) string {
+func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
+	[]goast.Stmt, []goast.Stmt, string) {
 	theType := types.ResolveType(p, n.Type)
 	name := n.Name
+	preStmts := []goast.Stmt{}
+	postStmts := []goast.Stmt{}
 
 	// TODO: Some platform structs are ignored.
 	// https://github.com/elliotchance/c2go/issues/85
@@ -155,12 +162,9 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) string {
 		name == "_IO_2_1_stdin_" ||
 		name == "_IO_2_1_stdout_" ||
 		name == "_IO_2_1_stderr_" ||
-		name == "stdin" ||
-		name == "stdout" ||
-		name == "stderr" ||
 		name == "_DefaultRuneLocale" ||
 		name == "_CurrentRuneLocale" {
-		return "unknown10"
+		return nil, nil, "unknown10"
 	}
 
 	// TODO: The name of a variable or field cannot be "type"
@@ -169,12 +173,51 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) string {
 		name = "type_"
 	}
 
+	// There may be some startup code for this global variable.
+	if p.FunctionName == "" {
+		switch name {
+		// Below are for macOS.
+		case "__stdinp", "__stdoutp":
+			p.AddImports("github.com/elliotchance/c2go/noarch", "os")
+			p.AppendStartupExpr(
+				util.NewBinaryExpr(
+					util.NewIdent(name),
+					token.ASSIGN,
+					util.NewCallExpr(
+						"noarch.NewFile",
+						goast.NewIdent("os."+util.Ucfirst(name[2:len(name)-1])),
+					),
+				),
+			)
+
+		// Below are for linux.
+		case "stdout", "stdin", "stderr":
+			theType = "*noarch.File"
+			p.AddImports("github.com/elliotchance/c2go/noarch", "os")
+			p.AppendStartupExpr(
+				util.NewBinaryExpr(
+					util.NewIdent(name),
+					token.ASSIGN,
+					util.NewCallExpr(
+						"noarch.NewFile",
+						goast.NewIdent("os."+util.Ucfirst(name)),
+					),
+				),
+			)
+
+		default:
+			// No init needed.
+		}
+	}
+
 	var defaultValues []goast.Expr
 	if len(n.Children) > 0 {
-		defaultValue, defaultValueType, err := transpileToExpr(n.Children[0], p)
+		defaultValue, defaultValueType, newPre, newPost, err := transpileToExpr(n.Children[0], p)
 		if err != nil {
 			panic(err)
 		}
+
+		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 		defaultValues = []goast.Expr{
 			types.CastExpr(p, defaultValue, defaultValueType, n.Type),
@@ -194,5 +237,5 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) string {
 		},
 	})
 
-	return n.Type
+	return nil, nil, theType
 }

@@ -43,9 +43,12 @@ func ctypeEnumValue(value string, t token.Token) goast.Expr {
 	}
 }
 
-func transpileEnumConstantDecl(p *program.Program, n *ast.EnumConstantDecl) *goast.ValueSpec {
+func transpileEnumConstantDecl(p *program.Program, n *ast.EnumConstantDecl) (
+	*goast.ValueSpec, []goast.Stmt, []goast.Stmt) {
 	var value goast.Expr = goast.NewIdent("iota")
 	valueType := "int"
+	preStmts := []goast.Stmt{}
+	postStmts := []goast.Stmt{}
 
 	// Special cases for linux ctype.h. See the description for the
 	// ctypeEnumValue() function.
@@ -89,7 +92,7 @@ func transpileEnumConstantDecl(p *program.Program, n *ast.EnumConstantDecl) *goa
 	default:
 		if len(n.Children) > 0 {
 			var err error
-			value, _, err = transpileToExpr(n.Children[0], p)
+			value, _, preStmts, postStmts, err = transpileToExpr(n.Children[0], p)
 			if err != nil {
 				panic(err)
 			}
@@ -100,15 +103,21 @@ func transpileEnumConstantDecl(p *program.Program, n *ast.EnumConstantDecl) *goa
 		Names:  []*goast.Ident{goast.NewIdent(n.Name)},
 		Type:   goast.NewIdent(valueType),
 		Values: []goast.Expr{value},
-	}
+	}, preStmts, postStmts
 }
 
 func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
+	preStmts := []goast.Stmt{}
+	postStmts := []goast.Stmt{}
+
 	for _, c := range n.Children {
+		e, newPre, newPost := transpileEnumConstantDecl(p, c.(*ast.EnumConstantDecl))
+		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
 		p.File.Decls = append(p.File.Decls, &goast.GenDecl{
 			Tok: token.CONST,
 			Specs: []goast.Spec{
-				transpileEnumConstantDecl(p, c.(*ast.EnumConstantDecl)),
+				e,
 			},
 		})
 	}

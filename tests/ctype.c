@@ -3,6 +3,9 @@
 #include <stdio.h>
 #include <ctype.h>
 
+char* strnul = "this string has a \0 NUL";
+char arrnul[] = "this string has a \0 NUL";
+
 void test_isalnum()
 {
   int i;

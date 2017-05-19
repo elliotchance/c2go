@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/elliotchance/c2go/util"
 )
 
 var (
@@ -51,10 +53,10 @@ func TestIntegrationScripts(t *testing.T) {
 			cProgram := programOut{}
 			goProgram := programOut{}
 
-			// Compile C
-			err := exec.Command("clang", "-lm", "-o", cPath, file).Run()
+			// Compile C.
+			out, err := exec.Command("clang", "-lm", "-o", cPath, file).CombinedOutput()
 			if err != nil {
-				t.Fatal(err)
+				t.Fatalf("error: %s\n%s", err, out)
 			}
 
 			// Run C program
@@ -94,7 +96,7 @@ func TestIntegrationScripts(t *testing.T) {
 
 			// Check stdout
 			if cProgram.stdout.String() != goProgram.stdout.String() {
-				t.Fatalf("Expected %q, Got: %q", cProgram.stdout.String(), goProgram.stdout.String())
+				t.Fatalf(util.ShowDiff(cProgram.stdout.String(), goProgram.stdout.String()))
 			}
 		})
 	}

@@ -5,7 +5,6 @@
 package transpiler
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -15,62 +14,6 @@ import (
 
 	goast "go/ast"
 )
-
-// transpileCallExpr transpiles expressions that calls a function, for example:
-//
-//     foo("bar")
-//
-// It returns three arguments; the Go AST expression, the C type (that is
-// returned by the function) and any error. If there is an error returned you
-// can assume the first two arguments will not contain any useful information.
-func transpileCallExpr(n *ast.CallExpr, p *program.Program) (*goast.CallExpr, string, error) {
-	// The first child will always contain the name of the function being
-	// called.
-	firstChild := n.Children[0].(*ast.ImplicitCastExpr).Children[0]
-	functionName := firstChild.(*ast.DeclRefExpr).Name
-
-	// Get the function definition from it's name. The case where it is not
-	// defined is handled below (we haven't seen the prototype yet).
-	functionDef := program.GetFunctionDefinition(functionName)
-
-	if functionDef == nil {
-		errorMessage := fmt.Sprintf("unknown function: %s", functionName)
-		return nil, "", errors.New(errorMessage)
-	}
-
-	if functionDef.Substitution != "" {
-		parts := strings.Split(functionDef.Substitution, ".")
-		importName := strings.Join(parts[:len(parts)-1], ".")
-		p.AddImport(importName)
-
-		parts2 := strings.Split(functionDef.Substitution, "/")
-		functionName = parts2[len(parts2)-1]
-	}
-
-	args := []goast.Expr{}
-	i := 0
-	for _, arg := range n.Children[1:] {
-		e, eType, err := transpileToExpr(arg, p)
-		if err != nil {
-			return nil, "unknown2", err
-		}
-
-		if i > len(functionDef.ArgumentTypes)-1 {
-			// This means the argument is one of the varargs so we don't know
-			// what type it needs to be cast to.
-			args = append(args, e)
-		} else {
-			args = append(args, types.CastExpr(p, e, eType, functionDef.ArgumentTypes[i]))
-		}
-
-		i++
-	}
-
-	return &goast.CallExpr{
-		Fun:  goast.NewIdent(functionName),
-		Args: args,
-	}, functionDef.ReturnType, nil
-}
 
 // transpileFunctionDecl transpiles the function prototype.
 //
@@ -89,6 +32,10 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 	// therefore be able to lookup what the real return type should be. I'm sure
 	// there is a much better way of doing this.
 	p.FunctionName = n.Name
+	defer func() {
+		// Reset the function name when we go out of scope.
+		p.FunctionName = ""
+	}()
 
 	// Always register the new function. Only from this point onwards will
 	// we be allowed to refer to the function.
@@ -119,9 +66,15 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 	for _, c := range n.Children {
 		if b, ok := c.(*ast.CompoundStmt); ok {
 			var err error
-			body, err = transpileToBlockStmt(b, p)
+			var newPre, newPost []goast.Stmt
+
+			body, newPre, newPost, err = transpileToBlockStmt(b, p)
 			if err != nil {
 				return err
+			}
+
+			if len(newPre) > 0 || len(newPost) > 0 {
+				panic("bad")
 			}
 
 			hasBody = true
@@ -145,6 +98,13 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 	}
 
 	if hasBody {
+		// If verbose mode is on we print the name of the function as a comment
+		// immediately to stdout. This will appear at the top of the program but
+		// make it much easier to diagnose when the transpiler errors.
+		if p.Verbose {
+			fmt.Printf("// Function: %s(%s)\n", f.Name, strings.Join(f.ArgumentTypes, ", "))
+		}
+
 		fieldList, err := getFieldList(n, p)
 		if err != nil {
 			return err
@@ -156,14 +116,22 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 			},
 		}
 
-		// main() function does not have a return type.
 		if p.FunctionName == "main" {
+			// main() function does not have a return type.
 			returnTypes = []*goast.Field{}
+
+			// We also need to append a setup function that will instantiate
+			// some things that are expected to be available at runtime.
+			body.List = append([]goast.Stmt{
+				&goast.ExprStmt{
+					X: &goast.CallExpr{
+						Fun: goast.NewIdent("__init"),
+					},
+				},
+			}, body.List...)
 		}
 
 		p.File.Decls = append(p.File.Decls, &goast.FuncDecl{
-			Doc:  nil,
-			Recv: nil,
 			Name: goast.NewIdent(n.Name),
 			Type: &goast.FuncType{
 				Params: fieldList,
@@ -200,10 +168,17 @@ func getFieldList(f *ast.FunctionDecl, p *program.Program) (*goast.FieldList, er
 	}, nil
 }
 
-func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (goast.Stmt, error) {
-	e, eType, err := transpileToExpr(n.Children[0], p)
+func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (
+	goast.Stmt, []goast.Stmt, []goast.Stmt, error) {
+	// There may not be a return value. Then we don't have to both ourselves
+	// with all the rest of the logic below.
+	if len(n.Children) == 0 {
+		return &goast.ReturnStmt{}, nil, nil, nil
+	}
+
+	e, eType, preStmts, postStmts, err := transpileToExpr(n.Children[0], p)
 	if err != nil {
-		return nil, err
+		return nil, nil, nil, err
 	}
 
 	f := program.GetFunctionDefinition(p.FunctionName)
@@ -220,14 +195,14 @@ func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (goast.Stmt, err
 					Fun:  goast.NewIdent("os.Exit"),
 					Args: results,
 				},
-			}, nil
+			}, preStmts, postStmts, nil
 		}
 		results = []goast.Expr{}
 	}
 
 	return &goast.ReturnStmt{
 		Results: results,
-	}, nil
+	}, preStmts, postStmts, nil
 }
 
 func getFunctionReturnType(f string) string {
