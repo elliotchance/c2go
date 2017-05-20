@@ -50,6 +50,10 @@ func transpileSwitchStmt(n *ast.SwitchStmt, p *program.Program) (
 	// of goast.SwitchStmt.
 	stmts := []goast.Stmt{}
 	for _, singleCase := range cases {
+		if singleCase == nil {
+			panic("nil single case")
+		}
+
 		stmts = append(stmts, singleCase)
 	}
 
@@ -134,7 +138,9 @@ func normalizeSwitchCases(body *ast.CompoundStmt, p *program.Program) (
 				return []*goast.CaseClause{}, nil, nil, err
 			}
 
-			cases[len(cases)-1].Body = append(cases[len(cases)-1].Body, stmt)
+			if stmt != nil {
+				cases[len(cases)-1].Body = append(cases[len(cases)-1].Body, stmt)
+			}
 		}
 	}
 

@@ -16,6 +16,26 @@ import (
 	"go/token"
 )
 
+func getName(firstChild ast.Node) string {
+	switch fc := firstChild.(type) {
+	case *ast.DeclRefExpr:
+		return fc.Name
+
+	case *ast.MemberExpr:
+		return fc.Name
+
+	case *ast.ParenExpr:
+		return getName(fc.Children[0])
+
+	case *ast.UnaryOperator:
+		ast.IsWarning(errors.New("cannot use UnaryOperator as function name"), firstChild)
+		return "UNKNOWN"
+
+	default:
+		panic(fmt.Sprintf("cannot CallExpr on: %#v", fc))
+	}
+}
+
 // transpileCallExpr transpiles expressions that calls a function, for example:
 //
 //     foo("bar")
@@ -30,8 +50,13 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 
 	// The first child will always contain the name of the function being
 	// called.
-	firstChild := n.Children[0].(*ast.ImplicitCastExpr).Children[0]
-	functionName := firstChild.(*ast.DeclRefExpr).Name
+	firstChild, ok := n.Children[0].(*ast.ImplicitCastExpr)
+	if !ok {
+		err := fmt.Errorf("unable to use CallExpr: %#v", n.Children[0])
+		return nil, "", nil, nil, err
+	}
+
+	functionName := getName(firstChild.Children[0])
 
 	// Get the function definition from it's name. The case where it is not
 	// defined is handled below (we haven't seen the prototype yet).
@@ -131,6 +156,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 	// Apply transformation if needed. A transformation rearranges the return
 	// value(s) and parameters. It is also used to indicate when a variable must
 	// be passed by reference.
+	var err error
 	if functionDef.ReturnParameters != nil || functionDef.Parameters != nil {
 		for i, a := range functionDef.Parameters {
 			byReference := false
@@ -153,7 +179,13 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 					X:  args[i],
 				}
 			} else {
-				realArg = types.CastExpr(p, realArg, argTypes[i], functionDef.ArgumentTypes[i])
+				realArg, err = types.CastExpr(p, realArg, argTypes[i],
+					functionDef.ArgumentTypes[i])
+				ast.WarningOrError(err, n, realArg == nil)
+
+				if realArg == nil {
+					realArg = util.NewStringLit("nil")
+				}
 			}
 
 			realArgs = append(realArgs, realArg)
@@ -163,10 +195,15 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 		// types.
 		for i, a := range args {
 			if i > len(functionDef.ArgumentTypes)-1 {
-				// This means the argument is one of the varargs so we don't know
-				// what type it needs to be cast to.
+				// This means the argument is one of the varargs so we don't
+				// know what type it needs to be cast to.
 			} else {
-				a = types.CastExpr(p, a, argTypes[i], functionDef.ArgumentTypes[i])
+				a, err = types.CastExpr(p, a, argTypes[i],
+					functionDef.ArgumentTypes[i])
+
+				if ast.IsWarning(err, n) {
+					a = util.NewStringLit("nil")
+				}
 			}
 
 			realArgs = append(realArgs, a)

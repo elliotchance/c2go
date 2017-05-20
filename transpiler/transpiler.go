@@ -3,6 +3,7 @@
 package transpiler
 
 import (
+	"errors"
 	"fmt"
 	goast "go/ast"
 	"go/parser"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/util"
 )
 
 func TranspileAST(fileName string, p *program.Program, root ast.Node) error {
@@ -125,7 +127,8 @@ func transpileToExpr(node ast.Node, p *program.Program) (
 		return transpileUnaryExprOrTypeTraitExpr(n, p)
 
 	default:
-		panic(fmt.Sprintf("cannot transpile to expr: %#v", node))
+		ast.IsWarning(errors.New("cannot transpile to expr"), node)
+		expr = util.NewStringLit("nil")
 	}
 
 	// Real return is through named arguments.
@@ -208,9 +211,7 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 		return
 	}
 
-	stmt = &goast.ExprStmt{
-		X: expr,
-	}
+	stmt = util.NewExprStmt(expr)
 
 	return
 }

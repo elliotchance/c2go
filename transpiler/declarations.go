@@ -4,6 +4,8 @@
 package transpiler
 
 import (
+	"errors"
+	"fmt"
 	goast "go/ast"
 	"go/token"
 
@@ -14,13 +16,15 @@ import (
 )
 
 func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, string) {
-	fieldType := types.ResolveType(p, n.Type)
 	name := n.Name
 
 	// FIXME: What causes this? See __darwin_fp_control for example.
 	if name == "" {
 		return nil, ""
 	}
+
+	fieldType, err := types.ResolveType(p, n.Type)
+	ast.IsWarning(err, n)
 
 	// TODO: The name of a variable or field cannot be "type"
 	// https://github.com/elliotchance/c2go/issues/83
@@ -61,10 +65,15 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 
 	var fields []*goast.Field
 	for _, c := range n.Children {
-		f, _ := transpileFieldDecl(p, c.(*ast.FieldDecl))
+		if field, ok := c.(*ast.FieldDecl); ok {
+			f, _ := transpileFieldDecl(p, field)
 
-		if f != nil {
-			fields = append(fields, f)
+			if f != nil {
+				fields = append(fields, f)
+			}
+		} else {
+			message := fmt.Sprintf("could not parse %v", c)
+			ast.IsWarning(errors.New(message), c)
 		}
 	}
 
@@ -94,7 +103,8 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 
 	p.TypeIsNowDefined(name)
 
-	resolvedType := types.ResolveType(p, n.Type)
+	resolvedType, err := types.ResolveType(p, n.Type)
+	ast.IsWarning(err, n)
 
 	// There is a case where the name of the type is also the definition,
 	// like:
@@ -159,7 +169,9 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 
 func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 	[]goast.Stmt, []goast.Stmt, string) {
-	theType := types.ResolveType(p, n.Type)
+	theType, err := types.ResolveType(p, n.Type)
+	ast.IsWarning(err, n)
+
 	name := n.Name
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
@@ -227,8 +239,10 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-		defaultValues = []goast.Expr{
-			types.CastExpr(p, defaultValue, defaultValueType, n.Type),
+		e, err := types.CastExpr(p, defaultValue, defaultValueType, n.Type)
+
+		if !ast.IsWarning(err, n) {
+			defaultValues = []goast.Expr{e}
 		}
 	}
 

@@ -16,6 +16,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 	*goast.BinaryExpr, string, []goast.Stmt, []goast.Stmt, error) {
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
+	var err error
 
 	left, leftType, newPre, newPost, err := transpileToExpr(n.Children[0], p)
 	if err != nil {
@@ -35,20 +36,29 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 	returnType := types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType)
 
 	if operator == token.LAND {
-		left = types.CastExpr(p, left, leftType, "bool")
-		right = types.CastExpr(p, right, rightType, "bool")
+		left, err = types.CastExpr(p, left, leftType, "bool")
+		ast.WarningOrError(err, n, left == nil)
+		if left == nil {
+			left = util.NewStringLit("nil")
+		}
 
-		return &goast.BinaryExpr{
-			X:  left,
-			Op: operator,
-			Y:  right,
-		}, "bool", preStmts, postStmts, nil
+		right, err = types.CastExpr(p, right, rightType, "bool")
+		ast.WarningOrError(err, n, right == nil)
+		if right == nil {
+			right = util.NewStringLit("nil")
+		}
+
+		return util.NewBinaryExpr(left, operator, right), "bool",
+			preStmts, postStmts, nil
 	}
 
 	// Convert "(0)" to "nil" when we are dealing with equality.
 	if (operator == token.NEQ || operator == token.EQL) &&
 		types.IsNullExpr(right) {
-		if types.ResolveType(p, leftType) == "string" {
+		t, err := types.ResolveType(p, leftType)
+		ast.IsWarning(err, n)
+
+		if t == "string" {
 			p.AddImport("github.com/elliotchance/c2go/noarch")
 			left = util.NewCallExpr("noarch.NullTerminatedString", left)
 			right = &goast.BasicLit{
@@ -61,12 +71,14 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 	}
 
 	if operator == token.ASSIGN {
-		right = types.CastExpr(p, right, rightType, returnType)
+		right, err = types.CastExpr(p, right, rightType, returnType)
+
+		if ast.IsWarning(err, n) && right == nil {
+			right = util.NewStringLit("nil")
+		}
 	}
 
-	return &goast.BinaryExpr{
-		X:  left,
-		Op: operator,
-		Y:  right,
-	}, types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType), preStmts, postStmts, nil
+	return util.NewBinaryExpr(left, operator, right),
+		types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType),
+		preStmts, postStmts, nil
 }
