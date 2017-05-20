@@ -1,11 +1,10 @@
 package noarch
 
-// NullTerminatedByteSlice returns a new byte slice that has been truncated to a
-// NULL byte. If there is no NULL byte then a new copy of the original byte
-// slice is returned.
-func NullTerminatedByteSlice(s []byte) []byte {
+// NullTerminatedByteSlice returns a string that contains all the bytes in the
+// provided C string up until the first NULL character.
+func NullTerminatedByteSlice(s []byte) string {
 	if s == nil {
-		return nil
+		return ""
 	}
 
 	end := -1
@@ -23,5 +22,5 @@ func NullTerminatedByteSlice(s []byte) []byte {
 	newSlice := make([]byte, end)
 	copy(newSlice, s)
 
-	return newSlice
+	return string(newSlice)
 }

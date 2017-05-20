@@ -98,8 +98,8 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 			if arraySize != -1 {
 				p.AddImport("github.com/elliotchance/c2go/noarch")
 				e = util.NewCallExpr(
-					"noarch.NullTerminatedString",
-					util.NewCallExpr("string", &goast.SliceExpr{X: e}),
+					"noarch.NullTerminatedByteSlice",
+					&goast.SliceExpr{X: e},
 				)
 			}
 

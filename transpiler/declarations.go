@@ -230,21 +230,8 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 		}
 	}
 
-	var defaultValues []goast.Expr
-	if len(n.Children) > 0 {
-		defaultValue, defaultValueType, newPre, newPost, err := transpileToExpr(n.Children[0], p)
-		if err != nil {
-			panic(err)
-		}
-
-		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
-
-		e, err := types.CastExpr(p, defaultValue, defaultValueType, n.Type)
-
-		if !ast.IsWarning(err, n) {
-			defaultValues = []goast.Expr{e}
-		}
-	}
+	defaultValue, _, newPre, newPost, err := getDefaultValueForVar(p, n)
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	p.File.Decls = append(p.File.Decls, &goast.GenDecl{
 		Tok: token.VAR,
@@ -254,7 +241,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 					goast.NewIdent(name),
 				},
 				Type:   goast.NewIdent(theType),
-				Values: defaultValues,
+				Values: defaultValue,
 			},
 		},
 	})

@@ -12,13 +12,13 @@ func TestNullTerminatedByteSlice(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want []byte
+		want string
 	}{
-		{"nil slice", args{nil}, nil},
-		{"empty slice", args{[]byte{}}, []byte{}},
-		{"single null-terminated", args{[]byte{0}}, []byte{}},
-		{"multi null-terminated", args{[]byte{1, 0, 2, 0}}, []byte{1}},
-		{"not null-terminated", args{[]byte{1, 2, 3}}, []byte{1, 2, 3}},
+		{"nil slice", args{nil}, ""},
+		{"empty slice", args{[]byte{}}, ""},
+		{"single null-terminated", args{[]byte{0}}, ""},
+		{"multi null-terminated", args{[]byte{'a', 0, 'b', 0}}, "a"},
+		{"not null-terminated", args{[]byte{'a', 'b', 'c'}}, "abc"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -55,19 +55,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 	// Convert "(0)" to "nil" when we are dealing with equality.
 	if (operator == token.NEQ || operator == token.EQL) &&
 		types.IsNullExpr(right) {
-		t, err := types.ResolveType(p, leftType)
-		ast.IsWarning(err, n)
-
-		if t == "string" {
-			p.AddImport("github.com/elliotchance/c2go/noarch")
-			left = util.NewCallExpr("noarch.NullTerminatedString", left)
-			right = &goast.BasicLit{
-				Kind:  token.STRING,
-				Value: `""`,
-			}
-		} else {
-			right = goast.NewIdent("nil")
-		}
+		right = goast.NewIdent("nil")
 	}
 
 	if operator == token.ASSIGN {

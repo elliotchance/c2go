@@ -65,16 +65,16 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 		t, err := types.ResolveType(p, eType)
 		ast.IsWarning(err, n)
 
-		if t == "string" {
-			return &goast.BinaryExpr{
-				X:  e,
-				Op: token.EQL,
-				Y: &goast.BasicLit{
-					Kind:  token.STRING,
-					Value: `""`,
-				},
-			}, "bool", preStmts, postStmts, nil
-		}
+		// if t == "string" {
+		// 	return &goast.BinaryExpr{
+		// 		X:  e,
+		// 		Op: token.EQL,
+		// 		Y: &goast.BasicLit{
+		// 			Kind:  token.STRING,
+		// 			Value: `""`,
+		// 		},
+		// 	}, "bool", preStmts, postStmts, nil
+		// }
 
 		p.AddImport("github.com/elliotchance/c2go/noarch")
 

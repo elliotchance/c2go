@@ -47,8 +47,6 @@ var simpleResolveTypes = map[string]string{
 	// when using the NULL macro.
 	"null": "null",
 
-	"const char *": "string",
-
 	// Are these built into some compilers?
 	"uint32":     "uint32",
 	"uint64":     "uint64",
@@ -79,6 +77,13 @@ var simpleResolveTypes = map[string]string{
 }
 
 func ResolveType(p *program.Program, s string) (string, error) {
+	// There are some special cases. The "const" modifier is normally stripped
+	// off, but in the case of "char*" the "const" changes how we handle it
+	// internally; as a string or a []byte.
+	// if s == "const char*" || s == "const char *" {
+	// 	return "string", nil
+	// }
+
 	// Remove any whitespace or attributes that are not relevant to Go.
 	s = strings.Replace(s, "const ", "", -1)
 	s = strings.Replace(s, "volatile ", "", -1)
