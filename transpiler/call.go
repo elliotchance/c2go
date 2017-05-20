@@ -63,20 +63,30 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-		// if i > len(functionDef.ArgumentTypes)-1 {
-		// 	// This means the argument is one of the varargs so we don't know
-		// 	// what type it needs to be cast to.
-		// } else {
-		// 	//e = types.CastExpr(p, e, eType, functionDef.ArgumentTypes[i])
-		// }
-
 		_, arraySize := types.GetArrayTypeAndSize(eType)
-		if functionName == "fmt.Printf" && arraySize != -1 {
-			p.AddImport("github.com/elliotchance/c2go/noarch")
-			e = util.NewCallExpr(
-				"noarch.NullTerminatedString",
-				util.NewCallExpr("string", &goast.SliceExpr{X: e}),
-			)
+
+		// If we are using varargs with Printf we need to make sure that certain
+		// types are cast correctly.
+		if functionName == "fmt.Printf" {
+			// Make sure that any string parameters (const char*) are truncated
+			// to the NULL byte.
+			if arraySize != -1 {
+				p.AddImport("github.com/elliotchance/c2go/noarch")
+				e = util.NewCallExpr(
+					"noarch.NullTerminatedString",
+					util.NewCallExpr("string", &goast.SliceExpr{X: e}),
+				)
+			}
+
+			// Byte slices (char*) must also be truncated to the NULL byte.
+			//
+			// TODO: This would also apply to other formatting functions like
+			// fprintf, etc.
+			if i > len(functionDef.ArgumentTypes)-1 &&
+				(eType == "char *" || eType == "char*") {
+				p.AddImport("github.com/elliotchance/c2go/noarch")
+				e = util.NewCallExpr("noarch.NullTerminatedByteSlice", e)
+			}
 		}
 
 		// We cannot use preallocated byte slices as strings in the same way we

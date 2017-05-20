@@ -28,3 +28,12 @@ func Strtol(a string, b string, c int) int32 {
 	// TODO: This is a bad implementation
 	return 65535
 }
+
+func Malloc(size uint32) []byte {
+	return make([]byte, size)
+}
+
+// Free doesn't do anything since memory is managed by the Go garbage collector.
+// However, I will leave it here as a placeholder for now.
+func Free(anything interface{}) {
+}

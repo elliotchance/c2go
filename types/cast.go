@@ -33,6 +33,10 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Ex
 		return expr
 	}
 
+	// Casting from void* to []byte is allowed. It is how malloc() and other
+	// memory functions work.
+	// if fromType == "void*"
+
 	fromType = ResolveType(p, fromType)
 	toType = ResolveType(p, toType)
 

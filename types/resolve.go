@@ -16,9 +16,9 @@ import (
 // Please keep them sorted by name.
 var simpleResolveTypes = map[string]string{
 	"bool":               "bool",
-	"char *":             "string",
+	"char *":             "[]byte",
 	"char":               "byte",
-	"char*":              "string",
+	"char*":              "[]byte",
 	"double":             "float64",
 	"float":              "float32",
 	"int":                "int",
@@ -35,9 +35,12 @@ var simpleResolveTypes = map[string]string{
 	"unsigned long":      "uint32",
 	"unsigned short":     "uint16",
 	"unsigned short int": "uint16",
-	"void *":             "interface{}",
 	"void":               "",
 	"_Bool":              "bool",
+
+	// void* is treated like char*
+	"void*":  "[]byte",
+	"void *": "[]byte",
 
 	// null is a special case (it should probably have a less ambiguos name)
 	// when using the NULL macro.

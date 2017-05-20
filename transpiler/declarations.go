@@ -17,6 +17,11 @@ func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, str
 	fieldType := types.ResolveType(p, n.Type)
 	name := n.Name
 
+	// FIXME: What causes this? See __darwin_fp_control for example.
+	if name == "" {
+		return nil, ""
+	}
+
 	// TODO: The name of a variable or field cannot be "type"
 	// https://github.com/elliotchance/c2go/issues/83
 	if name == "type" {
@@ -57,7 +62,10 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 	var fields []*goast.Field
 	for _, c := range n.Children {
 		f, _ := transpileFieldDecl(p, c.(*ast.FieldDecl))
-		fields = append(fields, f)
+
+		if f != nil {
+			fields = append(fields, f)
+		}
 	}
 
 	p.File.Decls = append(p.File.Decls, &goast.GenDecl{
