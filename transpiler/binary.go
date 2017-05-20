@@ -38,15 +38,18 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 	if operator == token.LAND {
 		left, err = types.CastExpr(p, left, leftType, "bool")
 		ast.WarningOrError(err, n, left == nil)
+		if left == nil {
+			left = util.NewStringLit("nil")
+		}
 
 		right, err = types.CastExpr(p, right, rightType, "bool")
 		ast.WarningOrError(err, n, right == nil)
+		if right == nil {
+			right = util.NewStringLit("nil")
+		}
 
-		return &goast.BinaryExpr{
-			X:  left,
-			Op: operator,
-			Y:  right,
-		}, "bool", preStmts, postStmts, nil
+		return util.NewBinaryExpr(left, operator, right), "bool",
+			preStmts, postStmts, nil
 	}
 
 	// Convert "(0)" to "nil" when we are dealing with equality.
@@ -75,9 +78,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 		}
 	}
 
-	return &goast.BinaryExpr{
-		X:  left,
-		Op: operator,
-		Y:  right,
-	}, types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType), preStmts, postStmts, nil
+	return util.NewBinaryExpr(left, operator, right),
+		types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType),
+		preStmts, postStmts, nil
 }

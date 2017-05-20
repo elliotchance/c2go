@@ -14,7 +14,7 @@ type Node interface {
 }
 
 // Position returns the position of the node in the original file. If the
-// position cannot be dtermined an empty string is returned.
+// position cannot be determined an empty string is returned.
 func Position(node Node) string {
 	switch n := node.(type) {
 	case *AlignedAttr:

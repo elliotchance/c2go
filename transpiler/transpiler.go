@@ -11,6 +11,7 @@ import (
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/util"
 )
 
 func TranspileAST(fileName string, p *program.Program, root ast.Node) error {
@@ -127,6 +128,7 @@ func transpileToExpr(node ast.Node, p *program.Program) (
 
 	default:
 		ast.IsWarning(errors.New("cannot transpile to expr"), node)
+		expr = util.NewStringLit("nil")
 	}
 
 	// Real return is through named arguments.
@@ -209,9 +211,7 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 		return
 	}
 
-	stmt = &goast.ExprStmt{
-		X: expr,
-	}
+	stmt = util.NewExprStmt(expr)
 
 	return
 }

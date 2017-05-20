@@ -165,6 +165,10 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 				realArg, err = types.CastExpr(p, realArg, argTypes[i],
 					functionDef.ArgumentTypes[i])
 				ast.WarningOrError(err, n, realArg == nil)
+
+				if realArg == nil {
+					realArg = util.NewStringLit("nil")
+				}
 			}
 
 			realArgs = append(realArgs, realArg)
