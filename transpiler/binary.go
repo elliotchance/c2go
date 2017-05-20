@@ -73,7 +73,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 	if operator == token.ASSIGN {
 		right, err = types.CastExpr(p, right, rightType, returnType)
 
-		if ast.IsWarning(err, n) {
+		if ast.IsWarning(err, n) && right == nil {
 			right = util.NewStringLit("nil")
 		}
 	}
