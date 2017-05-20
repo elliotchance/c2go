@@ -59,14 +59,85 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 	}
 
 	if operator == token.ASSIGN {
-		right, err = types.CastExpr(p, right, rightType, returnType)
+		// Memory allocation is translated into the Go-style.
+		allocSize := GetAllocationSizeNode(n.Children[1])
 
-		if ast.IsWarning(err, n) && right == nil {
-			right = util.NewStringLit("nil")
+		if allocSize != nil {
+			allocSizeExpr, _, newPre, newPost, err := transpileToExpr(allocSize, p)
+			preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
+			if err != nil {
+				return nil, "", preStmts, postStmts, err
+			}
+
+			derefType, err := types.GetDereferenceType(leftType)
+			if err != nil {
+				return nil, "", preStmts, postStmts, err
+			}
+
+			toType, err := types.ResolveType(p, leftType)
+			if err != nil {
+				return nil, "", preStmts, postStmts, err
+			}
+
+			elementSize, err := types.SizeOf(p, derefType)
+			if err != nil {
+				return nil, "", preStmts, postStmts, err
+			}
+
+			right = util.NewCallExpr(
+				"make",
+				util.NewStringLit(toType),
+				util.NewBinaryExpr(allocSizeExpr, token.QUO, util.NewIntLit(elementSize)),
+			)
+		} else {
+			right, err = types.CastExpr(p, right, rightType, returnType)
+
+			if ast.IsWarning(err, n) && right == nil {
+				right = util.NewStringLit("nil")
+			}
 		}
 	}
 
 	return util.NewBinaryExpr(left, operator, right),
 		types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType),
 		preStmts, postStmts, nil
+}
+
+// GetAllocationSizeNode returns the node that, if evaluated, would return the
+// size (in bytes) of a memory allocation operation. For example:
+//
+//     (int *)malloc(sizeof(int))
+//
+// Would return the node that represents the "sizeof(int)".
+//
+// If the node does not represent an allocation operation (such as calling
+// malloc, calloc, realloc, etc.) then nil is returned.
+func GetAllocationSizeNode(node ast.Node) ast.Node {
+	switch n := node.(type) {
+	case *ast.CStyleCastExpr:
+		// A CStyleCastExpr is common to cast the void* from malloc() into the
+		// correct pointer type.
+		return GetAllocationSizeNode(n.Children[0])
+
+	case *ast.CallExpr:
+		functionName, _ := getNameOfFunctionFromCallExpr(n)
+
+		if functionName == "malloc" ||
+			functionName == "calloc" ||
+			functionName == "realloc" {
+			// Is 1 always the body in this case? Might need to be more careful
+			// to find the correct node.
+			return n.Children[1]
+		}
+
+		return nil
+
+	default:
+		// There is a precise subset of nodes that are allowed to be recursed,
+		// otherwise we can relatively safely say that it's not an alloc
+		// operation. There may be some more complex examples where this is not
+		// the case but we are only interested in the 99% case right now.
+		return nil
+	}
 }

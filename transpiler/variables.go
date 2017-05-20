@@ -79,6 +79,9 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 		}
 	}
 
+	// if a.Name == "p" {
+	// 	panic(a.Type)
+	// }
 	t, err := types.ResolveType(p, a.Type)
 	ast.IsWarning(err, a)
 

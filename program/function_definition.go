@@ -153,7 +153,6 @@ var builtInFunctionDefinitions = []string{
 	// stdlib.h
 	"int atoi(const char*) -> noarch.Atoi",
 	"long strtol(const char *, char **, int) -> noarch.Strtol",
-	"void* malloc(unsigned int) -> noarch.Malloc",
 	"void free(void*) -> noarch.Free",
 
 	// I'm not sure which header file these comes from?

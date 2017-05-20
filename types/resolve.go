@@ -77,13 +77,6 @@ var simpleResolveTypes = map[string]string{
 }
 
 func ResolveType(p *program.Program, s string) (string, error) {
-	// There are some special cases. The "const" modifier is normally stripped
-	// off, but in the case of "char*" the "const" changes how we handle it
-	// internally; as a string or a []byte.
-	// if s == "const char*" || s == "const char *" {
-	// 	return "string", nil
-	// }
-
 	// Remove any whitespace or attributes that are not relevant to Go.
 	s = strings.Replace(s, "const ", "", -1)
 	s = strings.Replace(s, "volatile ", "", -1)
@@ -91,6 +84,10 @@ func ResolveType(p *program.Program, s string) (string, error) {
 	s = strings.Replace(s, "*restrict", "*", -1)
 	s = strings.Replace(s, "*const", "*", -1)
 	s = strings.Trim(s, " \t\n\r")
+
+	if s == "int *" {
+		return "[]int", nil
+	}
 
 	// TODO: Unions are not supported.
 	// https://github.com/elliotchance/c2go/issues/84
@@ -144,26 +141,26 @@ func ResolveType(p *program.Program, s string) (string, error) {
 			}
 
 			return "*" + s, nil
-		} else {
-			s = s[7:]
-
-			for _, v := range simpleResolveTypes {
-				if v == s {
-					return p.ImportType(simpleResolveTypes[s]), nil
-				}
-			}
-
-			return s, nil
 		}
+
+		s = s[7:]
+
+		for _, v := range simpleResolveTypes {
+			if v == s {
+				return p.ImportType(simpleResolveTypes[s]), nil
+			}
+		}
+
+		return s, nil
 	}
 
 	// Enums are by name.
 	if strings.HasPrefix(s, "enum ") {
 		if s[len(s)-1] == '*' {
 			return "*" + s[5:len(s)-2], nil
-		} else {
-			return s[5:], nil
 		}
+
+		return s[5:], nil
 	}
 
 	// I have no idea how to handle this yet.

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void test_malloc()
+void test_malloc1()
 {
     int i, n;
     char *buffer;
@@ -21,9 +21,17 @@ void test_malloc()
     free(buffer);
 }
 
+void test_malloc2()
+{
+    int *p;
+    p = (int *)malloc(sizeof(int));
+    *p = 5;
+}
+
 int main()
 {
-    test_malloc();
-    
+    test_malloc1();
+    test_malloc2();
+
     return 0;
 }

@@ -16,7 +16,7 @@ func GetDereferenceType(cType string) (string, error) {
 	// In the form of: "char **" -> "char *"
 	search = regexp.MustCompile(`([\w ]+)\s*(\*+)`).FindStringSubmatch(cType)
 	if len(search) > 0 {
-		return search[1] + search[2][0:len(search[2])-1], nil
+		return strings.TrimSpace(search[1] + search[2][0:len(search[2])-1]), nil
 	}
 
 	return "", errors.New(cType)

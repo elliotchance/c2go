@@ -36,6 +36,18 @@ func getName(firstChild ast.Node) string {
 	}
 }
 
+func getNameOfFunctionFromCallExpr(n *ast.CallExpr) (string, error) {
+	// The first child will always contain the name of the function being
+	// called.
+	firstChild, ok := n.Children[0].(*ast.ImplicitCastExpr)
+	if !ok {
+		err := fmt.Errorf("unable to use CallExpr: %#v", n.Children[0])
+		return "", err
+	}
+
+	return getName(firstChild.Children[0]), nil
+}
+
 // transpileCallExpr transpiles expressions that calls a function, for example:
 //
 //     foo("bar")
@@ -48,15 +60,10 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
-	// The first child will always contain the name of the function being
-	// called.
-	firstChild, ok := n.Children[0].(*ast.ImplicitCastExpr)
-	if !ok {
-		err := fmt.Errorf("unable to use CallExpr: %#v", n.Children[0])
+	functionName, err := getNameOfFunctionFromCallExpr(n)
+	if err != nil {
 		return nil, "", nil, nil, err
 	}
-
-	functionName := getName(firstChild.Children[0])
 
 	// Get the function definition from it's name. The case where it is not
 	// defined is handled below (we haven't seen the prototype yet).
@@ -156,7 +163,6 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 	// Apply transformation if needed. A transformation rearranges the return
 	// value(s) and parameters. It is also used to indicate when a variable must
 	// be passed by reference.
-	var err error
 	if functionDef.ReturnParameters != nil || functionDef.Parameters != nil {
 		for i, a := range functionDef.Parameters {
 			byReference := false

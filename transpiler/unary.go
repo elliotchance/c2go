@@ -4,6 +4,7 @@ package transpiler
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
@@ -65,17 +66,6 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 		t, err := types.ResolveType(p, eType)
 		ast.IsWarning(err, n)
 
-		// if t == "string" {
-		// 	return &goast.BinaryExpr{
-		// 		X:  e,
-		// 		Op: token.EQL,
-		// 		Y: &goast.BasicLit{
-		// 			Kind:  token.STRING,
-		// 			Value: `""`,
-		// 		},
-		// 	}, "bool", preStmts, postStmts, nil
-		// }
-
 		p.AddImport("github.com/elliotchance/c2go/noarch")
 
 		functionName := fmt.Sprintf("noarch.Not%s", util.Ucfirst(t))
@@ -86,6 +76,7 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 		}, eType, preStmts, postStmts, nil
 	}
 
+	// Dereferencing.
 	if operator == token.MUL {
 		if eType == "const char *" {
 			return &goast.IndexExpr{
@@ -100,6 +91,17 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 		t, err := types.GetDereferenceType(eType)
 		if err != nil {
 			return nil, "", preStmts, postStmts, err
+		}
+
+		// C is more relaxed with this syntax. In Go we convert all of the
+		// pointers to slices, so we have to be careful when dereference a slice
+		// that it actually takes the first element instead.
+		resolvedType, err := types.ResolveType(p, eType)
+		if strings.HasPrefix(resolvedType, "[]") {
+			return &goast.IndexExpr{
+				X:     e,
+				Index: util.NewIntLit(0),
+			}, t, preStmts, postStmts, nil
 		}
 
 		return &goast.StarExpr{
