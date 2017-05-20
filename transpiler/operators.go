@@ -214,6 +214,8 @@ func getTokenForOperator(operator string) token.Token {
 		return token.SHR
 	case "<<":
 		return token.SHL
+	case "^":
+		return token.XOR
 
 	// Comparison
 	case ">=":
@@ -236,6 +238,10 @@ func getTokenForOperator(operator string) token.Token {
 		return token.LAND
 	case "||":
 		return token.LOR
+
+	// Other
+	case ",":
+		return token.COMMA
 	}
 
 	panic(fmt.Sprintf("unknown operator: %s", operator))
