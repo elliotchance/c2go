@@ -79,9 +79,6 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 		}
 	}
 
-	// if a.Name == "p" {
-	// 	panic(a.Type)
-	// }
 	t, err := types.ResolveType(p, a.Type)
 	ast.IsWarning(err, a)
 
@@ -105,7 +102,7 @@ func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) (
 	postStmts := []goast.Stmt{}
 
 	// There may be more than one variable defined on the same line. With C it
-	// is possible for them to have similar by diffrent types, whereas in Go
+	// is possible for them to have similar but different types, whereas in Go
 	// this is not possible. The easiest way around this is to split the
 	// variables up into multiple declarations. That is why this function
 	// returns one or more DeclStmts.

@@ -194,7 +194,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 	}
 
 	// There may be some startup code for this global variable.
-	if p.FunctionName == "" {
+	if p.Function == nil {
 		switch name {
 		// Below are for macOS.
 		case "__stdinp", "__stdoutp":

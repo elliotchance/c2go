@@ -56,7 +56,7 @@ func transpilePredefinedExpr(n *ast.PredefinedExpr, p *program.Program) (*goast.
 		value = "[]byte(\"void print_number(int *)\")"
 
 	case "__func__":
-		value = fmt.Sprintf("[]byte(\"%s\")", p.FunctionName)
+		value = fmt.Sprintf("[]byte(\"%s\")", p.Function.Name)
 
 	default:
 		// There are many more.

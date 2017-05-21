@@ -5,9 +5,11 @@ package transpiler
 import (
 	goast "go/ast"
 	"go/token"
+	"reflect"
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/traverse"
 	"github.com/elliotchance/c2go/types"
 	"github.com/elliotchance/c2go/util"
 )
@@ -114,46 +116,20 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 // If the node does not represent an allocation operation (such as calling
 // malloc, calloc, realloc, etc.) then nil is returned.
 func GetAllocationSizeNode(node ast.Node) ast.Node {
-	switch n := node.(type) {
-	case *ast.CStyleCastExpr:
-		// A CStyleCastExpr is common to cast the void* from malloc() into the
-		// correct pointer type.
-		return GetAllocationSizeNode(n.Children[0])
+	exprs := traverse.GetAllNodesOfType(node,
+		reflect.TypeOf((*ast.CallExpr)(nil)))
 
-	case *ast.ImplicitCastExpr:
-		return GetAllocationSizeNode(n.Children[0])
-
-	case *ast.CallExpr:
-		functionName, _ := getNameOfFunctionFromCallExpr(n)
+	for _, expr := range exprs {
+		functionName, _ := getNameOfFunctionFromCallExpr(expr.(*ast.CallExpr))
 
 		if functionName == "malloc" ||
 			functionName == "calloc" ||
 			functionName == "realloc" {
 			// Is 1 always the body in this case? Might need to be more careful
 			// to find the correct node.
-			return n.Children[1]
+			return expr.(*ast.CallExpr).Children[1]
 		}
-
-		return nil
-
-	case *ast.BinaryOperator:
-		newNode := GetAllocationSizeNode(n.Children[0])
-		if newNode != nil {
-			return newNode
-		}
-
-		newNode = GetAllocationSizeNode(n.Children[1])
-		if newNode != nil {
-			return newNode
-		}
-
-		return nil
-
-	case *ast.IntegerLiteral, *ast.CharacterLiteral, *ast.DeclRefExpr:
-		// These are absolutely known not to be an allocation.
-		return nil
-
-	default:
-		panic(n)
 	}
+
+	return nil
 }
