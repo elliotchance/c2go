@@ -43,7 +43,7 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 		return expr, err
 	}
 
-	if fromType == "null" && toType == "*[]byte" {
+	if fromType == "null" && toType == "[][]byte" {
 		return util.NewNil(), nil
 	}
 

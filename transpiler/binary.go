@@ -3,6 +3,7 @@
 package transpiler
 
 import (
+	"fmt"
 	goast "go/ast"
 	"go/token"
 	"reflect"
@@ -94,6 +95,24 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 			)
 		} else {
 			right, err = types.CastExpr(p, right, rightType, returnType)
+
+			if _, ok := right.(*goast.UnaryExpr); ok {
+				deref, err := types.GetDereferenceType(rightType)
+				if !ast.IsWarning(err, n) {
+					// This is some hackey to convert a reference to a variable into a
+					// slice that points to the same location. It will look similar to:
+					//
+					//     (*[1]int)(unsafe.Pointer(&a))[:]
+					//
+					p.AddImport("unsafe")
+					right = &goast.SliceExpr{
+						X: util.NewCallExpr(
+							fmt.Sprintf("(*[1]%s)", deref),
+							util.NewCallExpr("unsafe.Pointer", right),
+						),
+					}
+				}
+			}
 
 			if ast.IsWarning(err, n) && right == nil {
 				right = util.NewStringLit("nil")

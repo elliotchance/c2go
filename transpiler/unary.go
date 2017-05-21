@@ -110,26 +110,8 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 	}
 
 	if operator == token.AND {
-		// This is some hackey to convert a reference to a variable into a
-		// slice that points to the same location. It will look similar to:
-		//
-		//     (*[1]int)(unsafe.Pointer(&a))[:]
-		//
-		p.AddImport("unsafe")
-		e = &goast.SliceExpr{
-			X: util.NewCallExpr(
-				fmt.Sprintf("(*[1]%s)", eType),
-				util.NewCallExpr("unsafe.Pointer", &goast.UnaryExpr{
-					Op: operator,
-					X:  e,
-				}),
-			),
-		}
-
 		// We now have a pointer to the original type.
 		eType += " *"
-
-		return e, eType, preStmts, postStmts, nil
 	}
 
 	return &goast.UnaryExpr{
