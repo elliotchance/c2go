@@ -120,6 +120,9 @@ func GetAllocationSizeNode(node ast.Node) ast.Node {
 		// correct pointer type.
 		return GetAllocationSizeNode(n.Children[0])
 
+	case *ast.ImplicitCastExpr:
+		return GetAllocationSizeNode(n.Children[0])
+
 	case *ast.CallExpr:
 		functionName, _ := getNameOfFunctionFromCallExpr(n)
 
@@ -133,11 +136,24 @@ func GetAllocationSizeNode(node ast.Node) ast.Node {
 
 		return nil
 
-	default:
-		// There is a precise subset of nodes that are allowed to be recursed,
-		// otherwise we can relatively safely say that it's not an alloc
-		// operation. There may be some more complex examples where this is not
-		// the case but we are only interested in the 99% case right now.
+	case *ast.BinaryOperator:
+		newNode := GetAllocationSizeNode(n.Children[0])
+		if newNode != nil {
+			return newNode
+		}
+
+		newNode = GetAllocationSizeNode(n.Children[1])
+		if newNode != nil {
+			return newNode
+		}
+
 		return nil
+
+	case *ast.IntegerLiteral, *ast.CharacterLiteral, *ast.DeclRefExpr:
+		// These are absolutely known not to be an allocation.
+		return nil
+
+	default:
+		panic(n)
 	}
 }

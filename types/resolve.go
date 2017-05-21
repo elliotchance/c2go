@@ -85,10 +85,6 @@ func ResolveType(p *program.Program, s string) (string, error) {
 	s = strings.Replace(s, "*const", "*", -1)
 	s = strings.Trim(s, " \t\n\r")
 
-	if s == "int *" {
-		return "[]int", nil
-	}
-
 	// TODO: Unions are not supported.
 	// https://github.com/elliotchance/c2go/issues/84
 	//
@@ -175,7 +171,15 @@ func ResolveType(p *program.Program, s string) (string, error) {
 		// the name and the "*". If there is an extra space it will be trimmed
 		// off.
 		t, err := ResolveType(p, strings.TrimSpace(s[:len(s)-1]))
-		return "*" + t, err
+
+		// Pointers are always converted into slices, except with some specific
+		// entities that are shared in the Go libraries.
+		prefix := "*"
+		if !strings.Contains(t, "noarch.") {
+			prefix = "[]"
+		}
+
+		return prefix + t, err
 	}
 
 	if regexp.MustCompile(`[\w ]+\*\[\d+\]$`).MatchString(s) {
