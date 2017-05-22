@@ -99,8 +99,9 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 			if _, ok := right.(*goast.UnaryExpr); ok {
 				deref, err := types.GetDereferenceType(rightType)
 				if !ast.IsWarning(err, n) {
-					// This is some hackey to convert a reference to a variable into a
-					// slice that points to the same location. It will look similar to:
+					// This is some hackey to convert a reference to a variable
+					// into a slice that points to the same location. It will
+					// look similar to:
 					//
 					//     (*[1]int)(unsafe.Pointer(&a))[:]
 					//
@@ -134,6 +135,9 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 //
 // If the node does not represent an allocation operation (such as calling
 // malloc, calloc, realloc, etc.) then nil is returned.
+//
+// In the case of calloc it will return a BinaryExpr that multiplies both
+// arguments.
 func GetAllocationSizeNode(node ast.Node) ast.Node {
 	exprs := traverse.GetAllNodesOfType(node,
 		reflect.TypeOf((*ast.CallExpr)(nil)))
@@ -142,11 +146,18 @@ func GetAllocationSizeNode(node ast.Node) ast.Node {
 		functionName, _ := getNameOfFunctionFromCallExpr(expr.(*ast.CallExpr))
 
 		if functionName == "malloc" ||
-			functionName == "calloc" ||
 			functionName == "realloc" {
 			// Is 1 always the body in this case? Might need to be more careful
 			// to find the correct node.
 			return expr.(*ast.CallExpr).Children[1]
+		}
+
+		if functionName == "calloc" {
+			return &ast.BinaryOperator{
+				Type:     "int",
+				Operator: "*",
+				Children: expr.(*ast.CallExpr).Children[1:],
+			}
 		}
 	}
 
