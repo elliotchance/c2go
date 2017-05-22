@@ -18,6 +18,11 @@ import (
 func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, string) {
 	name := n.Name
 
+	// FIXME: What causes this? See __darwin_fp_control for example.
+	if name == "" {
+		return nil, ""
+	}
+
 	fieldType, err := types.ResolveType(p, n.Type)
 	ast.IsWarning(err, n)
 
@@ -62,7 +67,10 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 	for _, c := range n.Children {
 		if field, ok := c.(*ast.FieldDecl); ok {
 			f, _ := transpileFieldDecl(p, field)
-			fields = append(fields, f)
+
+			if f != nil {
+				fields = append(fields, f)
+			}
 		} else {
 			message := fmt.Sprintf("could not parse %v", c)
 			ast.IsWarning(errors.New(message), c)
@@ -186,7 +194,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 	}
 
 	// There may be some startup code for this global variable.
-	if p.FunctionName == "" {
+	if p.Function == nil {
 		switch name {
 		// Below are for macOS.
 		case "__stdinp", "__stdoutp":
@@ -222,21 +230,8 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 		}
 	}
 
-	var defaultValues []goast.Expr
-	if len(n.Children) > 0 {
-		defaultValue, defaultValueType, newPre, newPost, err := transpileToExpr(n.Children[0], p)
-		if err != nil {
-			panic(err)
-		}
-
-		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
-
-		e, err := types.CastExpr(p, defaultValue, defaultValueType, n.Type)
-
-		if !ast.IsWarning(err, n) {
-			defaultValues = []goast.Expr{e}
-		}
-	}
+	defaultValue, _, newPre, newPost, err := getDefaultValueForVar(p, n)
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	p.File.Decls = append(p.File.Decls, &goast.GenDecl{
 		Tok: token.VAR,
@@ -246,7 +241,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 					goast.NewIdent(name),
 				},
 				Type:   goast.NewIdent(theType),
-				Values: defaultValues,
+				Values: defaultValue,
 			},
 		},
 	})

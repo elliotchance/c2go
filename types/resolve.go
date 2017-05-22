@@ -17,9 +17,9 @@ import (
 // Please keep them sorted by name.
 var simpleResolveTypes = map[string]string{
 	"bool":               "bool",
-	"char *":             "string",
+	"char *":             "[]byte",
 	"char":               "byte",
-	"char*":              "string",
+	"char*":              "[]byte",
 	"double":             "float64",
 	"float":              "float32",
 	"int":                "int",
@@ -36,15 +36,16 @@ var simpleResolveTypes = map[string]string{
 	"unsigned long":      "uint32",
 	"unsigned short":     "uint16",
 	"unsigned short int": "uint16",
-	"void *":             "interface{}",
 	"void":               "",
 	"_Bool":              "bool",
+
+	// void* is treated like char*
+	"void*":  "[]byte",
+	"void *": "[]byte",
 
 	// null is a special case (it should probably have a less ambiguos name)
 	// when using the NULL macro.
 	"null": "null",
-
-	"const char *": "string",
 
 	// Are these built into some compilers?
 	"uint32":     "uint32",
@@ -136,26 +137,26 @@ func ResolveType(p *program.Program, s string) (string, error) {
 			}
 
 			return "*" + s, nil
-		} else {
-			s = s[7:]
-
-			for _, v := range simpleResolveTypes {
-				if v == s {
-					return p.ImportType(simpleResolveTypes[s]), nil
-				}
-			}
-
-			return s, nil
 		}
+
+		s = s[7:]
+
+		for _, v := range simpleResolveTypes {
+			if v == s {
+				return p.ImportType(simpleResolveTypes[s]), nil
+			}
+		}
+
+		return s, nil
 	}
 
 	// Enums are by name.
 	if strings.HasPrefix(s, "enum ") {
 		if s[len(s)-1] == '*' {
 			return "*" + s[5:len(s)-2], nil
-		} else {
-			return s[5:], nil
 		}
+
+		return s[5:], nil
 	}
 
 	// I have no idea how to handle this yet.
@@ -170,7 +171,15 @@ func ResolveType(p *program.Program, s string) (string, error) {
 		// the name and the "*". If there is an extra space it will be trimmed
 		// off.
 		t, err := ResolveType(p, strings.TrimSpace(s[:len(s)-1]))
-		return "*" + t, err
+
+		// Pointers are always converted into slices, except with some specific
+		// entities that are shared in the Go libraries.
+		prefix := "*"
+		if !strings.Contains(t, "noarch.") {
+			prefix = "[]"
+		}
+
+		return prefix + t, err
 	}
 
 	if regexp.MustCompile(`[\w ]+\*\[\d+\]$`).MatchString(s) {

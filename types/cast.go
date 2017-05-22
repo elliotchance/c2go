@@ -43,29 +43,28 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 		return expr, err
 	}
 
+	if fromType == "null" && toType == "[][]byte" {
+		return util.NewNil(), nil
+	}
+
 	// FIXME: This is a hack to avoid casting in some situations.
 	if fromType == "" || toType == "" {
 		return expr, nil
 	}
 
-	if fromType == "[]byte" && toType == "string" {
-		p.AddImport("github.com/elliotchance/c2go/noarch")
-		return util.NewCallExpr("noarch.NullTerminatedByteSlice", expr), nil
-	}
-
-	if fromType == "null" && toType == "string" {
+	if fromType == "null" && toType == "[]byte" {
 		return &goast.BasicLit{
 			Kind:  token.STRING,
-			Value: `""`,
+			Value: `nil`,
 		}, nil
 	}
 
-	if fromType == "null" && toType == "*string" {
-		return &goast.BasicLit{
-			Kind:  token.STRING,
-			Value: `""`,
-		}, nil
-	}
+	// if fromType == "null" && toType == "*string" {
+	// 	return &goast.BasicLit{
+	// 		Kind:  token.STRING,
+	// 		Value: `""`,
+	// 	}, nil
+	// }
 
 	// This if for linux.
 	if fromType == "*_IO_FILE" && toType == "*noarch.File" {

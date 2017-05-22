@@ -72,12 +72,12 @@ func generateCharacterTable() {
 	}
 }
 
-func CtypeLoc() *[]uint16 {
+func CtypeLoc() [][]uint16 {
 	if len(characterTable) == 0 {
 		generateCharacterTable()
 	}
 
-	return &characterTable
+	return [][]uint16{characterTable}
 }
 
 func ToLower(_c int) int {

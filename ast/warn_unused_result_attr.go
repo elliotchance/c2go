@@ -3,7 +3,7 @@ package ast
 type WarnUnusedResultAttr struct {
 	Address  string
 	Position string
-	Children []interface{}
+	Children []Node
 }
 
 func parseWarnUnusedResultAttr(line string) *WarnUnusedResultAttr {
@@ -12,7 +12,7 @@ func parseWarnUnusedResultAttr(line string) *WarnUnusedResultAttr {
 	return &WarnUnusedResultAttr{
 		Address:  groups["address"],
 		Position: groups["position"],
-		Children: []interface{}{},
+		Children: []Node{},
 	}
 }
 

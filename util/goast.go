@@ -68,3 +68,7 @@ func NewIntLit(value int) *goast.BasicLit {
 		Value: strconv.Itoa(value),
 	}
 }
+
+func NewNil() *goast.BasicLit {
+	return NewStringLit("nil")
+}

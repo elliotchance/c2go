@@ -19,45 +19,55 @@ func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (
 	// https://github.com/elliotchance/c2go/issues/86
 	if n.Name == "argc" {
 		n.Name = "len(os.Args)"
+		n.Type = "int"
 		p.AddImport("os")
 	}
 	if n.Name == "argv" {
 		n.Name = "os.Args"
+		n.Type = "const char*"
 		p.AddImport("os")
 	}
 
 	return goast.NewIdent(n.Name), n.Type, nil
 }
 
+func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
+	[]goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
+	if len(a.Children) == 0 {
+		return nil, "", nil, nil, nil
+	}
+
+	defaultValue, defaultValueType, newPre, newPost, err := transpileToExpr(a.Children[0], p)
+	if err != nil {
+		return nil, defaultValueType, newPre, newPost, err
+	}
+
+	var values []goast.Expr
+	if !types.IsNullExpr(defaultValue) {
+		t, err := types.CastExpr(p, defaultValue, defaultValueType, a.Type)
+		if !ast.IsWarning(err, a) {
+			values = []goast.Expr{t}
+		}
+	}
+
+	return values, defaultValueType, newPre, newPost, nil
+}
+
 func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 	*goast.DeclStmt, []goast.Stmt, []goast.Stmt, error) {
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
-	var values []goast.Expr = nil
 
-	if len(a.Children) > 0 {
-		defaultValue, defaultValueType, newPre, newPost, err := transpileToExpr(a.Children[0], p)
-		if err != nil {
-			return nil, nil, nil, err
-		}
-
-		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
-
-		if !types.IsNullExpr(defaultValue) {
-			t, err := types.CastExpr(p, defaultValue, defaultValueType, a.Type)
-			if !ast.IsWarning(err, a) {
-				values = []goast.Expr{t}
-			}
-		}
-	}
+	defaultValue, _, newPre, newPost, err := getDefaultValueForVar(p, a)
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	// Allocate slice so that it operates like a fixed size array.
 	arrayType, arraySize := types.GetArrayTypeAndSize(a.Type)
-	if arraySize != -1 && values == nil {
+	if arraySize != -1 && defaultValue == nil {
 		goArrayType, err := types.ResolveType(p, arrayType)
 		ast.IsWarning(err, a)
 
-		values = []goast.Expr{
+		defaultValue = []goast.Expr{
 			util.NewCallExpr(
 				"make",
 				&goast.ArrayType{
@@ -79,7 +89,7 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 				&goast.ValueSpec{
 					Names:  []*goast.Ident{goast.NewIdent(a.Name)},
 					Type:   goast.NewIdent(t),
-					Values: values,
+					Values: defaultValue,
 				},
 			},
 		},
@@ -92,7 +102,7 @@ func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) (
 	postStmts := []goast.Stmt{}
 
 	// There may be more than one variable defined on the same line. With C it
-	// is possible for them to have similar by diffrent types, whereas in Go
+	// is possible for them to have similar but different types, whereas in Go
 	// this is not possible. The easiest way around this is to split the
 	// variables up into multiple declarations. That is why this function
 	// returns one or more DeclStmts.
