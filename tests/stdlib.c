@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "tests.h"
 
 void test_malloc1()
 {
@@ -46,7 +47,7 @@ void test_malloc3()
     *d = 123;
     d[4] = 456;
 
-    printf("%f %f", d[0], d[4]);
+    printf("%f %f\n", d[0], d[4]);
 }
 
 // calloc() works exactly the same as malloc() however the memory is zeroed out.
@@ -66,15 +67,15 @@ void test_calloc()
     *d = 123;
     d[4] = 456;
 
-    printf("%f %f", d[0], d[4]);
+    printf("%f %f\n", d[0], d[4]);
 }
 
 int main()
 {
-    test_malloc1();
-    test_malloc2();
-    test_malloc3();
-    test_calloc();
+    RUN(test_malloc1);
+    RUN(test_malloc2);
+    RUN(test_malloc3);
+    RUN(test_calloc);
 
     return 0;
 }

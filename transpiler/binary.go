@@ -136,7 +136,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 // If the node does not represent an allocation operation (such as calling
 // malloc, calloc, realloc, etc.) then nil is returned.
 //
-// In the case of calloc it will return a BinaryExpr that multiplies both
+// In the case of calloc() it will return a new BinaryExpr that multiplies both
 // arguments.
 func GetAllocationSizeNode(node ast.Node) ast.Node {
 	exprs := traverse.GetAllNodesOfType(node,
@@ -145,8 +145,7 @@ func GetAllocationSizeNode(node ast.Node) ast.Node {
 	for _, expr := range exprs {
 		functionName, _ := getNameOfFunctionFromCallExpr(expr.(*ast.CallExpr))
 
-		if functionName == "malloc" ||
-			functionName == "realloc" {
+		if functionName == "malloc" {
 			// Is 1 always the body in this case? Might need to be more careful
 			// to find the correct node.
 			return expr.(*ast.CallExpr).Children[1]
@@ -158,6 +157,15 @@ func GetAllocationSizeNode(node ast.Node) ast.Node {
 				Operator: "*",
 				Children: expr.(*ast.CallExpr).Children[1:],
 			}
+		}
+
+		// TODO: realloc() is not supported
+		// https://github.com/elliotchance/c2go/issues/118
+		//
+		// Realloc will be treated as calloc which will almost certainly cause
+		// bugs in your code.
+		if functionName == "realloc" {
+			return expr.(*ast.CallExpr).Children[2]
 		}
 	}
 
