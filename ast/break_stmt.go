@@ -19,6 +19,8 @@ func parseBreakStmt(line string) *BreakStmt {
 	}
 }
 
+// AddChild adds a new child node. Child nodes can then be accessed with the
+// Children attribute.
 func (n *BreakStmt) AddChild(node Node) {
 	n.Children = append(n.Children, node)
 }

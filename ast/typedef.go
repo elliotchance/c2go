@@ -19,6 +19,8 @@ func parseTypedef(line string) *Typedef {
 	}
 }
 
+// AddChild adds a new child node. Child nodes can then be accessed with the
+// Children attribute.
 func (n *Typedef) AddChild(node Node) {
 	n.Children = append(n.Children, node)
 }

@@ -25,6 +25,8 @@ func parsePredefinedExpr(line string) *PredefinedExpr {
 	}
 }
 
+// AddChild adds a new child node. Child nodes can then be accessed with the
+// Children attribute.
 func (n *PredefinedExpr) AddChild(node Node) {
 	n.Children = append(n.Children, node)
 }

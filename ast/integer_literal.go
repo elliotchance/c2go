@@ -23,6 +23,8 @@ func parseIntegerLiteral(line string) *IntegerLiteral {
 	}
 }
 
+// AddChild adds a new child node. Child nodes can then be accessed with the
+// Children attribute.
 func (n *IntegerLiteral) AddChild(node Node) {
 	n.Children = append(n.Children, node)
 }
