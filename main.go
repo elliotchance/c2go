@@ -1,4 +1,13 @@
 // Package c2go contains the main function for running the executable.
+//
+// Installation
+//
+//     go get -u github.com/elliotchance/c2go
+//
+// Usage
+//
+//     c2go myfile.c
+//
 package main
 
 import (
