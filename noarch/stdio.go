@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"reflect"
 )
 
 // This definition has been translated from the original definition for __sFILE,
@@ -37,21 +38,23 @@ type File struct {
 	// fpos_t _offset;
 }
 
-func Fopen(filePath, mode string) *File {
+func Fopen(filePath, mode []byte) *File {
 	var file *os.File
 	var err error
 
+	sFilePath := NullTerminatedByteSlice(filePath)
+
 	// TODO: Only some modes are supported by fopen()
 	// https://github.com/elliotchance/c2go/issues/89
-	switch mode {
+	switch NullTerminatedByteSlice(mode) {
 	case "r":
-		file, err = os.Open(filePath)
+		file, err = os.Open(sFilePath)
 	case "r+":
-		file, err = os.OpenFile(filePath, os.O_RDWR, 0)
+		file, err = os.OpenFile(sFilePath, os.O_RDWR, 0)
 	case "w":
-		file, err = os.Create(filePath)
+		file, err = os.Create(sFilePath)
 	case "w+":
-		file, err = os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0)
+		file, err = os.OpenFile(sFilePath, os.O_RDWR|os.O_CREATE, 0)
 	default:
 		panic(fmt.Sprintf("unsupported file mode: %s", mode))
 	}
@@ -73,23 +76,23 @@ func Fclose(f *File) int {
 	return 0
 }
 
-func Remove(filePath string) int {
-	if os.Remove(filePath) != nil {
+func Remove(filePath []byte) int {
+	if os.Remove(string(filePath)) != nil {
 		return -1
 	}
 
 	return 0
 }
 
-func Rename(from, to string) int {
-	if os.Rename(from, to) != nil {
+func Rename(from, to []byte) int {
+	if os.Rename(string(from), string(to)) != nil {
 		return -1
 	}
 
 	return 0
 }
 
-func Fputs(content string, f *File) int {
+func Fputs(content []byte, f *File) int {
 	// Be senstive to NULL-terminated strings.
 	length := 0
 	for _, b := range []byte(content) {
@@ -100,7 +103,7 @@ func Fputs(content string, f *File) int {
 		length++
 	}
 
-	n, err := f.OsFile.WriteString(content[:length])
+	n, err := f.OsFile.WriteString(string(content[:length]))
 	if err != nil {
 		panic(err)
 	}
@@ -117,13 +120,13 @@ func Tmpfile() *File {
 	return NewFile(f)
 }
 
-func Fgets(dest string, num int, f *File) string {
+func Fgets(dest []byte, num int, f *File) []byte {
 	buf := make([]byte, num)
 	n, err := f.OsFile.Read(buf)
 
 	// FIXME: Is this the right thing to do in this case?
 	if err != nil {
-		return ""
+		return []byte{}
 	}
 
 	// TODO: Allow arguments to be passed by reference.
@@ -138,10 +141,10 @@ func Fgets(dest string, num int, f *File) string {
 		// If it is the case that we have read the entire buffer with this read
 		// we need to make sure we leave room for what would be the NULL
 		// character at the end of the string in C.
-		return string(buf[:n-1])
+		return buf[:n-1]
 	}
 
-	return string(buf[:n])
+	return buf[:n]
 }
 
 func Rewind(f *File) {
@@ -171,7 +174,7 @@ func NewFile(f *os.File) *File {
 	}
 }
 
-func Tmpnam(buffer string) string {
+func Tmpnam(buffer []byte) []byte {
 	// TODO: Allow arguments to be passed by reference.
 	// https://github.com/elliotchance/c2go/issues/90
 	// This appears in multiple locations.
@@ -182,11 +185,11 @@ func Tmpnam(buffer string) string {
 	// don't intend to use it.
 	f, err := ioutil.TempFile("", "")
 	if err != nil {
-		return ""
+		return []byte{}
 	}
 
 	f.Close()
-	return f.Name()
+	return []byte(f.Name())
 }
 
 func Fflush(f *File) int {
@@ -198,8 +201,8 @@ func Fflush(f *File) int {
 	return 0
 }
 
-func Fprintf(f *File, format string, args ...interface{}) int {
-	n, err := fmt.Fprintf(f.OsFile, format, args...)
+func Fprintf(f *File, format []byte, args ...interface{}) int {
+	n, err := fmt.Fprintf(f.OsFile, string(format), args...)
 	if err != nil {
 		return -1
 	}
@@ -207,8 +210,8 @@ func Fprintf(f *File, format string, args ...interface{}) int {
 	return n
 }
 
-func Fscanf(f *File, format string, args ...interface{}) int {
-	n, err := fmt.Fscanf(f.OsFile, format, args...)
+func Fscanf(f *File, format []byte, args ...interface{}) int {
+	n, err := fmt.Fscanf(f.OsFile, string(format), args...)
 	if err != nil {
 		return -1
 	}
@@ -276,8 +279,8 @@ func Fread(buffer *[]byte, size1, size2 int, f *File) int {
 	return n
 }
 
-func Fwrite(buffer string, size1, size2 int, f *File) int {
-	n, err := f.OsFile.Write([]byte(buffer[:size1*size2]))
+func Fwrite(buffer []byte, size1, size2 int, f *File) int {
+	n, err := f.OsFile.Write(buffer[:size1*size2])
 	if err != nil {
 		return -1
 	}
@@ -296,4 +299,34 @@ func Fgetpos(f *File, pos *int) int {
 
 func Fsetpos(f *File, pos *int) int {
 	return Fseek(f, int32(*pos), 0)
+}
+
+func Printf(format []byte, args ...interface{}) int {
+	realArgs := []interface{}{}
+
+	// Convert any C strings into Go strings.
+	typeOfByteSlice := reflect.TypeOf([]byte(nil))
+	for _, arg := range args {
+		if reflect.TypeOf(arg) == typeOfByteSlice {
+			realArgs = append(realArgs, NullTerminatedByteSlice(arg.([]byte)))
+		} else {
+			realArgs = append(realArgs, arg)
+		}
+	}
+
+	n, _ := fmt.Printf(NullTerminatedByteSlice(format), realArgs...)
+
+	return n
+}
+
+func Puts(s []byte) int {
+	n, _ := fmt.Println(NullTerminatedByteSlice(s))
+
+	return n
+}
+
+func Scanf(format []byte, args ...interface{}) int {
+	n, _ := fmt.Scanf(NullTerminatedByteSlice(format), args...)
+
+	return n
 }

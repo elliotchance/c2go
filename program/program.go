@@ -4,11 +4,11 @@ package program
 
 import (
 	"fmt"
-	"go/ast"
 	"go/token"
 
 	goast "go/ast"
 
+	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/util"
 )
 
@@ -20,14 +20,14 @@ type Program struct {
 
 	// These are for the output Go AST.
 	FileSet *token.FileSet
-	File    *ast.File
+	File    *goast.File
 
 	// One a type is defined it will be ignored if a future type of the same
 	// name appears.
 	typesAlreadyDefined []string
 
 	// Contains the current function name during the transpilation.
-	FunctionName string
+	Function *ast.FunctionDecl
 
 	// These are used to setup the runtime before the application begins. An
 	// example would be to setup globals with stdin file pointers on certain

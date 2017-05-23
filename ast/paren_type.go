@@ -4,7 +4,7 @@ type ParenType struct {
 	Address  string
 	Type     string
 	Sugar    bool
-	Children []interface{}
+	Children []Node
 }
 
 func parseParenType(line string) *ParenType {
@@ -14,7 +14,7 @@ func parseParenType(line string) *ParenType {
 		Address:  groups["address"],
 		Type:     groups["type"],
 		Sugar:    true,
-		Children: []interface{}{},
+		Children: []Node{},
 	}
 }
 

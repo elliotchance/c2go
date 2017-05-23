@@ -2,6 +2,8 @@
 package ast
 
 import (
+	"fmt"
+	"reflect"
 	"regexp"
 	"strings"
 )
@@ -9,6 +11,208 @@ import (
 // Node represents any node in the AST.
 type Node interface {
 	AddChild(node Node)
+}
+
+// Position returns the position of the node in the original file. If the
+// position cannot be determined an empty string is returned.
+func Position(node Node) string {
+	switch n := node.(type) {
+	case *AlignedAttr:
+		return n.Position
+	case *AlwaysInlineAttr:
+		return n.Position
+	case *ArraySubscriptExpr:
+		return n.Position
+	case *AsmLabelAttr:
+		return n.Position
+	case *AvailabilityAttr:
+		return n.Position
+	case *BinaryOperator:
+		return n.Position
+	case *BreakStmt:
+		return n.Position
+	case *BuiltinType:
+		return ""
+	case *CallExpr:
+		return n.Position
+	case *CaseStmt:
+		return n.Position
+	case *CharacterLiteral:
+		return n.Position
+	case *CompoundStmt:
+		return n.Position
+	case *ConditionalOperator:
+		return n.Position
+	case *ConstAttr:
+		return n.Position
+	case *ConstantArrayType:
+		return ""
+	case *ContinueStmt:
+		return n.Position
+	case *CompoundAssignOperator:
+		return n.Position
+	case *CStyleCastExpr:
+		return n.Position
+	case *DeclRefExpr:
+		return n.Position
+	case *DeclStmt:
+		return n.Position
+	case *DefaultStmt:
+		return n.Position
+	case *DeprecatedAttr:
+		return n.Position
+	case *DoStmt:
+		return n.Position
+	case *ElaboratedType:
+		return ""
+	case *Enum:
+		return ""
+	case *EnumConstantDecl:
+		return n.Position
+	case *EnumDecl:
+		return n.Position
+	case *EnumType:
+		return ""
+	case *FieldDecl:
+		return n.Position
+	case *FloatingLiteral:
+		return n.Position
+	case *FormatAttr:
+		return n.Position
+	case *FunctionDecl:
+		return n.Position
+	case *FunctionProtoType:
+		return ""
+	case *ForStmt:
+		return n.Position
+	case *GotoStmt:
+		return n.Position
+	case *IfStmt:
+		return n.Position
+	case *ImplicitCastExpr:
+		return n.Position
+	case *ImplicitValueInitExpr:
+		return n.Position
+	case *IncompleteArrayType:
+		return ""
+	case *InitListExpr:
+		return n.Position
+	case *IntegerLiteral:
+		return n.Position
+	case *LabelStmt:
+		return n.Position
+	case *MallocAttr:
+		return n.Position
+	case *MaxFieldAlignmentAttr:
+		return n.Position
+	case *MemberExpr:
+		return n.Position
+	case *ModeAttr:
+		return n.Position
+	case *NoInlineAttr:
+		return n.Position
+	case *NoThrowAttr:
+		return n.Position
+	case *NonNullAttr:
+		return n.Position
+	case *OffsetOfExpr:
+		return n.Position
+	case *PackedAttr:
+		return n.Position
+	case *ParenExpr:
+		return n.Position
+	case *ParenType:
+		return ""
+	case *ParmVarDecl:
+		return n.Position
+	case *PointerType:
+		return ""
+	case *PredefinedExpr:
+		return n.Position
+	case *PureAttr:
+		return n.Position
+	case *QualType:
+		return ""
+	case *Record:
+		return ""
+	case *RecordDecl:
+		return n.Position
+	case *RecordType:
+		return ""
+	case *RestrictAttr:
+		return n.Position
+	case *ReturnStmt:
+		return n.Position
+	case *ReturnsTwiceAttr:
+		return n.Position
+	case *StringLiteral:
+		return n.Position
+	case *SwitchStmt:
+		return n.Position
+	case *TranslationUnitDecl:
+		return ""
+	case *TransparentUnionAttr:
+		return n.Position
+	case *Typedef:
+		return ""
+	case *TypedefDecl:
+		return n.Position
+	case *TypedefType:
+		return ""
+	case *UnaryExprOrTypeTraitExpr:
+		return n.Position
+	case *UnaryOperator:
+		return n.Position
+	case *VAArgExpr:
+		return n.Position
+	case *VarDecl:
+		return n.Position
+	case *WarnUnusedResultAttr:
+		return n.Position
+	case *WhileStmt:
+		return n.Position
+	default:
+		panic(n)
+	}
+}
+
+// getNicerLineNumber tries to extract a more useful line number from a
+// position. If the line number cannot be determined then the original location
+// string is returned.
+func getNicerLineNumber(s string) string {
+	matches := regexp.MustCompile(`line:(\d+)`).FindStringSubmatch(s)
+	if len(matches) > 0 {
+		return fmt.Sprintf("line %s", matches[1])
+	}
+
+	return s
+}
+
+func CheckError(e error, n Node) {
+	if e != nil {
+		structName := reflect.TypeOf(n).Elem().Name()
+		fmt.Printf("// Error (%s): %s: %s\n", structName,
+			getNicerLineNumber(Position(n)), e.Error())
+		panic(e)
+	}
+}
+
+func IsWarning(e error, n Node) bool {
+	if e != nil {
+		structName := reflect.TypeOf(n).Elem().Name()
+		fmt.Printf("// Warning (%s): %s: %s\n", structName,
+			getNicerLineNumber(Position(n)), e.Error())
+	}
+
+	return e != nil
+}
+
+func WarningOrError(e error, n Node, isError bool) {
+	if isError {
+		CheckError(e, n)
+	} else {
+		IsWarning(e, n)
+	}
 }
 
 // Parse takes the coloured output of the clang AST command and returns a root

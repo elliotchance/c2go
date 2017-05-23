@@ -13,6 +13,7 @@ import (
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/util"
 )
 
 func transpileFloatingLiteral(n *ast.FloatingLiteral) *goast.BasicLit {
@@ -22,11 +23,9 @@ func transpileFloatingLiteral(n *ast.FloatingLiteral) *goast.BasicLit {
 	}
 }
 
-func transpileStringLiteral(n *ast.StringLiteral) *goast.BasicLit {
-	return &goast.BasicLit{
-		Kind:  token.STRING,
-		Value: strconv.Quote(n.Value),
-	}
+func transpileStringLiteral(n *ast.StringLiteral) goast.Expr {
+	return util.NewCallExpr("[]byte",
+		util.NewStringLit(strconv.Quote(n.Value+"\x00")))
 }
 
 func transpileIntegerLiteral(n *ast.IntegerLiteral) *goast.BasicLit {
@@ -54,10 +53,10 @@ func transpilePredefinedExpr(n *ast.PredefinedExpr, p *program.Program) (*goast.
 
 	switch n.Name {
 	case "__PRETTY_FUNCTION__":
-		value = "\"void print_number(int *)\""
+		value = "[]byte(\"void print_number(int *)\")"
 
 	case "__func__":
-		value = fmt.Sprintf("\"%s\"", "print_number")
+		value = fmt.Sprintf("[]byte(\"%s\")", p.Function.Name)
 
 	default:
 		// There are many more.

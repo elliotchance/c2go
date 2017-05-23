@@ -4,6 +4,7 @@ package transpiler
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
@@ -62,17 +63,8 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 			}, "bool", preStmts, postStmts, nil
 		}
 
-		t := types.ResolveType(p, eType)
-		if t == "string" {
-			return &goast.BinaryExpr{
-				X:  e,
-				Op: token.EQL,
-				Y: &goast.BasicLit{
-					Kind:  token.STRING,
-					Value: `""`,
-				},
-			}, "bool", preStmts, postStmts, nil
-		}
+		t, err := types.ResolveType(p, eType)
+		ast.IsWarning(err, n)
 
 		p.AddImport("github.com/elliotchance/c2go/noarch")
 
@@ -84,6 +76,7 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 		}, eType, preStmts, postStmts, nil
 	}
 
+	// Dereferencing.
 	if operator == token.MUL {
 		if eType == "const char *" {
 			return &goast.IndexExpr{
@@ -100,18 +93,30 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 			return nil, "", preStmts, postStmts, err
 		}
 
+		// C is more relaxed with this syntax. In Go we convert all of the
+		// pointers to slices, so we have to be careful when dereference a slice
+		// that it actually takes the first element instead.
+		resolvedType, err := types.ResolveType(p, eType)
+		if strings.HasPrefix(resolvedType, "[]") {
+			return &goast.IndexExpr{
+				X:     e,
+				Index: util.NewIntLit(0),
+			}, t, preStmts, postStmts, nil
+		}
+
 		return &goast.StarExpr{
 			X: e,
 		}, t, preStmts, postStmts, nil
 	}
 
 	if operator == token.AND {
+		// We now have a pointer to the original type.
 		eType += " *"
 	}
 
 	return &goast.UnaryExpr{
-		X:  e,
 		Op: operator,
+		X:  e,
 	}, eType, preStmts, postStmts, nil
 }
 
@@ -122,8 +127,32 @@ func transpileUnaryExprOrTypeTraitExpr(n *ast.UnaryExprOrTypeTraitExpr, p *progr
 	// It will have children if the sizeof() is referencing a variable.
 	// Fortunately clang already has the type in the AST for us.
 	if len(n.Children) > 0 {
-		t = n.Children[0].(*ast.ParenExpr).Children[0].(*ast.DeclRefExpr).Type2
+		switch ty := n.Children[0].(*ast.ParenExpr).Children[0].(type) {
+		case *ast.DeclRefExpr:
+			t = ty.Type2
+
+		case *ast.ArraySubscriptExpr:
+			t = ty.Type
+
+		case *ast.MemberExpr:
+			t = ty.Type
+
+		case *ast.UnaryOperator:
+			t = ty.Type
+
+		case *ast.ParenExpr:
+			t = ty.Type
+
+		default:
+			panic(fmt.Sprintf("cannot do unary on: %#v", ty))
+		}
 	}
 
-	return util.NewIntLit(types.SizeOf(p, t)), types.ResolveType(p, n.Type1), nil, nil, nil
+	ty, err := types.ResolveType(p, n.Type1)
+	ast.IsWarning(err, n)
+
+	sizeInBytes, err := types.SizeOf(p, t)
+	ast.IsWarning(err, n)
+
+	return util.NewIntLit(sizeInBytes), ty, nil, nil, nil
 }

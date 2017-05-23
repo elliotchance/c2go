@@ -16,6 +16,38 @@ import (
 	"go/token"
 )
 
+func getName(firstChild ast.Node) string {
+	switch fc := firstChild.(type) {
+	case *ast.DeclRefExpr:
+		return fc.Name
+
+	case *ast.MemberExpr:
+		return fc.Name
+
+	case *ast.ParenExpr:
+		return getName(fc.Children[0])
+
+	case *ast.UnaryOperator:
+		ast.IsWarning(errors.New("cannot use UnaryOperator as function name"), firstChild)
+		return "UNKNOWN"
+
+	default:
+		panic(fmt.Sprintf("cannot CallExpr on: %#v", fc))
+	}
+}
+
+func getNameOfFunctionFromCallExpr(n *ast.CallExpr) (string, error) {
+	// The first child will always contain the name of the function being
+	// called.
+	firstChild, ok := n.Children[0].(*ast.ImplicitCastExpr)
+	if !ok {
+		err := fmt.Errorf("unable to use CallExpr: %#v", n.Children[0])
+		return "", err
+	}
+
+	return getName(firstChild.Children[0]), nil
+}
+
 // transpileCallExpr transpiles expressions that calls a function, for example:
 //
 //     foo("bar")
@@ -28,10 +60,10 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
-	// The first child will always contain the name of the function being
-	// called.
-	firstChild := n.Children[0].(*ast.ImplicitCastExpr).Children[0]
-	functionName := firstChild.(*ast.DeclRefExpr).Name
+	functionName, err := getNameOfFunctionFromCallExpr(n)
+	if err != nil {
+		return nil, "", nil, nil, err
+	}
 
 	// Get the function definition from it's name. The case where it is not
 	// defined is handled below (we haven't seen the prototype yet).
@@ -63,20 +95,30 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-		// if i > len(functionDef.ArgumentTypes)-1 {
-		// 	// This means the argument is one of the varargs so we don't know
-		// 	// what type it needs to be cast to.
-		// } else {
-		// 	//e = types.CastExpr(p, e, eType, functionDef.ArgumentTypes[i])
-		// }
-
 		_, arraySize := types.GetArrayTypeAndSize(eType)
-		if functionName == "fmt.Printf" && arraySize != -1 {
-			p.AddImport("github.com/elliotchance/c2go/noarch")
-			e = util.NewCallExpr(
-				"noarch.NullTerminatedString",
-				util.NewCallExpr("string", &goast.SliceExpr{X: e}),
-			)
+
+		// If we are using varargs with Printf we need to make sure that certain
+		// types are cast correctly.
+		if functionName == "fmt.Printf" {
+			// Make sure that any string parameters (const char*) are truncated
+			// to the NULL byte.
+			if arraySize != -1 {
+				p.AddImport("github.com/elliotchance/c2go/noarch")
+				e = util.NewCallExpr(
+					"noarch.NullTerminatedByteSlice",
+					&goast.SliceExpr{X: e},
+				)
+			}
+
+			// Byte slices (char*) must also be truncated to the NULL byte.
+			//
+			// TODO: This would also apply to other formatting functions like
+			// fprintf, etc.
+			if i > len(functionDef.ArgumentTypes)-1 &&
+				(eType == "char *" || eType == "char*") {
+				p.AddImport("github.com/elliotchance/c2go/noarch")
+				e = util.NewCallExpr("noarch.NullTerminatedByteSlice", e)
+			}
 		}
 
 		// We cannot use preallocated byte slices as strings in the same way we
@@ -143,7 +185,13 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 					X:  args[i],
 				}
 			} else {
-				realArg = types.CastExpr(p, realArg, argTypes[i], functionDef.ArgumentTypes[i])
+				realArg, err = types.CastExpr(p, realArg, argTypes[i],
+					functionDef.ArgumentTypes[i])
+				ast.WarningOrError(err, n, realArg == nil)
+
+				if realArg == nil {
+					realArg = util.NewStringLit("nil")
+				}
 			}
 
 			realArgs = append(realArgs, realArg)
@@ -153,10 +201,15 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 		// types.
 		for i, a := range args {
 			if i > len(functionDef.ArgumentTypes)-1 {
-				// This means the argument is one of the varargs so we don't know
-				// what type it needs to be cast to.
+				// This means the argument is one of the varargs so we don't
+				// know what type it needs to be cast to.
 			} else {
-				a = types.CastExpr(p, a, argTypes[i], functionDef.ArgumentTypes[i])
+				a, err = types.CastExpr(p, a, argTypes[i],
+					functionDef.ArgumentTypes[i])
+
+				if ast.IsWarning(err, n) {
+					a = util.NewStringLit("nil")
+				}
 			}
 
 			realArgs = append(realArgs, a)

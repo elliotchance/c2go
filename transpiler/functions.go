@@ -11,9 +11,26 @@ import (
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/types"
+	"github.com/elliotchance/c2go/util"
 
 	goast "go/ast"
 )
+
+// getFunctionBody returns the function body as a CompoundStmt. If the function
+// is a prototype or forward declaration (meaning it has no body) then nil is
+// returned.
+func getFunctionBody(n *ast.FunctionDecl) *ast.CompoundStmt {
+	// It's possible that the last node is the CompoundStmt (after all the
+	// parameter declarations) - but I don't know this for certain so we will
+	// look at all the children for now.
+	for _, c := range n.Children {
+		if b, ok := c.(*ast.CompoundStmt); ok {
+			return b
+		}
+	}
+
+	return nil
+}
 
 // transpileFunctionDecl transpiles the function prototype.
 //
@@ -31,10 +48,10 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 	// ReturnStmt comes alone it will know what the current function is, and
 	// therefore be able to lookup what the real return type should be. I'm sure
 	// there is a much better way of doing this.
-	p.FunctionName = n.Name
+	p.Function = n
 	defer func() {
 		// Reset the function name when we go out of scope.
-		p.FunctionName = ""
+		p.Function = nil
 	}()
 
 	// Always register the new function. Only from this point onwards will
@@ -58,27 +75,13 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 	// Test if the function has a body. This is identified by a child node that
 	// is a CompoundStmt (since it is not valid to have a function body without
 	// curly brackets).
-	//
-	// It's possible that the last node is the CompoundStmt (after all the
-	// parameter declarations) - but I don't know this for certain so we will
-	// look at all the children for now.
-	hasBody := false
-	for _, c := range n.Children {
-		if b, ok := c.(*ast.CompoundStmt); ok {
-			var err error
-			var newPre, newPost []goast.Stmt
+	functionBody := getFunctionBody(n)
+	if functionBody != nil {
+		var err error
 
-			body, newPre, newPost, err = transpileToBlockStmt(b, p)
-			if err != nil {
-				return err
-			}
-
-			if len(newPre) > 0 || len(newPost) > 0 {
-				panic("bad")
-			}
-
-			hasBody = true
-			break
+		body, _, _, err = transpileToBlockStmt(functionBody, p)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -97,12 +100,13 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 		return nil
 	}
 
-	if hasBody {
+	if functionBody != nil {
 		// If verbose mode is on we print the name of the function as a comment
 		// immediately to stdout. This will appear at the top of the program but
 		// make it much easier to diagnose when the transpiler errors.
 		if p.Verbose {
-			fmt.Printf("// Function: %s(%s)\n", f.Name, strings.Join(f.ArgumentTypes, ", "))
+			fmt.Printf("// Function: %s(%s)\n", f.Name,
+				strings.Join(f.ArgumentTypes, ", "))
 		}
 
 		fieldList, err := getFieldList(n, p)
@@ -110,24 +114,25 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 			return err
 		}
 
+		t, err := types.ResolveType(p, f.ReturnType)
+		ast.IsWarning(err, n)
+
 		returnTypes := []*goast.Field{
 			&goast.Field{
-				Type: goast.NewIdent(types.ResolveType(p, f.ReturnType)),
+				Type: goast.NewIdent(t),
 			},
 		}
 
-		if p.FunctionName == "main" {
+		if p.Function != nil && p.Function.Name == "main" {
 			// main() function does not have a return type.
 			returnTypes = []*goast.Field{}
 
 			// We also need to append a setup function that will instantiate
 			// some things that are expected to be available at runtime.
 			body.List = append([]goast.Stmt{
-				&goast.ExprStmt{
-					X: &goast.CallExpr{
-						Fun: goast.NewIdent("__init"),
-					},
-				},
+				util.NewExprStmt(&goast.CallExpr{
+					Fun: goast.NewIdent("__init"),
+				}),
 			}, body.List...)
 		}
 
@@ -156,9 +161,12 @@ func getFieldList(f *ast.FunctionDecl, p *program.Program) (*goast.FieldList, er
 	r := []*goast.Field{}
 	for _, n := range f.Children {
 		if v, ok := n.(*ast.ParmVarDecl); ok {
+			t, err := types.ResolveType(p, v.Type)
+			ast.IsWarning(err, f)
+
 			r = append(r, &goast.Field{
 				Names: []*goast.Ident{goast.NewIdent(v.Name)},
-				Type:  goast.NewIdent(types.ResolveType(p, v.Type)),
+				Type:  goast.NewIdent(t),
 			})
 		}
 	}
@@ -181,21 +189,24 @@ func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (
 		return nil, nil, nil, err
 	}
 
-	f := program.GetFunctionDefinition(p.FunctionName)
+	f := program.GetFunctionDefinition(p.Function.Name)
 
-	results := []goast.Expr{types.CastExpr(p, e, eType, f.ReturnType)}
+	t, err := types.CastExpr(p, e, eType, f.ReturnType)
+	if ast.IsWarning(err, n) {
+		t = util.NewStringLit("nil")
+	}
+
+	results := []goast.Expr{t}
 
 	// main() function is not allowed to return a result. Use os.Exit if non-zero
-	if p.FunctionName == "main" {
+	if p.Function != nil && p.Function.Name == "main" {
 		litExpr, isLiteral := e.(*goast.BasicLit)
 		if !isLiteral || (isLiteral && litExpr.Value != "0") {
 			p.AddImport("os")
-			return &goast.ExprStmt{
-				X: &goast.CallExpr{
-					Fun:  goast.NewIdent("os.Exit"),
-					Args: results,
-				},
-			}, preStmts, postStmts, nil
+			return util.NewExprStmt(&goast.CallExpr{
+				Fun:  goast.NewIdent("os.Exit"),
+				Args: results,
+			}), preStmts, postStmts, nil
 		}
 		results = []goast.Expr{}
 	}

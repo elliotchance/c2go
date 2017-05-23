@@ -118,10 +118,10 @@ var builtInFunctionDefinitions = []string{
 	"double tanh(double) -> math.Tanh",
 
 	// stdio.h
-	"int printf() -> fmt.Printf",
-	"int scanf() -> fmt.Scanf",
+	"int printf(const char*) -> noarch.Printf",
+	"int scanf(const char*) -> noarch.Scanf",
 	"int putchar(int) -> darwin.Putchar",
-	"int puts(const char *) -> fmt.Println",
+	"int puts(const char *) -> noarch.Puts",
 	"FILE* fopen(const char *, const char *) -> noarch.Fopen",
 	"int fclose(FILE*) -> noarch.Fclose",
 	"int remove(const char*) -> noarch.Remove",
@@ -135,7 +135,6 @@ var builtInFunctionDefinitions = []string{
 	"int fflush(FILE*) -> noarch.Fflush",
 	"int fprintf(FILE*, const char*) -> noarch.Fprintf",
 	"int fscanf(FILE*, const char*) -> noarch.Fscanf",
-	"int scanf(const char*) -> fmt.Scanf",
 	"int fgetc(FILE*) -> noarch.Fgetc",
 	"int fputc(int, FILE*) -> noarch.Fputc",
 	"int getc(FILE*) -> noarch.Fgetc",
@@ -154,6 +153,7 @@ var builtInFunctionDefinitions = []string{
 	// stdlib.h
 	"int atoi(const char*) -> noarch.Atoi",
 	"long strtol(const char *, char **, int) -> noarch.Strtol",
+	"void free(void*) -> noarch.Free",
 
 	// I'm not sure which header file these comes from?
 	"uint32 __builtin_bswap32(uint32) -> darwin.BSwap32",

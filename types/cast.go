@@ -27,46 +27,52 @@ func GetArrayTypeAndSize(s string) (string, int) {
 	return "", -1
 }
 
-func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Expr {
+func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.Expr, error) {
 	// Let's assume that anything can be converted to a void pointer.
 	if toType == "void *" {
-		return expr
+		return expr, nil
 	}
 
-	fromType = ResolveType(p, fromType)
-	toType = ResolveType(p, toType)
+	fromType, err := ResolveType(p, fromType)
+	if err != nil {
+		return expr, err
+	}
+
+	toType, err = ResolveType(p, toType)
+	if err != nil {
+		return expr, err
+	}
+
+	if fromType == "null" && toType == "[][]byte" {
+		return util.NewNil(), nil
+	}
 
 	// FIXME: This is a hack to avoid casting in some situations.
 	if fromType == "" || toType == "" {
-		return expr
+		return expr, nil
 	}
 
-	if fromType == "[]byte" && toType == "string" {
-		p.AddImport("github.com/elliotchance/c2go/noarch")
-		return util.NewCallExpr("noarch.NullTerminatedByteSlice", expr)
-	}
-
-	if fromType == "null" && toType == "string" {
+	if fromType == "null" && toType == "[]byte" {
 		return &goast.BasicLit{
 			Kind:  token.STRING,
-			Value: `""`,
-		}
+			Value: `nil`,
+		}, nil
 	}
 
-	if fromType == "null" && toType == "*string" {
-		return &goast.BasicLit{
-			Kind:  token.STRING,
-			Value: `""`,
-		}
-	}
+	// if fromType == "null" && toType == "*string" {
+	// 	return &goast.BasicLit{
+	// 		Kind:  token.STRING,
+	// 		Value: `""`,
+	// 	}, nil
+	// }
 
 	// This if for linux.
 	if fromType == "*_IO_FILE" && toType == "*noarch.File" {
-		return expr
+		return expr, nil
 	}
 
 	if fromType == toType {
-		return expr
+		return expr, nil
 	}
 
 	// Compatible integer types
@@ -94,7 +100,7 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Ex
 					Kind:  token.STRING,
 					Value: "0",
 				},
-			}
+			}, nil
 		}
 	}
 
@@ -132,7 +138,7 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Ex
 			Value: "0",
 		})
 
-		return value
+		return value, nil
 	}
 
 	// In the forms of:
@@ -163,7 +169,7 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Ex
 					},
 				},
 			},
-		}
+		}, nil
 	}
 
 	// Anything that is a pointer can be compared to nil
@@ -175,31 +181,31 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Ex
 				Kind:  token.STRING,
 				Value: "nil",
 			},
-		}
+		}, nil
 	}
 
 	if fromType == "int" && toType == "*int" {
 		return &goast.BasicLit{
 			Kind:  token.STRING,
 			Value: "nil",
-		}
+		}, nil
 	}
 	if fromType == "int" && toType == "*byte" {
 		return &goast.BasicLit{
 			Kind:  token.STRING,
 			Value: `""`,
-		}
+		}, nil
 	}
 
 	if fromType == "_Bool" && toType == "bool" {
-		return expr
+		return expr, nil
 	}
 
 	if util.InStrings(fromType, types) && util.InStrings(toType, types) {
 		return &goast.CallExpr{
 			Fun:  goast.NewIdent(toType),
 			Args: []goast.Expr{expr},
-		}
+		}, nil
 	}
 
 	p.AddImport("github.com/elliotchance/c2go/noarch")
@@ -222,7 +228,7 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) ast.Ex
 	return &goast.CallExpr{
 		Fun:  goast.NewIdent(functionName),
 		Args: []goast.Expr{expr},
-	}
+	}, nil
 }
 
 func IsNullExpr(n goast.Expr) bool {

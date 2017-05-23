@@ -9,6 +9,16 @@ import (
 	"strconv"
 )
 
+func NewExprStmt(expr goast.Expr) *goast.ExprStmt {
+	if expr == nil {
+		panic("expr is nil")
+	}
+
+	return &goast.ExprStmt{
+		X: expr,
+	}
+}
+
 func NewCallExpr(functionName string, args ...goast.Expr) *goast.CallExpr {
 	return &goast.CallExpr{
 		Fun:  goast.NewIdent(functionName),
@@ -17,6 +27,13 @@ func NewCallExpr(functionName string, args ...goast.Expr) *goast.CallExpr {
 }
 
 func NewBinaryExpr(left goast.Expr, operator token.Token, right goast.Expr) *goast.BinaryExpr {
+	if left == nil {
+		panic("left is nil")
+	}
+	if right == nil {
+		panic("right is nil")
+	}
+
 	return &goast.BinaryExpr{
 		X:  left,
 		Op: operator,
@@ -50,4 +67,8 @@ func NewIntLit(value int) *goast.BasicLit {
 		Kind:  token.INT,
 		Value: strconv.Itoa(value),
 	}
+}
+
+func NewNil() *goast.BasicLit {
+	return NewStringLit("nil")
 }

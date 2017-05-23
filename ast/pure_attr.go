@@ -5,7 +5,7 @@ type PureAttr struct {
 	Position  string
 	Implicit  bool
 	Inherited bool
-	Children  []interface{}
+	Children  []Node
 }
 
 func parsePureAttr(line string) *PureAttr {
@@ -21,7 +21,7 @@ func parsePureAttr(line string) *PureAttr {
 		Position:  groups["position"],
 		Implicit:  len(groups["implicit"]) > 0,
 		Inherited: len(groups["inherited"]) > 0,
-		Children:  []interface{}{},
+		Children:  []Node{},
 	}
 }
 

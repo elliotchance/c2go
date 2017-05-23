@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -16,9 +17,9 @@ import (
 // Please keep them sorted by name.
 var simpleResolveTypes = map[string]string{
 	"bool":               "bool",
-	"char *":             "string",
+	"char *":             "[]byte",
 	"char":               "byte",
-	"char*":              "string",
+	"char*":              "[]byte",
 	"double":             "float64",
 	"float":              "float32",
 	"int":                "int",
@@ -35,15 +36,16 @@ var simpleResolveTypes = map[string]string{
 	"unsigned long":      "uint32",
 	"unsigned short":     "uint16",
 	"unsigned short int": "uint16",
-	"void *":             "interface{}",
 	"void":               "",
 	"_Bool":              "bool",
+
+	// void* is treated like char*
+	"void*":  "[]byte",
+	"void *": "[]byte",
 
 	// null is a special case (it should probably have a less ambiguos name)
 	// when using the NULL macro.
 	"null": "null",
-
-	"const char *": "string",
 
 	// Are these built into some compilers?
 	"uint32":     "uint32",
@@ -54,7 +56,6 @@ var simpleResolveTypes = map[string]string{
 
 	// Darwin specific
 	"__darwin_ct_rune_t": "github.com/elliotchance/c2go/darwin.Darwin_ct_rune_t",
-	"union __mbstate_t":  "__mbstate_t",
 	"fpos_t":             "int",
 	"struct __float2":    "github.com/elliotchance/c2go/darwin.Float2",
 	"struct __double2":   "github.com/elliotchance/c2go/darwin.Double2",
@@ -73,54 +74,55 @@ var simpleResolveTypes = map[string]string{
 	"__sFILEX":                     "interface{}",
 	"__va_list_tag":                "interface{}",
 	"FILE":                         "github.com/elliotchance/c2go/noarch.File",
-	"union sigval":                 "int",
-	"union __sigaction_u":          "int",
-
-	// Linux specific
-	"union __WAIT_STATUS":         "interface{}",
-	"union pthread_mutex_t":       "interface{}",
-	"union pthread_mutexattr_t":   "interface{}",
-	"union pthread_cond_t":        "interface{}",
-	"union pthread_condattr_t":    "interface{}",
-	"union pthread_rwlock_t":      "interface{}",
-	"union pthread_rwlockattr_t":  "interface{}",
-	"union pthread_barrier_t":     "interface{}",
-	"union pthread_barrierattr_t": "interface{}",
-	"union pthread_attr_t":        "interface{}",
 }
 
-func ResolveType(p *program.Program, s string) string {
+func ResolveType(p *program.Program, s string) (string, error) {
 	// Remove any whitespace or attributes that are not relevant to Go.
 	s = strings.Replace(s, "const ", "", -1)
 	s = strings.Replace(s, "volatile ", "", -1)
 	s = strings.Replace(s, "*__restrict", "*", -1)
 	s = strings.Replace(s, "*restrict", "*", -1)
+	s = strings.Replace(s, "*const", "*", -1)
 	s = strings.Trim(s, " \t\n\r")
+
+	// TODO: Unions are not supported.
+	// https://github.com/elliotchance/c2go/issues/84
+	//
+	// For now we will let them be interface{} so that it does not stop the
+	// transpilation.
+	if strings.HasPrefix(s, "union ") {
+		return "interface{}", errors.New("unions are not supported")
+	}
 
 	// FIXME: This is a hack to avoid casting in some situations.
 	if s == "" {
-		return s
+		return s, errors.New("probably an incorrect type translation 1")
+	}
+
+	// FIXME: I have no idea what this is.
+	if s == "const" {
+		return "interface{}", errors.New("probably an incorrect type translation 4")
 	}
 
 	if s == "char *[]" {
-		return "interface{}"
+		return "interface{}", errors.New("probably an incorrect type translation 2")
 	}
 
 	if s == "fpos_t" {
-		return "int"
+		return "int", nil
 	}
 
 	// The simple resolve types are the types that we know there is an exact Go
 	// equivalent. For example float, int, etc.
 	for k, v := range simpleResolveTypes {
 		if k == s {
-			return p.ImportType(v)
+			return p.ImportType(v), nil
 		}
 	}
 
 	// If the type is already defined we can proceed with the same name.
 	if p.TypeIsAlreadyDefined(s) {
-		return p.ImportType(s)
+		return p.ImportType(s), nil
 	}
 
 	// Structures are by name.
@@ -130,36 +132,36 @@ func ResolveType(p *program.Program, s string) string {
 
 			for _, v := range simpleResolveTypes {
 				if v == s {
-					return "*" + p.ImportType(simpleResolveTypes[s])
+					return "*" + p.ImportType(simpleResolveTypes[s]), nil
 				}
 			}
 
-			return "*" + s
-		} else {
-			s = s[7:]
-
-			for _, v := range simpleResolveTypes {
-				if v == s {
-					return p.ImportType(simpleResolveTypes[s])
-				}
-			}
-
-			return s
+			return "*" + s, nil
 		}
+
+		s = s[7:]
+
+		for _, v := range simpleResolveTypes {
+			if v == s {
+				return p.ImportType(simpleResolveTypes[s]), nil
+			}
+		}
+
+		return s, nil
 	}
 
 	// Enums are by name.
 	if strings.HasPrefix(s, "enum ") {
 		if s[len(s)-1] == '*' {
-			return "*" + s[5:len(s)-2]
-		} else {
-			return s[5:]
+			return "*" + s[5:len(s)-2], nil
 		}
+
+		return s[5:], nil
 	}
 
 	// I have no idea how to handle this yet.
 	if strings.Index(s, "anonymous union") != -1 {
-		return "interface{}"
+		return "interface{}", errors.New("probably an incorrect type translation 3")
 	}
 
 	// It may be a pointer of a simple type. For example, float *, int *,
@@ -168,11 +170,20 @@ func ResolveType(p *program.Program, s string) string {
 		// The "-1" is important because there may or may not be a space between
 		// the name and the "*". If there is an extra space it will be trimmed
 		// off.
-		return "*" + ResolveType(p, strings.TrimSpace(s[:len(s)-1]))
+		t, err := ResolveType(p, strings.TrimSpace(s[:len(s)-1]))
+
+		// Pointers are always converted into slices, except with some specific
+		// entities that are shared in the Go libraries.
+		prefix := "*"
+		if !strings.Contains(t, "noarch.") {
+			prefix = "[]"
+		}
+
+		return prefix + t, err
 	}
 
 	if regexp.MustCompile(`[\w ]+\*\[\d+\]$`).MatchString(s) {
-		return "[]string"
+		return "[]string", nil
 	}
 
 	// Function pointers are not yet supported. In the mean time they will be
@@ -180,20 +191,23 @@ func ResolveType(p *program.Program, s string) string {
 	// properly.
 	search := regexp.MustCompile("[\\w ]+\\(\\*.*?\\)\\(.*\\)").MatchString(s)
 	if search {
-		return "interface{}"
+		return "interface{}", errors.New("function pointers are not supported")
 	}
 
 	search = regexp.MustCompile("[\\w ]+ \\(.*\\)").MatchString(s)
 	if search {
-		return "interface{}"
+		return "interface{}", errors.New("function pointers are not supported")
 	}
 
 	// It could be an array of fixed length. These needs to be converted to
 	// slices.
 	search2 := regexp.MustCompile("([\\w ]+)\\[(\\d+)\\]").FindStringSubmatch(s)
 	if len(search2) > 0 {
-		return fmt.Sprintf("[]%s", ResolveType(p, search2[1]))
+		t, err := ResolveType(p, search2[1])
+		return fmt.Sprintf("[]%s", t), err
 	}
 
-	panic(fmt.Sprintf("I couldn't find an appropriate Go type for the C type '%s'.", s))
+	errMsg := fmt.Sprintf(
+		"I couldn't find an appropriate Go type for the C type '%s'.", s)
+	return "interface{}", errors.New(errMsg)
 }
