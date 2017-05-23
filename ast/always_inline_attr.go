@@ -1,5 +1,7 @@
 package ast
 
+// AlwaysInlineAttr is a type of attribute that is optionally attached to a
+// variable or struct field definition.
 type AlwaysInlineAttr struct {
 	Address  string
 	Position string

@@ -10,7 +10,6 @@ import (
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
-	"github.com/elliotchance/c2go/traverse"
 	"github.com/elliotchance/c2go/types"
 	"github.com/elliotchance/c2go/util"
 )
@@ -139,8 +138,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 // In the case of calloc() it will return a new BinaryExpr that multiplies both
 // arguments.
 func GetAllocationSizeNode(node ast.Node) ast.Node {
-	exprs := traverse.GetAllNodesOfType(node,
-		reflect.TypeOf((*ast.CallExpr)(nil)))
+	exprs := ast.GetAllNodesOfType(node, reflect.TypeOf((*ast.CallExpr)(nil)))
 
 	for _, expr := range exprs {
 		functionName, _ := getNameOfFunctionFromCallExpr(expr.(*ast.CallExpr))

@@ -1,5 +1,7 @@
 package ast
 
+// AlignedAttr is a type of attribute that is optionally attached to a variable
+// or struct field definition.
 type AlignedAttr struct {
 	Address  string
 	Position string
