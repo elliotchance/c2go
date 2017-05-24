@@ -2,9 +2,6 @@
 // system.
 package darwin
 
-// FIXME: These are wrong.
-type C__mbstate_t int64
-
 // I'm not sure which header file this actually comes from?
 func BSwap32(a uint32) uint32 {
 	panic("BSwap32 is not supported")

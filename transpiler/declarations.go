@@ -126,10 +126,6 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 		return nil
 	}
 
-	if name == "__mbstate_t" {
-		resolvedType = p.ImportType("github.com/elliotchance/c2go/darwin.C__mbstate_t")
-	}
-
 	if name == "__darwin_ct_rune_t" {
 		resolvedType = p.ImportType("github.com/elliotchance/c2go/darwin.Darwin_ct_rune_t")
 	}
