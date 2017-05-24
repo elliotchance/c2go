@@ -2,18 +2,15 @@
 
 #include <stdio.h>
 #include <math.h>
+#include "tap.h"
 
 #define PI 3.14159265
+#define IS_NAN -2147483648
 
 unsigned long long ullmax = 18446744073709551615ull;
 
-void test_acos()
-{
-  double param, result;
-  param = 0.5;
-  result = acos(param) * 180.0 / PI;
-  printf("The arc cosine of %f is %.3f degrees.\n", param, result);
-}
+// #define eqf_ok(functionName, arg, expected) \
+//   cmp_ok(functionName(arg), "==", (double)expected, "%s(%f) = %f", #functionName, (double)arg, (double)expected)
 
 void test_asin()
 {
@@ -166,28 +163,93 @@ void test_tanh()
   printf("The hyperbolic tangent of %f is %f.\n", param, result);
 }
 
+int approx(double a, double b)
+{
+  // The epsilon is caculated as one millionth of the actual value. This should
+  // be accurate enough, but also floating-points are usually rendered with 6
+  // places.
+  double epsilon = fabs(a * 0.00001);
+
+  return fabs(a - b) <= ((fabs(a) < fabs(b) ? fabs(b) : fabs(a)) * epsilon);
+}
+
+#define is_ok(actual) ok(actual, "%s", #actual)
+
+#define eqf_ok(actual, expected)          \
+  if (approx((actual), (expected)))       \
+    pass("%s == %s", #actual, #expected); \
+  else                                    \
+    fail("%s != %s, got %f", #actual, #expected, actual);
+
 int main()
 {
-  test_acos();
-  test_asin();
-  test_atan();
-  test_atan2();
-  test_ceil();
-  test_cos();
-  test_cosh();
-  test_exp();
-  test_fabs();
-  test_floor();
-  test_fmod();
-  test_ldexp();
-  test_log();
-  test_log10();
-  test_pow();
-  test_sin();
-  test_sinh();
-  test_sqrt();
-  test_tan();
-  test_tanh();
+  plan(28);
 
-  return 0;
+  diag("acos");
+  is_ok(isnan(acos(-2)));
+  eqf_ok(acos(-1), 3.141592653589793);
+  eqf_ok(acos(0), 1.5707963267948966);
+  eqf_ok(acos(0.5), 1.0471975511965979);
+  eqf_ok(acos(1), 0);
+  is_ok(isnan(acos(2)));
+
+  diag("asin");
+  is_ok(isnan(asin(-2)));
+  eqf_ok(asin(-1), -1.5707963267948966);
+  eqf_ok(asin(0), 0);
+  eqf_ok(asin(0.5), 0.5235987755982989);
+  eqf_ok(asin(1), 1.5707963267948966);
+  is_ok(isnan(asin(2)));
+
+  diag("atan");
+  eqf_ok(atan(1), 0.7853981633974483);
+  eqf_ok(atan(0), 0);
+  eqf_ok(atan(-0), -0);
+  eqf_ok(atan(INFINITY), 1.5707963267948966);
+  eqf_ok(atan(-INFINITY), -1.5707963267948966);
+
+  diag("atan2");
+  eqf_ok(atan2(90, 15), 1.4056476493802699);
+  eqf_ok(atan2(15, 90), 0.16514867741462683);
+  eqf_ok(atan2(0, 0), 0);
+  eqf_ok(atan2(1, INFINITY), 0);
+  eqf_ok(atan2(1, -INFINITY), PI);
+  eqf_ok(atan2(INFINITY, 1), PI / 2.0);
+  eqf_ok(atan2(-INFINITY, 1), -PI / 2.0);
+  eqf_ok(atan2(INFINITY, INFINITY), PI / 4.0);
+  eqf_ok(atan2(INFINITY, -INFINITY), 2.356194);
+  eqf_ok(atan2(-INFINITY, INFINITY), -PI / 4.0);
+  eqf_ok(atan2(-INFINITY, -INFINITY), -2.356194);
+
+  // Math.atan2(±0, -0);               // ±PI.
+  // Math.atan2(±0, +0);               // ±0.
+  // Math.atan2(±0, -x);               // ±PI for x > 0.
+  // Math.atan2(±0, x);                // ±0 for x > 0.
+  // Math.atan2(-y, ±0);               // -PI/2 for y > 0.
+  // Math.atan2(y, ±0);                // PI/2 for y > 0.
+  // Math.atan2(±y, -Infinity);        // ±PI for finite y > 0.
+  // Math.atan2(±y, +Infinity);        // ±0 for finite y > 0.
+  // Math.atan2(±Infinity, x);         // ±PI/2 for finite x.
+  // Math.atan2(±Infinity, -Infinity); // ±3*PI/4.
+  // Math.atan2(±Infinity, +Infinity); // ±PI/4.
+
+  // test_atan2();
+  // test_ceil();
+  // test_cos();
+  // test_cosh();
+  // test_exp();
+  // test_fabs();
+  // test_floor();
+  // test_fmod();
+  // test_ldexp();
+  // test_log();
+  // test_log10();
+  // test_pow();
+  // test_sin();
+  // test_sinh();
+  // test_sqrt();
+  // test_tan();
+  // test_tanh();
+
+  done_testing();
 }
