@@ -120,7 +120,7 @@ var builtInFunctionDefinitions = []string{
 	// stdio.h
 	"int printf(const char*) -> noarch.Printf",
 	"int scanf(const char*) -> noarch.Scanf",
-	"int putchar(int) -> darwin.Putchar",
+	"int putchar(int) -> noarch.Putchar",
 	"int puts(const char *) -> noarch.Puts",
 	"FILE* fopen(const char *, const char *) -> noarch.Fopen",
 	"int fclose(FILE*) -> noarch.Fclose",
