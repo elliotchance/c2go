@@ -55,7 +55,7 @@ var simpleResolveTypes = map[string]string{
 	"__uint64_t": "uint64",
 
 	// Darwin specific
-	"__darwin_ct_rune_t": "github.com/elliotchance/c2go/darwin.Darwin_ct_rune_t",
+	"__darwin_ct_rune_t": "github.com/elliotchance/c2go/darwin.CtRuneT",
 	"fpos_t":             "int",
 	"struct __float2":    "github.com/elliotchance/c2go/darwin.Float2",
 	"struct __double2":   "github.com/elliotchance/c2go/darwin.Double2",

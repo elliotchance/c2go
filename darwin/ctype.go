@@ -5,8 +5,8 @@ import (
 	"unicode/utf8"
 )
 
-// __darwin_ct_rune_t
-type Darwin_ct_rune_t int
+// CtRuneT represents __darwin_ct_rune_t.
+type CtRuneT int
 
 // Apple defines a bunch of magic values for the type of character, see
 // https://opensource.apple.com/source/Libc/Libc-320/include/ctype.h.auto.html
@@ -40,7 +40,7 @@ const (
 //
 // There may be multiple bit masks. And yes, I'm sure there is a much better way
 // to handle this, so if you know one please consider putting in a PR :)
-func IsType(_c Darwin_ct_rune_t, _f uint32) uint32 {
+func IsType(_c CtRuneT, _f uint32) uint32 {
 	// These are the easy ones.
 	if _f&CTYPE_A != 0 && unicode.IsLetter(rune(_c)) {
 		return 1
@@ -123,19 +123,19 @@ func IsType(_c Darwin_ct_rune_t, _f uint32) uint32 {
 
 // I have no idea what MaskRune is supposed to do. It is provided internally by
 // darwin.
-func MaskRune(_c Darwin_ct_rune_t, _f uint32) Darwin_ct_rune_t {
+func MaskRune(_c CtRuneT, _f uint32) CtRuneT {
 	return _c
 }
 
 // __darwin_ct_rune_t __isctype(__darwin_ct_rune_t, uint32)
-func IsCType(_c Darwin_ct_rune_t, _f uint32) Darwin_ct_rune_t {
-	return Darwin_ct_rune_t(IsType(_c, _f))
+func IsCType(_c CtRuneT, _f uint32) CtRuneT {
+	return CtRuneT(IsType(_c, _f))
 }
 
-func ToLower(_c Darwin_ct_rune_t) Darwin_ct_rune_t {
-	return Darwin_ct_rune_t(unicode.ToLower(rune(_c)))
+func ToLower(_c CtRuneT) CtRuneT {
+	return CtRuneT(unicode.ToLower(rune(_c)))
 }
 
-func ToUpper(_c Darwin_ct_rune_t) Darwin_ct_rune_t {
-	return Darwin_ct_rune_t(unicode.ToUpper(rune(_c)))
+func ToUpper(_c CtRuneT) CtRuneT {
+	return CtRuneT(unicode.ToUpper(rune(_c)))
 }

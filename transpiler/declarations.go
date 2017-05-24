@@ -127,7 +127,7 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 	}
 
 	if name == "__darwin_ct_rune_t" {
-		resolvedType = p.ImportType("github.com/elliotchance/c2go/darwin.Darwin_ct_rune_t")
+		resolvedType = p.ImportType("github.com/elliotchance/c2go/darwin.CtRuneT")
 	}
 
 	// TODO: Some platform structs are ignored.

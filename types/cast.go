@@ -89,7 +89,7 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 		"__uint16_t", "size_t",
 
 		// Darwin specific
-		"__darwin_ct_rune_t", "darwin.Darwin_ct_rune_t",
+		"__darwin_ct_rune_t", "darwin.CtRuneT",
 	}
 	for _, v := range types {
 		if fromType == v && toType == "bool" {
