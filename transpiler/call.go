@@ -71,7 +71,19 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 
 	if functionDef == nil {
 		errorMessage := fmt.Sprintf("unknown function: %s", functionName)
-		return nil, "", nil, nil, errors.New(errorMessage)
+		ast.IsWarning(errors.New(errorMessage), n)
+
+		// We do not have a prototype for the function, but we should not exit
+		// here. Instead we will create a mock definition for it so that this
+		// transpile function will always return something and continue.
+		//
+		// The mock function definition is never actually saved to the program
+		// definitions, so each time we see the CallExpr it will run this every
+		// time. This is so if we come across the real prototype later it will
+		// be handled correctly. Or at least "more" correctly.
+		functionDef = &program.FunctionDefinition{
+			Name: functionName,
+		}
 	}
 
 	if functionDef.Substitution != "" {
