@@ -48,14 +48,14 @@ func TranspileAST(fileName string, p *program.Program, root ast.Node) error {
 	// declaration. According to the function definition, line should be
 	// greater than 0.
 	importDecl := &goast.GenDecl{
-		Tok: token.IMPORT,
+		Tok:    token.IMPORT,
 		Lparen: 1,
 	}
 
 	for _, quotedImportPath := range p.Imports() {
 		importSpec := &goast.ImportSpec{
 			Path: &goast.BasicLit{
-				Kind: token.IMPORT,
+				Kind:  token.IMPORT,
 				Value: quotedImportPath,
 			},
 		}
