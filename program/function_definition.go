@@ -87,6 +87,7 @@ var builtInFunctionDefinitions = []string{
 	"Float2 __sincospif_stret(float) -> darwin.SincospifStret",
 	"Double2 __sincos_stret(double) -> darwin.SincosStret",
 	"Float2 __sincosf_stret(float) -> darwin.SincosfStret",
+	"float __builtin_huge_valf() -> darwin.Inff",
 
 	// linux/assert.h
 	"bool __assert_fail(const char*, const char*, unsigned int, const char*) -> linux.AssertFail",
@@ -99,7 +100,7 @@ var builtInFunctionDefinitions = []string{
 	"double acos(double) -> math.Acos",
 	"double asin(double) -> math.Asin",
 	"double atan(double) -> math.Atan",
-	"double atan2(double) -> math.Atan2",
+	"double atan2(double, double) -> math.Atan2",
 	"double ceil(double) -> math.Ceil",
 	"double cos(double) -> math.Cos",
 	"double cosh(double) -> math.Cosh",

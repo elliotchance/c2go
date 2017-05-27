@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"testing"
 
 	"github.com/elliotchance/c2go/util"
@@ -69,7 +70,6 @@ func TestIntegrationScripts(t *testing.T) {
 
 			// Compile Go
 			goSrc := Start([]string{file})
-			// fmt.Println(goSrc)
 			ioutil.WriteFile("build/main.go", []byte(goSrc), os.ModePerm)
 			buildErr, err := exec.Command("go", "build", "-o", goPath, "build/main.go").CombinedOutput()
 			if err != nil {
@@ -83,6 +83,14 @@ func TestIntegrationScripts(t *testing.T) {
 			cmd.Stderr = &goProgram.stderr
 			err = cmd.Run()
 			goProgram.isZero = err == nil
+
+			// Check for special exit codes that signal that tests have failed.
+			if exitError, ok := err.(*exec.ExitError); ok {
+				exitStatus := exitError.Sys().(syscall.WaitStatus).ExitStatus()
+				if exitStatus == 101 || exitStatus == 102 {
+					t.Fatal(goProgram.stdout.String())
+				}
+			}
 
 			// Check if both exit codes are zero (or non-zero)
 			if cProgram.isZero != goProgram.isZero {
