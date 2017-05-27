@@ -45,6 +45,10 @@ type Program struct {
 	// If verbose is on progress messages will be printed immediately as code
 	// comments (so that they do not intefere with the program output).
 	Verbose bool
+
+	// A map of all the global variables (variables that exist outside of a
+	// function) and their types.
+	GlobalVariables map[string]string
 }
 
 // NewProgram creates a new blank program.
@@ -55,6 +59,7 @@ func NewProgram() *Program {
 		startupStatements:   []goast.Stmt{},
 		Structs:             make(map[string]*Struct),
 		Verbose:             false,
+		GlobalVariables:     map[string]string{},
 	}
 }
 
