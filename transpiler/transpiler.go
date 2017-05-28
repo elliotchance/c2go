@@ -14,6 +14,7 @@ import (
 	"github.com/elliotchance/c2go/util"
 )
 
+// TranspileAST iterates through the Clang AST and builds a Go AST
 func TranspileAST(fileName, packageName string, p *program.Program, root ast.Node) error {
 	// Start by parsing an empty file.
 	p.FileSet = token.NewFileSet()
