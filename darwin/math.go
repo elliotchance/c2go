@@ -72,6 +72,6 @@ func Signbitl(x float64) int {
 	return noarch.BoolToInt(math.Signbit(x))
 }
 
-func Nanf(s []byte) float32 {
-	return math.Float32frombits(0x7F800000)
+func NaN(s []byte) float64 {
+	return math.NaN()
 }

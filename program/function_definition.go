@@ -91,7 +91,7 @@ var builtInFunctionDefinitions = []string{
 	"int __inline_signbitf(float) -> darwin.Signbitf",
 	"int __inline_signbitd(double) -> darwin.Signbitd",
 	"int __inline_signbitl(long double) -> darwin.Signbitl",
-	"float __builtin_nanf(const char*) -> darwin.Nanf",
+	"double __builtin_nanf(const char*) -> darwin.NaN",
 
 	// linux/assert.h
 	"bool __assert_fail(const char*, const char*, unsigned int, const char*) -> linux.AssertFail",

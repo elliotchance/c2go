@@ -71,6 +71,16 @@ static int total_failures = 0;
         fail("%s != %s, got %f", #actual, #expected, actual) \
     }
 
+#define nan_ok(actual)                                 \
+    if (isnan(actual))                                 \
+    {                                                  \
+        pass("isnan(%s)", #actual)                     \
+    }                                                  \
+    else                                               \
+    {                                                  \
+        fail("%s is not NAN, got %f", #actual, actual) \
+    }
+
 #define done_testing()                                                     \
     if (total_failures > 0)                                                \
     {                                                                      \

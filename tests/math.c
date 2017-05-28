@@ -168,7 +168,7 @@ int isnegzero(double x)
 
 int main()
 {
-  plan(67);
+  plan(117);
 
   // Test constants
   diag("constants");
@@ -228,24 +228,103 @@ int main()
   ok(isnan(asin(NAN)));
 
   diag("atan");
-  eq_ok(atan(1), 0.7853981633974483);
+
   eq_ok(atan(0), 0);
-  eq_ok(atan(-0), -0);
-  eq_ok(atan(INFINITY), 1.5707963267948966);
-  eq_ok(atan(-INFINITY), -1.5707963267948966);
+  eq_ok(atan(1), 0.785398);
+  eq_ok(atan(-1), -0.785398);
+  eq_ok(atan(0.5), 0.463648);
+
+  eq_ok(atan(1.23e300), 1.570796);
+  ok(isnegzero(atan(-1.23e-300)));
+
+  eq_ok(atan(M_PI), 1.262627);
+  eq_ok(atan(M_E), 1.218283);
+
+  eq_ok(atan(INFINITY), 1.570796);
+  eq_ok(atan(-INFINITY), -1.570796);
+  nan_ok(atan(NAN));
 
   diag("atan2");
-  eq_ok(atan2(90, 15), 1.4056476493802699);
-  eq_ok(atan2(15, 90), 0.16514867741462683);
+
+  // x, 0
   eq_ok(atan2(0, 0), 0);
+  eq_ok(atan2(1, 0), 1.570796);
+  eq_ok(atan2(-1, 0), -1.570796);
+  eq_ok(atan2(0.5, 0), 1.570796);
+
+  eq_ok(atan2(1.23e300, 0), 1.570796);
+  ok(isnegzero(atan2(-1.23e-300, 0)));
+
+  eq_ok(atan2(M_PI, 0), 1.570796);
+  eq_ok(atan2(M_E, 0), 1.570796);
+
+  eq_ok(atan2(INFINITY, 0), 1.570796);
+  eq_ok(atan2(-INFINITY, 0), -1.570796);
+  ok(isnan(atan2(NAN, 0)));
+
+  // x, 1
+  eq_ok(atan2(0, 1), 0);
+  eq_ok(atan2(1, 1), 0.785398);
+  eq_ok(atan2(-1, 1), -0.785398);
+  eq_ok(atan2(0.5, 1), 0.463648);
+
+  eq_ok(atan2(1.23e300, 1), 1.570796);
+  ok(isnegzero(atan2(-1.23e-300, 1)));
+
+  eq_ok(atan2(M_PI, 1), 1.262627);
+  eq_ok(atan2(M_E, 1), 1.218283);
+
+  eq_ok(atan2(INFINITY, 1), 1.570796);
+  eq_ok(atan2(-INFINITY, 1), -1.570796);
+  ok(isnan(atan2(NAN, 1)));
+
+  // x, INFINITY
+  eq_ok(atan2(0, INFINITY), 0);
   eq_ok(atan2(1, INFINITY), 0);
-  eq_ok(atan2(1, -INFINITY), PI);
-  eq_ok(atan2(INFINITY, 1), PI / 2.0);
-  eq_ok(atan2(-INFINITY, 1), -PI / 2.0);
-  eq_ok(atan2(INFINITY, INFINITY), PI / 4.0);
+  ok(isnegzero(atan2(-1, INFINITY)));
+  eq_ok(atan2(0.5, INFINITY), 0);
+
+  eq_ok(atan2(1.23e300, INFINITY), 0);
+  ok(isnegzero(atan2(-1.23e-300, INFINITY)));
+
+  eq_ok(atan2(M_PI, INFINITY), 0);
+  eq_ok(atan2(M_E, INFINITY), 0);
+
+  eq_ok(atan2(INFINITY, INFINITY), 0.785398);
+  eq_ok(atan2(-INFINITY, INFINITY), -0.785398);
+  ok(isnan(atan2(NAN, INFINITY)));
+
+  // x, -INFINITY
+  eq_ok(atan2(0, -INFINITY), M_PI);
+  eq_ok(atan2(1, -INFINITY), M_PI);
+  ok(isnegzero(atan2(-1, -INFINITY)));
+  eq_ok(atan2(0.5, -INFINITY), M_PI);
+
+  eq_ok(atan2(1.23e300, -INFINITY), M_PI);
+  ok(isnegzero(atan2(-1.23e-300, -INFINITY)));
+
+  eq_ok(atan2(M_PI, -INFINITY), M_PI);
+  eq_ok(atan2(M_E, -INFINITY), M_PI);
+
   eq_ok(atan2(INFINITY, -INFINITY), 2.356194);
-  eq_ok(atan2(-INFINITY, INFINITY), -PI / 4.0);
   eq_ok(atan2(-INFINITY, -INFINITY), -2.356194);
+  ok(isnan(atan2(NAN, -INFINITY)));
+
+  // x, NAN
+  ok(isnan(atan2(0, NAN)));
+  ok(isnan(atan2(1, NAN)));
+  ok(isnan(atan2(-1, NAN)));
+  ok(isnan(atan2(0.5, NAN)));
+
+  ok(isnan(atan2(1.23e300, NAN)));
+  ok(isnan(atan2(-1.23e-300, NAN)));
+
+  ok(isnan(atan2(M_PI, NAN)));
+  ok(isnan(atan2(M_E, NAN)));
+
+  ok(isnan(atan2(INFINITY, NAN)));
+  ok(isnan(atan2(-INFINITY, NAN)));
+  ok(isnan(atan2(NAN, NAN)));
 
   diag("ceil");
   eq_ok(ceil(-3.55), -3);
