@@ -61,7 +61,7 @@ static int total_failures = 0;
     ++total_failures;  \
     printf("%d not ok - " fmt "\n", current_test, __VA_ARGS__);
 
-#define eq_ok(actual, expected)                              \
+#define is_eq(actual, expected)                              \
     if (approx((actual), (expected)))                        \
     {                                                        \
         pass("%s == %s", #actual, #expected)                 \
@@ -71,7 +71,7 @@ static int total_failures = 0;
         fail("%s != %s, got %f", #actual, #expected, actual) \
     }
 
-#define nan_ok(actual)                                 \
+#define is_nan(actual)                                 \
     if (isnan(actual))                                 \
     {                                                  \
         pass("isnan(%s)", #actual)                     \
@@ -81,7 +81,7 @@ static int total_failures = 0;
         fail("%s is not NAN, got %f", #actual, actual) \
     }
 
-#define inf_ok(actual, sign)                                                              \
+#define is_inf(actual, sign)                                                              \
     if (isinf(actual) == 1 && ((sign > 0 && (actual) > 0) || (sign < 0 && (actual) < 0))) \
     {                                                                                     \
         pass("isinf(%s, %d)", #actual, sign)                                              \
