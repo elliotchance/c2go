@@ -17,7 +17,8 @@ import (
 func TranspileAST(fileName, packageName string, p *program.Program, root ast.Node) error {
 	// Start by parsing an empty file.
 	p.FileSet = token.NewFileSet()
-	f, err := parser.ParseFile(p.FileSet, fileName, fmt.Sprintf("package %v", packageName), 0)
+	packageSignature := fmt.Sprintf("package %v", packageName)
+	f, err := parser.ParseFile(p.FileSet, fileName, packageSignature, 0)
 	p.File = f
 
 	if err != nil {
