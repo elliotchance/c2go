@@ -2,25 +2,26 @@
     printf("\n--- %s\n", #t); \
     t();
 
-int approx(double a, double b)
+int approx(double actual, double expected)
 {
-    // The epsilon is caculated as one millionth of the actual value. This should
-    // be accurate enough, but also floating-points are usually rendered with 6
-    // places.
-    double epsilon = fabs(a * 0.00005);
+    // The epsilon is calculated as one 5 millionths of the actual value. This
+    // should be accurate enough, but also floating-points are usually rendered
+    // with 6 places.
+    double epsilon = fabs(expected * 0.00005);
 
     // The below line should be:
-    // return fabs(a - b) <= ((fabs(a) < fabs(b) ? fabs(b) : fabs(a)) * epsilon);
+    //
+    //     return fabs(a - b) <= ((fabs(a) < fabs(b) ? fabs(b) : fabs(a)) * epsilon);
     //
     // However, this is not yet supported. See:
     // https://github.com/elliotchance/c2go/issues/129
-    double c = fabs(b);
-    if (fabs(a) < fabs(b))
+    double c = fabs(actual);
+    if (fabs(actual) < fabs(expected))
     {
-        c = fabs(a);
+        c = fabs(expected);
     }
 
-    return fabs(a - b) <= (c * epsilon);
+    return fabs(actual - expected) <= (c * epsilon);
 }
 
 // The number for the current test.
@@ -70,15 +71,15 @@ static int total_failures = 0;
         fail("%s != %s, got %f", #actual, #expected, actual) \
     }
 
-#define done_testing()                                                          \
-    if (total_failures > 0)                                                     \
-    {                                                                           \
-        diag("There was %d failed tests.", total_failures);                     \
-        return 101;                                                             \
-    }                                                                           \
-    if (current_test != total_tests)                                            \
-    {                                                                           \
+#define done_testing()                                                     \
+    if (total_failures > 0)                                                \
+    {                                                                      \
+        diag("There was %d failed tests.", total_failures);                \
+        return 101;                                                        \
+    }                                                                      \
+    if (current_test != total_tests)                                       \
+    {                                                                      \
         diag("Expected %d tests, but ran %d.", total_tests, current_test); \
-        return 102;                                                             \
-    }                                                                           \
+        return 102;                                                        \
+    }                                                                      \
     return 0;

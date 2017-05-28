@@ -88,6 +88,10 @@ var builtInFunctionDefinitions = []string{
 	"Double2 __sincos_stret(double) -> darwin.SincosStret",
 	"Float2 __sincosf_stret(float) -> darwin.SincosfStret",
 	"float __builtin_huge_valf() -> darwin.Inff",
+	"int __inline_signbitf(float) -> darwin.Signbitf",
+	"int __inline_signbitd(double) -> darwin.Signbitd",
+	"int __inline_signbitl(long double) -> darwin.Signbitl",
+	"float __builtin_nanf(const char*) -> darwin.Nanf",
 
 	// linux/assert.h
 	"bool __assert_fail(const char*, const char*, unsigned int, const char*) -> linux.AssertFail",

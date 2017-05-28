@@ -160,25 +160,72 @@ void test_tanh()
   printf("The hyperbolic tangent of %f is %f.\n", param, result);
 }
 
+// Test if x == -0.0.
+int isnegzero(double x)
+{
+  return (x * -0.0) == 0.0 && signbit(x);
+}
+
 int main()
 {
-  plan(28);
+  plan(67);
+
+  // Test constants
+  diag("constants");
+  eq_ok(M_E, 2.718282);
+  eq_ok(M_LOG2E, 1.442695);
+  eq_ok(M_LOG10E, 0.434294);
+  eq_ok(M_LN2, 0.693147);
+  eq_ok(M_LN10, 2.302585);
+  eq_ok(M_PI, 3.141593);
+  eq_ok(M_PI_2, 1.570796);
+  eq_ok(M_PI_4, 0.785398);
+  eq_ok(M_1_PI, 0.318310);
+  eq_ok(M_2_PI, 0.636620);
+  eq_ok(M_2_SQRTPI, 1.128379);
+  eq_ok(M_SQRT2, 1.414214);
+  eq_ok(M_SQRT1_2, 0.707107);
+
+  // Each of the tests are against these values:
+  //
+  // * Simple: 0, 1, -1, 0.5
+  // * Large and small: 1.23e300, -1.23e-300
+  // * Constants: M_PI, M_E
+  // * Special: INFINITY, -INFINITY, NAN
 
   diag("acos");
-  ok(isnan(acos(-2)));
-  eq_ok(acos(-1), 3.141592653589793);
-  eq_ok(acos(0), 1.5707963267948966);
-  eq_ok(acos(0.5), 1.0471975511965979);
+
+  eq_ok(acos(0), 1.570796);
   eq_ok(acos(1), 0);
-  ok(isnan(acos(2)));
+  eq_ok(acos(-1), M_PI);
+  eq_ok(acos(0.5), 1.047198);
+
+  ok(isnan(acos(1.23e300)));
+  eq_ok(acos(-1.23e-300), 1.570796);
+
+  ok(isnan(acos(M_PI)));
+  ok(isnan(acos(M_E)));
+
+  ok(isnan(acos(INFINITY)));
+  ok(isnan(acos(-INFINITY)));
+  ok(isnan(acos(NAN)));
 
   diag("asin");
-  ok(isnan(asin(-2)));
-  eq_ok(asin(-1), -1.5707963267948966);
+
   eq_ok(asin(0), 0);
-  eq_ok(asin(0.5), 0.5235987755982989);
-  eq_ok(asin(1), 1.5707963267948966);
-  ok(isnan(asin(2)));
+  eq_ok(asin(1), 1.570796);
+  eq_ok(asin(-1), -1.570796);
+  eq_ok(asin(0.5), 0.523599);
+
+  ok(isnan(asin(1.23e300)));
+  ok(isnegzero(asin(-1.23e-300)));
+
+  ok(isnan(asin(M_PI)));
+  ok(isnan(asin(M_E)));
+
+  ok(isnan(asin(INFINITY)));
+  ok(isnan(asin(-INFINITY)));
+  ok(isnan(asin(NAN)));
 
   diag("atan");
   eq_ok(atan(1), 0.7853981633974483);
@@ -200,20 +247,34 @@ int main()
   eq_ok(atan2(-INFINITY, INFINITY), -PI / 4.0);
   eq_ok(atan2(-INFINITY, -INFINITY), -2.356194);
 
-  // Math.atan2(±0, -0);               // ±PI.
-  // Math.atan2(±0, +0);               // ±0.
-  // Math.atan2(±0, -x);               // ±PI for x > 0.
-  // Math.atan2(±0, x);                // ±0 for x > 0.
-  // Math.atan2(-y, ±0);               // -PI/2 for y > 0.
-  // Math.atan2(y, ±0);                // PI/2 for y > 0.
-  // Math.atan2(±y, -Infinity);        // ±PI for finite y > 0.
-  // Math.atan2(±y, +Infinity);        // ±0 for finite y > 0.
-  // Math.atan2(±Infinity, x);         // ±PI/2 for finite x.
-  // Math.atan2(±Infinity, -Infinity); // ±3*PI/4.
-  // Math.atan2(±Infinity, +Infinity); // ±PI/4.
+  diag("ceil");
+  eq_ok(ceil(-3.55), -3);
+  eq_ok(ceil(3.55), 4);
+  eq_ok(ceil(0), 0);
+  eq_ok(ceil(0.000001), 1);
+  eq_ok(ceil(-0.000001), 0);
+  eq_ok(ceil(1e9), 1e9);
 
-  // test_atan2();
-  // test_ceil();
+  // Each of the tests are against these values:
+  //
+  // * Integers: 0, 1, -1
+  // * Floats: 1.23e30, -1.23e-30
+  // * Doubles: 1.23e300, -1.23e-300
+  // * Infinities: INFINITY, -INFINITY
+  // * Not a number: NAN
+
+  diag("cos");
+  eq_ok(cos(0), 1);
+  eq_ok(cos(1), 0.540302);
+  eq_ok(cos(-1), 0.540302);
+  eq_ok(cos(1.23e30), -0.966066);
+  eq_ok(cos(-1.23e-30), 1.000000);
+  eq_ok(cos(1.23e300), 0.251533);
+  eq_ok(cos(-1.23e-300), 1.000000);
+  ok(isnan(cos(INFINITY)));
+  ok(isnan(cos(-INFINITY)));
+  ok(isnan(cos(NAN)));
+
   // test_cos();
   // test_cosh();
   // test_exp();
