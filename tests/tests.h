@@ -1,8 +1,10 @@
+#include <math.h> // signbit()
+
 #define RUN(t)                \
     printf("\n--- %s\n", #t); \
     t();
 
-int approx(double actual, double expected)
+static int approx(double actual, double expected)
 {
     // The epsilon is calculated as one 5 millionths of the actual value. This
     // should be accurate enough, but also floating-points are usually rendered
@@ -25,7 +27,7 @@ int approx(double actual, double expected)
 }
 
 // Test if x == -0.0.
-int isnegzero(double x)
+static int isnegzero(double x)
 {
     return (x * -0.0) == 0.0 && signbit(x);
 }
@@ -67,14 +69,14 @@ static int total_failures = 0;
     ++total_failures;  \
     printf("%d not ok - " fmt "\n", current_test, __VA_ARGS__);
 
-#define is_eq(actual, expected)                              \
-    if (approx((actual), (expected)))                        \
-    {                                                        \
-        pass("%s == %s", #actual, #expected)                 \
-    }                                                        \
-    else                                                     \
-    {                                                        \
-        fail("%s != %s, got %f", #actual, #expected, actual) \
+#define is_eq(actual, expected)                                      \
+    if (approx((actual), (expected)))                                \
+    {                                                                \
+        pass("%s == %s", #actual, #expected)                         \
+    }                                                                \
+    else                                                             \
+    {                                                                \
+        fail("%s != %s, got %f", #actual, #expected, (double)actual) \
     }
 
 #define is_nan(actual)                                 \

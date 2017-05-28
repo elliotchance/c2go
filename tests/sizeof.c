@@ -1,70 +1,76 @@
 // This file contains tests for the sizeof() function and operator.
 
 #include <stdio.h>
+#include "tests.h"
 
-#define INT(type) \
-    printf("%s = %d bytes\n", #type, sizeof(type)); \
-    printf("unsigned %s = %d bytes\n", #type, sizeof(unsigned type)); \
-    printf("signed %s = %d bytes\n", #type, sizeof(signed type));
+#define check_sizes(type, size)         \
+    is_eq(sizeof(type), size);          \
+    is_eq(sizeof(unsigned type), size); \
+    is_eq(sizeof(signed type), size);   \
+    is_eq(sizeof(const type), size);    \
+    is_eq(sizeof(volatile type), size);
 
-#define FLOAT(type) \
-    printf("%s = %d bytes\n", #type, sizeof(type));
+#define FLOAT(type, size) \
+    is_eq(sizeof(type), size);
 
-#define OTHER(type) \
-    printf("%s = %d bytes\n", #type, sizeof(type));
+#define OTHER(type, size) \
+    is_eq(sizeof(type), size);
 
 // We print the variable so that the compiler doesn't complain that the variable
 // is unused.
 #define VARIABLE(v, p) \
     printf("%s = (%d) %d bytes\n", #v, p, sizeof(v));
 
-struct MyStruct {
+struct MyStruct
+{
     double a;
     char b;
+    char c;
 };
+
+short a;
+int b;
 
 int main(int argc, char *argv[])
 {
-    // Integer types.
-    INT(char)
-    INT(short)
-    INT(int)
-    INT(long)
+    plan(32);
 
-    // Floating-point types.
-    FLOAT(float)
-    FLOAT(double)
-    FLOAT(long double)
+    diag("Integer types");
+    check_sizes(char, 1);
+    check_sizes(short, 2);
+    check_sizes(int, 4);
+    check_sizes(long, 8);
 
-    // Other types.
-    OTHER(void)
+    diag("Floating-point types");
+    is_eq(sizeof(float), 4);
+    is_eq(sizeof(double), 8);
+    is_eq(sizeof(long double), 16);
 
-    // Types with qualifiers that do not effect the size.
-    OTHER(const short)
-    OTHER(volatile long double)
+    diag("Other types");
+    is_eq(sizeof(void), 1);
 
-    // Pointers.
-    OTHER(char*)
-    OTHER(char *)
-    OTHER(short**)
+    diag("Pointers");
+    is_eq(sizeof(char *), 8);
+    is_eq(sizeof(char *), 8);
+    is_eq(sizeof(short **), 8);
 
-    // Variables.
-    short a = 123;
-    int b = 456;
+    diag("Variables");
+    a = 123;
+    b = 456;
     struct MyStruct s1;
     s1.b = 0;
-    
-    VARIABLE(a, a);
-    VARIABLE(b, b);
-    VARIABLE(s1, s1.b);
 
-    // Structures.
-    OTHER(struct MyStruct);
+    is_eq(sizeof(a), 2);
+    is_eq(sizeof(b), 4);
+    is_eq(sizeof(s1), 16);
 
-    // Function pointers.
-    OTHER(main);
+    diag("Structures");
+    is_eq(sizeof(struct MyStruct), 16);
 
-    // TODO: Unions.
+    diag("Function pointers");
+    is_eq(sizeof(main), 1);
 
-    return 0;
+    diag("TODO: Unions");
+
+    done_testing();
 }
