@@ -28,10 +28,11 @@ import (
 const Version = "0.12.1"
 
 type ProgramArgs struct {
-	verbose    bool
-	ast        bool
-	inputFile  string
-	outputFile string
+	verbose     bool
+	ast         bool
+	inputFile   string
+	outputFile  string
+	packageName string
 }
 
 func readAST(data []byte) []string {
@@ -182,7 +183,7 @@ func Start(args ProgramArgs) {
 	p := program.NewProgram()
 	p.Verbose = args.verbose
 
-	err = transpiler.TranspileAST(args.inputFile, p, tree[0].(ast.Node))
+	err = transpiler.TranspileAST(args.inputFile, args.packageName, p, tree[0].(ast.Node))
 	if err != nil {
 		panic(err)
 	}
@@ -211,6 +212,7 @@ func main() {
 		transpileCommand = flag.NewFlagSet("transpile", flag.ContinueOnError)
 		verboseFlag      = transpileCommand.Bool("V", false, "print progress as comments")
 		outputFlag       = transpileCommand.String("o", "", "output Go generated code to the specified file")
+		packageFlag      = transpileCommand.String("p", "main", "set the name of the generated package")
 		astCommand       = flag.NewFlagSet("ast", flag.ContinueOnError)
 	)
 
@@ -258,13 +260,14 @@ func main() {
 		transpileCommand.Parse(os.Args[2:])
 
 		if transpileCommand.NArg() == 0 {
-			fmt.Fprintf(os.Stderr, "Usage: %s transpile [-V] [-o file.go] file.c\n", os.Args[0])
+			fmt.Fprintf(os.Stderr, "Usage: %s transpile [-V] [-o file.go] [-p package] file.c\n", os.Args[0])
 			transpileCommand.PrintDefaults()
 			os.Exit(1)
 		}
 
 		args.inputFile = transpileCommand.Arg(0)
 		args.outputFile = *outputFlag
+		args.packageName = *packageFlag
 
 		Start(args)
 	default:

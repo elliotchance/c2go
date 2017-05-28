@@ -14,10 +14,10 @@ import (
 	"github.com/elliotchance/c2go/util"
 )
 
-func TranspileAST(fileName string, p *program.Program, root ast.Node) error {
+func TranspileAST(fileName, packageName string, p *program.Program, root ast.Node) error {
 	// Start by parsing an empty file.
 	p.FileSet = token.NewFileSet()
-	f, err := parser.ParseFile(p.FileSet, fileName, "package main", 0)
+	f, err := parser.ParseFile(p.FileSet, fileName, fmt.Sprintf("package %v", packageName), 0)
 	p.File = f
 
 	if err != nil {
