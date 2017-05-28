@@ -24,6 +24,12 @@ int approx(double actual, double expected)
     return fabs(actual - expected) <= (c * epsilon);
 }
 
+// Test if x == -0.0.
+int isnegzero(double x)
+{
+    return (x * -0.0) == 0.0 && signbit(x);
+}
+
 // The number for the current test.
 static int current_test = 0;
 
@@ -42,7 +48,7 @@ static int total_failures = 0;
     printf(__VA_ARGS__); \
     printf("\n");
 
-#define ok(actual)          \
+#define is_true(actual)     \
     if (actual)             \
     {                       \
         pass("%s", #actual) \
@@ -90,6 +96,8 @@ static int total_failures = 0;
     {                                                                                     \
         fail("%s is not +/-inf, got %d", #actual, isinf(actual))                          \
     }
+
+#define is_negzero(actual) is_true(isnegzero(actual));
 
 #define done_testing()                                                     \
     if (total_failures > 0)                                                \
