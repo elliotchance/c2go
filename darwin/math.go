@@ -2,8 +2,6 @@ package darwin
 
 import (
 	"math"
-
-	"github.com/elliotchance/c2go/noarch"
 )
 
 type Float2 struct {
@@ -53,23 +51,6 @@ func SincospifStret(x float32) Float2 {
 
 func SincospiStret(x float64) Double2 {
 	return Double2{0, 0}
-}
-
-func Signbitf(x float32) int {
-	return noarch.BoolToInt(math.Signbit(float64(x)))
-}
-
-func Signbitd(x float64) int {
-	// if x*-0.0 == x {
-	// 	fmt.Println("yes")
-	// }
-	// x = -1.0 * 0.0
-	// fmt.Printf("%f %d\n", x, math.Signbit(x))
-	return noarch.BoolToInt(math.Signbit(x))
-}
-
-func Signbitl(x float64) int {
-	return noarch.BoolToInt(math.Signbit(x))
 }
 
 func NaN(s []byte) float64 {

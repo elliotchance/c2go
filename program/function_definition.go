@@ -76,6 +76,14 @@ var builtInFunctionDefinitions = []string{
 	"int tolower(int) -> linux.ToLower",
 	"int toupper(int) -> linux.ToUpper",
 
+	// linux/math.h
+	"int __signbitf(float) -> noarch.Signbitf",
+	"int __signbit(double) -> noarch.Signbitd",
+	"int __signbitl(long double) -> noarch.Signbitl",
+	"int __isnanf(float) -> linux.Isnanf",
+	"int __isnan(double) -> math.IsNaN",
+	"int __isnanl(long double) -> math.IsNaN",
+
 	// darwin/math.h
 	"double __builtin_fabs(double) -> darwin.Fabs",
 	"float __builtin_fabsf(float) -> darwin.Fabsf",
@@ -88,9 +96,9 @@ var builtInFunctionDefinitions = []string{
 	"Double2 __sincos_stret(double) -> darwin.SincosStret",
 	"Float2 __sincosf_stret(float) -> darwin.SincosfStret",
 	"float __builtin_huge_valf() -> darwin.Inff",
-	"int __inline_signbitf(float) -> darwin.Signbitf",
-	"int __inline_signbitd(double) -> darwin.Signbitd",
-	"int __inline_signbitl(long double) -> darwin.Signbitl",
+	"int __inline_signbitf(float) -> noarch.Signbitf",
+	"int __inline_signbitd(double) -> noarch.Signbitd",
+	"int __inline_signbitl(long double) -> noarch.Signbitl",
 	"double __builtin_nanf(const char*) -> darwin.NaN",
 
 	// linux/assert.h
