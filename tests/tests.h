@@ -81,6 +81,16 @@ static int total_failures = 0;
         fail("%s is not NAN, got %f", #actual, actual) \
     }
 
+#define inf_ok(actual, sign)                                                              \
+    if (isinf(actual) == 1 && ((sign > 0 && (actual) > 0) || (sign < 0 && (actual) < 0))) \
+    {                                                                                     \
+        pass("isinf(%s, %d)", #actual, sign)                                              \
+    }                                                                                     \
+    else                                                                                  \
+    {                                                                                     \
+        fail("%s is not +/-inf, got %d", #actual, isinf(actual))                          \
+    }
+
 #define done_testing()                                                     \
     if (total_failures > 0)                                                \
     {                                                                      \

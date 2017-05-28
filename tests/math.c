@@ -168,7 +168,7 @@ int isnegzero(double x)
 
 int main()
 {
-  plan(117);
+  plan(122);
 
   // Test constants
   diag("constants");
@@ -327,12 +327,21 @@ int main()
   ok(isnan(atan2(NAN, NAN)));
 
   diag("ceil");
-  eq_ok(ceil(-3.55), -3);
-  eq_ok(ceil(3.55), 4);
+
   eq_ok(ceil(0), 0);
-  eq_ok(ceil(0.000001), 1);
-  eq_ok(ceil(-0.000001), 0);
-  eq_ok(ceil(1e9), 1e9);
+  eq_ok(ceil(1), 1);
+  eq_ok(ceil(-1), -1);
+  eq_ok(ceil(0.5), 1);
+
+  eq_ok(ceil(1.23e300), 1.23e300);
+  eq_ok(ceil(-1.23e-300), 0);
+
+  eq_ok(ceil(M_PI), 4);
+  eq_ok(ceil(M_E), 3);
+
+  inf_ok(ceil(INFINITY), 1);
+  inf_ok(ceil(-INFINITY), -1);
+  nan_ok(ceil(NAN));
 
   // Each of the tests are against these values:
   //
