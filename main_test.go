@@ -4,7 +4,6 @@ package main
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -68,9 +67,11 @@ func TestIntegrationScripts(t *testing.T) {
 			err = cmd.Run()
 			cProgram.isZero = err == nil
 
+			programArgs := ProgramArgs{inputFile: file, outputFile: "build/main.go"}
+
 			// Compile Go
-			goSrc := Start([]string{file})
-			ioutil.WriteFile("build/main.go", []byte(goSrc), os.ModePerm)
+			Start(programArgs)
+
 			buildErr, err := exec.Command("go", "build", "-o", goPath, "build/main.go").CombinedOutput()
 			if err != nil {
 				t.Fatal(string(buildErr), err)

@@ -28,7 +28,7 @@ go get -u github.com/elliotchance/c2go
 # Usage
 
 ```bash
-c2go myfile.c
+c2go transpile myfile.c
 ```
 
 The `c2go` program processes a single C file and outputs the translated code
@@ -64,7 +64,7 @@ int main()
 ```
 
 ```bash
-c2go prime.c > prime.go
+c2go transpile prime.c
 go run prime.go
 ```
 
