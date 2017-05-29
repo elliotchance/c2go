@@ -1,6 +1,4 @@
 // This file contains tests for the system arguments (argv).
-//
-// TODO: 'argc' and 'argv' are hard-coded.
 
 #include <stdio.h>
 

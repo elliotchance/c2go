@@ -15,19 +15,6 @@ import (
 
 func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (
 	*goast.Ident, string, error) {
-	// TODO: System arguments are fixed variable names.
-	// https://github.com/elliotchance/c2go/issues/86
-	if n.Name == "argc" {
-		n.Name = "len(os.Args)"
-		n.Type = "int"
-		p.AddImport("os")
-	}
-	if n.Name == "argv" {
-		n.Name = "os.Args"
-		n.Type = "const char*"
-		p.AddImport("os")
-	}
-
 	return goast.NewIdent(n.Name), n.Type, nil
 }
 
