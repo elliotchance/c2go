@@ -127,6 +127,16 @@ func (p *Program) String() string {
 	buf.WriteString(strings.Join(p.messages, "\n") + "\n\n")
 
 	if err := format.Node(&buf, p.FileSet, p.File); err != nil {
+		// Printing the entire AST will generate a lot of output. However, it is
+		// the only way to debug this type of error. Hopefully the error
+		// (printed immediately afterwards) will give a clue.
+		//
+		// If the error is still unclear you should look at the panic backtrace
+		// of the internal Go libraries and look at the original panic. The
+		// struct/function this comes from should give a another clue what to
+		// look for in the ast output.
+		goast.Print(p.FileSet, p.File)
+
 		panic(err)
 	}
 
