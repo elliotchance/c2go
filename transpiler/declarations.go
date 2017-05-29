@@ -24,7 +24,7 @@ func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, str
 	}
 
 	fieldType, err := types.ResolveType(p, n.Type)
-	ast.IsWarning(err, n)
+	p.AddMessage(ast.GenerateWarningMessage(err, n))
 
 	// TODO: The name of a variable or field cannot be "type"
 	// https://github.com/elliotchance/c2go/issues/83
@@ -73,7 +73,7 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 			}
 		} else {
 			message := fmt.Sprintf("could not parse %v", c)
-			ast.IsWarning(errors.New(message), c)
+			p.AddMessage(ast.GenerateWarningMessage(errors.New(message), c))
 		}
 	}
 
@@ -104,7 +104,7 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 	p.TypeIsNowDefined(name)
 
 	resolvedType, err := types.ResolveType(p, n.Type)
-	ast.IsWarning(err, n)
+	p.AddMessage(ast.GenerateWarningMessage(err, n))
 
 	// There is a case where the name of the type is also the definition,
 	// like:
@@ -177,7 +177,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 	}
 
 	theType, err := types.ResolveType(p, n.Type)
-	ast.IsWarning(err, n)
+	p.AddMessage(ast.GenerateWarningMessage(err, n))
 
 	p.GlobalVariables[n.Name] = theType
 

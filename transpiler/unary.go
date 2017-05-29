@@ -64,7 +64,7 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 		}
 
 		t, err := types.ResolveType(p, eType)
-		ast.IsWarning(err, n)
+		p.AddMessage(ast.GenerateWarningMessage(err, n))
 
 		if t == "[]byte" {
 			return util.NewCallExpr("!noarch.CStringIsNull", e), "bool", preStmts, postStmts, nil
@@ -170,10 +170,10 @@ func transpileUnaryExprOrTypeTraitExpr(n *ast.UnaryExprOrTypeTraitExpr, p *progr
 	}
 
 	ty, err := types.ResolveType(p, n.Type1)
-	ast.IsWarning(err, n)
+	p.AddMessage(ast.GenerateWarningMessage(err, n))
 
 	sizeInBytes, err := types.SizeOf(p, t)
-	ast.IsWarning(err, n)
+	p.AddMessage(ast.GenerateWarningMessage(err, n))
 
 	return util.NewIntLit(sizeInBytes), ty, nil, nil, nil
 }

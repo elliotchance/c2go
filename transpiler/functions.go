@@ -116,7 +116,7 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 		}
 
 		t, err := types.ResolveType(p, f.ReturnType)
-		ast.IsWarning(err, n)
+		p.AddMessage(ast.GenerateWarningMessage(err, n))
 
 		returnTypes := []*goast.Field{
 			&goast.Field{
@@ -201,7 +201,7 @@ func getFieldList(f *ast.FunctionDecl, p *program.Program) (*goast.FieldList, er
 	for _, n := range f.Children {
 		if v, ok := n.(*ast.ParmVarDecl); ok {
 			t, err := types.ResolveType(p, v.Type)
-			ast.IsWarning(err, f)
+			p.AddMessage(ast.GenerateWarningMessage(err, f))
 
 			r = append(r, &goast.Field{
 				Names: []*goast.Ident{goast.NewIdent(v.Name)},
@@ -231,7 +231,7 @@ func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (
 	f := program.GetFunctionDefinition(p.Function.Name)
 
 	t, err := types.CastExpr(p, e, eType, f.ReturnType)
-	if ast.IsWarning(err, n) {
+	if p.AddMessage(ast.GenerateWarningMessage(err, n)) {
 		t = util.NewStringLit("nil")
 	}
 

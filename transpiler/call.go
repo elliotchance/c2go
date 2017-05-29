@@ -27,10 +27,6 @@ func getName(firstChild ast.Node) string {
 	case *ast.ParenExpr:
 		return getName(fc.Children[0])
 
-	case *ast.UnaryOperator:
-		ast.IsWarning(errors.New("cannot use UnaryOperator as function name"), firstChild)
-		return "UNKNOWN"
-
 	default:
 		panic(fmt.Sprintf("cannot CallExpr on: %#v", fc))
 	}
@@ -71,7 +67,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 
 	if functionDef == nil {
 		errorMessage := fmt.Sprintf("unknown function: %s", functionName)
-		ast.IsWarning(errors.New(errorMessage), n)
+		p.AddMessage(ast.GenerateWarningMessage(errors.New(errorMessage), n))
 
 		// We do not have a prototype for the function, but we should not exit
 		// here. Instead we will create a mock definition for it so that this
@@ -199,7 +195,9 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 			} else {
 				realArg, err = types.CastExpr(p, realArg, argTypes[i],
 					functionDef.ArgumentTypes[i])
-				ast.WarningOrError(err, n, realArg == nil)
+				p.AddMessage(
+					ast.GenerateWarningOrErrorMessage(err, n, realArg == nil),
+				)
 
 				if realArg == nil {
 					realArg = util.NewStringLit("nil")
@@ -219,7 +217,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 				a, err = types.CastExpr(p, a, argTypes[i],
 					functionDef.ArgumentTypes[i])
 
-				if ast.IsWarning(err, n) {
+				if p.AddMessage(ast.GenerateWarningMessage(err, n)) {
 					a = util.NewStringLit("nil")
 				}
 			}
