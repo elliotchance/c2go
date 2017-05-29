@@ -12,6 +12,7 @@ import (
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/types"
+	"github.com/elliotchance/c2go/util"
 )
 
 // transpileConditionalOperator transpiles a conditional (also known as a
@@ -71,14 +72,12 @@ func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program
 	//
 	// $2 and $3 (the true and false condition respectively) must be wrapped in
 	// a closure so that they are not both executed.
-	return &goast.CallExpr{
-		Fun: goast.NewIdent("noarch.Ternary"),
-		Args: []goast.Expr{
-			a,
-			newTernaryWrapper(b),
-			newTernaryWrapper(c),
-		},
-	}, n.Type, preStmts, postStmts, nil
+	return util.NewCallExpr(
+		"noarch.Ternary",
+		a,
+		newTernaryWrapper(b),
+		newTernaryWrapper(c),
+	), n.Type, preStmts, postStmts, nil
 }
 
 // newTernaryWrapper is a helper method used by transpileConditionalOperator().

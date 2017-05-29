@@ -70,10 +70,8 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 
 		functionName := fmt.Sprintf("noarch.Not%s", util.Ucfirst(t))
 
-		return &goast.CallExpr{
-			Fun:  goast.NewIdent(functionName),
-			Args: []goast.Expr{e},
-		}, eType, preStmts, postStmts, nil
+		return util.NewCallExpr(functionName, e),
+			eType, preStmts, postStmts, nil
 	}
 
 	// Dereferencing.
