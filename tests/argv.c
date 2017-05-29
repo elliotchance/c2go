@@ -1,15 +1,17 @@
 // This file contains tests for the system arguments (argv).
 
 #include <stdio.h>
+#include "tests.h"
 
-int main(int argc, char *argv[])
+int main(int argc, const char **argv)
 {
-    int c;
+    plan(4);
 
-    printf("Number of command line arguments passed: %d\n", argc);
+    is_eq(argc, 3);
 
-    for (c = 1; c < argc; c++)
-        printf("%d. Command line argument passed is %s\n", c + 1, argv[c]);
+    is_streq(argv[0], "build/go.out");
+    is_streq(argv[1], "some");
+    is_streq(argv[2], "args");
 
-    return 0;
+    done_testing();
 }

@@ -4,6 +4,27 @@
     printf("\n--- %s\n", #t); \
     t();
 
+// TODO: This can be removed and replaced with strcmp() when string.h is
+// implemented.
+int streq(const char *a, const char *b)
+{
+    if (strlen(a) != strlen(b))
+    {
+        return 0;
+    }
+
+    int i = 0;
+    for (; i < strlen(a); ++i)
+    {
+        if (a[i] != b[i])
+        {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
 static int approx(double actual, double expected)
 {
     // The epsilon is calculated as one 5 millionths of the actual value. This
@@ -77,6 +98,16 @@ static int total_failures = 0;
     else                                                             \
     {                                                                \
         fail("%s != %s, got %f", #actual, #expected, (double)actual) \
+    }
+
+#define is_streq(actual, expected)                               \
+    if (streq(actual, expected))                                 \
+    {                                                            \
+        pass("%s == %s", #actual, #expected)                     \
+    }                                                            \
+    else                                                         \
+    {                                                            \
+        fail("%s != %s, got \"%s\"", #actual, #expected, actual) \
     }
 
 #define is_nan(actual)                                 \
