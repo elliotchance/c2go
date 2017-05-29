@@ -71,6 +71,7 @@ int main()
     is_eq(sizeof(main), 1);
 
     diag("TODO: Unions");
+    diag("TODO: Test arrays of fixed size like: int[3]");
 
     done_testing();
 }
