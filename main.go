@@ -2,10 +2,8 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
-	"go/format"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -188,11 +186,6 @@ func Start(args ProgramArgs) {
 		panic(err)
 	}
 
-	var buf bytes.Buffer
-	if err := format.Node(&buf, p.FileSet, p.File); err != nil {
-		panic(err)
-	}
-
 	outputFilePath := args.outputFile
 
 	if outputFilePath == "" {
@@ -202,7 +195,7 @@ func Start(args ProgramArgs) {
 		outputFilePath = cleanFileName[0:len(cleanFileName)-len(extension)] + ".go"
 	}
 
-	err = ioutil.WriteFile(outputFilePath, buf.Bytes(), 0755)
+	err = ioutil.WriteFile(outputFilePath, []byte(p.String()), 0755)
 	Check("writing C output file failed: ", err)
 }
 

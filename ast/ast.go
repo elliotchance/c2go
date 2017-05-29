@@ -188,31 +188,32 @@ func getNicerLineNumber(s string) string {
 	return s
 }
 
-func CheckError(e error, n Node) {
+func GenerateErrorMessage(e error, n Node) string {
 	if e != nil {
 		structName := reflect.TypeOf(n).Elem().Name()
-		fmt.Printf("// Error (%s): %s: %s\n", structName,
-			getNicerLineNumber(Position(n)), e.Error())
-		panic(e)
-	}
-}
-
-func IsWarning(e error, n Node) bool {
-	if e != nil {
-		structName := reflect.TypeOf(n).Elem().Name()
-		fmt.Printf("// Warning (%s): %s: %s\n", structName,
+		return fmt.Sprintf("// Error (%s): %s: %s", structName,
 			getNicerLineNumber(Position(n)), e.Error())
 	}
 
-	return e != nil
+	return ""
 }
 
-func WarningOrError(e error, n Node, isError bool) {
+func GenerateWarningMessage(e error, n Node) string {
+	if e != nil {
+		structName := reflect.TypeOf(n).Elem().Name()
+		return fmt.Sprintf("// Warning (%s): %s: %s", structName,
+			getNicerLineNumber(Position(n)), e.Error())
+	}
+
+	return ""
+}
+
+func GenerateWarningOrErrorMessage(e error, n Node, isError bool) string {
 	if isError {
-		CheckError(e, n)
-	} else {
-		IsWarning(e, n)
+		return GenerateErrorMessage(e, n)
 	}
+
+	return GenerateWarningMessage(e, n)
 }
 
 // Parse takes the coloured output of the clang AST command and returns a root

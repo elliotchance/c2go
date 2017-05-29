@@ -45,7 +45,7 @@ func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
 	var values []goast.Expr
 	if !types.IsNullExpr(defaultValue) {
 		t, err := types.CastExpr(p, defaultValue, defaultValueType, a.Type)
-		if !ast.IsWarning(err, a) {
+		if !p.AddMessage(ast.GenerateWarningMessage(err, a)) {
 			values = []goast.Expr{t}
 		}
 	}
@@ -65,7 +65,7 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 	arrayType, arraySize := types.GetArrayTypeAndSize(a.Type)
 	if arraySize != -1 && defaultValue == nil {
 		goArrayType, err := types.ResolveType(p, arrayType)
-		ast.IsWarning(err, a)
+		p.AddMessage(ast.GenerateWarningMessage(err, a))
 
 		defaultValue = []goast.Expr{
 			util.NewCallExpr(
@@ -80,7 +80,7 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 	}
 
 	t, err := types.ResolveType(p, a.Type)
-	ast.IsWarning(err, a)
+	p.AddMessage(ast.GenerateWarningMessage(err, a))
 
 	return &goast.DeclStmt{
 		Decl: &goast.GenDecl{
@@ -125,7 +125,7 @@ func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) (
 			decls = append(decls, e)
 
 		case *ast.TypedefDecl:
-			ast.IsWarning(errors.New("cannot use TypedefDecl for DeclStmt"), c)
+			p.AddMessage(ast.GenerateWarningMessage(errors.New("cannot use TypedefDecl for DeclStmt"), c))
 
 		default:
 			panic(a)
@@ -182,7 +182,7 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	lhsResolvedType, err := types.ResolveType(p, lhsType)
-	ast.IsWarning(err, n)
+	p.AddMessage(ast.GenerateWarningMessage(err, n))
 
 	rhs := n.Name
 
