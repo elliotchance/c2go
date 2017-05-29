@@ -67,7 +67,11 @@ func TestIntegrationScripts(t *testing.T) {
 			err = cmd.Run()
 			cProgram.isZero = err == nil
 
-			programArgs := ProgramArgs{inputFile: file, outputFile: "build/main.go"}
+			programArgs := ProgramArgs{
+				inputFile:   file,
+				outputFile:  "build/main.go",
+				packageName: "main",
+			}
 
 			// Compile Go
 			Start(programArgs)

@@ -11,7 +11,7 @@ unsigned long long ullmax = 18446744073709551615ull;
 
 int main()
 {
-  plan(134);
+  plan(167);
 
   // Test constants
   diag("constants");

@@ -31,7 +31,7 @@ struct MyStruct
 short a;
 int b;
 
-int main(int argc, char *argv[])
+int main()
 {
     plan(32);
 

@@ -25,13 +25,14 @@ import (
 //     c2go -v
 //
 // See https://github.com/elliotchance/c2go/wiki/Release-Process
-const Version = "0.12.1"
+const Version = "0.12.2"
 
 type ProgramArgs struct {
-	verbose    bool
-	ast        bool
-	inputFile  string
-	outputFile string
+	verbose     bool
+	ast         bool
+	inputFile   string
+	outputFile  string
+	packageName string
 }
 
 func readAST(data []byte) []string {
@@ -182,7 +183,7 @@ func Start(args ProgramArgs) {
 	p := program.NewProgram()
 	p.Verbose = args.verbose
 
-	err = transpiler.TranspileAST(args.inputFile, p, tree[0].(ast.Node))
+	err = transpiler.TranspileAST(args.inputFile, args.packageName, p, tree[0].(ast.Node))
 	if err != nil {
 		panic(err)
 	}
@@ -207,11 +208,14 @@ func Start(args ProgramArgs) {
 
 func main() {
 	var (
-		versionFlag      = flag.Bool("v", false, "print the version and exit")
-		transpileCommand = flag.NewFlagSet("transpile", flag.ContinueOnError)
-		verboseFlag      = transpileCommand.Bool("V", false, "print progress as comments")
-		outputFlag       = transpileCommand.String("o", "", "output Go generated code to the specified file")
-		astCommand       = flag.NewFlagSet("ast", flag.ContinueOnError)
+		versionFlag       = flag.Bool("v", false, "print the version and exit")
+		transpileCommand  = flag.NewFlagSet("transpile", flag.ContinueOnError)
+		verboseFlag       = transpileCommand.Bool("V", false, "print progress as comments")
+		outputFlag        = transpileCommand.String("o", "", "output Go generated code to the specified file")
+		packageFlag       = transpileCommand.String("p", "main", "set the name of the generated package")
+		transpileHelpFlag = transpileCommand.Bool("h", false, "print help information")
+		astCommand        = flag.NewFlagSet("ast", flag.ContinueOnError)
+		astHelpFlag       = astCommand.Bool("h", false, "print help information")
 	)
 
 	flag.Usage = func() {
@@ -244,7 +248,7 @@ func main() {
 	case "ast":
 		astCommand.Parse(os.Args[2:])
 
-		if astCommand.NArg() == 0 {
+		if *astHelpFlag || astCommand.NArg() == 0 {
 			fmt.Fprintf(os.Stderr, "Usage: %s ast file.c\n", os.Args[0])
 			astCommand.PrintDefaults()
 			os.Exit(1)
@@ -257,14 +261,15 @@ func main() {
 	case "transpile":
 		transpileCommand.Parse(os.Args[2:])
 
-		if transpileCommand.NArg() == 0 {
-			fmt.Fprintf(os.Stderr, "Usage: %s transpile [-V] [-o file.go] file.c\n", os.Args[0])
+		if *transpileHelpFlag || transpileCommand.NArg() == 0 {
+			fmt.Fprintf(os.Stderr, "Usage: %s transpile [-V] [-o file.go] [-p package] file.c\n", os.Args[0])
 			transpileCommand.PrintDefaults()
 			os.Exit(1)
 		}
 
 		args.inputFile = transpileCommand.Arg(0)
 		args.outputFile = *outputFlag
+		args.packageName = *packageFlag
 
 		Start(args)
 	default:
