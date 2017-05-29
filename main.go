@@ -208,12 +208,14 @@ func Start(args ProgramArgs) {
 
 func main() {
 	var (
-		versionFlag      = flag.Bool("v", false, "print the version and exit")
-		transpileCommand = flag.NewFlagSet("transpile", flag.ContinueOnError)
-		verboseFlag      = transpileCommand.Bool("V", false, "print progress as comments")
-		outputFlag       = transpileCommand.String("o", "", "output Go generated code to the specified file")
-		packageFlag      = transpileCommand.String("p", "main", "set the name of the generated package")
-		astCommand       = flag.NewFlagSet("ast", flag.ContinueOnError)
+		versionFlag       = flag.Bool("v", false, "print the version and exit")
+		transpileCommand  = flag.NewFlagSet("transpile", flag.ContinueOnError)
+		verboseFlag       = transpileCommand.Bool("V", false, "print progress as comments")
+		outputFlag        = transpileCommand.String("o", "", "output Go generated code to the specified file")
+		packageFlag       = transpileCommand.String("p", "main", "set the name of the generated package")
+		transpileHelpFlag = transpileCommand.Bool("h", false, "print help information")
+		astCommand        = flag.NewFlagSet("ast", flag.ContinueOnError)
+		astHelpFlag       = astCommand.Bool("h", false, "print help information")
 	)
 
 	flag.Usage = func() {
@@ -246,7 +248,7 @@ func main() {
 	case "ast":
 		astCommand.Parse(os.Args[2:])
 
-		if astCommand.NArg() == 0 {
+		if *astHelpFlag || astCommand.NArg() == 0 {
 			fmt.Fprintf(os.Stderr, "Usage: %s ast file.c\n", os.Args[0])
 			astCommand.PrintDefaults()
 			os.Exit(1)
@@ -259,7 +261,7 @@ func main() {
 	case "transpile":
 		transpileCommand.Parse(os.Args[2:])
 
-		if transpileCommand.NArg() == 0 {
+		if *transpileHelpFlag || transpileCommand.NArg() == 0 {
 			fmt.Fprintf(os.Stderr, "Usage: %s transpile [-V] [-o file.go] [-p package] file.c\n", os.Args[0])
 			transpileCommand.PrintDefaults()
 			os.Exit(1)
