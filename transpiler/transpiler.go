@@ -136,7 +136,7 @@ func transpileToExpr(node ast.Node, p *program.Program) (
 
 	default:
 		p.AddMessage(ast.GenerateWarningMessage(errors.New("cannot transpile to expr"), node))
-		expr = util.NewStringLit("nil")
+		expr = util.NewNil()
 	}
 
 	// Real return is through named arguments.

@@ -230,7 +230,7 @@ func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (
 
 	t, err := types.CastExpr(p, e, eType, f.ReturnType)
 	if p.AddMessage(ast.GenerateWarningMessage(err, n)) {
-		t = util.NewStringLit("nil")
+		t = util.NewNil()
 	}
 
 	results := []goast.Expr{t}
