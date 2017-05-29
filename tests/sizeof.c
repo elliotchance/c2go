@@ -23,7 +23,7 @@ struct MyStruct {
     char b;
 };
 
-int main(int argc, char *argv[])
+int main()
 {
     // Integer types.
     INT(char)
