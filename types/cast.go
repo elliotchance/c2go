@@ -47,6 +47,10 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 		return util.NewNil(), nil
 	}
 
+	if fromType == "null" && toType == "bool" {
+		return goast.NewIdent("false"), nil
+	}
+
 	// FIXME: This is a hack to avoid casting in some situations.
 	if fromType == "" || toType == "" {
 		return expr, nil
