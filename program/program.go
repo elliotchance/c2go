@@ -171,7 +171,7 @@ func (p *Program) String() string {
 		//     9083  .  .  .  .  .  .  .  .  .  .  Name: "noarch.[]byteTo[]int"
 		//     9190  .  .  .  .  .  .  .  .  .  Name: "noarch.[]intTo[]byte"
 		//
-		// These two lines are clearly the error becuase a name should not look
+		// These two lines are clearly the error because a name should not look
 		// like this.
 		//
 		// Looking at the full output of the AST (thousands of lines) and

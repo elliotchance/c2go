@@ -136,9 +136,7 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 			// some things that are expected to be available at runtime.
 			prependStmtsInMain = append(
 				prependStmtsInMain,
-				util.NewExprStmt(&goast.CallExpr{
-					Fun: goast.NewIdent("__init"),
-				}),
+				util.NewExprStmt(util.NewCallExpr("__init")),
 			)
 
 			// In Go, the main() function does not take the system arguments.
@@ -264,10 +262,8 @@ func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (
 		litExpr, isLiteral := e.(*goast.BasicLit)
 		if !isLiteral || (isLiteral && litExpr.Value != "0") {
 			p.AddImport("os")
-			return util.NewExprStmt(&goast.CallExpr{
-				Fun:  goast.NewIdent("os.Exit"),
-				Args: results,
-			}), preStmts, postStmts, nil
+			return util.NewExprStmt(util.NewCallExpr("os.Exit", results...)),
+				preStmts, postStmts, nil
 		}
 		results = []goast.Expr{}
 	}
