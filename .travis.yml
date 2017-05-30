@@ -52,11 +52,11 @@ script:
   # documented.
   - cd /tmp
   - export C2GO=$GOPATH/src/github.com/elliotchance/c2go
-  - c2go transpile $C2GO/tests/prime.c
+  - c2go transpile $C2GO/examples/prime.c
   - echo "47" | go run prime.go
   - if [ $(c2go -v | wc -l) -ne 1 ]; then exit 1; fi
   - if [ $(cat prime.go | wc -l) -eq 0 ]; then exit 1; fi
-  - if [ $(c2go ast $C2GO/tests/prime.c | wc -l) -eq 0 ]; then exit 1; fi
+  - if [ $(c2go ast $C2GO/examples/prime.c | wc -l) -eq 0 ]; then exit 1; fi
 
   # Revert the cwd for any cleanup commands.
   - cd -

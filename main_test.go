@@ -43,10 +43,17 @@ type programOut struct {
 //     go test -tags=integration -run=TestIntegrationScripts/tests/ctype/isalnum.c
 //
 func TestIntegrationScripts(t *testing.T) {
-	files, err := filepath.Glob("tests/*.c")
+	testFiles, err := filepath.Glob("tests/*.c")
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	exampleFiles, err := filepath.Glob("examples/*.c")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	files := append(testFiles, exampleFiles...)
 
 	for _, file := range files {
 		// Create build folder
@@ -116,15 +123,17 @@ func TestIntegrationScripts(t *testing.T) {
 				t.Fatalf(util.ShowDiff(cProgram.stdout.String(), goProgram.stdout.String()))
 			}
 
-			// Extact the number of tests run.
-			firstLine := strings.Split(goProgram.stdout.String(), "\n")[0]
+			// If this is not an example we will extact the number of tests run.
+			if strings.Index(file, "examples/") == -1 {
+				firstLine := strings.Split(goProgram.stdout.String(), "\n")[0]
 
-			matches := regexp.MustCompile(`1..(\d+)`).FindStringSubmatch(firstLine)
-			if len(matches) == 0 {
-				t.Fatalf("Test did not output tap: %s", file)
+				matches := regexp.MustCompile(`1..(\d+)`).FindStringSubmatch(firstLine)
+				if len(matches) == 0 {
+					t.Fatalf("Test did not output tap: %s", file)
+				}
+
+				fmt.Println(file + " TAP TESTS: " + matches[1])
 			}
-
-			fmt.Println(file + " TAP TESTS: " + matches[1])
 		})
 	}
 }

@@ -33,7 +33,7 @@ c2go transpile myfile.c
 
 The `c2go` program processes a single C file and outputs the translated code
 in Go. Let's use an included example,
-[prime.c](https://github.com/elliotchance/c2go/blob/master/tests/math/prime.c):
+[prime.c](https://github.com/elliotchance/c2go/blob/master/examples/prime.c):
 
 ```c
 #include <stdio.h>
