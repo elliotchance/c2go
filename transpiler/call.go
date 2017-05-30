@@ -214,8 +214,6 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 		}
 	}
 
-	return &goast.CallExpr{
-		Fun:  goast.NewIdent(functionName),
-		Args: realArgs,
-	}, functionDef.ReturnType, preStmts, postStmts, nil
+	return util.NewCallExpr(functionName, realArgs...),
+		functionDef.ReturnType, preStmts, postStmts, nil
 }

@@ -158,18 +158,16 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 		//
 		//     string(expr[:size - 1])
 		//
-		return &goast.CallExpr{
-			Fun: goast.NewIdent("string"),
-			Args: []goast.Expr{
-				&goast.SliceExpr{
-					X: expr,
-					High: &goast.BasicLit{
-						Kind:  token.INT,
-						Value: strconv.Itoa(size - 1),
-					},
+		return util.NewCallExpr(
+			"string",
+			&goast.SliceExpr{
+				X: expr,
+				High: &goast.BasicLit{
+					Kind:  token.INT,
+					Value: strconv.Itoa(size - 1),
 				},
 			},
-		}, nil
+		), nil
 	}
 
 	// Anything that is a pointer can be compared to nil
@@ -202,10 +200,7 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 	}
 
 	if util.InStrings(fromType, types) && util.InStrings(toType, types) {
-		return &goast.CallExpr{
-			Fun:  goast.NewIdent(toType),
-			Args: []goast.Expr{expr},
-		}, nil
+		return util.NewCallExpr(toType, expr), nil
 	}
 
 	p.AddImport("github.com/elliotchance/c2go/noarch")
@@ -225,10 +220,7 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 	functionName := fmt.Sprintf("noarch.%sTo%s",
 		util.GetExportedName(leftName), util.GetExportedName(rightName))
 
-	return &goast.CallExpr{
-		Fun:  goast.NewIdent(functionName),
-		Args: []goast.Expr{expr},
-	}, nil
+	return util.NewCallExpr(functionName, expr), nil
 }
 
 func IsNullExpr(n goast.Expr) bool {
