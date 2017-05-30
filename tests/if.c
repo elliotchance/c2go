@@ -1,18 +1,21 @@
 #include <stdio.h>
- 
+#include "tests.h"
+
 int main()
 {
-   int x = 1;
+    plan(2);
 
-   // Without else
-   if ( x == 1 )
-      printf("x is equal to one.\n");
+    int x = 1;
 
-   // With else
-   if ( x != 1 )
-      printf("x is not equal to one.\n");
-   else
-      printf("x is equal to one.\n");
- 
-   return 0;
+    // Without else
+    if (x == 1)
+        pass("%s", "x is equal to one");
+
+    // With else
+    if (x != 1)
+        fail("%s", "x is not equal to one")
+    else
+        pass("%s", "x is equal to one");
+
+    done_testing();
 }
