@@ -113,6 +113,18 @@ static int total_failures = 0;
         fail("%s", #actual) \
     }
 
+// Check if the input is false. This works in the exact opposite way as
+// is_true(). Be careful with floating-point values.
+#define is_false(actual)    \
+    if (actual == 0)        \
+    {                       \
+        pass("%s", #actual) \
+    }                       \
+    else                    \
+    {                       \
+        fail("%s", #actual) \
+    }
+
 // Immediately pass a check. This is useful if you are testing code flow, such
 // as reaching a particular if/else branch.
 //
@@ -192,16 +204,17 @@ static int total_failures = 0;
 // To signal that testing is now complete and to return the appropriate status
 // code. This should be the last line in the main() function.
 #define done_testing()                                                     \
+    int exit_status = 0;                                                   \
     if (total_failures > 0)                                                \
     {                                                                      \
         diag("There was %d failed tests.", total_failures);                \
-        return 101;                                                        \
+        exit_status = 101;                                                 \
     }                                                                      \
-    if (current_test != total_tests)                                       \
+    else if (current_test != total_tests)                                  \
     {                                                                      \
         diag("Expected %d tests, but ran %d.", total_tests, current_test); \
-        return 102;                                                        \
+        exit_status = 102;                                                 \
     }                                                                      \
-    return 0;
+    return exit_status;
 
 // Do not place code beyond this. See the TAP comment above.
