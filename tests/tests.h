@@ -129,18 +129,22 @@ static int total_failures = 0;
 // as reaching a particular if/else branch.
 //
 // pass() takes the same arguments as a printf().
-#define pass(fmt, ...) \
-    ++current_test;    \
-    printf("%d ok - " fmt "\n", current_test, __VA_ARGS__);
+#define pass(fmt, ...)                                          \
+    {                                                           \
+        ++current_test;                                         \
+        printf("%d ok - " fmt "\n", current_test, __VA_ARGS__); \
+    }
 
 // Immediately fail a check. This is useful if you are testing code flow (such
 // as code that should not be reached or known bad conditions we met.
 //
 // fail() takes the same arguments as a printf().
-#define fail(fmt, ...) \
-    ++current_test;    \
-    ++total_failures;  \
-    printf("%d not ok - " fmt "\n", current_test, __VA_ARGS__);
+#define fail(fmt, ...)                                              \
+    {                                                               \
+        ++current_test;                                             \
+        ++total_failures;                                           \
+        printf("%d not ok - " fmt "\n", current_test, __VA_ARGS__); \
+    }
 
 // Test if two values are equal. is_eq() will accept any *numerical* value than
 // can be cast to a double and compared. This does not work with strings, see
