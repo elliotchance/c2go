@@ -48,20 +48,30 @@ script:
 
       # The code below was copied from:
       # https://github.com/golang/go/issues/6909#issuecomment-232878416
+      #
+      # As in @rodrigocorsi2 comment above (using full path to grep due to
+      # 'grep -n' alias).
+      export PKGS=$(go list ./... | grep -v c2go/build | /usr/bin/grep -v /vendor/)
 
-      # as in @rodrigocorsi2 comment above (using full path to grep due to
-      # 'grep -n' alias)
-      export PKGS=$(go list ./... | /usr/bin/grep -v /vendor/)
-
-      # make comma-separated
+      # Make comma-separated.
       export PKGS_DELIM=$(echo "$PKGS" | paste -sd "," -)
 
-      # should work as before replacing './...' with vars
-      go list -f '{{if or (len .TestGoFiles) (len .XTestGoFiles)}}go test -tags=integration -race -coverprofile {{.Name}}_{{len .Imports}}_{{len .Deps}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}{{end}}' $PKGS | xargs -I {} bash -c {}
+      # Run tests and append all output to out.txt. It's important we have "-v"
+      # so that all the test names are printed.
+      rm -f /tmp/out.txt
+      go list -f '{{if or (len .TestGoFiles) (len .XTestGoFiles)}}go test -v -tags=integration -race -coverprofile {{.Name}}_{{len .Imports}}_{{len .Deps}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}{{end}} >> /tmp/out.txt' $PKGS | xargs -I {} bash -c {}
+      if [ $? -ne 0 ]; then
+        # Print out the failures (removing a lot of the noise).
+        cat /tmp/out.txt | grep -v -- "--- PASS" | grep -v -- "=== RUN"
+        exit 1
+      fi
 
       # Merge coverage profiles.
       gocovmerge `ls *.coverprofile` > coverage.txt
       rm *.coverprofile
+
+      # Print stats
+      echo "Unit tests: " $(grep "=== RUN" /tmp/out.txt | wc -l)
 
   # These steps are from the README to verify it can be installed and run as
   # documented.
