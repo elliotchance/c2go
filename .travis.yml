@@ -46,7 +46,7 @@ script:
       set -e
       echo "" > coverage.txt
 
-      # The code below was used from:
+      # The code below was copied from:
       # https://github.com/golang/go/issues/6909#issuecomment-232878416
 
       # as in @rodrigocorsi2 comment above (using full path to grep due to
