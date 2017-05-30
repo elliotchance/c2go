@@ -10,7 +10,7 @@ func TestParenType(t *testing.T) {
 			Address:  "0x7faf820a4c60",
 			Type:     "void (int)",
 			Sugar:    true,
-			Children: []interface{}{},
+			Children: []Node{},
 		},
 	}
 

@@ -34,19 +34,49 @@ before_install:
         rvm get head
       fi
 
+  # gocovmerge is used to merge all the separate unit/integration test coverage
+  # profiles.
+  - go get -u github.com/wadey/gocovmerge
+
 script:
   - . ./.travis.gofmt.sh
 
-  # Run the unit tests first
+  # Run the unit/integration tests first
   - |
       set -e
       echo "" > coverage.txt
 
-      go test -tags=integration -race -coverprofile=profile.out -coverpkg ./...
-      if [ -f profile.out ]; then
-        cat profile.out >> coverage.txt
-        rm profile.out
+      # The code below was copied from:
+      # https://github.com/golang/go/issues/6909#issuecomment-232878416
+      #
+      # As in @rodrigocorsi2 comment above (using full path to grep due to
+      # 'grep -n' alias).
+      export PKGS=$(go list ./... | grep -v c2go/build | /usr/bin/grep -v /vendor/)
+
+      # Make comma-separated.
+      export PKGS_DELIM=$(echo "$PKGS" | paste -sd "," -)
+
+      # Run tests and append all output to out.txt. It's important we have "-v"
+      # so that all the test names are printed. It's also important that the
+      # covermode be set to "count" so that the coverage profiles can be merged
+      # correctly together with gocovmerge.
+      rm -f /tmp/out.txt
+      go list -f '{{if or (len .TestGoFiles) (len .XTestGoFiles)}}go test -v -tags=integration -race -covermode count -coverprofile {{.Name}}_{{len .Imports}}_{{len .Deps}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}{{end}} >> /tmp/out.txt' $PKGS | xargs -I {} bash -c {}
+      if [ $? -ne 0 ]; then
+        # Print out the failures (removing a lot of the noise).
+        cat /tmp/out.txt | grep -v -- "--- PASS" | grep -v -- "=== RUN"
+        exit 1
       fi
+
+      # Merge coverage profiles.
+      COVERAGE_FILES=`ls -1 *.coverprofile 2>/dev/null | wc -l`
+      if [ $COVERAGE_FILES != 0 ]; then
+        gocovmerge `ls *.coverprofile` > coverage.txt
+        rm *.coverprofile
+      fi
+
+      # Print stats
+      echo "Unit tests: " $(grep "=== RUN" /tmp/out.txt | wc -l)
 
   # These steps are from the README to verify it can be installed and run as
   # documented.
