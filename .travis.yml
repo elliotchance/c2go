@@ -34,19 +34,34 @@ before_install:
         rvm get head
       fi
 
+  # gocovmerge is used to merge all the separate unit/integration test coverage
+  # profiles.
+  - go get -u wadey/gocovmerge
+
 script:
   - . ./.travis.gofmt.sh
 
-  # Run the unit tests first
+  # Run the unit/integration tests first
   - |
       set -e
       echo "" > coverage.txt
 
-      go test -tags=integration -race -coverprofile=profile.out -coverpkg ./...
-      if [ -f profile.out ]; then
-        cat profile.out >> coverage.txt
-        rm profile.out
-      fi
+      # The code below was used from:
+      # https://github.com/golang/go/issues/6909#issuecomment-232878416
+
+      # as in @rodrigocorsi2 comment above (using full path to grep due to
+      # 'grep -n' alias)
+      export PKGS=$(go list ./... | /usr/bin/grep -v /vendor/)
+
+      # make comma-separated
+      export PKGS_DELIM=$(echo "$PKGS" | paste -sd "," -)
+
+      # should work as before replacing './...' with vars
+      go list -f '{{if or (len .TestGoFiles) (len .XTestGoFiles)}}go test -tags=integration -race -coverprofile {{.Name}}_{{len .Imports}}_{{len .Deps}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}{{end}}' $PKGS | xargs -I {} bash -c {}
+
+      # Merge coverage profiles.
+      gocovmerge `ls *.coverprofile` > coverage.txt
+      rm *.coverprofile
 
   # These steps are from the README to verify it can be installed and run as
   # documented.
