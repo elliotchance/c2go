@@ -16,7 +16,7 @@ var resolveTestCases = []resolveTestCase{
 	{"int", "int"},
 	{"char *[13]", "[]string"},
 	{"__uint16_t", "uint16"},
-	{"void *", "interface{}"},
+	{"void *", "[]byte"},
 	{"unsigned short int", "uint16"},
 	{"_Bool", "bool"},
 }
@@ -25,7 +25,12 @@ func TestResolve(t *testing.T) {
 	p := program.NewProgram()
 
 	for _, testCase := range resolveTestCases {
-		goType := types.ResolveType(p, testCase.cType)
+		goType, err := types.ResolveType(p, testCase.cType)
+		if err != nil {
+			t.Error(err)
+			continue
+		}
+
 		if goType != testCase.goType {
 			t.Errorf("Expected '%s' -> '%s', got '%s'",
 				testCase.cType, testCase.goType, goType)
