@@ -4,12 +4,15 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"syscall"
 	"testing"
+
+	"regexp"
 
 	"github.com/elliotchance/c2go/util"
 )
@@ -99,7 +102,8 @@ func TestIntegrationScripts(t *testing.T) {
 
 			// Check if both exit codes are zero (or non-zero)
 			if cProgram.isZero != goProgram.isZero {
-				t.Fatalf("Expected: %t, Got: %t", cProgram.isZero, goProgram.isZero)
+				t.Fatalf("Exit statuses did not match.\n" + util.ShowDiff(cProgram.stdout.String(), goProgram.stdout.String()))
+				// t.Fatalf("Expected: %t, Got: %t", cProgram.isZero, goProgram.isZero)
 			}
 
 			// Check stderr
@@ -111,6 +115,16 @@ func TestIntegrationScripts(t *testing.T) {
 			if cProgram.stdout.String() != goProgram.stdout.String() {
 				t.Fatalf(util.ShowDiff(cProgram.stdout.String(), goProgram.stdout.String()))
 			}
+
+			// Extact the number of tests run.
+			firstLine := strings.Split(goProgram.stdout.String(), "\n")[0]
+
+			matches := regexp.MustCompile(`1..(\d+)`).FindStringSubmatch(firstLine)
+			if len(matches) == 0 {
+				t.Fatalf("Test did not output tap: %s", file)
+			}
+
+			fmt.Println(file + " TAP TESTS: " + matches[1])
 		})
 	}
 }

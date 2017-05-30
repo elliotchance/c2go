@@ -5,11 +5,14 @@
 
 int main(int argc, const char **argv)
 {
-    plan(4);
+    plan(3);
 
     is_eq(argc, 3);
 
-    is_streq(argv[0], "build/go.out");
+    // We cannot compare the zeroth argument becuase it will be different for C
+    // and Go.
+    // is_streq(argv[0], "build/go.out");
+
     is_streq(argv[1], "some");
     is_streq(argv[2], "args");
 
