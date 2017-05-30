@@ -67,8 +67,11 @@ script:
       fi
 
       # Merge coverage profiles.
-      gocovmerge `ls *.coverprofile` > coverage.txt
-      rm *.coverprofile
+      COVERAGE_FILES=`ls -1 *.coverprofile 2>/dev/null | wc -l`
+      if [ $COVERAGE_FILES != 0 ]; then
+        gocovmerge `ls *.coverprofile` > coverage.txt
+        rm *.coverprofile
+      fi
 
       # Print stats
       echo "Unit tests: " $(grep "=== RUN" /tmp/out.txt | wc -l)
