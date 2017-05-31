@@ -382,7 +382,7 @@ func Parse(line string) Node {
 		return parseWarnUnusedResultAttr(line)
 	case "WhileStmt":
 		return parseWhileStmt(line)
-	case "NullStmt":
+	case "NullStmt", "WeakAttr":
 		return nil
 	default:
 		panic("unknown node type: '" + line + "'")
