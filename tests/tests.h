@@ -46,6 +46,14 @@ static int approx(double actual, double expected)
         return 0;
     }
 
+    // If we expect zero (a common case) we have a fixed epsilon for actual. If
+    // allowed to continue the epison caluclated would be zero and we would be
+    // doing an exact match which is what we want to avoid.
+    if (expected == 0.0)
+    {
+        return fabs(actual) < 0.00005;
+    }
+
     // The epsilon is calculated as one 5 millionths of the actual value. This
     // should be accurate enough, but also floating-points are usually rendered
     // with 6 places.
@@ -53,7 +61,8 @@ static int approx(double actual, double expected)
 
     // The below line should be:
     //
-    //     return fabs(a - b) <= ((fabs(a) < fabs(b) ? fabs(b) : fabs(a)) * epsilon);
+    //     return fabs(a - b) <=
+    //         ((fabs(a) < fabs(b) ? fabs(b) : fabs(a)) * epsilon);
     //
     // However, this is not yet supported. See:
     // https://github.com/elliotchance/c2go/issues/129

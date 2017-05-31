@@ -11,7 +11,7 @@ unsigned long long ullmax = 18446744073709551615ull;
 
 int main()
 {
-  plan(307);
+  plan(327);
 
   // Note: There are some tests that must be disabled because they return
   // different values under different compilers. See the comment surrounding the
@@ -247,7 +247,7 @@ int main()
   is_eq(fmod(1, 0.5), 0);
   is_negzero(fmod(-1, 0.5));
   is_eq(fmod(0.5, 0.5), 0);
-  is_eq(fmod(1.23e300, 0.5), 1.23e300);
+  is_eq(fmod(1.23e300, 0.5), 0);
   is_negzero(fmod(-1.23e-300, 0.5));
   is_eq(fmod(M_PI, 0.5), M_PI - 3);
   is_eq(fmod(M_E, 0.5), M_E - 2.5);
@@ -400,9 +400,34 @@ int main()
   is_nan(pow(-INFINITY, NAN));
   is_nan(pow(NAN, NAN));
 
-  // test_pow();
-  // test_sin();
-  // test_sinh();
+  diag("sin");
+  is_eq(sin(0), 0);
+  is_eq(sin(1), 0.841471);
+  is_eq(sin(-1), -0.841471);
+  is_eq(sin(0.5), 0.479426);
+  // https://github.com/golang/go/issues/20539
+  disabled(is_eq(sin(1.23e300), 0.967849));
+  is_negzero(sin(-1.23e-300));
+  is_eq(sin(M_PI), 0);
+  is_eq(sin(M_E), 0.410781);
+  is_nan(sin(INFINITY));
+  is_nan(sin(-INFINITY));
+  is_nan(sin(NAN));
+
+  diag("sinh");
+  is_eq(sinh(0), 0);
+  is_eq(sinh(1), 1.175201);
+  is_eq(sinh(-1), -1.175201);
+  is_eq(sinh(0.5), 0.521095);
+  // https://github.com/golang/go/issues/20539
+  disabled(is_eq(sinh(1.23e300), 1));
+  is_negzero(sinh(-1.23e-300));
+  is_eq(sinh(M_PI), 11.548739);
+  is_eq(sinh(M_E), 7.544137);
+  is_inf(sinh(INFINITY), 1);
+  is_inf(sinh(-INFINITY), -1);
+  is_nan(sinh(NAN));
+
   // test_sqrt();
   // test_tan();
   // test_tanh();
