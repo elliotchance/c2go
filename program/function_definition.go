@@ -123,7 +123,7 @@ var builtInFunctionDefinitions = []string{
 	"double ldexp(double, int) -> math.Ldexp",
 	"double log(double) -> math.Log",
 	"double log10(double) -> math.Log10",
-	"double pow(double) -> math.Pow",
+	"double pow(double, double) -> math.Pow",
 	"double sin(double) -> math.Sin",
 	"double sinh(double) -> math.Sinh",
 	"double sqrt(double) -> math.Sqrt",

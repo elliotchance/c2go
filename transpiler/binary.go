@@ -38,7 +38,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 	operator := getTokenForOperator(n.Operator)
 	returnType := types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType)
 
-	if operator == token.LAND {
+	if operator == token.LAND || operator == token.LOR {
 		left, err = types.CastExpr(p, left, leftType, "bool")
 		p.AddMessage(ast.GenerateWarningOrErrorMessage(err, n, left == nil))
 		if left == nil {

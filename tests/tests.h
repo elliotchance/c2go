@@ -33,8 +33,19 @@ int streq(const char *a, const char *b)
 // approx is used by the is_eq() macro for comparing numbers of any kind (they
 // are cast to double) which make it ideal for comparing different sized floats
 // or other math that might introduce rounding errors.
+//
+// approx will strictly not handle any input value that is infinite or NaN. It
+// will always return false, even if the values are exactly equal. This is to
+// force you to use the correct matcher (ie. is_inf) instead of relying on
+// comparisons which might not work.
 static int approx(double actual, double expected)
 {
+    // We do not handle infinities or NaN.
+    if (isinf(actual) || isinf(expected) || isnan(actual) || isnan(expected))
+    {
+        return 0;
+    }
+
     // The epsilon is calculated as one 5 millionths of the actual value. This
     // should be accurate enough, but also floating-points are usually rendered
     // with 6 places.
@@ -152,40 +163,40 @@ static int total_failures = 0;
 //
 // Floating-point values are notoriously hard to compare exactly so the values
 // are compared through the approx() function also defined in this file.
-#define is_eq(actual, expected)                                      \
-    if (approx((actual), (expected)))                                \
-    {                                                                \
-        pass("%s == %s", #actual, #expected)                         \
-    }                                                                \
-    else                                                             \
-    {                                                                \
-        fail("%s != %s, got %f", #actual, #expected, (double)actual) \
+#define is_eq(actual, expected)                                       \
+    if (approx((actual), (expected)))                                 \
+    {                                                                 \
+        pass("%s == %s", #actual, #expected)                          \
+    }                                                                 \
+    else                                                              \
+    {                                                                 \
+        fail("%s == %s # got %f", #actual, #expected, (double)actual) \
     }
 
 // Compare two C strings. The two strings are equal if they are the same length
 // (based on strlen) and each of their characters (actually bytes) are exactly
 // the same value. This is nor to be used with strings that are mixed case or
 // contain multibyte characters (eg. UTF-16, etc).
-#define is_streq(actual, expected)                               \
-    if (streq(actual, expected))                                 \
-    {                                                            \
-        pass("%s == %s", #actual, #expected)                     \
-    }                                                            \
-    else                                                         \
-    {                                                            \
-        fail("%s != %s, got \"%s\"", #actual, #expected, actual) \
+#define is_streq(actual, expected)                                \
+    if (streq(actual, expected))                                  \
+    {                                                             \
+        pass("%s == %s", #actual, #expected)                      \
+    }                                                             \
+    else                                                          \
+    {                                                             \
+        fail("%s == %s # got \"%s\"", #actual, #expected, actual) \
     }
 
 // Check that a floating-point value is Not A Number. Passing a value that is
 // not floating point may lead to undefined behaviour.
-#define is_nan(actual)                                 \
-    if (isnan(actual))                                 \
-    {                                                  \
-        pass("isnan(%s)", #actual)                     \
-    }                                                  \
-    else                                               \
-    {                                                  \
-        fail("%s is not NAN, got %f", #actual, actual) \
+#define is_nan(actual)                              \
+    if (isnan(actual))                              \
+    {                                               \
+        pass("isnan(%s)", #actual)                  \
+    }                                               \
+    else                                            \
+    {                                               \
+        fail("isnan(%s) # got %f", #actual, actual) \
     }
 
 // Check that a floating-point value is positive or negative infinity. A sign of
@@ -198,12 +209,16 @@ static int total_failures = 0;
     }                                                                                     \
     else                                                                                  \
     {                                                                                     \
-        fail("%s is not +/-inf, got %d", #actual, isinf(actual))                          \
+        fail("isinf(%s, %d) # got %d", #actual, sign, isinf(actual))                      \
     }
 
 // Check that a value is a negative-zero. See isnegzero() for more information.
 // Using non-floating-point values with this may give unexpected results.
 #define is_negzero(actual) is_true(isnegzero(actual));
+
+// disabled will suppress checks. The check, and any code associated within it
+// will not be run at all. This is not the same as passing or skipping a test.
+#define disabled(x)
 
 // To signal that testing is now complete and to return the appropriate status
 // code. This should be the last line in the main() function.

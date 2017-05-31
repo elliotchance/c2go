@@ -11,7 +11,11 @@ unsigned long long ullmax = 18446744073709551615ull;
 
 int main()
 {
-  plan(255);
+  plan(307);
+
+  // Note: There are some tests that must be disabled because they return
+  // different values under different compilers. See the comment surrounding the
+  // disabled() tests for more information.
 
   // Test constants
   diag("constants");
@@ -160,7 +164,8 @@ int main()
   is_eq(cos(1), 0.540302);
   is_eq(cos(-1), 0.540302);
   is_eq(cos(0.5), 0.877583);
-  is_eq(cos(1.23e300), 1.23e300);
+  // https://github.com/golang/go/issues/20539
+  disabled(is_eq(cos(1.23e300), 0.251533));
   is_eq(cos(-1.23e-300), 1);
   is_eq(cos(M_PI), -1);
   is_eq(cos(M_E), -0.911734);
@@ -173,7 +178,8 @@ int main()
   is_eq(cosh(1), 1.543081);
   is_eq(cosh(-1), 1.543081);
   is_eq(cosh(0.5), 1.127626);
-  is_eq(cosh(1.23e300), 1.23e300);
+  // https://github.com/golang/go/issues/20539
+  disabled(is_eq(cosh(1.23e300), 1));
   is_eq(cosh(-1.23e-300), 1);
   is_eq(cosh(M_PI), 11.591953);
   is_eq(cosh(M_E), 7.610125);
@@ -186,7 +192,8 @@ int main()
   is_eq(exp(1), 2.718282);
   is_eq(exp(-1), 0.367879);
   is_eq(exp(0.5), 1.648721);
-  is_eq(exp(1.23e300), 1.23e300);
+  // https://github.com/golang/go/issues/20539
+  disabled(is_inf(exp(1.23e300), 1));
   is_eq(exp(-1.23e-300), 1);
   is_eq(exp(M_PI), 23.140693);
   is_eq(exp(M_E), 15.154262);
@@ -301,7 +308,7 @@ int main()
   is_nan(ldexp(NAN, 2));
 
   diag("log");
-  is_eq(log(0), 1);
+  is_inf(log(0), -1);
   is_eq(log(1), 0);
   is_nan(log(-1));
   is_eq(log(0.5), -0.693147);
@@ -314,7 +321,7 @@ int main()
   is_nan(log(NAN));
 
   diag("log10");
-  is_eq(log10(0), 1);
+  is_inf(log10(0), -1);
   is_eq(log10(1), 0);
   is_nan(log10(-1));
   is_eq(log10(0.5), -0.301030);
@@ -325,6 +332,73 @@ int main()
   is_inf(log10(INFINITY), 1);
   is_nan(log10(-INFINITY));
   is_nan(log10(NAN));
+
+  diag("pow");
+
+  // pow(x, 0)
+  is_eq(pow(0, 0), 1);
+  is_eq(pow(1, 0), 1);
+  is_eq(pow(-1, 0), 1);
+  is_eq(pow(0.5, 0), 1);
+  is_eq(pow(1.23e300, 0), 1);
+  is_eq(pow(-1.23e-300, 0), 1);
+  is_eq(pow(M_PI, 0), 1);
+  is_eq(pow(M_E, 0), 1);
+  is_eq(pow(INFINITY, 0), 1);
+  is_eq(pow(-INFINITY, 0), 1);
+  is_eq(pow(NAN, 0), 1);
+
+  // pow(x, M_PI)
+  is_eq(pow(0, M_PI), 0);
+  is_eq(pow(1, M_PI), 1);
+  is_nan(pow(-1, M_PI));
+  is_eq(pow(0.5, M_PI), 0.113315);
+  is_inf(pow(1.23e300, M_PI), 1);
+  is_nan(pow(-1.23e-300, M_PI));
+  is_eq(pow(M_PI, M_PI), 36.462160);
+  is_eq(pow(M_E, M_PI), 23.140693);
+  is_inf(pow(INFINITY, M_PI), 1);
+  is_inf(pow(-INFINITY, M_PI), 1);
+  is_nan(pow(NAN, M_PI));
+
+  // pow(x, INFINITY)
+  is_eq(pow(0, INFINITY), 0);
+  is_eq(pow(1, INFINITY), 1);
+  is_eq(pow(-1, INFINITY), 1);
+  is_eq(pow(0.5, INFINITY), 0);
+  is_inf(pow(1.23e300, INFINITY), 1);
+  is_eq(pow(-1.23e-300, INFINITY), 0);
+  is_inf(pow(M_PI, INFINITY), 1);
+  is_inf(pow(M_E, INFINITY), 1);
+  is_inf(pow(INFINITY, INFINITY), 1);
+  is_inf(pow(-INFINITY, INFINITY), 1);
+  is_nan(pow(NAN, INFINITY));
+
+  // pow(x, -INFINITY)
+  is_inf(pow(0, -INFINITY), 1);
+  is_eq(pow(1, -INFINITY), 1);
+  is_eq(pow(-1, -INFINITY), 1);
+  is_inf(pow(0.5, -INFINITY), 1);
+  is_eq(pow(1.23e300, -INFINITY), 0);
+  is_inf(pow(-1.23e-300, -INFINITY), 1);
+  is_eq(pow(M_PI, -INFINITY), 0);
+  is_eq(pow(M_E, -INFINITY), 0);
+  is_eq(pow(INFINITY, -INFINITY), 0);
+  is_eq(pow(-INFINITY, -INFINITY), 0);
+  is_nan(pow(NAN, -INFINITY));
+
+  // pow(x, NAN)
+  is_nan(pow(0, NAN));
+  is_eq(pow(1, NAN), 1);
+  is_nan(pow(-1, NAN));
+  is_nan(pow(0.5, NAN));
+  is_nan(pow(1.23e300, NAN));
+  is_nan(pow(-1.23e-300, NAN));
+  is_nan(pow(M_PI, NAN));
+  is_nan(pow(M_E, NAN));
+  is_nan(pow(INFINITY, NAN));
+  is_nan(pow(-INFINITY, NAN));
+  is_nan(pow(NAN, NAN));
 
   // test_pow();
   // test_sin();
