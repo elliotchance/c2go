@@ -11,7 +11,7 @@ unsigned long long ullmax = 18446744073709551615ull;
 
 int main()
 {
-  plan(327);
+  plan(338);
 
   // Note: There are some tests that must be disabled because they return
   // different values under different compilers. See the comment surrounding the
@@ -428,7 +428,19 @@ int main()
   is_inf(sinh(-INFINITY), -1);
   is_nan(sinh(NAN));
 
-  // test_sqrt();
+  diag("sqrt");
+  is_eq(sqrt(0), 0);
+  is_eq(sqrt(1), 1);
+  is_nan(sqrt(-1));
+  is_eq(sqrt(0.5), 0.707107);
+  is_eq(sqrt(1.23e300), 1.109054e150);
+  is_nan(sqrt(-1.23e-300));
+  is_eq(sqrt(M_PI), 1.772454);
+  is_eq(sqrt(M_E), 1.648721);
+  is_inf(sqrt(INFINITY), 1);
+  is_nan(sqrt(-INFINITY));
+  is_nan(sqrt(NAN));
+
   // test_tan();
   // test_tanh();
 
