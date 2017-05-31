@@ -60,6 +60,31 @@ func NewCallExpr(functionName string, args ...goast.Expr) *goast.CallExpr {
 	}
 }
 
+// NewFuncClosure creates a new *"go/ast".CallExpr that calls a function
+// literal closure. The first argument is the Go return type of the
+// closure, and the remainder of the arguments are the statements of the
+// closure body.
+func NewFuncClosure(returnType string, stmts ...goast.Stmt) *goast.CallExpr {
+	return &goast.CallExpr{
+		Fun: &goast.FuncLit{
+			Type: &goast.FuncType{
+				Params: &goast.FieldList{},
+				Results: &goast.FieldList{
+					List: []*goast.Field{
+						&goast.Field{
+							Type: goast.NewIdent(returnType),
+						},
+					},
+				},
+			},
+			Body: &goast.BlockStmt{
+				List: stmts,
+			},
+		},
+		Args: []goast.Expr{},
+	}
+}
+
 func NewBinaryExpr(left goast.Expr, operator token.Token, right goast.Expr) *goast.BinaryExpr {
 	if left == nil {
 		panic("left is nil")

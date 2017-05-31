@@ -24,86 +24,75 @@ import (
 // another expression.
 //
 // Since Go does not support the ternary operator or inline "if" statements we
-// use a function, noarch.Ternary() to work the same way.
+// use a closure to work the same way.
 //
 // It is also important to note that C only evaulates the "b" or "c" condition
-// based on the result of "a" (from the above example). So we wrap the "b" and
-// "c" in closures so that the Ternary function will only evaluate one of them.
+// based on the result of "a" (from the above example).
 func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program) (
 	*goast.CallExpr, string, []goast.Stmt, []goast.Stmt, error) {
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
-	a, _, newPre, newPost, err := transpileToExpr(n.Children[0], p)
+	a, aType, newPre, newPost, err := transpileToExpr(n.Children[0], p)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	b, _, newPre, newPost, err := transpileToExpr(n.Children[1], p)
+	b, bType, newPre, newPost, err := transpileToExpr(n.Children[1], p)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	c, _, newPre, newPost, err := transpileToExpr(n.Children[2], p)
+	c, cType, newPre, newPost, err := transpileToExpr(n.Children[2], p)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	p.AddImport("github.com/elliotchance/c2go/noarch")
+	a, err = types.CastExpr(p, a, aType, "bool")
+	if err != nil {
+		return nil, "", nil, nil, err
+	}
 
-	// The following code will generate the Go AST that will simulate a
-	// conditional (ternary) operator, in the form of:
-	//
-	//     noarch.Ternary(
-	//         $1,
-	//         func () interface{} {
-	//             return $2
-	//         },
-	//         func () interface{} {
-	//             return $3
-	//         },
-	//     )
-	//
-	// $2 and $3 (the true and false condition respectively) must be wrapped in
-	// a closure so that they are not both executed.
-	return util.NewCallExpr(
-		"noarch.Ternary",
-		a,
-		newTernaryWrapper(b),
-		newTernaryWrapper(c),
-	), n.Type, preStmts, postStmts, nil
-}
+	// TODO: Here it is being assumed that the return type of the
+	// conditional operator is the type of the 'false' result. Things
+	// are a bit more complicated then that in C.
 
-// newTernaryWrapper is a helper method used by transpileConditionalOperator().
-// It will wrap an expression in a closure.
-func newTernaryWrapper(e goast.Expr) *goast.FuncLit {
-	return &goast.FuncLit{
-		Type: &goast.FuncType{
-			Params: &goast.FieldList{},
-			Results: &goast.FieldList{
-				List: []*goast.Field{
-					&goast.Field{
-						Type: &goast.InterfaceType{
-							Methods: &goast.FieldList{},
-						},
+	b, err = types.CastExpr(p, b, bType, cType)
+	if err != nil {
+		return nil, "", nil, nil, err
+	}
+
+	returnType, err := types.ResolveType(p, cType)
+	if err != nil {
+		return nil, "", nil, nil, err
+	}
+
+	return util.NewFuncClosure(
+		returnType,
+		&goast.IfStmt{
+			Cond: a,
+			Body: &goast.BlockStmt{
+				List: []goast.Stmt{
+					&goast.ReturnStmt{
+						Results: []goast.Expr{b},
+					},
+				},
+			},
+			Else: &goast.BlockStmt{
+				List: []goast.Stmt{
+					&goast.ReturnStmt{
+						Results: []goast.Expr{c},
 					},
 				},
 			},
 		},
-		Body: &goast.BlockStmt{
-			List: []goast.Stmt{
-				&goast.ReturnStmt{
-					Results: []goast.Expr{e},
-				},
-			},
-		},
-	}
+	), cType, preStmts, postStmts, nil
 }
 
 // transpileParenExpr transpiles an expression that is wrapped in parentheses.
