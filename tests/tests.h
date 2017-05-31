@@ -97,6 +97,9 @@ static int total_tests = 0;
 // The total number of failed tests.
 static int total_failures = 0;
 
+// Signals if the last test passed (1) or failed (0).
+static int last_test_was_ok = 1;
+
 // Set the number of expected tests/checks. This is important to prevent errors
 // that would cause the program to silently fail before the test suite is
 // finished.
@@ -153,17 +156,19 @@ static int total_failures = 0;
     {                                                           \
         ++current_test;                                         \
         printf("%d ok - " fmt "\n", current_test, __VA_ARGS__); \
+        last_test_was_ok = 1;                                   \
     }
 
 // Immediately fail a check. This is useful if you are testing code flow (such
 // as code that should not be reached or known bad conditions we met.
 //
 // fail() takes the same arguments as a printf().
-#define fail(fmt, ...)                                              \
-    {                                                               \
-        ++current_test;                                             \
-        ++total_failures;                                           \
-        printf("%d not ok - " fmt "\n", current_test, __VA_ARGS__); \
+#define fail(fmt, ...)                                                                         \
+    {                                                                                          \
+        ++current_test;                                                                        \
+        ++total_failures;                                                                      \
+        printf("%d not ok - %s:%d: " fmt "\n", current_test, __FILE__, __LINE__, __VA_ARGS__); \
+        last_test_was_ok = 0;                                                                  \
     }
 
 // Test if two values are equal. is_eq() will accept any *numerical* value than
@@ -225,6 +230,16 @@ static int total_failures = 0;
 // Using non-floating-point values with this may give unexpected results.
 #define is_negzero(actual) is_true(isnegzero(actual));
 
+#define is_not_null(actual)         \
+    if (actual != NULL)             \
+    {                               \
+        pass("%s != NULL", #actual) \
+    }                               \
+    else                            \
+    {                               \
+        fail("%s != NULL", #actual) \
+    }
+
 // disabled will suppress checks. The check, and any code associated within it
 // will not be run at all. This is not the same as passing or skipping a test.
 #define disabled(x)
@@ -244,5 +259,15 @@ static int total_failures = 0;
         exit_status = 102;                                                         \
     }                                                                              \
     return exit_status;
+
+// or_return will return (with an optional value provided) if the check failed.
+//
+//     is_not_null(filePointer) or_return();
+//
+#define or_return(...)      \
+    if (!last_test_was_ok)  \
+    {                       \
+        return __VA_ARGS__; \
+    }
 
 // Do not place code beyond this. See the TAP comment above.
