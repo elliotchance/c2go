@@ -11,7 +11,7 @@ unsigned long long ullmax = 18446744073709551615ull;
 
 int main()
 {
-  plan(338);
+  plan(359);
 
   // Note: There are some tests that must be disabled because they return
   // different values under different compilers. See the comment surrounding the
@@ -441,8 +441,32 @@ int main()
   is_nan(sqrt(-INFINITY));
   is_nan(sqrt(NAN));
 
-  // test_tan();
-  // test_tanh();
+  diag("tan");
+  is_eq(tan(0), 0);
+  is_eq(tan(1), 1.557408);
+  is_eq(tan(-1), -1.557408);
+  is_eq(tan(0.5), 0.546302);
+  // https://github.com/golang/go/issues/20539
+  disabled(is_eq(tan(1.23e300), 3.847798));
+  is_negzero(tan(-1.23e-300));
+  is_eq(tan(M_PI), 0);
+  is_eq(tan(M_E), -0.450550);
+  is_nan(tan(INFINITY));
+  is_nan(tan(-INFINITY));
+  is_nan(tan(NAN));
+
+  diag("tanh");
+  is_eq(tanh(0), 0);
+  is_eq(tanh(1), 0.761594);
+  is_eq(tanh(-1), -0.761594);
+  is_eq(tanh(0.5), 0.462117);
+  is_eq(tanh(1.23e300), 1);
+  is_negzero(tanh(-1.23e-300));
+  is_eq(tanh(M_PI), 0.996272);
+  is_eq(tanh(M_E), 0.991329);
+  is_eq(tanh(INFINITY), 1);
+  is_eq(tanh(-INFINITY), -1);
+  is_nan(tanh(NAN));
 
   done_testing();
 }
