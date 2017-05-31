@@ -127,7 +127,8 @@ func TestIntegrationScripts(t *testing.T) {
 			if strings.Index(file, "examples/") == -1 {
 				firstLine := strings.Split(goProgram.stdout.String(), "\n")[0]
 
-				matches := regexp.MustCompile(`1..(\d+)`).FindStringSubmatch(firstLine)
+				matches := regexp.MustCompile(`1\.\.(\d+)`).
+					FindStringSubmatch(firstLine)
 				if len(matches) == 0 {
 					t.Fatalf("Test did not output tap: %s", file)
 				}
