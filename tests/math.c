@@ -11,7 +11,7 @@ unsigned long long ullmax = 18446744073709551615ull;
 
 int main()
 {
-  plan(167);
+  plan(255);
 
   // Test constants
   diag("constants");
@@ -287,9 +287,45 @@ int main()
   is_nan(fmod(-INFINITY, NAN));
   is_nan(fmod(NAN, NAN));
 
-  // test_ldexp();
-  // test_log();
-  // test_log10();
+  diag("ldexp");
+  is_eq(ldexp(0, 2), 0);
+  is_eq(ldexp(1, 2), 4);
+  is_eq(ldexp(-1, 2), -4);
+  is_eq(ldexp(0.5, 2), 2);
+  is_eq(ldexp(1.23e300, 2), 1.23e300);
+  is_negzero(ldexp(-1.23e-300, 2));
+  is_eq(ldexp(M_PI, 2), 12.566371);
+  is_eq(ldexp(M_E, 2), 10.873127);
+  is_inf(ldexp(INFINITY, 2), 1);
+  is_inf(ldexp(-INFINITY, 2), -1);
+  is_nan(ldexp(NAN, 2));
+
+  diag("log");
+  is_eq(log(0), 1);
+  is_eq(log(1), 0);
+  is_nan(log(-1));
+  is_eq(log(0.5), -0.693147);
+  is_eq(log(1.23e300), 1.23e300);
+  is_nan(log(-1.23e-300));
+  is_eq(log(M_PI), 1.144730);
+  is_eq(log(M_E), 1);
+  is_inf(log(INFINITY), 1);
+  is_nan(log(-INFINITY));
+  is_nan(log(NAN));
+
+  diag("log10");
+  is_eq(log10(0), 1);
+  is_eq(log10(1), 0);
+  is_nan(log10(-1));
+  is_eq(log10(0.5), -0.301030);
+  is_eq(log10(1.23e300), 1.23e300);
+  is_nan(log10(-1.23e-300));
+  is_eq(log10(M_PI), 0.497150);
+  is_eq(log10(M_E), 0.434294);
+  is_inf(log10(INFINITY), 1);
+  is_nan(log10(-INFINITY));
+  is_nan(log10(NAN));
+
   // test_pow();
   // test_sin();
   // test_sinh();
