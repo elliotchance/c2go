@@ -220,7 +220,73 @@ int main()
   is_inf(floor(-INFINITY), -1);
   is_nan(floor(NAN));
 
-  // test_fmod();
+  diag("fmod");
+
+  // fmod(x, 0)
+  is_nan(fmod(0, 0));
+  is_nan(fmod(1, 0));
+  is_nan(fmod(-1, 0));
+  is_nan(fmod(0.5, 0));
+  is_nan(fmod(1.23e300, 0));
+  is_nan(fmod(-1.23e-300, 0));
+  is_nan(fmod(M_PI, 0));
+  is_nan(fmod(M_E, 0));
+  is_nan(fmod(INFINITY, 0));
+  is_nan(fmod(-INFINITY, 0));
+  is_nan(fmod(NAN, 0));
+
+  // fmod(x, 0.5)
+  is_eq(fmod(0, 0.5), 0);
+  is_eq(fmod(1, 0.5), 0);
+  is_negzero(fmod(-1, 0.5));
+  is_eq(fmod(0.5, 0.5), 0);
+  is_eq(fmod(1.23e300, 0.5), 1.23e300);
+  is_negzero(fmod(-1.23e-300, 0.5));
+  is_eq(fmod(M_PI, 0.5), M_PI - 3);
+  is_eq(fmod(M_E, 0.5), M_E - 2.5);
+  is_nan(fmod(INFINITY, 0.5));
+  is_nan(fmod(-INFINITY, 0.5));
+  is_nan(fmod(NAN, 0.5));
+
+  // fmod(x, INFINITY)
+  is_eq(fmod(0, INFINITY), 0);
+  is_eq(fmod(1, INFINITY), 1);
+  is_negzero(fmod(-1, INFINITY));
+  is_eq(fmod(0.5, INFINITY), 0.5);
+  is_eq(fmod(1.23e300, INFINITY), 1.23e300);
+  is_negzero(fmod(-1.23e-300, INFINITY));
+  is_eq(fmod(M_PI, INFINITY), M_PI);
+  is_eq(fmod(M_E, INFINITY), M_E);
+  is_nan(fmod(INFINITY, INFINITY));
+  is_nan(fmod(-INFINITY, INFINITY));
+  is_nan(fmod(NAN, INFINITY));
+
+  // fmod(x, -INFINITY)
+  is_eq(fmod(0, -INFINITY), 0);
+  is_eq(fmod(1, -INFINITY), 1);
+  is_negzero(fmod(-1, -INFINITY));
+  is_eq(fmod(0.5, -INFINITY), 0.5);
+  is_eq(fmod(1.23e300, -INFINITY), 1.23e300);
+  is_negzero(fmod(-1.23e-300, -INFINITY));
+  is_eq(fmod(M_PI, -INFINITY), M_PI);
+  is_eq(fmod(M_E, -INFINITY), M_E);
+  is_nan(fmod(INFINITY, -INFINITY));
+  is_nan(fmod(-INFINITY, -INFINITY));
+  is_nan(fmod(NAN, -INFINITY));
+
+  // fmod(x, NAN)
+  is_nan(fmod(0, NAN));
+  is_nan(fmod(1, NAN));
+  is_nan(fmod(-1, NAN));
+  is_nan(fmod(0.5, NAN));
+  is_nan(fmod(1.23e300, NAN));
+  is_nan(fmod(-1.23e-300, NAN));
+  is_nan(fmod(M_PI, NAN));
+  is_nan(fmod(M_E, NAN));
+  is_nan(fmod(INFINITY, NAN));
+  is_nan(fmod(-INFINITY, NAN));
+  is_nan(fmod(NAN, NAN));
+
   // test_ldexp();
   // test_log();
   // test_log10();
