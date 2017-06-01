@@ -128,6 +128,6 @@ func NewIntLit(value int) *goast.BasicLit {
 	}
 }
 
-func NewNil() *goast.BasicLit {
-	return NewStringLit("nil")
+func NewNil() *goast.Ident {
+	return goast.NewIdent("nil")
 }

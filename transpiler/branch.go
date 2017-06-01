@@ -70,7 +70,7 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
 	p.AddMessage(ast.GenerateWarningOrErrorMessage(err, n, boolCondition == nil))
 
 	if boolCondition == nil {
-		boolCondition = util.NewStringLit("nil")
+		boolCondition = util.NewNil()
 	}
 
 	body, newPre, newPost, err := transpileToBlockStmt(children[2], p)
@@ -167,7 +167,7 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 		p.AddMessage(ast.GenerateWarningOrErrorMessage(err, n, condition == nil))
 
 		if condition == nil {
-			condition = util.NewStringLit("nil")
+			condition = util.NewNil()
 		}
 	}
 
@@ -206,7 +206,7 @@ func transpileWhileStmt(n *ast.WhileStmt, p *program.Program) (
 	p.AddMessage(ast.GenerateWarningOrErrorMessage(err, n, cond == nil))
 
 	if cond == nil {
-		cond = util.NewStringLit("nil")
+		cond = util.NewNil()
 	}
 
 	return &goast.ForStmt{
@@ -240,7 +240,7 @@ func transpileDoStmt(n *ast.DoStmt, p *program.Program) (
 	p.AddMessage(ast.GenerateWarningOrErrorMessage(err, n, x == nil))
 
 	if x == nil {
-		x = util.NewStringLit("nil")
+		x = util.NewNil()
 	}
 
 	body.List = append(body.List, &goast.IfStmt{
