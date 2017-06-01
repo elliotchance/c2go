@@ -171,11 +171,25 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	lhsResolvedType, err := types.ResolveType(p, lhsType)
 	p.AddMessage(ast.GenerateWarningMessage(err, n))
 
+	// lhsType will be something like "struct foo"
+	structType := p.Structs[lhsType]
 	rhs := n.Name
-
-	// FIXME: This should not be empty. We need some fallback type to catch
-	// errors like "unknown8".
-	rhsType := ""
+	rhsType := "void *"
+	if structType == nil {
+		// This case should not happen in the future. Any structs should be
+		// either parsed correctly from the source or be manually setup when the
+		// parser starts if the struct if hidden or shared between libraries.
+		//
+		// Some other things to keep in mind:
+		//   1. Types need to be stripped of their pointer, 'FILE *' -> 'FILE'.
+		//   2. Types may refer to one or more other types in a chain that have
+		//      to be resolved before the real field type can be determined.
+		err = errors.New("cannot determine type for '" + lhsType +
+			"', will use 'void *' for all fields")
+		p.AddMessage(ast.GenerateWarningMessage(err, n))
+	} else {
+		rhsType = structType.Fields[rhs].(string)
+	}
 
 	// FIXME: This is just a hack
 	if util.InStrings(lhsResolvedType, []string{"darwin.Float2", "darwin.Double2"}) {
