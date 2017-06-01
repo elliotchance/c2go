@@ -176,14 +176,14 @@ static int last_test_was_ok = 1;
 //
 // Floating-point values are notoriously hard to compare exactly so the values
 // are compared through the approx() function also defined in this file.
-#define is_eq(actual, expected)                                       \
-    if (approx((actual), (expected)))                                 \
-    {                                                                 \
-        pass("%s == %s", #actual, #expected)                          \
-    }                                                                 \
-    else                                                              \
-    {                                                                 \
-        fail("%s == %s # got %f", #actual, #expected, (double)actual) \
+#define is_eq(actual, expected)                                         \
+    if (approx((actual), (expected)))                                   \
+    {                                                                   \
+        pass("%s == %s", #actual, #expected)                            \
+    }                                                                   \
+    else                                                                \
+    {                                                                   \
+        fail("%s == %s # got %f", #actual, #expected, (double)(actual)) \
     }
 
 // Compare two C strings. The two strings are equal if they are the same length
