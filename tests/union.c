@@ -13,6 +13,11 @@ int main()
     union programming variable;
     char *s = "Programming in Software Development.";
 
+    /*union {
+        float constant;
+        char *pointer;
+    } local_union = */
+
     variable.constant = 1.23;
     printf("%f\n", variable.constant);
 

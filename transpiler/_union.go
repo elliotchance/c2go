@@ -1,4 +1,4 @@
-package main
+package transpiler
 
 import(
     "fmt"
@@ -10,27 +10,27 @@ import(
 type UnionType []byte
 
 // Get casted value
-func (self UnionType) cast(t reflect.Type) reflect.Value {
+func (self _UnionType) cast(t reflect.Type) reflect.Value {
     return reflect.NewAt(t, unsafe.Pointer(&self[0])).Elem()
 }
 
 // Getter
-func (self UnionType) Get(v interface{}) {
+func (self _UnionType) Get(v interface{}) {
     value := reflect.ValueOf(v).Elem()
 
     value.Set(self.cast(value.Type()))
 }
 
 // Setter
-func (self UnionType) Set(v interface{}) {
+func (self _UnionType) Set(v interface{}) {
     value := reflect.ValueOf(v)
 
     self.cast(value.Type()).Set(value)
 }
 
-func main(){
+func fake_main(){
     // Create the union
-    u := make(UnionType, 4)
+    u := make(_UnionType, 4)
 
     // Set a value
     u.Set(0x12345678)
