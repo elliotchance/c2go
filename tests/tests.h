@@ -1,10 +1,5 @@
 #include <math.h> // signbit()
 
-// TODO: This is deprecated and can be removed.
-#define RUN(t)                \
-    printf("\n--- %s\n", #t); \
-    t();
-
 // TODO: This can be removed and replaced with strcmp() when string.h is
 // implemented.
 int streq(const char *a, const char *b)
@@ -152,23 +147,27 @@ static int last_test_was_ok = 1;
 // as reaching a particular if/else branch.
 //
 // pass() takes the same arguments as a printf().
-#define pass(fmt, ...)                                          \
-    {                                                           \
-        ++current_test;                                         \
-        printf("%d ok - " fmt "\n", current_test, __VA_ARGS__); \
-        last_test_was_ok = 1;                                   \
+#define pass(...)                         \
+    {                                     \
+        ++current_test;                   \
+        printf("%d ok - ", current_test); \
+        printf(__VA_ARGS__);              \
+        printf("\n");                     \
+        last_test_was_ok = 1;             \
     }
 
 // Immediately fail a check. This is useful if you are testing code flow (such
 // as code that should not be reached or known bad conditions we met.
 //
 // fail() takes the same arguments as a printf().
-#define fail(fmt, ...)                                                                         \
-    {                                                                                          \
-        ++current_test;                                                                        \
-        ++total_failures;                                                                      \
-        printf("%d not ok - %s:%d: " fmt "\n", current_test, __FILE__, __LINE__, __VA_ARGS__); \
-        last_test_was_ok = 0;                                                                  \
+#define fail(...)                                                        \
+    {                                                                    \
+        ++current_test;                                                  \
+        ++total_failures;                                                \
+        printf("%d not ok - %s:%d: ", current_test, __FILE__, __LINE__); \
+        printf(__VA_ARGS__);                                             \
+        printf("\n");                                                    \
+        last_test_was_ok = 0;                                            \
     }
 
 // Test if two values are equal. is_eq() will accept any *numerical* value than

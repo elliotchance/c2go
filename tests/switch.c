@@ -11,30 +11,23 @@
 // CompoundStmt with 12 children.
 
 #include <stdio.h>
+#include "tests.h"
 
 void match_a_single_case()
 {
     switch (1)
     {
     case 0:
-        printf("a 00\n");
-        printf("a 01\n");
-        printf("a 02\n");
+        fail("code should not reach here");
         break;
     case 1:
-        printf("a 10\n");
-        printf("a 11\n");
-        printf("a 12\n");
+        pass(__func__);
         break;
     case 2:
-        printf("a 20\n");
-        printf("a 21\n");
-        printf("a 22\n");
+        fail("code should not reach here");
         break;
     default:
-        printf("a default 0\n");
-        printf("a default 1\n");
-        printf("a default 2\n");
+        fail("code should not reach here");
         break;
     }
 }
@@ -44,15 +37,15 @@ void fallthrough_to_next_case()
     switch (1)
     {
     case 0:
-        printf("b 0\n");
+        fail("code should not reach here");
         break;
     case 1:
-        printf("b 1\n");
+        pass(__func__);
     case 2:
-        printf("b 2\n");
+        pass(__func__);
         break;
     default:
-        printf("b default\n");
+        fail("code should not reach here");
         break;
     }
 }
@@ -62,10 +55,10 @@ void match_no_cases()
     switch (1)
     {
     case 5:
-        printf("c 5\n");
+        fail("code should not reach here");
         break;
     case 2:
-        printf("c 2\n");
+        fail("code should not reach here");
         break;
     }
 }
@@ -75,13 +68,13 @@ void match_default()
     switch (1)
     {
     case 5:
-        printf("d 5\n");
+        fail("code should not reach here");
         break;
     case 2:
-        printf("d 2\n");
+        fail("code should not reach here");
         break;
     default:
-        printf("d default\n");
+        pass(__func__);
         break;
     }
 }
@@ -91,13 +84,13 @@ void fallthrough_several_cases_including_default()
     switch (1)
     {
     case 0:
-        printf("e 0\n");
+        fail("code should not reach here");
     case 1:
-        printf("e 1\n");
+        pass(__func__);
     case 2:
-        printf("e 2\n");
+        pass(__func__);
     default:
-        printf("e default\n");
+        pass(__func__);
     }
 }
 
@@ -107,22 +100,22 @@ void scoped_match_a_single_case()
     {
     case 0:
     {
-        printf("a 0\n");
+        fail("code should not reach here");
         break;
     }
     case 1:
     {
-        printf("a 1\n");
+        pass(__func__);
         break;
     }
     case 2:
     {
-        printf("a 2\n");
+        fail("code should not reach here");
         break;
     }
     default:
     {
-        printf("a default\n");
+        fail("code should not reach here");
         break;
     }
     }
@@ -134,21 +127,21 @@ void scoped_fallthrough_to_next_case()
     {
     case 0:
     {
-        printf("b 0\n");
+        fail("code should not reach here");
         break;
     }
     case 1:
     {
-        printf("b 1\n");
+        pass(__func__);
     }
     case 2:
     {
-        printf("b 2\n");
+        pass(__func__);
         break;
     }
     default:
     {
-        printf("b default\n");
+        fail("code should not reach here");
         break;
     }
     }
@@ -160,12 +153,12 @@ void scoped_match_no_cases()
     {
     case 5:
     {
-        printf("c 5\n");
+        fail("code should not reach here");
         break;
     }
     case 2:
     {
-        printf("c 2\n");
+        fail("code should not reach here");
         break;
     }
     }
@@ -177,17 +170,17 @@ void scoped_match_default()
     {
     case 5:
     {
-        printf("d 5\n");
+        fail("code should not reach here");
         break;
     }
     case 2:
     {
-        printf("d 2\n");
+        fail("code should not reach here");
         break;
     }
     default:
     {
-        printf("d default\n");
+        pass(__func__);
         break;
     }
     }
@@ -199,25 +192,27 @@ void scoped_fallthrough_several_cases_including_default()
     {
     case 0:
     {
-        printf("e 0\n");
+        fail("code should not reach here");
     }
     case 1:
     {
-        printf("e 1\n");
+        pass(__func__);
     }
     case 2:
     {
-        printf("e 2\n");
+        pass(__func__);
     }
     default:
     {
-        printf("e default\n");
+        pass(__func__);
     }
     }
 }
 
 int main()
 {
+    plan(14);
+
     match_a_single_case();
     fallthrough_to_next_case();
     match_no_cases();
@@ -231,4 +226,6 @@ int main()
     scoped_match_no_cases();
     scoped_match_default();
     scoped_fallthrough_several_cases_including_default();
+
+    done_testing();
 }
