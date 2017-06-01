@@ -200,7 +200,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 				)
 
 				if realArg == nil {
-					realArg = util.NewStringLit("nil")
+					realArg = util.NewNil()
 				}
 			}
 
@@ -218,7 +218,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 					functionDef.ArgumentTypes[i])
 
 				if p.AddMessage(ast.GenerateWarningMessage(err, n)) {
-					a = util.NewStringLit("nil")
+					a = util.NewNil()
 				}
 			}
 

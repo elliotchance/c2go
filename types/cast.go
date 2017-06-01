@@ -173,10 +173,7 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 		return &goast.BinaryExpr{
 			X:  expr,
 			Op: token.NEQ,
-			Y: &goast.BasicLit{
-				Kind:  token.STRING,
-				Value: "nil",
-			},
+			Y:  util.NewNil(),
 		}, nil
 	}
 
@@ -185,10 +182,7 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 	}
 
 	if fromType == "int" && toType == "*int" {
-		return &goast.BasicLit{
-			Kind:  token.STRING,
-			Value: "nil",
-		}, nil
+		return util.NewNil(), nil
 	}
 	if fromType == "int" && toType == "*byte" {
 		return &goast.BasicLit{
