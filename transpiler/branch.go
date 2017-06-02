@@ -67,10 +67,10 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
 
 	// The condition in Go must always be a bool.
 	boolCondition, err := types.CastExpr(p, conditional, conditionalType, "bool")
-	ast.WarningOrError(err, n, boolCondition == nil)
+	p.AddMessage(ast.GenerateWarningOrErrorMessage(err, n, boolCondition == nil))
 
 	if boolCondition == nil {
-		boolCondition = util.NewStringLit("nil")
+		boolCondition = util.NewNil()
 	}
 
 	body, newPre, newPost, err := transpileToBlockStmt(children[2], p)
@@ -164,10 +164,10 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 		condition, err = types.CastExpr(p, condition, conditionType, "bool")
-		ast.WarningOrError(err, n, condition == nil)
+		p.AddMessage(ast.GenerateWarningOrErrorMessage(err, n, condition == nil))
 
 		if condition == nil {
-			condition = util.NewStringLit("nil")
+			condition = util.NewNil()
 		}
 	}
 
@@ -203,10 +203,10 @@ func transpileWhileStmt(n *ast.WhileStmt, p *program.Program) (
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	cond, err := types.CastExpr(p, condition, conditionType, "bool")
-	ast.WarningOrError(err, n, cond == nil)
+	p.AddMessage(ast.GenerateWarningOrErrorMessage(err, n, cond == nil))
 
 	if cond == nil {
-		cond = util.NewStringLit("nil")
+		cond = util.NewNil()
 	}
 
 	return &goast.ForStmt{
@@ -237,10 +237,10 @@ func transpileDoStmt(n *ast.DoStmt, p *program.Program) (
 
 	// Add IfStmt to the end of the loop to check the condition.
 	x, err := types.CastExpr(p, condition, conditionType, "bool")
-	ast.WarningOrError(err, n, x == nil)
+	p.AddMessage(ast.GenerateWarningOrErrorMessage(err, n, x == nil))
 
 	if x == nil {
-		x = util.NewStringLit("nil")
+		x = util.NewNil()
 	}
 
 	body.List = append(body.List, &goast.IfStmt{

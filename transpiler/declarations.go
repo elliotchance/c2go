@@ -24,7 +24,7 @@ func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, str
 	}
 
 	fieldType, err := types.ResolveType(p, n.Type)
-	ast.IsWarning(err, n)
+	p.AddMessage(ast.GenerateWarningMessage(err, n))
 
 	// TODO: The name of a variable or field cannot be "type"
 	// https://github.com/elliotchance/c2go/issues/83
@@ -47,7 +47,7 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 	p.TypeIsNowDefined(name)
 
 	s := program.NewStruct(n)
-	p.Structs[s.Name] = s
+	p.Structs["struct "+s.Name] = s
 
 	// TODO: Unions are not supported.
 	// https://github.com/elliotchance/c2go/issues/84
@@ -73,7 +73,7 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 			}
 		} else {
 			message := fmt.Sprintf("could not parse %v", c)
-			ast.IsWarning(errors.New(message), c)
+			p.AddMessage(ast.GenerateWarningMessage(errors.New(message), c))
 		}
 	}
 
@@ -104,7 +104,7 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 	p.TypeIsNowDefined(name)
 
 	resolvedType, err := types.ResolveType(p, n.Type)
-	ast.IsWarning(err, n)
+	p.AddMessage(ast.GenerateWarningMessage(err, n))
 
 	// There is a case where the name of the type is also the definition,
 	// like:
@@ -166,7 +166,7 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 	[]goast.Stmt, []goast.Stmt, string) {
 	theType, err := types.ResolveType(p, n.Type)
-	ast.IsWarning(err, n)
+	p.AddMessage(ast.GenerateWarningMessage(err, n))
 
 	name := n.Name
 	preStmts := []goast.Stmt{}

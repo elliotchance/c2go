@@ -14,10 +14,12 @@ import (
 	"github.com/elliotchance/c2go/util"
 )
 
-func TranspileAST(fileName string, p *program.Program, root ast.Node) error {
+// TranspileAST iterates through the Clang AST and builds a Go AST
+func TranspileAST(fileName, packageName string, p *program.Program, root ast.Node) error {
 	// Start by parsing an empty file.
 	p.FileSet = token.NewFileSet()
-	f, err := parser.ParseFile(p.FileSet, fileName, "package main", 0)
+	packageSignature := fmt.Sprintf("package %v", packageName)
+	f, err := parser.ParseFile(p.FileSet, fileName, packageSignature, 0)
 	p.File = f
 
 	if err != nil {
@@ -44,6 +46,14 @@ func TranspileAST(fileName string, p *program.Program, root ast.Node) error {
 
 	// Add the imports after everything else so we can ensure that they are all
 	// placed at the top.
+	// A valid Lparen position (Lparen.IsValid()) indicated a parenthesized
+	// declaration. According to the function definition, line should be
+	// greater than 0.
+	importDecl := &goast.GenDecl{
+		Tok:    token.IMPORT,
+		Lparen: 1,
+	}
+
 	for _, quotedImportPath := range p.Imports() {
 		importSpec := &goast.ImportSpec{
 			Path: &goast.BasicLit{
@@ -51,13 +61,11 @@ func TranspileAST(fileName string, p *program.Program, root ast.Node) error {
 				Value: quotedImportPath,
 			},
 		}
-		importDecl := &goast.GenDecl{
-			Tok: token.IMPORT,
-		}
 
 		importDecl.Specs = append(importDecl.Specs, importSpec)
-		p.File.Decls = append([]goast.Decl{importDecl}, p.File.Decls...)
 	}
+
+	p.File.Decls = append([]goast.Decl{importDecl}, p.File.Decls...)
 
 	return err
 }
@@ -127,8 +135,8 @@ func transpileToExpr(node ast.Node, p *program.Program) (
 		return transpileUnaryExprOrTypeTraitExpr(n, p)
 
 	default:
-		ast.IsWarning(errors.New("cannot transpile to expr"), node)
-		expr = util.NewStringLit("nil")
+		p.AddMessage(ast.GenerateWarningMessage(errors.New("cannot transpile to expr"), node))
+		expr = util.NewNil()
 	}
 
 	// Real return is through named arguments.

@@ -11,14 +11,13 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
-	"go/format"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"strings"
@@ -30,16 +29,18 @@ import (
 
 // Version can be requested through the command line with:
 //
-//     c2go -version
+//     c2go -v
 //
 // See https://github.com/elliotchance/c2go/wiki/Release-Process
-const Version = "0.12.0"
+const Version = "0.12.4"
 
-var (
-	printAst = flag.Bool("print-ast", false, "Print AST before translated Go code.")
-	verbose  = flag.Bool("verbose", false, "Print progress as comments.")
-	version  = flag.Bool("version", false, "Print the version and exit.")
-)
+type ProgramArgs struct {
+	verbose     bool
+	ast         bool
+	inputFile   string
+	outputFile  string
+	packageName string
+}
 
 func readAST(data []byte) []string {
 	uncolored := regexp.MustCompile(`\x1b\[[\d;]+m`).ReplaceAll(data, []byte{})
@@ -148,19 +149,17 @@ func Check(prefix string, e error) {
 	}
 }
 
-func Start(args []string) string {
+func Start(args ProgramArgs) {
 	if os.Getenv("GOPATH") == "" {
 		panic("The $GOPATH must be set.")
 	}
 
 	// 1. Compile it first (checking for errors)
-	cFilePath := args[0]
-
-	_, err := os.Stat(cFilePath)
+	_, err := os.Stat(args.inputFile)
 	Check("", err)
 
 	// 2. Preprocess
-	pp, err := exec.Command("clang", "-E", cFilePath).Output()
+	pp, err := exec.Command("clang", "-E", args.inputFile).Output()
 	Check("preprocess failed: ", err)
 
 	pp_file_path := path.Join(os.TempDir(), "pp.c")
@@ -178,39 +177,63 @@ func Start(args []string) string {
 	}
 
 	lines := readAST(ast_pp)
-	if *printAst {
+	if args.ast {
 		for _, l := range lines {
 			fmt.Println(l)
 		}
 		fmt.Println()
 	}
+
 	nodes := convertLinesToNodes(lines)
 	tree := buildTree(nodes, 0)
 
 	p := program.NewProgram()
-	p.Verbose = *verbose
+	p.Verbose = args.verbose
 
-	err = transpiler.TranspileAST(cFilePath, p, tree[0].(ast.Node))
+	err = transpiler.TranspileAST(args.inputFile, args.packageName, p, tree[0].(ast.Node))
 	if err != nil {
 		panic(err)
 	}
 
-	var buf bytes.Buffer
-	if err := format.Node(&buf, p.FileSet, p.File); err != nil {
-		panic(err)
+	outputFilePath := args.outputFile
+
+	if outputFilePath == "" {
+		cleanFileName := filepath.Clean(filepath.Base(args.inputFile))
+		extension := filepath.Ext(args.inputFile)
+
+		outputFilePath = cleanFileName[0:len(cleanFileName)-len(extension)] + ".go"
 	}
 
-	return buf.String()
+	err = ioutil.WriteFile(outputFilePath, []byte(p.String()), 0755)
+	Check("writing C output file failed: ", err)
 }
 
 func main() {
+	var (
+		versionFlag       = flag.Bool("v", false, "print the version and exit")
+		transpileCommand  = flag.NewFlagSet("transpile", flag.ContinueOnError)
+		verboseFlag       = transpileCommand.Bool("V", false, "print progress as comments")
+		outputFlag        = transpileCommand.String("o", "", "output Go generated code to the specified file")
+		packageFlag       = transpileCommand.String("p", "main", "set the name of the generated package")
+		transpileHelpFlag = transpileCommand.Bool("h", false, "print help information")
+		astCommand        = flag.NewFlagSet("ast", flag.ContinueOnError)
+		astHelpFlag       = astCommand.Bool("h", false, "print help information")
+	)
+
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: %s [options] <file.c>\n", os.Args[0])
+		usage := "Usage: %s [-v] [<command>] [<flags>] file.c\n\n"
+		usage += "Commands:\n"
+		usage += "  transpile\ttranspile an input C source file to Go\n"
+		usage += "  ast\t\tprint AST before translated Go code\n\n"
+
+		usage += "Flags:\n"
+		fmt.Fprintf(os.Stderr, usage, os.Args[0])
 		flag.PrintDefaults()
 	}
+
 	flag.Parse()
 
-	if *version {
+	if *versionFlag {
 		// Simply print out the version and exit.
 		fmt.Println(Version)
 		return
@@ -221,5 +244,38 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Print(Start(flag.Args()))
+	args := ProgramArgs{verbose: *verboseFlag, ast: false}
+
+	switch os.Args[1] {
+	case "ast":
+		astCommand.Parse(os.Args[2:])
+
+		if *astHelpFlag || astCommand.NArg() == 0 {
+			fmt.Fprintf(os.Stderr, "Usage: %s ast file.c\n", os.Args[0])
+			astCommand.PrintDefaults()
+			os.Exit(1)
+		}
+
+		args.ast = true
+		args.inputFile = astCommand.Arg(0)
+
+		Start(args)
+	case "transpile":
+		transpileCommand.Parse(os.Args[2:])
+
+		if *transpileHelpFlag || transpileCommand.NArg() == 0 {
+			fmt.Fprintf(os.Stderr, "Usage: %s transpile [-V] [-o file.go] [-p package] file.c\n", os.Args[0])
+			transpileCommand.PrintDefaults()
+			os.Exit(1)
+		}
+
+		args.inputFile = transpileCommand.Arg(0)
+		args.outputFile = *outputFlag
+		args.packageName = *packageFlag
+
+		Start(args)
+	default:
+		flag.Usage()
+		os.Exit(1)
+	}
 }

@@ -39,15 +39,15 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 
 	if operator == token.LAND {
 		left, err = types.CastExpr(p, left, leftType, "bool")
-		ast.WarningOrError(err, n, left == nil)
+		p.AddMessage(ast.GenerateWarningOrErrorMessage(err, n, left == nil))
 		if left == nil {
-			left = util.NewStringLit("nil")
+			left = util.NewNil()
 		}
 
 		right, err = types.CastExpr(p, right, rightType, "bool")
-		ast.WarningOrError(err, n, right == nil)
+		p.AddMessage(ast.GenerateWarningOrErrorMessage(err, n, right == nil))
 		if right == nil {
-			right = util.NewStringLit("nil")
+			right = util.NewNil()
 		}
 
 		return util.NewBinaryExpr(left, operator, right), "bool",
@@ -57,7 +57,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 	// Convert "(0)" to "nil" when we are dealing with equality.
 	if (operator == token.NEQ || operator == token.EQL) &&
 		types.IsNullExpr(right) {
-		right = goast.NewIdent("nil")
+		right = util.NewNil()
 	}
 
 	if operator == token.ASSIGN {
@@ -97,7 +97,8 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 
 			if _, ok := right.(*goast.UnaryExpr); ok {
 				deref, err := types.GetDereferenceType(rightType)
-				if !ast.IsWarning(err, n) {
+
+				if !p.AddMessage(ast.GenerateWarningMessage(err, n)) {
 					// This is some hackey to convert a reference to a variable
 					// into a slice that points to the same location. It will
 					// look similar to:
@@ -114,8 +115,8 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 				}
 			}
 
-			if ast.IsWarning(err, n) && right == nil {
-				right = util.NewStringLit("nil")
+			if p.AddMessage(ast.GenerateWarningMessage(err, n)) && right == nil {
+				right = util.NewNil()
 			}
 		}
 	}

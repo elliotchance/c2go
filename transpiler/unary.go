@@ -64,16 +64,14 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 		}
 
 		t, err := types.ResolveType(p, eType)
-		ast.IsWarning(err, n)
+		p.AddMessage(ast.GenerateWarningMessage(err, n))
 
 		p.AddImport("github.com/elliotchance/c2go/noarch")
 
 		functionName := fmt.Sprintf("noarch.Not%s", util.Ucfirst(t))
 
-		return &goast.CallExpr{
-			Fun:  goast.NewIdent(functionName),
-			Args: []goast.Expr{e},
-		}, eType, preStmts, postStmts, nil
+		return util.NewCallExpr(functionName, e),
+			eType, preStmts, postStmts, nil
 	}
 
 	// Dereferencing.
@@ -149,10 +147,10 @@ func transpileUnaryExprOrTypeTraitExpr(n *ast.UnaryExprOrTypeTraitExpr, p *progr
 	}
 
 	ty, err := types.ResolveType(p, n.Type1)
-	ast.IsWarning(err, n)
+	p.AddMessage(ast.GenerateWarningMessage(err, n))
 
 	sizeInBytes, err := types.SizeOf(p, t)
-	ast.IsWarning(err, n)
+	p.AddMessage(ast.GenerateWarningMessage(err, n))
 
 	return util.NewIntLit(sizeInBytes), ty, nil, nil, nil
 }

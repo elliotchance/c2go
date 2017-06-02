@@ -15,19 +15,6 @@ import (
 
 func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (
 	*goast.Ident, string, error) {
-	// TODO: System arguments are fixed variable names.
-	// https://github.com/elliotchance/c2go/issues/86
-	if n.Name == "argc" {
-		n.Name = "len(os.Args)"
-		n.Type = "int"
-		p.AddImport("os")
-	}
-	if n.Name == "argv" {
-		n.Name = "os.Args"
-		n.Type = "const char*"
-		p.AddImport("os")
-	}
-
 	return goast.NewIdent(n.Name), n.Type, nil
 }
 
@@ -45,7 +32,7 @@ func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
 	var values []goast.Expr
 	if !types.IsNullExpr(defaultValue) {
 		t, err := types.CastExpr(p, defaultValue, defaultValueType, a.Type)
-		if !ast.IsWarning(err, a) {
+		if !p.AddMessage(ast.GenerateWarningMessage(err, a)) {
 			values = []goast.Expr{t}
 		}
 	}
@@ -65,7 +52,7 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 	arrayType, arraySize := types.GetArrayTypeAndSize(a.Type)
 	if arraySize != -1 && defaultValue == nil {
 		goArrayType, err := types.ResolveType(p, arrayType)
-		ast.IsWarning(err, a)
+		p.AddMessage(ast.GenerateWarningMessage(err, a))
 
 		defaultValue = []goast.Expr{
 			util.NewCallExpr(
@@ -80,7 +67,7 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 	}
 
 	t, err := types.ResolveType(p, a.Type)
-	ast.IsWarning(err, a)
+	p.AddMessage(ast.GenerateWarningMessage(err, a))
 
 	return &goast.DeclStmt{
 		Decl: &goast.GenDecl{
@@ -125,7 +112,7 @@ func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) (
 			decls = append(decls, e)
 
 		case *ast.TypedefDecl:
-			ast.IsWarning(errors.New("cannot use TypedefDecl for DeclStmt"), c)
+			p.AddMessage(ast.GenerateWarningMessage(errors.New("cannot use TypedefDecl for DeclStmt"), c))
 
 		default:
 			panic(a)
@@ -182,13 +169,27 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	lhsResolvedType, err := types.ResolveType(p, lhsType)
-	ast.IsWarning(err, n)
+	p.AddMessage(ast.GenerateWarningMessage(err, n))
 
+	// lhsType will be something like "struct foo"
+	structType := p.Structs[lhsType]
 	rhs := n.Name
-
-	// FIXME: This should not be empty. We need some fallback type to catch
-	// errors like "unknown8".
-	rhsType := ""
+	rhsType := "void *"
+	if structType == nil {
+		// This case should not happen in the future. Any structs should be
+		// either parsed correctly from the source or be manually setup when the
+		// parser starts if the struct if hidden or shared between libraries.
+		//
+		// Some other things to keep in mind:
+		//   1. Types need to be stripped of their pointer, 'FILE *' -> 'FILE'.
+		//   2. Types may refer to one or more other types in a chain that have
+		//      to be resolved before the real field type can be determined.
+		err = errors.New("cannot determine type for '" + lhsType +
+			"', will use 'void *' for all fields")
+		p.AddMessage(ast.GenerateWarningMessage(err, n))
+	} else {
+		rhsType = structType.Fields[rhs].(string)
+	}
 
 	// FIXME: This is just a hack
 	if util.InStrings(lhsResolvedType, []string{"darwin.Float2", "darwin.Double2"}) {

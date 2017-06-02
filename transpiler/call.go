@@ -27,10 +27,6 @@ func getName(firstChild ast.Node) string {
 	case *ast.ParenExpr:
 		return getName(fc.Children[0])
 
-	case *ast.UnaryOperator:
-		ast.IsWarning(errors.New("cannot use UnaryOperator as function name"), firstChild)
-		return "UNKNOWN"
-
 	default:
 		panic(fmt.Sprintf("cannot CallExpr on: %#v", fc))
 	}
@@ -187,10 +183,12 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 			} else {
 				realArg, err = types.CastExpr(p, realArg, argTypes[i],
 					functionDef.ArgumentTypes[i])
-				ast.WarningOrError(err, n, realArg == nil)
+				p.AddMessage(
+					ast.GenerateWarningOrErrorMessage(err, n, realArg == nil),
+				)
 
 				if realArg == nil {
-					realArg = util.NewStringLit("nil")
+					realArg = util.NewNil()
 				}
 			}
 
@@ -207,8 +205,8 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 				a, err = types.CastExpr(p, a, argTypes[i],
 					functionDef.ArgumentTypes[i])
 
-				if ast.IsWarning(err, n) {
-					a = util.NewStringLit("nil")
+				if p.AddMessage(ast.GenerateWarningMessage(err, n)) {
+					a = util.NewNil()
 				}
 			}
 
@@ -216,8 +214,6 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 		}
 	}
 
-	return &goast.CallExpr{
-		Fun:  goast.NewIdent(functionName),
-		Args: realArgs,
-	}, functionDef.ReturnType, preStmts, postStmts, nil
+	return util.NewCallExpr(functionName, realArgs...),
+		functionDef.ReturnType, preStmts, postStmts, nil
 }

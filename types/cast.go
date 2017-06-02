@@ -47,16 +47,17 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 		return util.NewNil(), nil
 	}
 
+	if fromType == "null" && toType == "bool" {
+		return goast.NewIdent("false"), nil
+	}
+
 	// FIXME: This is a hack to avoid casting in some situations.
 	if fromType == "" || toType == "" {
 		return expr, nil
 	}
 
 	if fromType == "null" && toType == "[]byte" {
-		return &goast.BasicLit{
-			Kind:  token.STRING,
-			Value: `nil`,
-		}, nil
+		return util.NewNil(), nil
 	}
 
 	// if fromType == "null" && toType == "*string" {
@@ -158,18 +159,16 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 		//
 		//     string(expr[:size - 1])
 		//
-		return &goast.CallExpr{
-			Fun: goast.NewIdent("string"),
-			Args: []goast.Expr{
-				&goast.SliceExpr{
-					X: expr,
-					High: &goast.BasicLit{
-						Kind:  token.INT,
-						Value: strconv.Itoa(size - 1),
-					},
+		return util.NewCallExpr(
+			"string",
+			&goast.SliceExpr{
+				X: expr,
+				High: &goast.BasicLit{
+					Kind:  token.INT,
+					Value: strconv.Itoa(size - 1),
 				},
 			},
-		}, nil
+		), nil
 	}
 
 	// Anything that is a pointer can be compared to nil
@@ -177,18 +176,12 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 		return &goast.BinaryExpr{
 			X:  expr,
 			Op: token.NEQ,
-			Y: &goast.BasicLit{
-				Kind:  token.STRING,
-				Value: "nil",
-			},
+			Y:  util.NewNil(),
 		}, nil
 	}
 
 	if fromType == "int" && toType == "*int" {
-		return &goast.BasicLit{
-			Kind:  token.STRING,
-			Value: "nil",
-		}, nil
+		return util.NewNil(), nil
 	}
 	if fromType == "int" && toType == "*byte" {
 		return &goast.BasicLit{
@@ -202,10 +195,7 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 	}
 
 	if util.InStrings(fromType, types) && util.InStrings(toType, types) {
-		return &goast.CallExpr{
-			Fun:  goast.NewIdent(toType),
-			Args: []goast.Expr{expr},
-		}, nil
+		return util.NewCallExpr(toType, expr), nil
 	}
 
 	p.AddImport("github.com/elliotchance/c2go/noarch")
@@ -225,10 +215,7 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 	functionName := fmt.Sprintf("noarch.%sTo%s",
 		util.GetExportedName(leftName), util.GetExportedName(rightName))
 
-	return &goast.CallExpr{
-		Fun:  goast.NewIdent(functionName),
-		Args: []goast.Expr{expr},
-	}, nil
+	return util.NewCallExpr(functionName, expr), nil
 }
 
 func IsNullExpr(n goast.Expr) bool {

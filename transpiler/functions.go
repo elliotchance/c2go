@@ -14,6 +14,7 @@ import (
 	"github.com/elliotchance/c2go/util"
 
 	goast "go/ast"
+	"go/token"
 )
 
 // getFunctionBody returns the function body as a CompoundStmt. If the function
@@ -115,7 +116,7 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 		}
 
 		t, err := types.ResolveType(p, f.ReturnType)
-		ast.IsWarning(err, n)
+		p.AddMessage(ast.GenerateWarningMessage(err, n))
 
 		returnTypes := []*goast.Field{
 			&goast.Field{
@@ -127,13 +128,54 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 			// main() function does not have a return type.
 			returnTypes = []*goast.Field{}
 
+			// This collects statements that will be placed at the top of
+			// (before any other code) in main().
+			prependStmtsInMain := []goast.Stmt{}
+
 			// We also need to append a setup function that will instantiate
 			// some things that are expected to be available at runtime.
-			body.List = append([]goast.Stmt{
-				util.NewExprStmt(&goast.CallExpr{
-					Fun: goast.NewIdent("__init"),
-				}),
-			}, body.List...)
+			prependStmtsInMain = append(
+				prependStmtsInMain,
+				util.NewExprStmt(util.NewCallExpr("__init")),
+			)
+
+			// In Go, the main() function does not take the system arguments.
+			// Instead they are accessed through the os package. We create new
+			// variables in the main() function (if needed), immediately after
+			// the __init() for these variables.
+			if len(fieldList.List) > 0 {
+				p.AddImport("os")
+
+				prependStmtsInMain = append(
+					prependStmtsInMain,
+					&goast.ExprStmt{
+						X: util.NewBinaryExpr(
+							fieldList.List[0].Names[0],
+							token.DEFINE,
+							goast.NewIdent("len(os.Args)"),
+						),
+					},
+				)
+			}
+
+			if len(fieldList.List) > 1 {
+				prependStmtsInMain = append(
+					prependStmtsInMain,
+					&goast.ExprStmt{
+						X: util.NewBinaryExpr(
+							fieldList.List[1].Names[0],
+							token.DEFINE,
+							goast.NewIdent("os.Args"),
+						),
+					},
+				)
+			}
+
+			// Prepend statements for main().
+			body.List = append(prependStmtsInMain, body.List...)
+
+			// The main() function does not have arguments or a return value.
+			fieldList = &goast.FieldList{}
 		}
 
 		p.File.Decls = append(p.File.Decls, &goast.FuncDecl{
@@ -151,18 +193,13 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 	return nil
 }
 
-// getFieldList returns the paramaters of a C function as a Go AST FieldList.
+// getFieldList returns the parameters of a C function as a Go AST FieldList.
 func getFieldList(f *ast.FunctionDecl, p *program.Program) (*goast.FieldList, error) {
-	// The main() function does not have arguments or a return value.
-	if f.Name == "main" {
-		return &goast.FieldList{}, nil
-	}
-
 	r := []*goast.Field{}
 	for _, n := range f.Children {
 		if v, ok := n.(*ast.ParmVarDecl); ok {
 			t, err := types.ResolveType(p, v.Type)
-			ast.IsWarning(err, f)
+			p.AddMessage(ast.GenerateWarningMessage(err, f))
 
 			r = append(r, &goast.Field{
 				Names: []*goast.Ident{goast.NewIdent(v.Name)},
@@ -192,8 +229,8 @@ func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (
 	f := program.GetFunctionDefinition(p.Function.Name)
 
 	t, err := types.CastExpr(p, e, eType, f.ReturnType)
-	if ast.IsWarning(err, n) {
-		t = util.NewStringLit("nil")
+	if p.AddMessage(ast.GenerateWarningMessage(err, n)) {
+		t = util.NewNil()
 	}
 
 	results := []goast.Expr{t}
@@ -203,10 +240,8 @@ func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (
 		litExpr, isLiteral := e.(*goast.BasicLit)
 		if !isLiteral || (isLiteral && litExpr.Value != "0") {
 			p.AddImport("os")
-			return util.NewExprStmt(&goast.CallExpr{
-				Fun:  goast.NewIdent("os.Exit"),
-				Args: results,
-			}), preStmts, postStmts, nil
+			return util.NewExprStmt(util.NewCallExpr("os.Exit", results...)),
+				preStmts, postStmts, nil
 		}
 		results = []goast.Expr{}
 	}
