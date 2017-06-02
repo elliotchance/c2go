@@ -125,7 +125,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 
 			// var __temp string
 			preStmts = append(preStmts, &goast.DeclStmt{
-				&goast.GenDecl{
+				Decl: &goast.GenDecl{
 					Tok: token.VAR,
 					Specs: []goast.Spec{
 						&goast.ValueSpec{

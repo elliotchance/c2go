@@ -34,6 +34,9 @@ import (
 // See https://github.com/elliotchance/c2go/wiki/Release-Process
 const Version = "0.12.4"
 
+// ProgramArgs defines the options available when processing the program. There
+// is no constructor since the zeroed out values are the appropriaye defaults -
+// you need only set the options you need.
 type ProgramArgs struct {
 	verbose     bool
 	ast         bool
@@ -114,7 +117,7 @@ func buildTree(nodes []treeNode, depth int) []ast.Node {
 	return results
 }
 
-func ToJSON(tree []interface{}) []map[string]interface{} {
+func toJSON(tree []interface{}) []map[string]interface{} {
 	r := make([]map[string]interface{}, len(tree))
 
 	for j, n := range tree {
@@ -133,7 +136,7 @@ func ToJSON(tree []interface{}) []map[string]interface{} {
 					continue
 				}
 
-				value = ToJSON(v)
+				value = toJSON(v)
 			}
 
 			r[j][name] = value
@@ -143,12 +146,13 @@ func ToJSON(tree []interface{}) []map[string]interface{} {
 	return r
 }
 
-func Check(prefix string, e error) {
+func check(prefix string, e error) {
 	if e != nil {
 		panic(prefix + e.Error())
 	}
 }
 
+// Start begins transpiling an input file.
 func Start(args ProgramArgs) {
 	if os.Getenv("GOPATH") == "" {
 		panic("The $GOPATH must be set.")
@@ -156,27 +160,27 @@ func Start(args ProgramArgs) {
 
 	// 1. Compile it first (checking for errors)
 	_, err := os.Stat(args.inputFile)
-	Check("", err)
+	check("", err)
 
 	// 2. Preprocess
 	pp, err := exec.Command("clang", "-E", args.inputFile).Output()
-	Check("preprocess failed: ", err)
+	check("preprocess failed: ", err)
 
-	pp_file_path := path.Join(os.TempDir(), "pp.c")
-	err = ioutil.WriteFile(pp_file_path, pp, 0644)
-	Check("writing to /tmp/pp.c failed: ", err)
+	ppFilePath := path.Join(os.TempDir(), "pp.c")
+	err = ioutil.WriteFile(ppFilePath, pp, 0644)
+	check("writing to /tmp/pp.c failed: ", err)
 
 	// 3. Generate JSON from AST
-	ast_pp, err := exec.Command("clang", "-Xclang", "-ast-dump", "-fsyntax-only", pp_file_path).Output()
+	astPP, err := exec.Command("clang", "-Xclang", "-ast-dump", "-fsyntax-only", ppFilePath).Output()
 	if err != nil {
 		// If clang fails it still prints out the AST, so we have to run it
 		// again to get the real error.
-		errBody, _ := exec.Command("clang", pp_file_path).CombinedOutput()
+		errBody, _ := exec.Command("clang", ppFilePath).CombinedOutput()
 
 		panic("clang failed: " + err.Error() + ":\n\n" + string(errBody))
 	}
 
-	lines := readAST(ast_pp)
+	lines := readAST(astPP)
 	if args.ast {
 		for _, l := range lines {
 			fmt.Println(l)
@@ -205,7 +209,7 @@ func Start(args ProgramArgs) {
 	}
 
 	err = ioutil.WriteFile(outputFilePath, []byte(p.String()), 0755)
-	Check("writing C output file failed: ", err)
+	check("writing C output file failed: ", err)
 }
 
 func main() {
