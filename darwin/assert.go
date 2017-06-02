@@ -7,8 +7,8 @@ import (
 	"github.com/elliotchance/c2go/noarch"
 )
 
-func BuiltinExpect(a, b int) bool {
-	return a != b
+func BuiltinExpect(a, b int) int {
+	return noarch.BoolToInt(a != b)
 }
 
 func AssertRtn(functionName, filePath []byte, lineNumber int, expression []byte) bool {

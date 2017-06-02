@@ -55,6 +55,8 @@ func TestIntegrationScripts(t *testing.T) {
 
 	files := append(testFiles, exampleFiles...)
 
+	totalTapTests := 0
+
 	for _, file := range files {
 		// Create build folder
 		os.Mkdir("build/", os.ModePerm)
@@ -133,8 +135,11 @@ func TestIntegrationScripts(t *testing.T) {
 					t.Fatalf("Test did not output tap: %s", file)
 				}
 
-				fmt.Println(file + " TAP TESTS: " + matches[1])
+				fmt.Printf("%s: 1..%s ok\n", file, matches[1])
+				totalTapTests += util.Atoi(matches[1])
 			}
 		})
 	}
+
+	fmt.Printf("total: %d\n", totalTapTests)
 }

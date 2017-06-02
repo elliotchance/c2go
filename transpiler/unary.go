@@ -167,11 +167,8 @@ func transpileUnaryExprOrTypeTraitExpr(n *ast.UnaryExprOrTypeTraitExpr, p *progr
 		}
 	}
 
-	ty, err := types.ResolveType(p, n.Type1)
-	p.AddMessage(ast.GenerateWarningMessage(err, n))
-
 	sizeInBytes, err := types.SizeOf(p, t)
 	p.AddMessage(ast.GenerateWarningMessage(err, n))
 
-	return util.NewIntLit(sizeInBytes), ty, nil, nil, nil
+	return util.NewIntLit(sizeInBytes), n.Type1, nil, nil, nil
 }
