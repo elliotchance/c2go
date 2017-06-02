@@ -1,7 +1,6 @@
 package types
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -35,7 +34,7 @@ func SizeOf(p *program.Program, cType string) (int, error) {
 
 		s := p.Structs[cType[7:]]
 		if s == nil {
-			return 0, errors.New(fmt.Sprintf("could not sizeof: %s", cType))
+			return 0, fmt.Errorf("could not sizeof: %s", cType)
 		}
 
 		for _, t := range s.Fields {
@@ -91,7 +90,6 @@ func SizeOf(p *program.Program, cType string) (int, error) {
 		return 16, nil
 
 	default:
-		return pointerSize, errors.New(
-			fmt.Sprintf("cannot determine size of: %s", cType))
+		return pointerSize, fmt.Errorf("cannot determine size of: %s", cType)
 	}
 }

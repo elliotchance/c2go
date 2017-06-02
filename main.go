@@ -37,6 +37,9 @@ const Version = "0.12.4"
 // ProgramArgs defines the options available when processing the program. There
 // is no constructor since the zeroed out values are the appropriaye defaults -
 // you need only set the options you need.
+//
+// TODO: Better separation on CLI modes
+// https://github.com/elliotchance/c2go/issues/134
 type ProgramArgs struct {
 	verbose     bool
 	ast         bool

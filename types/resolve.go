@@ -76,6 +76,35 @@ var simpleResolveTypes = map[string]string{
 	"FILE":                         "github.com/elliotchance/c2go/noarch.File",
 }
 
+// ResolveType determines the Go type from a C type.
+//
+// Some basic examples are obvious, such as "float" in C would be "float32" in
+// Go. But there are also much more complicated examples, such as compound types
+// (structs and unions) and function pointers.
+//
+// Some general rules:
+//
+// 1. The Go type must be deterministic. The same C type will ALWAYS return the
+//    same Go type, in any condition. This is extremely important since the
+//    nature of C is that is may not have certain information avilable about the
+//    rest of the program or libraries when it is being compiled.
+//
+// 2. Many C type modifiers and properties are lost as they have no sensible or
+//    valid translation to Go. Some example of those would be "const" and
+//    "volatile". It is left be up to the clang (or other compiler) to warn if
+//    types are being abused against the standards in which they are being
+//    compiled under. Go will make no assumptions about how you expect it act,
+//    only how it is used.
+//
+// 3. New types are registered (discovered) throughout the transpiling of the
+//    program, so not all types are know at any given time. This works exactly
+//    the same way in a C compiler that will not let you use a type before it
+//    has been defined.
+//
+// 4. If all else fails an error is returned. However, a type (which is almost
+//    certainly incorrect) "interface{}" is also returned. This is to allow the
+//    transpiler to step over type errors and put something as a placeholder
+//    until a more suitable solution is found for those cases.
 func ResolveType(p *program.Program, s string) (string, error) {
 	// Remove any whitespace or attributes that are not relevant to Go.
 	s = strings.Replace(s, "const ", "", -1)
