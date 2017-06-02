@@ -40,11 +40,11 @@ func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, str
 
 func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 	name := n.Name
-	if name == "" || p.TypeIsAlreadyDefined(name) {
+	if name == "" || p.IsTypeAlreadyDefined(name) {
 		return nil
 	}
 
-	p.TypeIsNowDefined(name)
+	p.DefineType(name)
 
 	s := program.NewStruct(n)
 	p.Structs["struct "+s.Name] = s
@@ -97,11 +97,11 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 	name := n.Name
 
-	if p.TypeIsAlreadyDefined(name) {
+	if p.IsTypeAlreadyDefined(name) {
 		return nil
 	}
 
-	p.TypeIsNowDefined(name)
+	p.DefineType(name)
 
 	resolvedType, err := types.ResolveType(p, n.Type)
 	p.AddMessage(ast.GenerateWarningMessage(err, n))

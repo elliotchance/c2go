@@ -121,7 +121,7 @@ func ResolveType(p *program.Program, s string) (string, error) {
 	}
 
 	// If the type is already defined we can proceed with the same name.
-	if p.TypeIsAlreadyDefined(s) {
+	if p.IsTypeAlreadyDefined(s) {
 		return p.ImportType(s), nil
 	}
 

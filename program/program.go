@@ -87,11 +87,22 @@ func (p *Program) AddMessage(message string) bool {
 	return true
 }
 
-func (p *Program) TypeIsAlreadyDefined(typeName string) bool {
+// IsTypeAlreadyDefined will return true if the typeName has already been
+// defined.
+//
+// A type could be defined:
+//
+// 1. Initially. That is, before the transpilation starts (hard-coded).
+// 2. By calling DefineType throughout the transpilation.
+func (p *Program) IsTypeAlreadyDefined(typeName string) bool {
 	return util.InStrings(typeName, p.typesAlreadyDefined)
 }
 
-func (p *Program) TypeIsNowDefined(typeName string) {
+// DefineType will record a type as having already been defined. The purpose for
+// this is to not generate Go for a type more than once. C allows variables and
+// other entities (such as function prototypes) to be defined more than once in
+// some cases. An example of this would be static variables or functions.
+func (p *Program) DefineType(typeName string) {
 	p.typesAlreadyDefined = append(p.typesAlreadyDefined, typeName)
 }
 
