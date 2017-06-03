@@ -61,7 +61,7 @@ script:
       # covermode be set to "count" so that the coverage profiles can be merged
       # correctly together with gocovmerge.
       rm -f /tmp/out.txt
-      go list -f '{{if or (len .TestGoFiles) (len .XTestGoFiles)}}go test -v -tags=integration -race -covermode count -coverprofile {{.Name}}_{{len .Imports}}_{{len .Deps}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}{{end}} >> /tmp/out.txt' $PKGS | xargs -I {} bash -c {}
+      go list -f "{{if or (len .TestGoFiles) (len .XTestGoFiles)}}go test -v -tags=integration -race -covermode count -coverprofile {{.Name}}_{{len .Imports}}_{{len .Deps}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}{{end}} >> /tmp/out.txt" $PKGS | xargs -I {} bash -c {}
       if [ $? -ne 0 ]; then
         # Print out the failures (removing a lot of the noise).
         cat /tmp/out.txt | grep -v -- "--- PASS" | grep -v -- "=== RUN"
