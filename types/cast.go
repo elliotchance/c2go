@@ -81,6 +81,10 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 		return util.NewNil(), nil
 	}
 
+	if fromType == "null" && toType == "float64" {
+		return util.NewStringLit("0.0"), nil
+	}
+
 	if fromType == "null" && toType == "bool" {
 		return goast.NewIdent("false"), nil
 	}
@@ -205,6 +209,10 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 			Op: token.NEQ,
 			Y:  util.NewNil(),
 		}, nil
+	}
+
+	if fromType == "[]byte" && toType == "bool" {
+		return util.NewCallExpr("!noarch.CStringIsNull", expr), nil
 	}
 
 	if fromType == "int" && toType == "*int" {

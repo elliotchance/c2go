@@ -4,21 +4,28 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include "tests.h"
 
-#define START_TEST(t)         \
-    printf("\n--- %s\n", #t); \
+#define START_TEST(t) \
+    diag(#t);         \
     test_##t();
 
 void test_putchar()
 {
+    putchar('#');
     char c;
     for (c = 'A'; c <= 'Z'; c++)
         putchar(c);
+    putchar('\n');
+
+    pass("%s", "putchar");
 }
 
 void test_puts()
 {
-    puts("c2go");
+    puts("#c2go");
+
+    pass("%s", "puts");
 }
 
 void test_printf()
@@ -26,23 +33,29 @@ void test_printf()
     // TODO: printf() has a different syntax to Go
     // https://github.com/elliotchance/c2go/issues/94
 
-    printf("Characters: %c %c \n", 'a', 65);
+    printf("# Characters: %c %c \n", 'a', 65);
     //printf("Decimals: %d %ld\n", 1977, 650000L);
-    printf("Preceding with blanks: %10d \n", 1977);
-    printf("Preceding with zeros: %010d \n", 1977);
-    printf("Some different radices: %d %x %o %#x %#o \n", 100, 100, 100, 100, 100);
-    printf("floats: %4.2f %+.0e %E \n", 3.1416, 3.1416, 3.1416);
-    printf("Width trick: %*d \n", 5, 10);
-    printf("%s \n", "A string");
+    printf("# Preceding with blanks: %10d \n", 1977);
+    printf("# Preceding with zeros: %010d \n", 1977);
+    printf("# Some different radices: %d %x %o %#x %#o \n", 100, 100, 100, 100, 100);
+    printf("# floats: %4.2f %+.0e %E \n", 3.1416, 3.1416, 3.1416);
+    printf("# Width trick: %*d \n", 5, 10);
+    printf("# %s \n", "A string");
+
+    pass("%s", "printf");
 }
 
 void test_remove()
 {
     // TODO: This does not actually test successfully deleting a file.
     if (remove("myfile.txt") != 0)
-        puts("Error deleting file");
+    {
+        pass("%s", "error deleting file");
+    }
     else
-        puts("File successfully deleted");
+    {
+        fail("%s", "file successfully deleted");
+    }
 }
 
 void test_rename()
@@ -53,9 +66,13 @@ void test_rename()
     char newname[] = "newname.txt";
     result = rename(oldname, newname);
     if (result == 0)
-        puts("File successfully renamed");
+    {
+        fail("%s", "File successfully renamed");
+    }
     else
-        puts("Error renaming file");
+    {
+        pass("%s", "Error renaming file");
+    }
 }
 
 void test_fopen()
@@ -64,7 +81,7 @@ void test_fopen()
     pFile = fopen("/tmp/myfile.txt", "w");
     if (pFile != NULL)
     {
-        fputs("fopen example", pFile);
+        is_not_null(pFile);
         fclose(pFile);
     }
 }
@@ -97,7 +114,7 @@ void test_tmpnam()
     //     assert(buffer != NULL);
 
     pointer = tmpnam(NULL);
-    assert(pointer != NULL);
+    is_not_null(pointer);
 }
 
 void test_fclose()
@@ -112,17 +129,13 @@ void test_fflush()
 {
     char mybuffer[80];
     FILE *pFile;
-    pFile = fopen("example.txt", "r+");
-    if (pFile == NULL)
-        printf("Error opening file");
-    else
-    {
-        fputs("test", pFile);
-        fflush(pFile); // flushing or repositioning required
-        fgets(mybuffer, 80, pFile);
-        puts(mybuffer);
-        fclose(pFile);
-    }
+    pFile = fopen("/tmp/example.txt", "w+");
+    is_not_null(pFile) or_return();
+
+    fputs("test", pFile);
+    fflush(pFile); // flushing or repositioning required
+    fgets(mybuffer, 80, pFile);
+    fclose(pFile);
 }
 
 void test_fprintf()
@@ -132,7 +145,7 @@ void test_fprintf()
     char *name = "John Smith";
 
     pFile = fopen("/tmp/myfile1.txt", "w");
-    assert(pFile != NULL);
+    is_not_null(pFile);
 
     for (n = 0; n < 3; n++)
     {
@@ -154,15 +167,9 @@ void test_fscanf()
     fscanf(pFile, "%f", &f);
     fscanf(pFile, "%s", str);
     fclose(pFile);
-    printf("I have read: %f and %s \n", f, str);
-}
 
-void test_scanf()
-{
-    int i;
-
-    scanf("%d", &i);
-    printf("You enetered: %d\n", i);
+    is_eq(f, 3.1416);
+    is_streq(str, "PI");
 }
 
 void test_fgetc()
@@ -171,19 +178,17 @@ void test_fgetc()
     int c;
     int n = 0;
     pFile = fopen("tests/stdio.c", "r");
-    if (pFile == NULL)
-        printf("Error opening file");
-    else
+    is_not_null(pFile);
+
+    do
     {
-        do
-        {
-            c = fgetc(pFile);
-            if (c == '$')
-                n++;
-        } while (c != EOF);
-        fclose(pFile);
-        printf("The file contains %d dollar sign characters ($).\n", n);
-    }
+        c = fgetc(pFile);
+        if (c == '$')
+            n++;
+    } while (c != EOF);
+    fclose(pFile);
+
+    is_eq(n, 2);
 }
 
 void test_fgets()
@@ -193,23 +198,22 @@ void test_fgets()
     char dummy[20];
 
     pFile = fopen("tests/stdio.c", "r");
-    if (pFile == NULL)
-        printf("Error opening file");
-    else
-    {
-        mystring = fgets(dummy, 20, pFile);
-        if (mystring != NULL)
-            puts(mystring);
-        fclose(pFile);
-    }
+    is_not_null(pFile);
+
+    mystring = fgets(dummy, 20, pFile);
+    is_not_null(mystring);
+
+    fclose(pFile);
 }
 
 void test_fputc()
 {
     char c;
 
+    fputc('#', stdout);
     for (c = 'A'; c <= 'Z'; c++)
         fputc(c, stdout);
+    fputc('\n', stdout);
 }
 
 void test_fputs()
@@ -228,19 +232,17 @@ void test_getc()
     int c;
     int n = 0;
     pFile = fopen("tests/stdio.c", "r");
-    if (pFile == NULL)
-        printf("Error opening file");
-    else
+    is_not_null(pFile);
+
+    do
     {
-        do
-        {
-            c = getc(pFile);
-            if (c == '$')
-                n++;
-        } while (c != EOF);
-        fclose(pFile);
-        printf("File contains %d$.\n", n);
-    }
+        c = getc(pFile);
+        if (c == '$')
+            n++;
+    } while (c != EOF);
+    fclose(pFile);
+
+    is_eq(n, 2);
 }
 
 void test_putc()
@@ -272,15 +274,13 @@ void test_ftell()
     long size;
 
     pFile = fopen("tests/stdio.c", "r");
-    if (pFile == NULL)
-        printf("Error opening file");
-    else
-    {
-        fseek(pFile, 0, SEEK_END); // non-portable
-        size = ftell(pFile);
-        fclose(pFile);
-        printf("Size of myfile.txt: %d bytes.\n", size);
-    }
+    is_not_null(pFile);
+
+    fseek(pFile, 0, SEEK_END); // non-portable
+    size = ftell(pFile);
+    fclose(pFile);
+
+    is_eq(size, 7974);
 }
 
 void test_fread()
@@ -291,32 +291,23 @@ void test_fread()
     int result;
 
     pFile = fopen("tests/getchar.c", "r");
-    if (pFile == NULL)
-    {
-        fputs("File error", stderr);
-        return;
-    }
+    is_not_null(pFile);
 
     // obtain file size:
     fseek(pFile, 0, SEEK_END);
     lSize = ftell(pFile);
-    printf("lSize = %d\n", lSize);
+    is_eq(lSize, 301);
+
     rewind(pFile);
 
     // copy the file into the buffer:
     result = fread(buffer, 1, lSize, pFile);
-    if (result != lSize)
-    {
-        fputs("Reading error", stderr);
-        return;
-    }
+    is_eq(result, lSize);
 
     // See issue #107
     buffer[lSize - 1] = 0;
-    
-    printf("%s", buffer);
 
-    /* the whole file is now loaded in the memory buffer. */
+    is_eq(strlen(buffer), 300);
 
     // terminate
     fclose(pFile);
@@ -325,7 +316,6 @@ void test_fread()
 void test_fwrite()
 {
     FILE *pFile;
-    // char *buffer = ;
     pFile = fopen("/tmp/myfile.bin", "w");
     fwrite("xyz", 1, 3, pFile);
     fclose(pFile);
@@ -339,21 +329,20 @@ void test_fgetpos()
     fpos_t pos;
 
     pFile = fopen("tests/stdio.c", "r");
-    if (pFile == NULL)
-        printf("Error opening file");
-    else
+    is_not_null(pFile);
+
+    c = fgetc(pFile);
+    is_eq(c, '/');
+
+    fgetpos(pFile, &pos);
+    for (n = 0; n < 3; n++)
     {
+        fsetpos(pFile, &pos);
         c = fgetc(pFile);
-        printf("1st character is %c\n", c);
-        fgetpos(pFile, &pos);
-        for (n = 0; n < 3; n++)
-        {
-            fsetpos(pFile, &pos);
-            c = fgetc(pFile);
-            printf("2nd character is %c\n", c);
-        }
-        fclose(pFile);
+        is_eq(c, '/');
     }
+
+    fclose(pFile);
 }
 
 void test_fsetpos()
@@ -382,7 +371,8 @@ void test_rewind()
     fread(buffer, 1, 26, pFile);
     fclose(pFile);
     buffer[26] = '\0';
-    puts(buffer);
+
+    is_eq(strlen(buffer), 26);
 }
 
 void test_feof()
@@ -390,27 +380,29 @@ void test_feof()
     FILE *pFile;
     int n = 0;
     pFile = fopen("tests/stdio.c", "r");
-    if (pFile == NULL)
-        printf("Error opening file");
+    is_not_null(pFile);
+
+    while (fgetc(pFile) != EOF)
+    {
+        ++n;
+    }
+    if (feof(pFile))
+    {
+        pass("%s", "End-of-File reached.");
+        is_eq(n, 7977);
+    }
     else
     {
-        while (fgetc(pFile) != EOF)
-        {
-            ++n;
-        }
-        if (feof(pFile))
-        {
-            puts("End-of-File reached.");
-            printf("Total number of bytes read: %d\n", n);
-        }
-        else
-            puts("End-of-File was not reached.");
-        fclose(pFile);
+        fail("%s", "End-of-File was not reached.");
     }
+
+    fclose(pFile);
 }
 
 int main()
 {
+    plan(33);
+
     START_TEST(putchar)
     START_TEST(puts)
     START_TEST(printf)
@@ -424,7 +416,6 @@ int main()
     START_TEST(printf)
     START_TEST(fprintf)
     START_TEST(fscanf)
-    START_TEST(scanf)
     START_TEST(fgetc)
     START_TEST(fgets)
     START_TEST(fputc)
@@ -440,5 +431,5 @@ int main()
     START_TEST(rewind)
     START_TEST(feof)
 
-    return 0;
+    done_testing();
 }

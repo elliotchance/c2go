@@ -8,8 +8,8 @@ import (
 )
 
 // BuiltinExpect handles __builtin_expect().
-func BuiltinExpect(a, b int) bool {
-	return a != b
+func BuiltinExpect(a, b int) int {
+	return noarch.BoolToInt(a != b)
 }
 
 // AssertRtn handles __assert_rtn().

@@ -37,5 +37,11 @@ func Atoi(s string) int {
 }
 
 func GetExportedName(field string) string {
+	// Convert "[]byte" into "byteSlice". This also works with multiple slices,
+	// like "[][]byte" to "byteSliceSlice".
+	for field[:2] == "[]" {
+		field = field[2:] + "Slice"
+	}
+
 	return Ucfirst(strings.TrimLeft(field, "*_"))
 }

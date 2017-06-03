@@ -54,6 +54,10 @@ type Program struct {
 	// transpiling the AST. These messages, which are code comments, are
 	// appended to the very top of the output file. See AddMessage().
 	messages []string
+
+	// A map of all the global variables (variables that exist outside of a
+	// function) and their types.
+	GlobalVariables map[string]string
 }
 
 // NewProgram creates a new blank program.
@@ -65,6 +69,7 @@ func NewProgram() *Program {
 		Structs:             make(map[string]*Struct),
 		Verbose:             false,
 		messages:            []string{},
+		GlobalVariables:     map[string]string{},
 	}
 }
 

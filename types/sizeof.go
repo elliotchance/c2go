@@ -32,7 +32,7 @@ func SizeOf(p *program.Program, cType string) (int, error) {
 	if strings.HasPrefix(cType, "struct ") {
 		totalBytes := 0
 
-		s := p.Structs[cType[7:]]
+		s := p.Structs[cType]
 		if s == nil {
 			return 0, fmt.Errorf("could not sizeof: %s", cType)
 		}
