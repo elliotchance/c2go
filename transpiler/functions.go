@@ -165,8 +165,29 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 						X: util.NewBinaryExpr(
 							fieldList.List[1].Names[0],
 							token.DEFINE,
-							goast.NewIdent("os.Args"),
+							goast.NewIdent("[][]byte{}"),
 						),
+					},
+					&goast.RangeStmt{
+						Key:   goast.NewIdent("_"),
+						Value: goast.NewIdent("argvSingle"),
+						Tok:   token.DEFINE,
+						X:     goast.NewIdent("os.Args"),
+						Body: &goast.BlockStmt{
+							List: []goast.Stmt{
+								&goast.ExprStmt{
+									X: util.NewBinaryExpr(
+										fieldList.List[1].Names[0],
+										token.ASSIGN,
+										util.NewCallExpr(
+											"append",
+											fieldList.List[1].Names[0],
+											goast.NewIdent("[]byte(argvSingle)"),
+										),
+									),
+								},
+							},
+						},
 					},
 				)
 			}
@@ -235,7 +256,8 @@ func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (
 
 	results := []goast.Expr{t}
 
-	// main() function is not allowed to return a result. Use os.Exit if non-zero
+	// main() function is not allowed to return a result. Use os.Exit if
+	// non-zero.
 	if p.Function != nil && p.Function.Name == "main" {
 		litExpr, isLiteral := e.(*goast.BasicLit)
 		if !isLiteral || (isLiteral && litExpr.Value != "0") {

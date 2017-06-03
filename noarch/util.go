@@ -24,3 +24,11 @@ func NullTerminatedByteSlice(s []byte) string {
 
 	return string(newSlice)
 }
+
+func CStringIsNull(s []byte) bool {
+	if s == nil || len(s) < 1 {
+		return true
+	}
+
+	return s[0] == 0
+}

@@ -47,6 +47,10 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 		return util.NewNil(), nil
 	}
 
+	if fromType == "null" && toType == "float64" {
+		return util.NewStringLit("0.0"), nil
+	}
+
 	if fromType == "null" && toType == "bool" {
 		return goast.NewIdent("false"), nil
 	}
@@ -59,13 +63,6 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 	if fromType == "null" && toType == "[]byte" {
 		return util.NewNil(), nil
 	}
-
-	// if fromType == "null" && toType == "*string" {
-	// 	return &goast.BasicLit{
-	// 		Kind:  token.STRING,
-	// 		Value: `""`,
-	// 	}, nil
-	// }
 
 	// This if for linux.
 	if fromType == "*_IO_FILE" && toType == "*noarch.File" {
@@ -178,6 +175,10 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 			Op: token.NEQ,
 			Y:  util.NewNil(),
 		}, nil
+	}
+
+	if fromType == "[]byte" && toType == "bool" {
+		return util.NewCallExpr("!noarch.CStringIsNull", expr), nil
 	}
 
 	if fromType == "int" && toType == "*int" {

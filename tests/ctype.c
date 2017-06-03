@@ -2,204 +2,72 @@
 
 #include <stdio.h>
 #include <ctype.h>
+#include "tests.h"
 
-char* strnul = "this string has a \0 NUL";
+#define T is_true
+#define F is_false
+
+#define CTYPE(functionName, A, B, C, D, E, F, G, H) \
+  diag(#functionName);                              \
+  A(functionName('a'));                             \
+  B(functionName('B'));                             \
+  C(functionName('0'));                             \
+  D(functionName('*'));                             \
+  E(functionName('\0'));                            \
+  F(functionName(' '));                             \
+  G(functionName('\n'));                            \
+  H(functionName('z'));
+
+// This is just helpful for alignment.
+#define _CTYPE CTYPE
+
+char *strnul = "this string has a \0 NUL";
 char arrnul[] = "this string has a \0 NUL";
-
-void test_isalnum()
-{
-  int i;
-  char str[] = "c3po...";
-  i = 0;
-  while (isalnum(str[i]))
-  {
-    i++;
-  }
-  printf("The first %d characters are alphanumeric.\n", i);
-}
-
-void test_isalpha()
-{
-  int i = 0;
-  char str[] = "C++";
-  while (str[i])
-  {
-    if (isalpha(str[i]))
-      printf("character %c is alphabetic\n", str[i]);
-    else
-      printf("character %c is not alphabetic\n", str[i]);
-    i++;
-  }
-}
-
-void test_iscntrl()
-{
-  int i = 0;
-  char str[] = "first line \n second line \n";
-  while (!iscntrl(str[i]))
-  {
-    putchar(str[i]);
-    i++;
-  }
-}
-
-void test_isdigit()
-{
-  char str[] = "1776ad";
-  int year;
-  if (isdigit(str[0]))
-  {
-    year = atoi(str);
-    printf("The year that followed %d was %d.\n", year, year + 1);
-  }
-}
-
-void test_isgraph()
-{
-  int var1 = '3';
-  int var2 = 'm';
-
-  if (isgraph(var1))
-  {
-    printf("var1 = |%c| can be printed\n", var1);
-  }
-  else
-  {
-    printf("var1 = |%c| can't be printed\n", var1);
-  }
-
-  if (isgraph(var2))
-  {
-    printf("var2 = |%c| can be printed\n", var2);
-  }
-  else
-  {
-    printf("var2 = |%c| can't be printed\n", var2);
-  }
-}
-
-void test_islower()
-{
-  int i = 0;
-  char str[] = "Test String.\n";
-  char c;
-  while (str[i])
-  {
-    c = str[i];
-    if (islower(c))
-      c = toupper(c);
-    putchar(c);
-    i++;
-  }
-}
-
-void test_isprint()
-{
-  int i = 0;
-  char str[] = "first line \n second line \n";
-  while (isprint(str[i]))
-  {
-    putchar(str[i]);
-    i++;
-  }
-}
-
-void test_ispunct()
-{
-  int i = 0;
-  int cx = 0;
-  char str[] = "Hello, welcome!";
-  while (str[i])
-  {
-    if (ispunct(str[i]))
-      cx++;
-    i++;
-  }
-  printf("Sentence contains %d punctuation characters.\n", cx);
-}
-
-void test_isspace()
-{
-  char c;
-  int i = 0;
-  char str[] = "Example sentence to test isspace\n";
-  while (str[i])
-  {
-    c = str[i];
-    if (isspace(c))
-      c = '\n';
-    putchar(c);
-    i++;
-  }
-}
-
-void test_isupper()
-{
-  int i = 0;
-  char str[] = "Test String.\n";
-  char c;
-  while (str[i])
-  {
-    c = str[i];
-    if (isupper(c))
-      c = tolower(c);
-    putchar(c);
-    i++;
-  }
-}
-
-void test_isxdigit()
-{
-  char str[] = "ffff";
-  long int number;
-  if (isxdigit(str[0]))
-  {
-    number = strtol(str, NULL, 16);
-    printf("The hexadecimal number %d is %d.\n", number, number);
-  }
-}
-
-void test_tolower()
-{
-  int i = 0;
-  char str[] = "Test String.\n";
-  char c;
-  while (str[i])
-  {
-    c = str[i];
-    putchar(tolower(c));
-    i++;
-  }
-}
-
-void test_toupper()
-{
-  int i = 0;
-  char str[] = "Test String.\n";
-  char c;
-  while (str[i])
-  {
-    c = str[i];
-    putchar(toupper(c));
-    i++;
-  }
-}
 
 int main()
 {
-  test_isalnum();
-  test_isalpha();
-  test_iscntrl();
-  test_isdigit();
-  test_isgraph();
-  test_islower();
-  test_isprint();
-  test_ispunct();
-  test_isspace();
-  test_isupper();
-  test_isxdigit();
-  test_tolower();
-  test_toupper();
+  plan(104);
 
-  return 0;
+  //              . Lower alpha (a)
+  //              |  . Upper alpha (B)
+  //              |  |  . Digit (0)
+  //              |  |  |  . Punctuation (*)
+  //              |  |  |  |  . NULL
+  //              |  |  |  |  |  . Space
+  //              |  |  |  |  |  |  . New line
+  //              |  |  |  |  |  |  |  . Non-hex digit (z)
+  //              v  v  v  v  v  v  v  v
+  _CTYPE(isalnum, T, T, T, F, F, F, F, T);
+  _CTYPE(isalpha, T, T, F, F, F, F, F, T);
+  _CTYPE(iscntrl, F, F, F, F, T, F, T, F);
+  _CTYPE(isdigit, F, F, T, F, F, F, F, F);
+  _CTYPE(isgraph, T, T, T, T, F, F, F, T);
+  _CTYPE(islower, T, F, F, F, F, F, F, T);
+  _CTYPE(isprint, T, T, T, T, F, T, F, T);
+  _CTYPE(ispunct, F, F, F, T, F, F, F, F);
+  _CTYPE(isspace, F, F, F, F, F, T, T, F);
+  _CTYPE(isupper, F, T, F, F, F, F, F, F);
+  CTYPE(isxdigit, T, T, T, F, F, F, F, F);
+
+  diag("tolower");
+  is_eq(tolower('a'), 'a');
+  is_eq(tolower('B'), 'b');
+  is_eq(tolower('0'), '0');
+  is_eq(tolower('*'), '*');
+  is_eq(tolower('\0'), '\0');
+  is_eq(tolower(' '), ' ');
+  is_eq(tolower('\n'), '\n');
+  is_eq(tolower('z'), 'z');
+
+  diag("toupper");
+  is_eq(toupper('a'), 'A');
+  is_eq(toupper('B'), 'B');
+  is_eq(toupper('0'), '0');
+  is_eq(toupper('*'), '*');
+  is_eq(toupper('\0'), '\0');
+  is_eq(toupper(' '), ' ');
+  is_eq(toupper('\n'), '\n');
+  is_eq(toupper('z'), 'Z');
+
+  done_testing();
 }

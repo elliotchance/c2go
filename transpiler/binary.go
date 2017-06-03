@@ -38,7 +38,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 	operator := getTokenForOperator(n.Operator)
 	returnType := types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType)
 
-	if operator == token.LAND {
+	if operator == token.LAND || operator == token.LOR {
 		left, err = types.CastExpr(p, left, leftType, "bool")
 		p.AddMessage(ast.GenerateWarningOrErrorMessage(err, n, left == nil))
 		if left == nil {
@@ -55,10 +55,18 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 			preStmts, postStmts, nil
 	}
 
-	// Convert "(0)" to "nil" when we are dealing with equality.
-	if (operator == token.NEQ || operator == token.EQL) &&
-		types.IsNullExpr(right) {
-		right = util.NewNil()
+	if operator == token.NEQ || operator == token.EQL {
+		// Convert "(0)" to "nil" when we are dealing with equality.
+		if types.IsNullExpr(right) {
+			right = util.NewNil()
+		} else {
+			// We may have to cast the right side to the same type as the left
+			// side. This is a bit crude because we should make a better
+			// decision of which type to cast to instead of only using the type
+			// of the left side.
+			right, err = types.CastExpr(p, right, rightType, leftType)
+			p.AddMessage(ast.GenerateWarningOrErrorMessage(err, n, right == nil))
+		}
 	}
 
 	if operator == token.ASSIGN {

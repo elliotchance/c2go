@@ -1,38 +1,49 @@
 #include <stdio.h>
+#include "tests.h"
 
 int main()
 {
+    plan(19);
+
     int i = 0;
 
-    // Missing init
-    for (; i < 10; i++)
-        printf("%d\n", i);
+    diag("Missing init");
+    for (; i < 3; i++)
+        pass("%d", i);
 
-    // CompountStmt
-    for (i = 0; i < 10; i++) {
-        printf("%d\n", i);
+    diag("CompountStmt");
+    for (i = 0; i < 3; i++)
+    {
+        pass("%d", i);
     }
 
-    // Not CompoundStmt
-    for (i = 0; i < 10; i++)
-        printf("%d\n", i);
+    diag("Not CompountStmt");
+    for (i = 0; i < 3; i++)
+        pass("%d", i);
 
-    // Infinite loop
+    diag("Infinite loop");
     int j = 0;
-    for (;;) {
-        printf("infinite loop\n");
+    for (;;)
+    {
+        pass("%d", j);
         j++;
-        if (j > 10)
+        if (j > 3)
             break;
     }
 
-    // continue
-    i = 0; j = 0;
-    for(;;) {
-        printf("%d %d\n", i, j);
+    diag("continue");
+    i = 0;
+    j = 0;
+    for (;;)
+    {
+        pass("%d %d", i, j);
         i++;
-        if (i < 3) continue;
+        if (i < 3)
+            continue;
         j++;
-        if (j > 3) break;
+        if (j > 3)
+            break;
     }
+
+    done_testing();
 }
