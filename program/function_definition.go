@@ -80,9 +80,12 @@ var builtInFunctionDefinitions = []string{
 	"int __signbitf(float) -> noarch.Signbitf",
 	"int __signbit(double) -> noarch.Signbitd",
 	"int __signbitl(long double) -> noarch.Signbitl",
-	"int __isnanf(float) -> linux.Isnanf",
+	"int __isnanf(float) -> linux.IsNanf",
 	"int __isnan(double) -> math.IsNaN",
 	"int __isnanl(long double) -> math.IsNaN",
+	"int __isinff(float) -> linux.IsInff",
+	"int __isinf(float) -> linux.IsInf",
+	"int __isinfl(long double) -> linux.IsInf",
 
 	// darwin/math.h
 	"double __builtin_fabs(double) -> darwin.Fabs",
