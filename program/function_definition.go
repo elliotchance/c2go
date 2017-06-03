@@ -84,7 +84,7 @@ var builtInFunctionDefinitions = []string{
 	"int __isnan(double) -> math.IsNaN",
 	"int __isnanl(long double) -> math.IsNaN",
 	"int __isinff(float) -> linux.IsInff",
-	"int __isinf(float) -> linux.IsInf",
+	"int __isinf(double) -> linux.IsInf",
 	"int __isinfl(long double) -> linux.IsInf",
 
 	// darwin/math.h
