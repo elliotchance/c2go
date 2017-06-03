@@ -60,14 +60,11 @@ script:
       # so that all the test names are printed. It's also important that the
       # covermode be set to "count" so that the coverage profiles can be merged
       # correctly together with gocovmerge.
+      #
+      # Exit code 123 will be returned if any of the tests fail.
       rm -f /tmp/out.txt
       go list -f 'go test -v -tags=integration -race -covermode count -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS |
-        xargs -I{} bash -c '{} >> /tmp/out.txt'
-      if [ $? -ne 0 ]; then
-        # Print out the failures (removing a lot of the noise).
-        cat /tmp/out.txt | grep -v -- "--- PASS" | grep -v -- "=== RUN"
-        exit 1
-      fi
+        xargs -I{} bash -c '{}'
 
       # Merge coverage profiles.
       COVERAGE_FILES=`ls -1 *.coverprofile 2>/dev/null | wc -l`
@@ -95,3 +92,7 @@ script:
 
 after_success:
   - include_cov=coverage.txt bash <(curl -s https://codecov.io/bash)
+
+after_failure:
+  # Print out the failures (removing a lot of the noise).
+  - cat /tmp/out.txt | grep -v -- "--- PASS" | grep -v -- "=== RUN"
