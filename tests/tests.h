@@ -215,14 +215,22 @@ static int last_test_was_ok = 1;
 // Check that a floating-point value is positive or negative infinity. A sign of
 // less than 0 will check for -inf and a sign greater than 0 will check for
 // +inf. A sign of 0 will always cause a failure.
-#define is_inf(actual, sign)                                                              \
-    if (isinf(actual) == 1 && ((sign > 0 && (actual) > 0) || (sign < 0 && (actual) < 0))) \
-    {                                                                                     \
-        pass("isinf(%s, %d)", #actual, sign)                                              \
-    }                                                                                     \
-    else                                                                                  \
-    {                                                                                     \
-        fail("isinf(%s, %d) # got %d", #actual, sign, isinf(actual))                      \
+//
+// Mac and Linux check for infinity in different ways; either by using isinf()
+// or comparing directly with an INFINITY constant. We always use both methods.
+// This is separate checking the sign of the infinity.
+#define is_inf(actual, sign)                                                                    \
+    {                                                                                           \
+        int linuxInf = ((actual) == -INFINITY || (actual) == INFINITY);                         \
+        int macInf = (isinf(actual) == 1);                                                      \
+        if ((linuxInf || macInf) && ((sign > 0 && (actual) > 0) || (sign < 0 && (actual) < 0))) \
+        {                                                                                       \
+            pass("isinf(%s, %d)", #actual, sign)                                                \
+        }                                                                                       \
+        else                                                                                    \
+        {                                                                                       \
+            fail("isinf(%s, %d) # got %f", #actual, sign, actual)                               \
+        }                                                                                       \
     }
 
 // Check that a value is a negative-zero. See isnegzero() for more information.

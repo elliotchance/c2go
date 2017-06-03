@@ -15,3 +15,7 @@ func Signbitd(x float64) int {
 func Signbitl(x float64) int {
 	return BoolToInt(math.Signbit(x))
 }
+
+func IsNaN(x float64) int {
+	return BoolToInt(math.IsNaN(x))
+}
