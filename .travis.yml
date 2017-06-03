@@ -77,6 +77,7 @@ script:
 
       # Print stats
       echo "Unit tests: " $(grep "=== RUN" /tmp/out.txt | wc -l)
+      echo "Integration tests: " $(grep "# Total tests" /tmp/out.txt | cut -c21-)
 
   # These steps are from the README to verify it can be installed and run as
   # documented.

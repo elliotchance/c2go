@@ -4,6 +4,7 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -54,6 +55,8 @@ func TestIntegrationScripts(t *testing.T) {
 	}
 
 	files := append(testFiles, exampleFiles...)
+
+	isVerbose := flag.CommandLine.Lookup("test.v").Value.String() == "true"
 
 	totalTapTests := 0
 
@@ -111,22 +114,27 @@ func TestIntegrationScripts(t *testing.T) {
 
 			// Check if both exit codes are zero (or non-zero)
 			if cProgram.isZero != goProgram.isZero {
-				t.Fatalf("Exit statuses did not match.\n" + util.ShowDiff(cProgram.stdout.String(), goProgram.stdout.String()))
-				// t.Fatalf("Expected: %t, Got: %t", cProgram.isZero, goProgram.isZero)
+				t.Fatalf("Exit statuses did not match.\n" +
+					util.ShowDiff(cProgram.stdout.String(),
+						goProgram.stdout.String()),
+				)
 			}
 
 			// Check stderr
 			if cProgram.stderr.String() != goProgram.stderr.String() {
-				t.Fatalf("Expected %q, Got: %q", cProgram.stderr.String(), goProgram.stderr.String())
+				t.Fatalf("Expected %q, Got: %q",
+					cProgram.stderr.String(),
+					goProgram.stderr.String())
 			}
 
 			// Check stdout
 			if cProgram.stdout.String() != goProgram.stdout.String() {
-				t.Fatalf(util.ShowDiff(cProgram.stdout.String(), goProgram.stdout.String()))
+				t.Fatalf(util.ShowDiff(cProgram.stdout.String(),
+					goProgram.stdout.String()))
 			}
 
 			// If this is not an example we will extact the number of tests run.
-			if strings.Index(file, "examples/") == -1 {
+			if strings.Index(file, "examples/") == -1 && isVerbose {
 				firstLine := strings.Split(goProgram.stdout.String(), "\n")[0]
 
 				matches := regexp.MustCompile(`1\.\.(\d+)`).
@@ -135,11 +143,13 @@ func TestIntegrationScripts(t *testing.T) {
 					t.Fatalf("Test did not output tap: %s", file)
 				}
 
-				fmt.Printf("%s: 1..%s ok\n", file, matches[1])
+				fmt.Printf("TAP: # %s: %s tests\n", file, matches[1])
 				totalTapTests += util.Atoi(matches[1])
 			}
 		})
 	}
 
-	fmt.Printf("total: %d\n", totalTapTests)
+	if isVerbose {
+		fmt.Printf("TAP: # Total tests: %d\n", totalTapTests)
+	}
 }
