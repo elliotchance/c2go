@@ -206,7 +206,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 			p.AddImports("github.com/elliotchance/c2go/noarch", "os")
 			p.AppendStartupExpr(
 				util.NewBinaryExpr(
-					util.NewIdent(name),
+					goast.NewIdent(name),
 					token.ASSIGN,
 					util.NewCallExpr(
 						"noarch.NewFile",
@@ -221,7 +221,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 			p.AddImports("github.com/elliotchance/c2go/noarch", "os")
 			p.AppendStartupExpr(
 				util.NewBinaryExpr(
-					util.NewIdent(name),
+					goast.NewIdent(name),
 					token.ASSIGN,
 					util.NewCallExpr(
 						"noarch.NewFile",

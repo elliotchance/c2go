@@ -90,6 +90,12 @@ func NewFuncClosure(returnType string, stmts ...goast.Stmt) *goast.CallExpr {
 	}
 }
 
+// NewBinaryExpr create a new Go AST binary expression with a left, operator and
+// right operand.
+//
+// You should use this instead of BinaryExpr directly so that nil left and right
+// operands can be caught (and panic) before Go tried to render the source -
+// which would result in a very hard to debug error.
 func NewBinaryExpr(left goast.Expr, operator token.Token, right goast.Expr) *goast.BinaryExpr {
 	PanicIfNil(left, "left is nil")
 	PanicIfNil(right, "right is nil")
@@ -101,20 +107,7 @@ func NewBinaryExpr(left goast.Expr, operator token.Token, right goast.Expr) *goa
 	}
 }
 
-func NewIdent(name string) goast.Expr {
-	return goast.NewIdent(name)
-}
-
-func NewIdents(names ...string) []goast.Expr {
-	idents := []goast.Expr{}
-
-	for _, name := range names {
-		idents = append(idents, goast.NewIdent(name))
-	}
-
-	return idents
-}
-
+// NewStringLit returns a new Go basic literal with a string value.
 func NewStringLit(value string) *goast.BasicLit {
 	return &goast.BasicLit{
 		Kind:  token.STRING,
@@ -122,6 +115,7 @@ func NewStringLit(value string) *goast.BasicLit {
 	}
 }
 
+// NewIntLit returns a new Go basic literal with an integer value.
 func NewIntLit(value int) *goast.BasicLit {
 	return &goast.BasicLit{
 		Kind:  token.INT,
@@ -129,6 +123,7 @@ func NewIntLit(value int) *goast.BasicLit {
 	}
 }
 
+// NewNil returns a Go AST identity that can be used to represent "nil".
 func NewNil() *goast.Ident {
 	return goast.NewIdent("nil")
 }
