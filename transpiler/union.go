@@ -101,8 +101,6 @@ func transpileUnion(name string, size int, fields []*goast.Field) []goast.Decl {
         },
     }
 
-    return res
-
     for _, f := range fields {
         field_id := strings.Title(f.Names[0].Name)
 

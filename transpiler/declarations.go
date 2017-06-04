@@ -77,8 +77,10 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
         p.AddImports("reflect", "unsafe")
 
         // Union size
-        size, err := types.SizeOf(p, name)
+        size, err := types.SizeOf(p, "union "+name)
         if err != nil {
+            fmt.Println("Error:", err)
+
             return err
         }
 
