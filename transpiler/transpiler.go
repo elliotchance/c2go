@@ -29,6 +29,29 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 	// Now begin building the Go AST.
 	err = transpileToNode(root, p)
 
+	if p.OutputAsTest {
+		p.AddImport("testing")
+
+		// TODO: There should be a cleaner way to add a function to the program.
+		// This code was taken from the end of transpileFunctionDecl.
+		p.File.Decls = append(p.File.Decls, &goast.FuncDecl{
+			Name: util.NewIdent("TestApp"),
+			Type: &goast.FuncType{
+				Params: &goast.FieldList{
+					List: []*goast.Field{
+						&goast.Field{
+							Names: []*goast.Ident{util.NewIdent("t")},
+							Type:  util.NewTypeIdent("*testing.T"),
+						},
+					},
+				},
+			},
+			Body: &goast.BlockStmt{
+				List: []goast.Stmt{util.NewExprStmt(util.NewCallExpr("main"))},
+			},
+		})
+	}
+
 	// Now we need to build the __init() function. This sets up certain state
 	// and variables that the runtime expects to be ready.
 	p.File.Decls = append(p.File.Decls, &goast.FuncDecl{

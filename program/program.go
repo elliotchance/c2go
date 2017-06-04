@@ -58,6 +58,8 @@ type Program struct {
 	// A map of all the global variables (variables that exist outside of a
 	// function) and their types.
 	GlobalVariables map[string]string
+
+	OutputAsTest bool
 }
 
 // NewProgram creates a new blank program.

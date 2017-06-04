@@ -84,20 +84,27 @@ func TestIntegrationScripts(t *testing.T) {
 
 			programArgs := ProgramArgs{
 				inputFile:   file,
-				outputFile:  "build/main.go",
+				outputFile:  "build/main_test.go",
 				packageName: "main",
+
+				// This appends a TestApp function to the output source so we
+				// can run "go test" against the produced binary.
+				outputAsTest: true,
 			}
 
 			// Compile Go
 			Start(programArgs)
 
-			buildErr, err := exec.Command("go", "build", "-o", goPath, "build/main.go").CombinedOutput()
-			if err != nil {
-				t.Fatal(string(buildErr), err)
-			}
+			// buildErr, err := exec.Command(
+			// 	"go", "test", programArgs.outputFile,
+			// 	"--", args...).CombinedOutput()
+			// if err != nil {
+			// 	t.Fatal(string(buildErr), err)
+			// }
 
-			// Run Go program
-			cmd = exec.Command(goPath, args...)
+			// Run Go program. The "-v" option is important; without it most or
+			// all of the fmt.* output would be supressed.
+			cmd = exec.Command("go", "test", "-v", programArgs.outputFile, "--", "some", "args")
 			cmd.Stdin = strings.NewReader(stdin)
 			cmd.Stdout = &goProgram.stdout
 			cmd.Stderr = &goProgram.stderr
@@ -128,9 +135,23 @@ func TestIntegrationScripts(t *testing.T) {
 			}
 
 			// Check stdout
-			if cProgram.stdout.String() != goProgram.stdout.String() {
-				t.Fatalf(util.ShowDiff(cProgram.stdout.String(),
-					goProgram.stdout.String()))
+			cOut := cProgram.stdout.String()
+			goOutLines := strings.Split(goProgram.stdout.String(), "\n")
+
+			// Skip the first line.
+			if goOutLines[0] != "=== RUN   TestApp" {
+				t.Fatalf("The first line from the Go stdout is incorrect.")
+			}
+
+			// Skip the last two lines.
+			if !strings.HasPrefix(goOutLines[len(goOutLines)-2], "ok  \tcommand-line-arguments") {
+				t.Fatalf("The second last line from the Go stdout is incorrect.")
+			}
+
+			goOut := strings.Join(goOutLines[1:len(goOutLines)-2], "\n") + "\n"
+
+			if cOut != goOut {
+				t.Fatalf(util.ShowDiff(cOut, goOut))
 			}
 
 			// If this is not an example we will extact the number of tests run.
