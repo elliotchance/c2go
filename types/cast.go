@@ -179,7 +179,7 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 
 	if fromType == "[]byte" && toType == "bool" {
 		return util.NewUnaryExpr(
-			token.NOT, util.NewCallExpr("!noarch.CStringIsNull", expr),
+			token.NOT, util.NewCallExpr("noarch.CStringIsNull", expr),
 		), nil
 	}
 
