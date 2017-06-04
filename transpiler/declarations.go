@@ -33,8 +33,8 @@ func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, str
 	}
 
 	return &goast.Field{
-		Names: []*goast.Ident{goast.NewIdent(name)},
-		Type:  goast.NewIdent(fieldType),
+		Names: []*goast.Ident{util.NewIdent(name)},
+		Type:  util.NewTypeIdent(fieldType),
 	}, "unknown3"
 }
 
@@ -81,7 +81,7 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 		Tok: token.TYPE,
 		Specs: []goast.Spec{
 			&goast.TypeSpec{
-				Name: goast.NewIdent(name),
+				Name: util.NewIdent(name),
 				Type: &goast.StructType{
 					Fields: &goast.FieldList{
 						List: fields,
@@ -158,8 +158,8 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 		Tok: token.TYPE,
 		Specs: []goast.Spec{
 			&goast.TypeSpec{
-				Name: goast.NewIdent(name),
-				Type: goast.NewIdent(resolvedType),
+				Name: util.NewIdent(name),
+				Type: util.NewTypeIdent(resolvedType),
 			},
 		},
 	})
@@ -214,7 +214,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 					token.ASSIGN,
 					util.NewCallExpr(
 						"noarch.NewFile",
-						goast.NewIdent("os."+util.Ucfirst(name[2:len(name)-1])),
+						util.NewIdent("os."+util.Ucfirst(name[2:len(name)-1])),
 					),
 				),
 			)
@@ -229,7 +229,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 					token.ASSIGN,
 					util.NewCallExpr(
 						"noarch.NewFile",
-						goast.NewIdent("os."+util.Ucfirst(name)),
+						util.NewIdent("os."+util.Ucfirst(name)),
 					),
 				),
 			)
@@ -247,9 +247,9 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 		Specs: []goast.Spec{
 			&goast.ValueSpec{
 				Names: []*goast.Ident{
-					goast.NewIdent(name),
+					util.NewIdent(name),
 				},
-				Type:   goast.NewIdent(theType),
+				Type:   util.NewTypeIdent(theType),
 				Values: defaultValue,
 			},
 		},

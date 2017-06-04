@@ -147,7 +147,7 @@ func ResolveType(p *program.Program, s string) (string, error) {
 			}
 		}
 
-		return s, nil
+		return ResolveType(p, s)
 	}
 
 	// Enums are by name.

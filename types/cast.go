@@ -52,7 +52,7 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 	}
 
 	if fromType == "null" && toType == "bool" {
-		return goast.NewIdent("false"), nil
+		return util.NewIdent("false"), nil
 	}
 
 	// FIXME: This is a hack to avoid casting in some situations.
@@ -114,7 +114,7 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 
 		value := &goast.CompositeLit{
 			Type: &goast.ArrayType{
-				Elt: goast.NewIdent("byte"),
+				Elt: util.NewTypeIdent("byte"),
 			},
 			Elts: []goast.Expr{},
 		}

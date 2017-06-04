@@ -41,6 +41,17 @@ func IsAValidFunctionName(s string) bool {
 		Match([]byte(s))
 }
 
+// IsAValidType will test if s is a valid Go type. This only checks that the
+// name follow convention and not if the type itself will work.
+func IsAValidType(s string) bool {
+	if s == "interface{}" {
+		return true
+	}
+
+	return regexp.MustCompile(`^\**(\[\])*[a-zA-Z_][a-zA-Z0-9_.]*$`).
+		Match([]byte(s))
+}
+
 // NewCallExpr creates a new *"go/ast".CallExpr with each of the arguments
 // (after the function name) being each of the expressions that represent the
 // individual arguments.
@@ -55,7 +66,7 @@ func NewCallExpr(functionName string, args ...goast.Expr) *goast.CallExpr {
 	}
 
 	return &goast.CallExpr{
-		Fun:  goast.NewIdent(functionName),
+		Fun:  NewIdent(functionName),
 		Args: args,
 	}
 }
@@ -72,7 +83,7 @@ func NewFuncClosure(returnType string, stmts ...goast.Stmt) *goast.CallExpr {
 				Results: &goast.FieldList{
 					List: []*goast.Field{
 						&goast.Field{
-							Type: goast.NewIdent(returnType),
+							Type: NewIdent(returnType),
 						},
 					},
 				},
@@ -100,7 +111,21 @@ func NewBinaryExpr(left goast.Expr, operator token.Token, right goast.Expr) *goa
 	}
 }
 
-func NewIdent(name string) goast.Expr {
+func NewIdent(name string) *goast.Ident {
+	if !IsAValidFunctionName(name) {
+		panic(fmt.Sprintf("invalid identity: '%s'", name))
+	}
+
+	return goast.NewIdent(name)
+}
+
+// NewTypeIdent created a new Go identity that is to be used for a Go type. This
+// is different from NewIdent in how the input string is validated.
+func NewTypeIdent(name string) *goast.Ident {
+	if !IsAValidType(name) {
+		panic(fmt.Sprintf("invalid type: '%s'", name))
+	}
+
 	return goast.NewIdent(name)
 }
 
@@ -108,7 +133,7 @@ func NewIdents(names ...string) []goast.Expr {
 	idents := []goast.Expr{}
 
 	for _, name := range names {
-		idents = append(idents, goast.NewIdent(name))
+		idents = append(idents, NewIdent(name))
 	}
 
 	return idents
@@ -129,7 +154,7 @@ func NewIntLit(value int) *goast.BasicLit {
 }
 
 func NewNil() *goast.Ident {
-	return goast.NewIdent("nil")
+	return NewIdent("nil")
 }
 
 // NewUnaryExpr creates a new Go unary expression. You should use this function

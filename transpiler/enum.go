@@ -9,6 +9,7 @@ import (
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/util"
 )
 
 // ctypeEnumValue generates a specific expression for values used by some
@@ -45,7 +46,7 @@ func ctypeEnumValue(value string, t token.Token) goast.Expr {
 
 func transpileEnumConstantDecl(p *program.Program, n *ast.EnumConstantDecl) (
 	*goast.ValueSpec, []goast.Stmt, []goast.Stmt) {
-	var value goast.Expr = goast.NewIdent("iota")
+	var value goast.Expr = util.NewIdent("iota")
 	valueType := "int"
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
@@ -100,8 +101,8 @@ func transpileEnumConstantDecl(p *program.Program, n *ast.EnumConstantDecl) (
 	}
 
 	return &goast.ValueSpec{
-		Names:  []*goast.Ident{goast.NewIdent(n.Name)},
-		Type:   goast.NewIdent(valueType),
+		Names:  []*goast.Ident{util.NewIdent(n.Name)},
+		Type:   util.NewTypeIdent(valueType),
 		Values: []goast.Expr{value},
 	}, preStmts, postStmts
 }
