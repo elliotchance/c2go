@@ -6,9 +6,9 @@
 
 int main()
 {
-	plan(15);
+	plan(19);
 
-    int i = 10;
+    int i = 10, j = 1;
     float f = 3.14159f;
     double d = 0.0;
     char c = 'A';
@@ -59,6 +59,20 @@ int main()
 
     c += 11;
 	is_eq(c, 76);
+
+	diag("Shift with signed int");
+
+    i = 4 << j;
+        is_eq(i, 8);
+
+    i = 8 >> j;
+        is_eq(i, 4);
+
+    i <<= j;
+        is_eq(i, 8);
+
+    i >>= j;
+        is_eq(i, 4);
 
 	done_testing();
 }
