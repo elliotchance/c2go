@@ -28,12 +28,18 @@ func (self *SampleType) pointer(v interface{}) {
     value.Set(self.cast(value.Type().Elem()))
 }
 
-// Setter
-func (self *SampleType) Set(v interface{}) {
+// Generic setter
+func (self *SampleType) UntypedSet(v interface{}) {
     value := reflect.ValueOf(v)
 
     self.cast(value.Type()).Elem().Set(value)
 }
+
+// Setters
+func (self *SampleType) SetF1(v int32)  { self.UntypedSet(v) }
+func (self *SampleType) SetF2(v uint32) { self.UntypedSet(v) }
+func (self *SampleType) SetF3(v byte)   { self.UntypedSet(v) }
+func (self *SampleType) SetF4(v int16)  { self.UntypedSet(v) }
 
 // Getters
 func (self *SampleType) GetF1() (res int32)  { self.assign(&res); return }
@@ -52,7 +58,7 @@ func main() {
     var u SampleType
 
     // Set a value
-    u.Set(0x12345678)
+    u.UntypedSet(0x12345678)
 
     // Get values
     f1 := u.GetF1()
