@@ -117,9 +117,14 @@ func ResolveType(p *program.Program, s string) (string, error) {
     }
 
     // Structures are by name.
-    if strings.HasPrefix(s, "struct ") {
+    if strings.HasPrefix(s, "struct ") || strings.HasPrefix(s, "union ") {
+        start := 7
+        if s[0] == 'u' {
+            start--
+        }
+
         if s[len(s)-1] == '*' {
-            s = s[7 : len(s)-2]
+            s = s[start : len(s)-2]
 
             for _, v := range simpleResolveTypes {
                 if v == s {
@@ -130,7 +135,7 @@ func ResolveType(p *program.Program, s string) (string, error) {
             return "*" + s, nil
         }
 
-        s = s[7:]
+        s = s[start:]
 
         for _, v := range simpleResolveTypes {
             if v == s {
