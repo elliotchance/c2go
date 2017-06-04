@@ -1,11 +1,14 @@
 package transpiler
 
 import (
+    "strconv"
+    "strings"
+
     goast "go/ast"
     "go/token"
 )
 
-func transpileUnion(name string) []goast.Decl {
+func transpileUnion(name string, size int, fields []*goast.Field) []goast.Decl {
     res := []goast.Decl{
         // Type declaration (array: [x]byte with x the size of union)
         &goast.GenDecl{
@@ -17,7 +20,7 @@ func transpileUnion(name string) []goast.Decl {
                         Elt: goast.NewIdent("byte"),
                         Len: &goast.BasicLit{
                             Kind:  token.INT,
-                            Value: "1024", // Size of the union
+                            Value: strconv.Itoa(size), // Size of the union
                         },
                     },
                 },
@@ -96,77 +99,56 @@ func transpileUnion(name string) []goast.Decl {
                 },
             },
         },
+    }
 
-        // assign() method
-        &goast.FuncDecl{
-            Name: goast.NewIdent("assign"),
-            Recv: &goast.FieldList{
-                List: []*goast.Field{
-                    &goast.Field{
-                        Names: []*goast.Ident{goast.NewIdent("self")},
-                        Type: &goast.StarExpr{
-                            X: goast.NewIdent(name),
-                        },
-                    },
-                },
-            },
-            Type: &goast.FuncType{
-                Params: &goast.FieldList{
+    return res
+
+    for _, f := range fields {
+        field_id := strings.Title(f.Names[0].Name)
+
+        res = append(res,
+            // Getter method (GetXX)
+            &goast.FuncDecl{
+                Name: goast.NewIdent("Get" + field_id),
+                Recv: &goast.FieldList{
                     List: []*goast.Field{
                         &goast.Field{
-                            Names: []*goast.Ident{goast.NewIdent("v")},
-                            Type: &goast.InterfaceType{
-                                Methods: new(goast.FieldList),
+                            Names: []*goast.Ident{goast.NewIdent("self")},
+                            Type: &goast.StarExpr{
+                                X: goast.NewIdent(name),
                             },
                         },
                     },
                 },
-            },
-            Body: &goast.BlockStmt{
-                List: []goast.Stmt{
-                    &goast.AssignStmt{
-                        Lhs: []goast.Expr{
-                            goast.NewIdent("value"),
-                        },
-                        Tok: token.DEFINE,
-                        Rhs: []goast.Expr{
-                            &goast.CallExpr{
-                                Fun: &goast.SelectorExpr{
-                                    X: &goast.CallExpr{
-                                        Fun: &goast.SelectorExpr{
-                                            X:   goast.NewIdent("reflect"),
-                                            Sel: goast.NewIdent("ValueOf"),
-                                        },
-                                        Args: []goast.Expr{
-                                            goast.NewIdent("v"),
-                                        },
-                                    },
-                                    Sel: goast.NewIdent("Elem"),
+                Type: &goast.FuncType{
+                    Params: &goast.FieldList{
+                        List: []*goast.Field{
+                            &goast.Field{
+                                Names: []*goast.Ident{goast.NewIdent("v")},
+                                Type: &goast.InterfaceType{
+                                    Methods: new(goast.FieldList),
                                 },
                             },
                         },
                     },
-                    &goast.ExprStmt{
-                        X: &goast.CallExpr{
-                            Fun: &goast.SelectorExpr{
-                                X:   goast.NewIdent("value"),
-                                Sel: goast.NewIdent("Set"),
+                },
+                Body: &goast.BlockStmt{
+                    List: []goast.Stmt{
+                        &goast.AssignStmt{
+                            Lhs: []goast.Expr{
+                                goast.NewIdent("value"),
                             },
-                            Args: []goast.Expr{
+                            Tok: token.DEFINE,
+                            Rhs: []goast.Expr{
                                 &goast.CallExpr{
                                     Fun: &goast.SelectorExpr{
                                         X: &goast.CallExpr{
                                             Fun: &goast.SelectorExpr{
-                                                X:   goast.NewIdent("self"),
-                                                Sel: goast.NewIdent("cast"),
+                                                X:   goast.NewIdent("reflect"),
+                                                Sel: goast.NewIdent("ValueOf"),
                                             },
                                             Args: []goast.Expr{
-                                                &goast.CallExpr{
-                                                    Fun: &goast.SelectorExpr{
-                                                        X:   goast.NewIdent("value"),
-                                                        Sel: goast.NewIdent("Type"),
-                                                    },
-                                                },
+                                                goast.NewIdent("v"),
                                             },
                                         },
                                         Sel: goast.NewIdent("Elem"),
@@ -174,81 +156,81 @@ func transpileUnion(name string) []goast.Decl {
                                 },
                             },
                         },
-                    },
-                },
-            },
-        },
-
-        // pointer() method
-        &goast.FuncDecl{
-            Name: goast.NewIdent("pointer"),
-            Recv: &goast.FieldList{
-                List: []*goast.Field{
-                    &goast.Field{
-                        Names: []*goast.Ident{goast.NewIdent("self")},
-                        Type: &goast.StarExpr{
-                            X: goast.NewIdent(name),
-                        },
-                    },
-                },
-            },
-            Type: &goast.FuncType{
-                Params: &goast.FieldList{
-                    List: []*goast.Field{
-                        &goast.Field{
-                            Names: []*goast.Ident{goast.NewIdent("v")},
-                            Type: &goast.InterfaceType{
-                                Methods: new(goast.FieldList),
-                            },
-                        },
-                    },
-                },
-            },
-            Body: &goast.BlockStmt{
-                List: []goast.Stmt{
-                    &goast.AssignStmt{
-                        Lhs: []goast.Expr{
-                            goast.NewIdent("value"),
-                        },
-                        Tok: token.DEFINE,
-                        Rhs: []goast.Expr{
-                            &goast.CallExpr{
+                        &goast.ExprStmt{
+                            X: &goast.CallExpr{
                                 Fun: &goast.SelectorExpr{
-                                    X: &goast.CallExpr{
+                                    X:   goast.NewIdent("value"),
+                                    Sel: goast.NewIdent("Set"),
+                                },
+                                Args: []goast.Expr{
+                                    &goast.CallExpr{
                                         Fun: &goast.SelectorExpr{
-                                            X:   goast.NewIdent("reflect"),
-                                            Sel: goast.NewIdent("ValueOf"),
-                                        },
-                                        Args: []goast.Expr{
-                                            goast.NewIdent("v"),
+                                            X: &goast.CallExpr{
+                                                Fun: &goast.SelectorExpr{
+                                                    X:   goast.NewIdent("self"),
+                                                    Sel: goast.NewIdent("cast"),
+                                                },
+                                                Args: []goast.Expr{
+                                                    &goast.CallExpr{
+                                                        Fun: &goast.SelectorExpr{
+                                                            X:   goast.NewIdent("value"),
+                                                            Sel: goast.NewIdent("Type"),
+                                                        },
+                                                    },
+                                                },
+                                            },
+                                            Sel: goast.NewIdent("Elem"),
                                         },
                                     },
-                                    Sel: goast.NewIdent("Elem"),
                                 },
                             },
                         },
                     },
-                    &goast.ExprStmt{
-                        X: &goast.CallExpr{
-                            Fun: &goast.SelectorExpr{
-                                X:   goast.NewIdent("value"),
-                                Sel: goast.NewIdent("Set"),
+                },
+            },
+
+            // Get pointer method (PtrXX)
+            &goast.FuncDecl{
+                Name: goast.NewIdent("Ptr" + field_id),
+                Recv: &goast.FieldList{
+                    List: []*goast.Field{
+                        &goast.Field{
+                            Names: []*goast.Ident{goast.NewIdent("self")},
+                            Type: &goast.StarExpr{
+                                X: goast.NewIdent(name),
                             },
-                            Args: []goast.Expr{
+                        },
+                    },
+                },
+                Type: &goast.FuncType{
+                    Params: &goast.FieldList{
+                        List: []*goast.Field{
+                            &goast.Field{
+                                Names: []*goast.Ident{goast.NewIdent("v")},
+                                Type: &goast.InterfaceType{
+                                    Methods: new(goast.FieldList),
+                                },
+                            },
+                        },
+                    },
+                },
+                Body: &goast.BlockStmt{
+                    List: []goast.Stmt{
+                        &goast.AssignStmt{
+                            Lhs: []goast.Expr{
+                                goast.NewIdent("value"),
+                            },
+                            Tok: token.DEFINE,
+                            Rhs: []goast.Expr{
                                 &goast.CallExpr{
                                     Fun: &goast.SelectorExpr{
                                         X: &goast.CallExpr{
                                             Fun: &goast.SelectorExpr{
-                                                X:   goast.NewIdent("self"),
-                                                Sel: goast.NewIdent("cast"),
+                                                X:   goast.NewIdent("reflect"),
+                                                Sel: goast.NewIdent("ValueOf"),
                                             },
                                             Args: []goast.Expr{
-                                                &goast.CallExpr{
-                                                    Fun: &goast.SelectorExpr{
-                                                        X:   goast.NewIdent("value"),
-                                                        Sel: goast.NewIdent("Type"),
-                                                    },
-                                                },
+                                                goast.NewIdent("v"),
                                             },
                                         },
                                         Sel: goast.NewIdent("Elem"),
@@ -256,10 +238,39 @@ func transpileUnion(name string) []goast.Decl {
                                 },
                             },
                         },
+                        &goast.ExprStmt{
+                            X: &goast.CallExpr{
+                                Fun: &goast.SelectorExpr{
+                                    X:   goast.NewIdent("value"),
+                                    Sel: goast.NewIdent("Set"),
+                                },
+                                Args: []goast.Expr{
+                                    &goast.CallExpr{
+                                        Fun: &goast.SelectorExpr{
+                                            X: &goast.CallExpr{
+                                                Fun: &goast.SelectorExpr{
+                                                    X:   goast.NewIdent("self"),
+                                                    Sel: goast.NewIdent("cast"),
+                                                },
+                                                Args: []goast.Expr{
+                                                    &goast.CallExpr{
+                                                        Fun: &goast.SelectorExpr{
+                                                            X:   goast.NewIdent("value"),
+                                                            Sel: goast.NewIdent("Type"),
+                                                        },
+                                                    },
+                                                },
+                                            },
+                                            Sel: goast.NewIdent("Elem"),
+                                        },
+                                    },
+                                },
+                            },
+                        },
                     },
                 },
             },
-        },
+        )
     }
 
     return res

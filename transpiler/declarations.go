@@ -76,8 +76,14 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
         // Imports needed
         p.AddImports("reflect", "unsafe")
 
+        // Union size
+        size, err := types.SizeOf(p, name)
+        if err != nil {
+            return err
+        }
+
         // Declaration for implementing union
-        p.File.Decls = append(p.File.Decls, transpileUnion(name)...)
+        p.File.Decls = append(p.File.Decls, transpileUnion(name, size, fields)...)
     } else {
         p.File.Decls = append(p.File.Decls, &goast.GenDecl{
             Tok: token.TYPE,
