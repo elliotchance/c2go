@@ -55,7 +55,7 @@ func NewCallExpr(functionName string, args ...goast.Expr) *goast.CallExpr {
 	}
 
 	return &goast.CallExpr{
-		Fun:  goast.NewIdent(functionName),
+		Fun:  NewIdent(functionName),
 		Args: args,
 	}
 }
@@ -72,7 +72,7 @@ func NewFuncClosure(returnType string, stmts ...goast.Stmt) *goast.CallExpr {
 				Results: &goast.FieldList{
 					List: []*goast.Field{
 						&goast.Field{
-							Type: goast.NewIdent(returnType),
+							Type: NewIdent(returnType),
 						},
 					},
 				},
@@ -100,7 +100,11 @@ func NewBinaryExpr(left goast.Expr, operator token.Token, right goast.Expr) *goa
 	}
 }
 
-func NewIdent(name string) goast.Expr {
+func NewIdent(name string) *goast.Ident {
+	if !IsAValidFunctionName(name) {
+		panic(fmt.Sprintf("invalid identity: '%s'", name))
+	}
+
 	return goast.NewIdent(name)
 }
 
@@ -108,7 +112,7 @@ func NewIdents(names ...string) []goast.Expr {
 	idents := []goast.Expr{}
 
 	for _, name := range names {
-		idents = append(idents, goast.NewIdent(name))
+		idents = append(idents, NewIdent(name))
 	}
 
 	return idents
@@ -129,5 +133,5 @@ func NewIntLit(value int) *goast.BasicLit {
 }
 
 func NewNil() *goast.Ident {
-	return goast.NewIdent("nil")
+	return NewIdent("nil")
 }

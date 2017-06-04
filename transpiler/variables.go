@@ -15,7 +15,7 @@ import (
 
 func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (
 	*goast.Ident, string, error) {
-	return goast.NewIdent(n.Name), n.Type, nil
+	return util.NewIdent(n.Name), n.Type, nil
 }
 
 func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
@@ -58,7 +58,7 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 			util.NewCallExpr(
 				"make",
 				&goast.ArrayType{
-					Elt: goast.NewIdent(goArrayType),
+					Elt: util.NewIdent(goArrayType),
 				},
 				util.NewIntLit(arraySize),
 				util.NewIntLit(arraySize),
@@ -74,8 +74,8 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 			Tok: token.VAR,
 			Specs: []goast.Spec{
 				&goast.ValueSpec{
-					Names:  []*goast.Ident{goast.NewIdent(a.Name)},
-					Type:   goast.NewIdent(t),
+					Names:  []*goast.Ident{util.NewIdent(a.Name)},
+					Type:   util.NewIdent(t),
 					Values: defaultValue,
 				},
 			},
@@ -199,6 +199,6 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 
 	return &goast.SelectorExpr{
 		X:   lhs,
-		Sel: goast.NewIdent(rhs),
+		Sel: util.NewIdent(rhs),
 	}, rhsType, preStmts, postStmts, nil
 }

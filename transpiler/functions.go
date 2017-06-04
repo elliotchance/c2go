@@ -120,7 +120,7 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 
 		returnTypes := []*goast.Field{
 			&goast.Field{
-				Type: goast.NewIdent(t),
+				Type: util.NewIdent(t),
 			},
 		}
 
@@ -152,7 +152,7 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 						X: util.NewBinaryExpr(
 							fieldList.List[0].Names[0],
 							token.DEFINE,
-							goast.NewIdent("len(os.Args)"),
+							util.NewIdent("len(os.Args)"),
 						),
 					},
 				)
@@ -165,14 +165,14 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 						X: util.NewBinaryExpr(
 							fieldList.List[1].Names[0],
 							token.DEFINE,
-							goast.NewIdent("[][]byte{}"),
+							util.NewIdent("[][]byte{}"),
 						),
 					},
 					&goast.RangeStmt{
-						Key:   goast.NewIdent("_"),
-						Value: goast.NewIdent("argvSingle"),
+						Key:   util.NewIdent("_"),
+						Value: util.NewIdent("argvSingle"),
 						Tok:   token.DEFINE,
-						X:     goast.NewIdent("os.Args"),
+						X:     util.NewIdent("os.Args"),
 						Body: &goast.BlockStmt{
 							List: []goast.Stmt{
 								&goast.ExprStmt{
@@ -182,7 +182,7 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 										util.NewCallExpr(
 											"append",
 											fieldList.List[1].Names[0],
-											goast.NewIdent("[]byte(argvSingle)"),
+											util.NewIdent("[]byte(argvSingle)"),
 										),
 									),
 								},
@@ -200,7 +200,7 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 		}
 
 		p.File.Decls = append(p.File.Decls, &goast.FuncDecl{
-			Name: goast.NewIdent(n.Name),
+			Name: util.NewIdent(n.Name),
 			Type: &goast.FuncType{
 				Params: fieldList,
 				Results: &goast.FieldList{
@@ -223,8 +223,8 @@ func getFieldList(f *ast.FunctionDecl, p *program.Program) (*goast.FieldList, er
 			p.AddMessage(ast.GenerateWarningMessage(err, f))
 
 			r = append(r, &goast.Field{
-				Names: []*goast.Ident{goast.NewIdent(v.Name)},
-				Type:  goast.NewIdent(t),
+				Names: []*goast.Ident{util.NewIdent(v.Name)},
+				Type:  util.NewIdent(t),
 			})
 		}
 	}
