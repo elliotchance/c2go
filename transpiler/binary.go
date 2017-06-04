@@ -55,6 +55,21 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 			preStmts, postStmts, nil
 	}
 
+	// The right hand argument of the shift left or shift right operators
+	// in Go must be unsigned integers. In C, shifting with a negative shift
+	// count is undefined behaviour (so we should be able to ignore that case).
+	// To handle this, cast the shift count to a uint64.
+	if operator == token.SHL || operator == token.SHR {
+		right, err = types.CastExpr(p, right, rightType, "unsigned long long")
+		p.AddMessage(ast.GenerateWarningOrErrorMessage(err, n, right == nil))
+		if right == nil {
+			right = util.NewNil()
+		}
+
+		return util.NewBinaryExpr(left, operator, right), leftType,
+			preStmts, postStmts, nil
+	}
+
 	if operator == token.NEQ || operator == token.EQL {
 		// Convert "(0)" to "nil" when we are dealing with equality.
 		if types.IsNullExpr(right) {
