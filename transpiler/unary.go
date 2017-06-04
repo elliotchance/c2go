@@ -68,7 +68,7 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 
 		if t == "[]byte" {
 			return util.NewUnaryExpr(
-				token.NOT, util.NewCallExpr("!noarch.CStringIsNull", e),
+				token.NOT, util.NewCallExpr("noarch.CStringIsNull", e),
 			), "bool", preStmts, postStmts, nil
 		}
 
