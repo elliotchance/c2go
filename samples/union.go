@@ -14,7 +14,7 @@ func (self *SampleType) cast(t reflect.Type) reflect.Value {
     return reflect.NewAt(t, unsafe.Pointer(&self[0]))
 }
 
-// Assign
+// Assign value from an union field (used by getters)
 func (self *SampleType) assign(v interface{}) {
     value := reflect.ValueOf(v).Elem()
 
