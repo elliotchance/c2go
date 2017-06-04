@@ -58,7 +58,7 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 			util.NewCallExpr(
 				"make",
 				&goast.ArrayType{
-					Elt: util.NewIdent(goArrayType),
+					Elt: util.NewTypeIdent(goArrayType),
 				},
 				util.NewIntLit(arraySize),
 				util.NewIntLit(arraySize),
@@ -75,7 +75,7 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 			Specs: []goast.Spec{
 				&goast.ValueSpec{
 					Names:  []*goast.Ident{util.NewIdent(a.Name)},
-					Type:   util.NewIdent(t),
+					Type:   util.NewTypeIdent(t),
 					Values: defaultValue,
 				},
 			},

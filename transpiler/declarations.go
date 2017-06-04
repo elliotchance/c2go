@@ -34,7 +34,7 @@ func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, str
 
 	return &goast.Field{
 		Names: []*goast.Ident{util.NewIdent(name)},
-		Type:  util.NewIdent(fieldType),
+		Type:  util.NewTypeIdent(fieldType),
 	}, "unknown3"
 }
 
@@ -159,7 +159,7 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 		Specs: []goast.Spec{
 			&goast.TypeSpec{
 				Name: util.NewIdent(name),
-				Type: util.NewIdent(resolvedType),
+				Type: util.NewTypeIdent(resolvedType),
 			},
 		},
 	})
@@ -249,7 +249,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 				Names: []*goast.Ident{
 					util.NewIdent(name),
 				},
-				Type:   util.NewIdent(theType),
+				Type:   util.NewTypeIdent(theType),
 				Values: defaultValue,
 			},
 		},

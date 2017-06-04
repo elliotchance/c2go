@@ -118,9 +118,13 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 		t, err := types.ResolveType(p, f.ReturnType)
 		p.AddMessage(ast.GenerateWarningMessage(err, n))
 
+		if t == "" {
+			t = "UnknownType"
+		}
+
 		returnTypes := []*goast.Field{
 			&goast.Field{
-				Type: util.NewIdent(t),
+				Type: util.NewTypeIdent(t),
 			},
 		}
 
@@ -152,7 +156,7 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 						X: util.NewBinaryExpr(
 							fieldList.List[0].Names[0],
 							token.DEFINE,
-							util.NewIdent("len(os.Args)"),
+							util.NewTypeIdent("len(os.Args)"),
 						),
 					},
 				)
@@ -165,7 +169,7 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 						X: util.NewBinaryExpr(
 							fieldList.List[1].Names[0],
 							token.DEFINE,
-							util.NewIdent("[][]byte{}"),
+							util.NewTypeIdent("[][]byte{}"),
 						),
 					},
 					&goast.RangeStmt{
@@ -182,7 +186,7 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 										util.NewCallExpr(
 											"append",
 											fieldList.List[1].Names[0],
-											util.NewIdent("[]byte(argvSingle)"),
+											util.NewTypeIdent("[]byte(argvSingle)"),
 										),
 									),
 								},
@@ -224,7 +228,7 @@ func getFieldList(f *ast.FunctionDecl, p *program.Program) (*goast.FieldList, er
 
 			r = append(r, &goast.Field{
 				Names: []*goast.Ident{util.NewIdent(v.Name)},
-				Type:  util.NewIdent(t),
+				Type:  util.NewTypeIdent(t),
 			})
 		}
 	}

@@ -102,7 +102,7 @@ func transpileEnumConstantDecl(p *program.Program, n *ast.EnumConstantDecl) (
 
 	return &goast.ValueSpec{
 		Names:  []*goast.Ident{util.NewIdent(n.Name)},
-		Type:   util.NewIdent(valueType),
+		Type:   util.NewTypeIdent(valueType),
 		Values: []goast.Expr{value},
 	}, preStmts, postStmts
 }

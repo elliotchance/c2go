@@ -41,6 +41,17 @@ func IsAValidFunctionName(s string) bool {
 		Match([]byte(s))
 }
 
+// IsAValidType will test if s is a valid Go type. This only checks that the
+// name follow convention and not if the type itself will work.
+func IsAValidType(s string) bool {
+	if s == "interface{}" {
+		return true
+	}
+
+	return regexp.MustCompile(`^\**(\[\])*[a-zA-Z_][a-zA-Z0-9_.]*$`).
+		Match([]byte(s))
+}
+
 // NewCallExpr creates a new *"go/ast".CallExpr with each of the arguments
 // (after the function name) being each of the expressions that represent the
 // individual arguments.
@@ -103,6 +114,16 @@ func NewBinaryExpr(left goast.Expr, operator token.Token, right goast.Expr) *goa
 func NewIdent(name string) *goast.Ident {
 	if !IsAValidFunctionName(name) {
 		panic(fmt.Sprintf("invalid identity: '%s'", name))
+	}
+
+	return goast.NewIdent(name)
+}
+
+// NewTypeIdent created a new Go identity that is to be used for a Go type. This
+// is different from NewIdent in how the input string is validated.
+func NewTypeIdent(name string) *goast.Ident {
+	if !IsAValidType(name) {
+		panic(fmt.Sprintf("invalid type: '%s'", name))
 	}
 
 	return goast.NewIdent(name)

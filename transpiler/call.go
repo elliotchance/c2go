@@ -142,7 +142,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 					Specs: []goast.Spec{
 						&goast.ValueSpec{
 							Names: []*goast.Ident{util.NewIdent(tempVariableName)},
-							Type:  util.NewIdent("string"),
+							Type:  util.NewTypeIdent("string"),
 						},
 					},
 				},
