@@ -127,3 +127,17 @@ func NewIntLit(value int) *goast.BasicLit {
 func NewNil() *goast.Ident {
 	return goast.NewIdent("nil")
 }
+
+// NewUnaryExpr creates a new Go unary expression. You should use this function
+// instead of instantiating the UnaryExpr directly because this funtion has
+// extra error checking.
+func NewUnaryExpr(operator token.Token, right goast.Expr) *goast.UnaryExpr {
+	if right == nil {
+		panic("right is nil")
+	}
+
+	return &goast.UnaryExpr{
+		Op: operator,
+		X:  right,
+	}
+}

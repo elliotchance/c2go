@@ -67,7 +67,9 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 		p.AddMessage(ast.GenerateWarningMessage(err, n))
 
 		if t == "[]byte" {
-			return util.NewCallExpr("!noarch.CStringIsNull", e), "bool", preStmts, postStmts, nil
+			return util.NewUnaryExpr(
+				token.NOT, util.NewCallExpr("noarch.CStringIsNull", e),
+			), "bool", preStmts, postStmts, nil
 		}
 
 		p.AddImport("github.com/elliotchance/c2go/noarch")
