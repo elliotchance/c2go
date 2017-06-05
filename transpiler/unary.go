@@ -84,11 +84,8 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 	if operator == token.MUL {
 		if eType == "const char *" {
 			return &goast.IndexExpr{
-				X: e,
-				Index: &goast.BasicLit{
-					Kind:  token.INT,
-					Value: "0",
-				},
+				X:     e,
+				Index: util.NewIntLit(0),
 			}, "char", preStmts, postStmts, nil
 		}
 
