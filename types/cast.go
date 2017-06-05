@@ -178,10 +178,7 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 		return util.NewNil(), nil
 	}
 	if fromType == "int" && toType == "*byte" {
-		return &goast.BasicLit{
-			Kind:  token.STRING,
-			Value: `""`,
-		}, nil
+		return util.NewStringLit(`""`), nil
 	}
 
 	if fromType == "_Bool" && toType == "bool" {
