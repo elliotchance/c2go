@@ -23,7 +23,7 @@ import (
 //     c2go -v
 //
 // See https://github.com/elliotchance/c2go/wiki/Release-Process
-const Version = "0.13.1"
+const Version = "0.13.2"
 
 type ProgramArgs struct {
 	verbose     bool
