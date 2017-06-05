@@ -48,7 +48,7 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 	}
 
 	if fromType == "null" && toType == "float64" {
-		return util.NewStringLit("0.0"), nil
+		return util.NewFloatLit(0.0), nil
 	}
 
 	if fromType == "null" && toType == "bool" {
@@ -94,10 +94,7 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 			return &goast.BinaryExpr{
 				X:  expr,
 				Op: token.NEQ,
-				Y: &goast.BasicLit{
-					Kind:  token.STRING,
-					Value: "0",
-				},
+				Y:  util.NewIntLit(0),
 			}, nil
 		}
 	}
@@ -131,10 +128,7 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 			})
 		}
 
-		value.Elts = append(value.Elts, &goast.BasicLit{
-			Kind:  token.INT,
-			Value: "0",
-		})
+		value.Elts = append(value.Elts, util.NewIntLit(0))
 
 		return value, nil
 	}
@@ -159,11 +153,8 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 		return util.NewCallExpr(
 			"string",
 			&goast.SliceExpr{
-				X: expr,
-				High: &goast.BasicLit{
-					Kind:  token.INT,
-					Value: strconv.Itoa(size - 1),
-				},
+				X:    expr,
+				High: util.NewIntLit(size - 1),
 			},
 		), nil
 	}
@@ -187,10 +178,7 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 		return util.NewNil(), nil
 	}
 	if fromType == "int" && toType == "*byte" {
-		return &goast.BasicLit{
-			Kind:  token.STRING,
-			Value: `""`,
-		}, nil
+		return util.NewStringLit(`""`), nil
 	}
 
 	if fromType == "_Bool" && toType == "bool" {
