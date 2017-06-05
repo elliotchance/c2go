@@ -98,7 +98,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 
 			right = util.NewCallExpr(
 				"make",
-				util.NewStringLit(toType),
+				util.NewTypeIdent(toType),
 				util.NewBinaryExpr(allocSizeExpr, token.QUO, util.NewIntLit(elementSize)),
 			)
 		} else {
