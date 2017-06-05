@@ -204,6 +204,14 @@ func NewIntLit(value int) *goast.BasicLit {
 	}
 }
 
+// NewFloatLit creates a new Float Literal.
+func NewFloatLit(value float64) *goast.BasicLit {
+	return &goast.BasicLit{
+		Kind:  token.FLOAT,
+		Value: strconv.FormatFloat(value, 'g', -1, 64),
+	}
+}
+
 func NewNil() *goast.Ident {
 	return NewIdent("nil")
 }

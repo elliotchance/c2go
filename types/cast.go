@@ -48,7 +48,7 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 	}
 
 	if fromType == "null" && toType == "float64" {
-		return util.NewStringLit("0.0"), nil
+		return util.NewFloatLit(0.0), nil
 	}
 
 	if fromType == "null" && toType == "bool" {
