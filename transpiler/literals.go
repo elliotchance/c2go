@@ -17,18 +17,7 @@ import (
 )
 
 func transpileFloatingLiteral(n *ast.FloatingLiteral) *goast.BasicLit {
-	// Important: Using 'e' as the formatter will output scientific notation.
-	//
-	// This is ugly in a lot of scenarios but it is more correct when dealing
-	// with extremely large or small numbers that cannot be easily represented
-	// as a decimal.
-	//
-	// This function should be improved to make smarter decisions about the best
-	// formatting based on the size of the number.
-	return &goast.BasicLit{
-		Kind:  token.FLOAT,
-		Value: fmt.Sprintf("%e", n.Value),
-	}
+	return util.NewFloatLit(n.Value)
 }
 
 func transpileStringLiteral(n *ast.StringLiteral) goast.Expr {
