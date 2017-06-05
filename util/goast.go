@@ -22,34 +22,10 @@ func NewExprStmt(expr goast.Expr) *goast.ExprStmt {
 	}
 }
 
-// IsAValidFunctionName performs a crude check to see if a string would make a
-// valid function name in Go. Crude because it is not based on the actual Go
-// standard and allows for some special conditions that allow writing code
-// easier.
+// IsAValidFunctionName performs a check to see if a string would make a
+// valid function name in Go. Go allows unicode characters, but C doesn't.
 func IsAValidFunctionName(s string) bool {
-	// This is a special case that is used by transpileBinaryExpression().
-	if s == "(*[1]int)" {
-		return true
-	}
-
-	// We allow '.' in the identifier name because there are lots of places
-	// where we call a function like "os.Exit", but the dot is not strictly
-	// allowed.
-	//
-	// The identifier may start with zero or more "[]" since types are used as
-	// function names.
-	return regexp.MustCompile(`^(\[\d*\])*[a-zA-Z_][a-zA-Z0-9_.]*$`).
-		Match([]byte(s))
-}
-
-// IsAValidType will test if s is a valid Go type. This only checks that the
-// name follow convention and not if the type itself will work.
-func IsAValidType(s string) bool {
-	if s == "interface{}" {
-		return true
-	}
-
-	return regexp.MustCompile(`^\**(\[\])*[a-zA-Z_][a-zA-Z0-9_.]*$`).
+	return regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`).
 		Match([]byte(s))
 }
 
@@ -110,12 +86,6 @@ func typeToExpr(t string) goast.Expr {
 // The function name is checked with IsAValidFunctionName and will panic if the
 // function name is deemed to be not valid.
 func NewCallExpr(functionName string, args ...goast.Expr) *goast.CallExpr {
-	// Make sure the function name is valid. This can lead to some really
-	// painful to debug errors. See Program.String().
-	if !IsAValidFunctionName(functionName) {
-		panic(fmt.Sprintf("not a valid function name: %s", functionName))
-	}
-
 	return &goast.CallExpr{
 		Fun:  typeToExpr(functionName),
 		Args: args,
@@ -173,10 +143,6 @@ func NewIdent(name string) *goast.Ident {
 // NewTypeIdent created a new Go identity that is to be used for a Go type. This
 // is different from NewIdent in how the input string is validated.
 func NewTypeIdent(name string) goast.Expr {
-	if !IsAValidType(name) {
-		panic(fmt.Sprintf("invalid type: '%s'", name))
-	}
-
 	return typeToExpr(name)
 }
 
