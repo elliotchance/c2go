@@ -143,12 +143,12 @@ func SizeOf(p *program.Program, cType string) (int, error) {
 
     base_size, err := SizeOf(p, groups["type"])
     if err != nil {
-        return nil, err
+        return 0, err
     }
 
     count, err := strconv.Atoi(groups["count"])
     if err != nil {
-        return nil, err
+        return 0, err
     }
 
     return base_size * count, nil
