@@ -59,12 +59,12 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 
                     // Call-Expression argument
                     argLhs := util.NewCallExpr(getterName)
-                    argOp := getTokenForOperator(binaryOperation)
+                    argOp := binaryOperator
                     argRhs := util.NewIntLit(1)
                     argValue := util.NewBinaryExpr(argLhs, argOp, argRhs)
 
                     // Make Go expression
-                    resExpr := util.NewCallExpr(funcName, argValue)
+                    resExpr := util.NewCallExpr(setterName, argValue)
 
                     return resExpr, n.Type, preStmts, postStmts, nil
                 }

@@ -169,7 +169,7 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
                 argValue := util.NewBinaryExpr(argLhs, argOp, argRhs)
 
                 // Make Go expression
-                resExpr := util.NewCallExpr(funcName, argValue)
+                resExpr := util.NewCallExpr(setterName, argValue)
 
                 return resExpr, "", preStmts, postStmts, nil
             }
