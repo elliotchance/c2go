@@ -54,15 +54,15 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 				if union.IsUnion {
 					resExpr := &goast.CallExpr{
 						Fun: &goast.SelectorExpr{
-							X:		goast.NewIdent(ref.Name),
-							Sel:	goast.NewIdent("Set" + method_suffix),
+							X:   goast.NewIdent(ref.Name),
+							Sel: goast.NewIdent("Set" + method_suffix),
 						},
 						Args: []goast.Expr{
 							util.NewBinaryExpr(
 								&goast.CallExpr{
 									Fun: &goast.SelectorExpr{
-										X:		goast.NewIdent(ref.Name),
-										Sel:	goast.NewIdent("Get" + method_suffix),
+										X:   goast.NewIdent(ref.Name),
+										Sel: goast.NewIdent("Get" + method_suffix),
 									},
 								},
 								binaryOperator,
@@ -82,13 +82,13 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 		}
 
 		return transpileBinaryOperator(&ast.BinaryOperator{
-			Type:		n.Type,
-			Operator:	binaryOperator,
+			Type:     n.Type,
+			Operator: binaryOperator,
 			Children: []ast.Node{
 				n.Children[0], &ast.IntegerLiteral{
-					Type:		"int",
-					Value:		"1",
-					Children:	[]ast.Node{},
+					Type:     "int",
+					Value:    "1",
+					Children: []ast.Node{},
 				},
 			},
 		}, p)
@@ -105,8 +105,8 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 	if operator == token.NOT {
 		if eType == "bool" || eType == "_Bool" {
 			return &goast.UnaryExpr{
-				X:	e,
-				Op:	operator,
+				X:  e,
+				Op: operator,
 			}, "bool", preStmts, postStmts, nil
 		}
 
@@ -125,10 +125,10 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 	if operator == token.MUL {
 		if eType == "const char *" {
 			return &goast.IndexExpr{
-				X:	e,
+				X: e,
 				Index: &goast.BasicLit{
-					Kind:	token.INT,
-					Value:	"0",
+					Kind:  token.INT,
+					Value: "0",
 				},
 			}, "char", preStmts, postStmts, nil
 		}
@@ -144,8 +144,8 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 		resolvedType, err := types.ResolveType(p, eType)
 		if strings.HasPrefix(resolvedType, "[]") {
 			return &goast.IndexExpr{
-				X:		e,
-				Index:	util.NewIntLit(0),
+				X:     e,
+				Index: util.NewIntLit(0),
 			}, t, preStmts, postStmts, nil
 		}
 
@@ -160,8 +160,8 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 	}
 
 	return &goast.UnaryExpr{
-		Op:	operator,
-		X:	e,
+		Op: operator,
+		X:  e,
 	}, eType, preStmts, postStmts, nil
 }
 

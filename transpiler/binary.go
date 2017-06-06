@@ -139,8 +139,8 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 					if union.IsUnion {
 						resExpr := &goast.CallExpr{
 							Fun: &goast.SelectorExpr{
-								X:		goast.NewIdent(ref.Name),
-								Sel:	goast.NewIdent("Set" + strings.Title(member_expr.Name)),
+								X:   goast.NewIdent(ref.Name),
+								Sel: goast.NewIdent("Set" + strings.Title(member_expr.Name)),
 							},
 							Args: []goast.Expr{
 								right,
@@ -188,9 +188,9 @@ func GetAllocationSizeNode(node ast.Node) ast.Node {
 
 		if functionName == "calloc" {
 			return &ast.BinaryOperator{
-				Type:		"int",
-				Operator:	"*",
-				Children:	expr.(*ast.CallExpr).Children[1:],
+				Type:     "int",
+				Operator: "*",
+				Children: expr.(*ast.CallExpr).Children[1:],
 			}
 		}
 

@@ -72,12 +72,12 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 
 	return &goast.DeclStmt{
 		Decl: &goast.GenDecl{
-			Tok:	token.VAR,
+			Tok: token.VAR,
 			Specs: []goast.Spec{
 				&goast.ValueSpec{
-					Names:	[]*goast.Ident{goast.NewIdent(a.Name)},
-					Type:	goast.NewIdent(t),
-					Values:	defaultValue,
+					Names:  []*goast.Ident{goast.NewIdent(a.Name)},
+					Type:   goast.NewIdent(t),
+					Values: defaultValue,
 				},
 			},
 		},
@@ -152,8 +152,8 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program) 
 	}
 
 	return &goast.IndexExpr{
-		X:		expression,
-		Index:	index,
+		X:     expression,
+		Index: index,
 	}, newType, preStmts, postStmts, nil
 }
 
@@ -200,8 +200,8 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 		if union.IsUnion {
 			resExpr := &goast.CallExpr{
 				Fun: &goast.SelectorExpr{
-					X:		goast.NewIdent(ref.Name),
-					Sel:	goast.NewIdent("Get" + strings.Title(n.Name)),
+					X:   goast.NewIdent(ref.Name),
+					Sel: goast.NewIdent("Get" + strings.Title(n.Name)),
 				},
 			}
 
@@ -210,7 +210,7 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	}
 
 	return &goast.SelectorExpr{
-		X:		lhs,
-		Sel:	goast.NewIdent(rhs),
+		X:   lhs,
+		Sel: goast.NewIdent(rhs),
 	}, rhsType, preStmts, postStmts, nil
 }

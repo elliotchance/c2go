@@ -29,16 +29,16 @@ func (self *SampleType) UntypedSet(v interface{}) {
 }
 
 // Setters
-func (self *SampleType) SetF1(v int32)	{ self.UntypedSet(v) }
-func (self *SampleType) SetF2(v uint32)	{ self.UntypedSet(v) }
-func (self *SampleType) SetF3(v byte)	{ self.UntypedSet(v) }
-func (self *SampleType) SetF4(v int16)	{ self.UntypedSet(v) }
+func (self *SampleType) SetF1(v int32)  { self.UntypedSet(v) }
+func (self *SampleType) SetF2(v uint32) { self.UntypedSet(v) }
+func (self *SampleType) SetF3(v byte)   { self.UntypedSet(v) }
+func (self *SampleType) SetF4(v int16)  { self.UntypedSet(v) }
 
 // Getters
-func (self *SampleType) GetF1() (res int32)		{ self.assign(&res); return }
-func (self *SampleType) GetF2() (res uint32)	{ self.assign(&res); return }
-func (self *SampleType) GetF3() (res byte)		{ self.assign(&res); return }
-func (self *SampleType) GetF4() (res int16)		{ self.assign(&res); return }
+func (self *SampleType) GetF1() (res int32)  { self.assign(&res); return }
+func (self *SampleType) GetF2() (res uint32) { self.assign(&res); return }
+func (self *SampleType) GetF3() (res byte)   { self.assign(&res); return }
+func (self *SampleType) GetF4() (res int16)  { self.assign(&res); return }
 
 func main() {
 	// Create the union

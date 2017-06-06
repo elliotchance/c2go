@@ -77,7 +77,7 @@ func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program
 	return util.NewFuncClosure(
 		returnType,
 		&goast.IfStmt{
-			Cond:	a,
+			Cond: a,
 			Body: &goast.BlockStmt{
 				List: []goast.Stmt{
 					&goast.ReturnStmt{
@@ -157,19 +157,19 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
 			if union.IsUnion {
 				resExpr := &goast.CallExpr{
 					Fun: &goast.SelectorExpr{
-						X:		goast.NewIdent(ref.Name),
-						Sel:	goast.NewIdent("Set" + method_suffix),
+						X:   goast.NewIdent(ref.Name),
+						Sel: goast.NewIdent("Set" + method_suffix),
 					},
 					Args: []goast.Expr{
 						&goast.BinaryExpr{
 							X: &goast.CallExpr{
 								Fun: &goast.SelectorExpr{
-									X:		goast.NewIdent(ref.Name),
-									Sel:	goast.NewIdent("Get" + method_suffix),
+									X:   goast.NewIdent(ref.Name),
+									Sel: goast.NewIdent("Get" + method_suffix),
 								},
 							},
-							Y:	right,
-							Op:	getTokenForOperator(binaryOperation),
+							Y:  right,
+							Op: getTokenForOperator(binaryOperation),
 						},
 					},
 				}
@@ -187,9 +187,9 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	return &goast.BinaryExpr{
-		X:	left,
-		Y:	right,
-		Op:	getTokenForOperator(n.Opcode),
+		X:  left,
+		Y:  right,
+		Op: getTokenForOperator(n.Opcode),
 	}, "", preStmts, postStmts, nil
 }
 

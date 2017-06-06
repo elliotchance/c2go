@@ -20,53 +20,53 @@ import (
 // program to a Go program.
 type Program struct {
 	// All of the Go import paths required for this program.
-	imports	[]string
+	imports []string
 
 	// These are for the output Go AST.
-	FileSet	*token.FileSet
-	File	*goast.File
+	FileSet *token.FileSet
+	File    *goast.File
 
 	// One a type is defined it will be ignored if a future type of the same
 	// name appears.
-	typesAlreadyDefined	[]string
+	typesAlreadyDefined []string
 
 	// Contains the current function name during the transpilation.
-	Function	*ast.FunctionDecl
+	Function *ast.FunctionDecl
 
 	// These are used to setup the runtime before the application begins. An
 	// example would be to setup globals with stdin file pointers on certain
 	// platforms.
-	startupStatements	[]goast.Stmt
+	startupStatements []goast.Stmt
 
 	// This is used to generate globally unique names for temporary variables
 	// and other generated code. See GetNextIdentifier().
-	nextUniqueIdentifier	int
+	nextUniqueIdentifier int
 
 	// The definitions for defined structs.
 	// TODO: This field should be protected through proper getters and setters.
-	Structs	map[string]*Struct
-	Unions	map[string]*Struct
+	Structs map[string]*Struct
+	Unions  map[string]*Struct
 
 	// If verbose is on progress messages will be printed immediately as code
 	// comments (so that they do not intefere with the program output).
-	Verbose	bool
+	Verbose bool
 
 	// Contains the messages (for example, "// Warning") generated when
 	// transpiling the AST. These messages, which are code comments, are
 	// appended to the very top of the output file. See AddMessage().
-	messages	[]string
+	messages []string
 }
 
 // NewProgram creates a new blank program.
 func NewProgram() *Program {
 	return &Program{
-		imports:				[]string{},
-		typesAlreadyDefined:	[]string{},
-		startupStatements:		[]goast.Stmt{},
-		Structs:				make(map[string]*Struct),
-		Unions:					make(map[string]*Struct),
-		Verbose:				false,
-		messages:				[]string{},
+		imports:             []string{},
+		typesAlreadyDefined: []string{},
+		startupStatements:   []goast.Stmt{},
+		Structs:             make(map[string]*Struct),
+		Unions:              make(map[string]*Struct),
+		Verbose:             false,
+		messages:            []string{},
 	}
 }
 

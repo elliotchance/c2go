@@ -33,8 +33,8 @@ func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, str
 	}
 
 	return &goast.Field{
-		Names:	[]*goast.Ident{goast.NewIdent(name)},
-		Type:	goast.NewIdent(fieldType),
+		Names: []*goast.Ident{goast.NewIdent(name)},
+		Type:  goast.NewIdent(fieldType),
 	}, "unknown3"
 }
 
@@ -89,10 +89,10 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 		p.File.Decls = append(p.File.Decls, transpileUnion(name, size, fields)...)
 	} else {
 		p.File.Decls = append(p.File.Decls, &goast.GenDecl{
-			Tok:	token.TYPE,
+			Tok: token.TYPE,
 			Specs: []goast.Spec{
 				&goast.TypeSpec{
-					Name:	goast.NewIdent(name),
+					Name: goast.NewIdent(name),
 					Type: &goast.StructType{
 						Fields: &goast.FieldList{
 							List: fields,
@@ -167,11 +167,11 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 	}
 
 	p.File.Decls = append(p.File.Decls, &goast.GenDecl{
-		Tok:	token.TYPE,
+		Tok: token.TYPE,
 		Specs: []goast.Spec{
 			&goast.TypeSpec{
-				Name:	goast.NewIdent(name),
-				Type:	goast.NewIdent(resolvedType),
+				Name: goast.NewIdent(name),
+				Type: goast.NewIdent(resolvedType),
 			},
 		},
 	})
@@ -246,14 +246,14 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	p.File.Decls = append(p.File.Decls, &goast.GenDecl{
-		Tok:	token.VAR,
+		Tok: token.VAR,
 		Specs: []goast.Spec{
 			&goast.ValueSpec{
 				Names: []*goast.Ident{
 					goast.NewIdent(name),
 				},
-				Type:	goast.NewIdent(theType),
-				Values:	defaultValue,
+				Type:   goast.NewIdent(theType),
+				Values: defaultValue,
 			},
 		},
 	})

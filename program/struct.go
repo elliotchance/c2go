@@ -9,14 +9,14 @@ import (
 // Struct represents the definition for a C struct.
 type Struct struct {
 	// The name of the struct.
-	Name	string
+	Name string
 
 	// True if the struct kind is an union.
-	IsUnion	bool
+	IsUnion bool
 
 	// Each of the fields and their C type. The field may be a string or an
 	// instance of Struct for nested structures.
-	Fields	map[string]interface{}
+	Fields map[string]interface{}
 }
 
 // NewStruct creates a new Struct definition from an ast.RecordDecl.
@@ -40,8 +40,8 @@ func NewStruct(n *ast.RecordDecl) *Struct {
 	}
 
 	return &Struct{
-		Name:		n.Name,
-		IsUnion:	n.Kind == "union",
-		Fields:		fields,
+		Name:    n.Name,
+		IsUnion: n.Kind == "union",
+		Fields:  fields,
 	}
 }
