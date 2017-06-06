@@ -21,13 +21,6 @@ func (self *SampleType) assign(v interface{}) {
     value.Set(self.cast(value.Type()).Elem())
 }
 
-// Get typed pointer
-func (self *SampleType) pointer(v interface{}) {
-    value := reflect.ValueOf(v).Elem()
-
-    value.Set(self.cast(value.Type().Elem()))
-}
-
 // Generic setter
 func (self *SampleType) UntypedSet(v interface{}) {
     value := reflect.ValueOf(v)
@@ -46,12 +39,6 @@ func (self *SampleType) GetF1() (res int32)  { self.assign(&res); return }
 func (self *SampleType) GetF2() (res uint32) { self.assign(&res); return }
 func (self *SampleType) GetF3() (res byte)   { self.assign(&res); return }
 func (self *SampleType) GetF4() (res int16)  { self.assign(&res); return }
-
-// Pointers
-func (self *SampleType) PtrF1() (res *int32)  { self.pointer(&res); return }
-func (self *SampleType) PtrF2() (res *uint32) { self.pointer(&res); return }
-func (self *SampleType) PtrF3() (res *byte)   { self.pointer(&res); return }
-func (self *SampleType) PtrF4() (res *int16)  { self.pointer(&res); return }
 
 func main() {
     // Create the union
