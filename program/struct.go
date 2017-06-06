@@ -1,47 +1,47 @@
 package program
 
 import (
-    "fmt"
+	"fmt"
 
-    "github.com/elliotchance/c2go/ast"
+	"github.com/elliotchance/c2go/ast"
 )
 
 // Struct represents the definition for a C struct.
 type Struct struct {
-    // The name of the struct.
-    Name string
+	// The name of the struct.
+	Name	string
 
-    // True if the struct kind is an union.
-    IsUnion bool
+	// True if the struct kind is an union.
+	IsUnion	bool
 
-    // Each of the fields and their C type. The field may be a string or an
-    // instance of Struct for nested structures.
-    Fields map[string]interface{}
+	// Each of the fields and their C type. The field may be a string or an
+	// instance of Struct for nested structures.
+	Fields	map[string]interface{}
 }
 
 // NewStruct creates a new Struct definition from an ast.RecordDecl.
 func NewStruct(n *ast.RecordDecl) *Struct {
-    fields := make(map[string]interface{})
+	fields := make(map[string]interface{})
 
-    for _, field := range n.Children {
-        switch f := field.(type) {
-        case *ast.FieldDecl:
-            fields[f.Name] = f.Type
+	for _, field := range n.Children {
+		switch f := field.(type) {
+		case *ast.FieldDecl:
+			fields[f.Name] = f.Type
 
-        case *ast.RecordDecl:
-            fields[f.Name] = NewStruct(f)
+		case *ast.RecordDecl:
+			fields[f.Name] = NewStruct(f)
 
-        case *ast.MaxFieldAlignmentAttr, *ast.AlignedAttr:
-            // FIXME: Should these really be ignored?
+		case *ast.MaxFieldAlignmentAttr, *ast.AlignedAttr:
+			// FIXME: Should these really be ignored?
 
-        default:
-            panic(fmt.Sprintf("cannot decode: %#v", f))
-        }
-    }
+		default:
+			panic(fmt.Sprintf("cannot decode: %#v", f))
+		}
+	}
 
-    return &Struct{
-        Name:    n.Name,
-        IsUnion: n.Kind == "union",
-        Fields:  fields,
-    }
+	return &Struct{
+		Name:		n.Name,
+		IsUnion:	n.Kind == "union",
+		Fields:		fields,
+	}
 }
