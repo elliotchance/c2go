@@ -133,12 +133,10 @@ func SizeOf(p *program.Program, cType string) (int, error) {
     }
 
     // Get size for array types like: `base_type [count]`
-    groups := util.GroupsFromRegex(`^(?P<type>.+) ?[(?P<count>\d+)\]$`, cType)
-    fmt.Println("Gr:", groups)
-
+    groups := util.GroupsFromRegex(`^(?P<type>[^ ]+) *\[(?P<count>\d+)\]$`, cType)
     if groups == nil {
         return pointerSize, errors.New(
-            fmt.Sprintf("cannot determine size of: %s", cType))
+            fmt.Sprintf("cannot determine size of: `%s`", cType))
     }
 
     base_size, err := SizeOf(p, groups["type"])
