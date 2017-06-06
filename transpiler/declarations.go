@@ -77,9 +77,6 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
     }
 
     if s.IsUnion {
-        // Imports needed
-        p.AddImports("reflect", "unsafe")
-
         // Union size
         size, err := types.SizeOf(p, "union "+name)
         if err != nil {
