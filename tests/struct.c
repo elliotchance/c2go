@@ -12,18 +12,19 @@ struct programming
 void f(struct programming *addr)
 {
     char *s = "Show string member.";
+    float v = 1.23+4.56+1.;
 
     addr->constant += 4.56;
     addr->constant++;
     addr->pointer = s;
 
-    printf("%f\n", addr->constant);
-    printf("%s\n", addr->pointer);
+    is_eq(addr->constant, v);
+    is_streq(addr->pointer, "Show string member.");
 }
 
 int main()
 {
-    plan(2);
+    plan(4);
 
     struct programming variable;
     char *s = "Programming in Software Development.";
@@ -35,8 +36,8 @@ int main()
     is_streq(variable.pointer, "Programming in Software Development.");
 
     f(&variable);
-    
+
     done_testing();
-    
+
     return 0;
 }

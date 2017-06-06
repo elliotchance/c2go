@@ -34,21 +34,12 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
         if ok {
             ref := memberExpr.GetDeclRef()
             if ref != nil {
-                typename, err := types.ResolveType(p, ref.Type)
-                if err != nil {
-                    return nil, "", preStmts, postStmts, err
-                }
-
-                if typename[0] == '*' {
-                    typename = typename[1:]
-                }
-
                 binaryOperator := token.ADD
                 if operator == token.DEC {
                     binaryOperator = token.SUB
                 }
 
-                union := p.GetStruct(typename)
+                union := p.GetStruct(ref.Type)
                 if union.IsUnion {
                     // Method suffix for using getters and setters of Go union type
                     methodSuffix := strings.Title(memberExpr.Name)

@@ -149,16 +149,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
             if ok {
                 ref := memberExpr.GetDeclRef()
                 if ref != nil {
-                    typename, err := types.ResolveType(p, ref.Type)
-                    if err != nil {
-                        return nil, "", preStmts, postStmts, err
-                    }
-
-                    if typename[0] == '*' {
-                        typename = typename[1:]
-                    }
-
-                    union := p.GetStruct(typename)
+                    union := p.GetStruct(ref.Type)
                     if union.IsUnion {
                         funcName := fmt.Sprintf("%s.Set%s", ref.Name, strings.Title(memberExpr.Name))
                         resExpr := util.NewCallExpr(funcName, right)

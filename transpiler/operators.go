@@ -140,20 +140,11 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
     if ok {
         ref := memberExpr.GetDeclRef()
         if ref != nil {
-            typename, err := types.ResolveType(p, ref.Type)
-            if err != nil {
-                return nil, "", preStmts, postStmts, err
-            }
-
-            if typename[0] == '*' {
-                typename = typename[1:]
-            }
-
             // Get operator by removing last char that is '=' (e.g.: += becomes +)
             binaryOperation := n.Opcode
             binaryOperation = binaryOperation[:(len(binaryOperation) - 1)]
 
-            union := p.GetStruct(typename)
+            union := p.GetStruct(ref.Type)
             if union.IsUnion {
                 // Method suffix for using getters and setters of Go union type
                 methodSuffix := strings.Title(memberExpr.Name)

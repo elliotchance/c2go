@@ -173,7 +173,7 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
     p.AddMessage(ast.GenerateWarningMessage(err, n))
 
     // lhsType will be something like "struct foo"
-    structType := p.Structs[lhsType]
+    structType := p.GetStruct(lhsType)
     rhs := n.Name
     rhsType := "void *"
     if structType == nil {
@@ -199,25 +199,12 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
     }
 
     // Construct code for getting value to an union field
-    ref := n.GetDeclRef()
-    if ref != nil {
-        typename, err := types.ResolveType(p, ref.Type)
-        if err != nil {
-            return nil, "", preStmts, postStmts, err
-        }
+    if structType.IsUnion {
+        ident := lhs.(*goast.Ident)
+        funcName := fmt.Sprintf("%s.Get%s", ident.Name, strings.Title(n.Name))
+        resExpr := util.NewCallExpr(funcName)
 
-        if typename[0] == '*' {
-            typename = typename[1:]
-        }
-
-        // Getting union field value
-        union := p.GetStruct(typename)
-        if union.IsUnion {
-            funcName := fmt.Sprintf("%s.Get%s", ref.Name, strings.Title(n.Name))
-            resExpr := util.NewCallExpr(funcName)
-
-            return resExpr, rhsType, preStmts, postStmts, nil
-        }
+        return resExpr, rhsType, preStmts, postStmts, nil
     }
 
     return &goast.SelectorExpr{

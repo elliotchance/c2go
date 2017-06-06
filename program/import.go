@@ -23,8 +23,7 @@ func (p *Program) Imports() []string {
 
     // Imports packages for unions if at least an union is defined
     for _, t := range p.typesAlreadyDefined {
-        _, ok := p.Unions[t]
-        if ok {
+        if p.Unions.HasType("union " + t) {
             addImport("reflect")
             addImport("unsafe")
             break
