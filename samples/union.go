@@ -6,7 +6,16 @@ import (
     "unsafe"
 )
 
-// SampleType is an Union type example
+/*
+SampleType is a Go union type example for the C union type:
+    union SampleType
+    {
+        long f1;
+        unsigned long f2;
+        unsigned char f3;
+        short f4;
+    };
+*/
 type SampleType [4]byte
 
 // Get casted pointer
@@ -21,12 +30,32 @@ func (st *SampleType) assign(v interface{}) {
     value.Set(st.cast(value.Type()).Elem())
 }
 
+// Get typed pointer
+func (self *SampleType) pointer(v interface{}) {
+    value := reflect.ValueOf(v).Elem()
+
+    value.Set(self.cast(value.Type().Elem()))
+}
+
 // UntypedSet is the generic setter
 func (st *SampleType) UntypedSet(v interface{}) {
     value := reflect.ValueOf(v)
 
     st.cast(value.Type()).Elem().Set(value)
 }
+
+/* Pointers */
+// PtrF1 gets pointer on F1 field
+func (self *SampleType) PtrF1() (res *int32) { self.pointer(&res); return }
+
+// PtrF2 gets pointer on F2 field
+func (self *SampleType) PtrF2() (res *uint32) { self.pointer(&res); return }
+
+// PtrF3 gets pointer on F3 field
+func (self *SampleType) PtrF3() (res *byte) { self.pointer(&res); return }
+
+// PtrF4 gets pointer on F4 field
+func (self *SampleType) PtrF4() (res *int16) { self.pointer(&res); return }
 
 /* Setters */
 // SetF1 sets F1 field
