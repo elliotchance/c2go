@@ -113,6 +113,12 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 		t, err := types.ResolveType(p, eType)
 		p.AddMessage(ast.GenerateWarningMessage(err, n))
 
+		if t == "[]byte" {
+			return util.NewUnaryExpr(
+				token.NOT, util.NewCallExpr("noarch.CStringIsNull", e),
+			), "bool", preStmts, postStmts, nil
+		}
+
 		p.AddImport("github.com/elliotchance/c2go/noarch")
 
 		functionName := fmt.Sprintf("noarch.Not%s", util.Ucfirst(t))
@@ -125,11 +131,8 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 	if operator == token.MUL {
 		if eType == "const char *" {
 			return &goast.IndexExpr{
-				X: e,
-				Index: &goast.BasicLit{
-					Kind:  token.INT,
-					Value: "0",
-				},
+				X:     e,
+				Index: util.NewIntLit(0),
 			}, "char", preStmts, postStmts, nil
 		}
 
@@ -172,32 +175,46 @@ func transpileUnaryExprOrTypeTraitExpr(n *ast.UnaryExprOrTypeTraitExpr, p *progr
 	// It will have children if the sizeof() is referencing a variable.
 	// Fortunately clang already has the type in the AST for us.
 	if len(n.Children) > 0 {
-		switch ty := n.Children[0].(*ast.ParenExpr).Children[0].(type) {
-		case *ast.DeclRefExpr:
-			t = ty.Type2
+		var realFirstChild interface{}
+		t = ""
 
-		case *ast.ArraySubscriptExpr:
-			t = ty.Type
-
-		case *ast.MemberExpr:
-			t = ty.Type
-
-		case *ast.UnaryOperator:
-			t = ty.Type
-
+		switch c := n.Children[0].(type) {
 		case *ast.ParenExpr:
-			t = ty.Type
-
+			realFirstChild = c.Children[0]
+		case *ast.DeclRefExpr:
+			t = c.Type
 		default:
-			panic(fmt.Sprintf("cannot do unary on: %#v", ty))
+			panic(fmt.Sprintf("cannot find first child from: %#v", n.Children[0]))
+		}
+
+		if t == "" {
+			switch ty := realFirstChild.(type) {
+			case *ast.DeclRefExpr:
+				t = ty.Type2
+
+			case *ast.ArraySubscriptExpr:
+				t = ty.Type
+
+			case *ast.MemberExpr:
+				t = ty.Type
+
+			case *ast.UnaryOperator:
+				t = ty.Type
+
+			case *ast.ParenExpr:
+				t = ty.Type
+
+			case *ast.CallExpr:
+				t = ty.Type
+
+			default:
+				panic(fmt.Sprintf("cannot do unary on: %#v", ty))
+			}
 		}
 	}
-
-	ty, err := types.ResolveType(p, n.Type1)
-	p.AddMessage(ast.GenerateWarningMessage(err, n))
 
 	sizeInBytes, err := types.SizeOf(p, t)
 	p.AddMessage(ast.GenerateWarningMessage(err, n))
 
-	return util.NewIntLit(sizeInBytes), ty, nil, nil, nil
+	return util.NewIntLit(sizeInBytes), n.Type1, nil, nil, nil
 }

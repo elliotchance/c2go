@@ -124,10 +124,11 @@ func transpileParenExpr(n *ast.ParenExpr, p *program.Program) (
 
 func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.Program) (
 	goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
+	operator := getTokenForOperator(n.Opcode)
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
-	right, _, newPre, newPost, err := transpileToExpr(n.Children[1], p)
+	right, rightType, newPre, newPost, err := transpileToExpr(n.Children[1], p)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
@@ -186,10 +187,22 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
+	// The right hand argument of the shift left or shift right operators
+	// in Go must be unsigned integers. In C, shifting with a negative shift
+	// count is undefined behaviour (so we should be able to ignore that case).
+	// To handle this, cast the shift count to a uint64.
+	if operator == token.SHL_ASSIGN || operator == token.SHR_ASSIGN {
+		right, err = types.CastExpr(p, right, rightType, "unsigned long long")
+		p.AddMessage(ast.GenerateWarningOrErrorMessage(err, n, right == nil))
+		if right == nil {
+			right = util.NewNil()
+		}
+	}
+
 	return &goast.BinaryExpr{
 		X:  left,
 		Y:  right,
-		Op: getTokenForOperator(n.Opcode),
+		Op: operator,
 	}, "", preStmts, postStmts, nil
 }
 

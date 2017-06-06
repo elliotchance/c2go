@@ -4,11 +4,16 @@ package main
 
 import (
 	"bytes"
+	"flag"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"testing"
+
+	"regexp"
 
 	"github.com/elliotchance/c2go/util"
 )
@@ -39,10 +44,21 @@ type programOut struct {
 //     go test -tags=integration -run=TestIntegrationScripts/tests/ctype/isalnum.c
 //
 func TestIntegrationScripts(t *testing.T) {
-	files, err := filepath.Glob("tests/*.c")
+	testFiles, err := filepath.Glob("tests/*.c")
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	exampleFiles, err := filepath.Glob("examples/*.c")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	files := append(testFiles, exampleFiles...)
+
+	isVerbose := flag.CommandLine.Lookup("test.v").Value.String() == "true"
+
+	totalTapTests := 0
 
 	for _, file := range files {
 		// Create build folder
@@ -88,20 +104,52 @@ func TestIntegrationScripts(t *testing.T) {
 			err = cmd.Run()
 			goProgram.isZero = err == nil
 
+			// Check for special exit codes that signal that tests have failed.
+			if exitError, ok := err.(*exec.ExitError); ok {
+				exitStatus := exitError.Sys().(syscall.WaitStatus).ExitStatus()
+				if exitStatus == 101 || exitStatus == 102 {
+					t.Fatal(goProgram.stdout.String())
+				}
+			}
+
 			// Check if both exit codes are zero (or non-zero)
 			if cProgram.isZero != goProgram.isZero {
-				t.Fatalf("Expected: %t, Got: %t", cProgram.isZero, goProgram.isZero)
+				t.Fatalf("Exit statuses did not match.\n" +
+					util.ShowDiff(cProgram.stdout.String(),
+						goProgram.stdout.String()),
+				)
 			}
 
 			// Check stderr
 			if cProgram.stderr.String() != goProgram.stderr.String() {
-				t.Fatalf("Expected %q, Got: %q", cProgram.stderr.String(), goProgram.stderr.String())
+				t.Fatalf("Expected %q, Got: %q",
+					cProgram.stderr.String(),
+					goProgram.stderr.String())
 			}
 
 			// Check stdout
 			if cProgram.stdout.String() != goProgram.stdout.String() {
-				t.Fatalf(util.ShowDiff(cProgram.stdout.String(), goProgram.stdout.String()))
+				t.Fatalf(util.ShowDiff(cProgram.stdout.String(),
+					goProgram.stdout.String()))
+			}
+
+			// If this is not an example we will extact the number of tests run.
+			if strings.Index(file, "examples/") == -1 && isVerbose {
+				firstLine := strings.Split(goProgram.stdout.String(), "\n")[0]
+
+				matches := regexp.MustCompile(`1\.\.(\d+)`).
+					FindStringSubmatch(firstLine)
+				if len(matches) == 0 {
+					t.Fatalf("Test did not output tap: %s", file)
+				}
+
+				fmt.Printf("TAP: # %s: %s tests\n", file, matches[1])
+				totalTapTests += util.Atoi(matches[1])
 			}
 		})
+	}
+
+	if isVerbose {
+		fmt.Printf("TAP: # Total tests: %d\n", totalTapTests)
 	}
 }

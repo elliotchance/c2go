@@ -39,27 +39,50 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 	operator := getTokenForOperator(n.Operator)
 	returnType := types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType)
 
-	if operator == token.LAND {
+	if operator == token.LAND || operator == token.LOR {
 		left, err = types.CastExpr(p, left, leftType, "bool")
 		p.AddMessage(ast.GenerateWarningOrErrorMessage(err, n, left == nil))
 		if left == nil {
-			left = util.NewStringLit("nil")
+			left = util.NewNil()
 		}
 
 		right, err = types.CastExpr(p, right, rightType, "bool")
 		p.AddMessage(ast.GenerateWarningOrErrorMessage(err, n, right == nil))
 		if right == nil {
-			right = util.NewStringLit("nil")
+			right = util.NewNil()
 		}
 
 		return util.NewBinaryExpr(left, operator, right), "bool",
 			preStmts, postStmts, nil
 	}
 
-	// Convert "(0)" to "nil" when we are dealing with equality.
-	if (operator == token.NEQ || operator == token.EQL) &&
-		types.IsNullExpr(right) {
-		right = goast.NewIdent("nil")
+	// The right hand argument of the shift left or shift right operators
+	// in Go must be unsigned integers. In C, shifting with a negative shift
+	// count is undefined behaviour (so we should be able to ignore that case).
+	// To handle this, cast the shift count to a uint64.
+	if operator == token.SHL || operator == token.SHR {
+		right, err = types.CastExpr(p, right, rightType, "unsigned long long")
+		p.AddMessage(ast.GenerateWarningOrErrorMessage(err, n, right == nil))
+		if right == nil {
+			right = util.NewNil()
+		}
+
+		return util.NewBinaryExpr(left, operator, right), leftType,
+			preStmts, postStmts, nil
+	}
+
+	if operator == token.NEQ || operator == token.EQL {
+		// Convert "(0)" to "nil" when we are dealing with equality.
+		if types.IsNullExpr(right) {
+			right = util.NewNil()
+		} else {
+			// We may have to cast the right side to the same type as the left
+			// side. This is a bit crude because we should make a better
+			// decision of which type to cast to instead of only using the type
+			// of the left side.
+			right, err = types.CastExpr(p, right, rightType, leftType)
+			p.AddMessage(ast.GenerateWarningOrErrorMessage(err, n, right == nil))
+		}
 	}
 
 	if operator == token.ASSIGN {
@@ -91,7 +114,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 
 			right = util.NewCallExpr(
 				"make",
-				util.NewStringLit(toType),
+				util.NewTypeIdent(toType),
 				util.NewBinaryExpr(allocSizeExpr, token.QUO, util.NewIntLit(elementSize)),
 			)
 		} else {
@@ -118,7 +141,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 			}
 
 			if p.AddMessage(ast.GenerateWarningMessage(err, n)) && right == nil {
-				right = util.NewStringLit("nil")
+				right = util.NewNil()
 			}
 
 			// Construct code for assigning value to an union field

@@ -67,7 +67,19 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 
 	if functionDef == nil {
 		errorMessage := fmt.Sprintf("unknown function: %s", functionName)
-		return nil, "", nil, nil, errors.New(errorMessage)
+		p.AddMessage(ast.GenerateWarningMessage(errors.New(errorMessage), n))
+
+		// We do not have a prototype for the function, but we should not exit
+		// here. Instead we will create a mock definition for it so that this
+		// transpile function will always return something and continue.
+		//
+		// The mock function definition is never actually saved to the program
+		// definitions, so each time we see the CallExpr it will run this every
+		// time. This is so if we come across the real prototype later it will
+		// be handled correctly. Or at least "more" correctly.
+		functionDef = &program.FunctionDefinition{
+			Name: functionName,
+		}
 	}
 
 	if functionDef.Substitution != "" {
@@ -129,8 +141,8 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 					Tok: token.VAR,
 					Specs: []goast.Spec{
 						&goast.ValueSpec{
-							Names: []*goast.Ident{goast.NewIdent(tempVariableName)},
-							Type:  goast.NewIdent("string"),
+							Names: []*goast.Ident{util.NewIdent(tempVariableName)},
+							Type:  util.NewTypeIdent("string"),
 						},
 					},
 				},
@@ -139,12 +151,12 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 			postStmts = append(postStmts, &goast.ExprStmt{
 				X: util.NewCallExpr("copy", &goast.SliceExpr{
 					X: e,
-				}, goast.NewIdent(tempVariableName)),
+				}, util.NewIdent(tempVariableName)),
 			})
 
 			e = &goast.UnaryExpr{
 				Op: token.AND,
-				X:  goast.NewIdent(tempVariableName),
+				X:  util.NewIdent(tempVariableName),
 			}
 		}
 
@@ -188,7 +200,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 				)
 
 				if realArg == nil {
-					realArg = util.NewStringLit("nil")
+					realArg = util.NewNil()
 				}
 			}
 
@@ -206,7 +218,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 					functionDef.ArgumentTypes[i])
 
 				if p.AddMessage(ast.GenerateWarningMessage(err, n)) {
-					a = util.NewStringLit("nil")
+					a = util.NewNil()
 				}
 			}
 

@@ -1,6 +1,7 @@
 // Tests for structures.
 
 #include <stdio.h>
+#include "tests.h"
 
 struct programming
 {
@@ -22,16 +23,20 @@ void f(struct programming *addr)
 
 int main()
 {
+    plan(2);
+
     struct programming variable;
     char *s = "Programming in Software Development.";
 
     variable.constant = 1.23;
     variable.pointer = s;
 
-    printf("%f\n", variable.constant);
-    printf("%s\n", variable.pointer);
+    is_eq(variable.constant, 1.23);
+    is_streq(variable.pointer, "Programming in Software Development.");
 
     f(&variable);
-
+    
+    done_testing();
+    
     return 0;
 }

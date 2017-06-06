@@ -54,7 +54,9 @@ func IsType(_c Darwin_ct_rune_t, _f uint32) uint32 {
 		return 1
 	}
 
-	if _f&CTYPE_G != 0 && unicode.IsGraphic(rune(_c)) {
+	// The IsSpace check is required becuase Go treats spaces as graphic
+	// characters, which C does not.
+	if _f&CTYPE_G != 0 && unicode.IsGraphic(rune(_c)) && !unicode.IsSpace(rune(_c)) {
 		return 1
 	}
 

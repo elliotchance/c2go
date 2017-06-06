@@ -16,7 +16,7 @@ import (
 
 func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (
 	*goast.Ident, string, error) {
-	return goast.NewIdent(n.Name), n.Type, nil
+	return util.NewIdent(n.Name), n.Type, nil
 }
 
 func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
@@ -59,7 +59,7 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 			util.NewCallExpr(
 				"make",
 				&goast.ArrayType{
-					Elt: goast.NewIdent(goArrayType),
+					Elt: util.NewTypeIdent(goArrayType),
 				},
 				util.NewIntLit(arraySize),
 				util.NewIntLit(arraySize),
@@ -75,8 +75,8 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 			Tok: token.VAR,
 			Specs: []goast.Spec{
 				&goast.ValueSpec{
-					Names:  []*goast.Ident{goast.NewIdent(a.Name)},
-					Type:   goast.NewIdent(t),
+					Names:  []*goast.Ident{util.NewIdent(a.Name)},
+					Type:   util.NewTypeIdent(t),
 					Values: defaultValue,
 				},
 			},
@@ -172,11 +172,25 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	lhsResolvedType, err := types.ResolveType(p, lhsType)
 	p.AddMessage(ast.GenerateWarningMessage(err, n))
 
+	// lhsType will be something like "struct foo"
+	structType := p.Structs[lhsType]
 	rhs := n.Name
-
-	// FIXME: This should not be empty. We need some fallback type to catch
-	// errors like "unknown8".
-	rhsType := ""
+	rhsType := "void *"
+	if structType == nil {
+		// This case should not happen in the future. Any structs should be
+		// either parsed correctly from the source or be manually setup when the
+		// parser starts if the struct if hidden or shared between libraries.
+		//
+		// Some other things to keep in mind:
+		//   1. Types need to be stripped of their pointer, 'FILE *' -> 'FILE'.
+		//   2. Types may refer to one or more other types in a chain that have
+		//      to be resolved before the real field type can be determined.
+		err = errors.New("cannot determine type for '" + lhsType +
+			"', will use 'void *' for all fields")
+		p.AddMessage(ast.GenerateWarningMessage(err, n))
+	} else {
+		rhsType = structType.Fields[rhs].(string)
+	}
 
 	// FIXME: This is just a hack
 	if util.InStrings(lhsResolvedType, []string{"darwin.Float2", "darwin.Double2"}) {
@@ -211,6 +225,6 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 
 	return &goast.SelectorExpr{
 		X:   lhs,
-		Sel: goast.NewIdent(rhs),
+		Sel: util.NewIdent(rhs),
 	}, rhsType, preStmts, postStmts, nil
 }

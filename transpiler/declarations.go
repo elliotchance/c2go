@@ -33,8 +33,8 @@ func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, str
 	}
 
 	return &goast.Field{
-		Names: []*goast.Ident{goast.NewIdent(name)},
-		Type:  goast.NewIdent(fieldType),
+		Names: []*goast.Ident{util.NewIdent(name)},
+		Type:  util.NewTypeIdent(fieldType),
 	}, "unknown3"
 }
 
@@ -48,9 +48,9 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 
 	s := program.NewStruct(n)
 	if s.IsUnion {
-		p.Unions[s.Name] = s
+		p.Unions["union "+s.Name] = s
 	} else {
-		p.Structs[s.Name] = s
+		p.Structs["struct "+s.Name] = s
 	}
 
 	// TODO: Some platform structs are ignored.
@@ -92,7 +92,7 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 			Tok: token.TYPE,
 			Specs: []goast.Spec{
 				&goast.TypeSpec{
-					Name: goast.NewIdent(name),
+					Name: util.NewIdent(name),
 					Type: &goast.StructType{
 						Fields: &goast.FieldList{
 							List: fields,
@@ -170,8 +170,8 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 		Tok: token.TYPE,
 		Specs: []goast.Spec{
 			&goast.TypeSpec{
-				Name: goast.NewIdent(name),
-				Type: goast.NewIdent(resolvedType),
+				Name: util.NewIdent(name),
+				Type: util.NewTypeIdent(resolvedType),
 			},
 		},
 	})
@@ -181,8 +181,17 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 
 func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 	[]goast.Stmt, []goast.Stmt, string) {
+	// There are cases where the same variable is defined more than once. I
+	// assume this is becuase they are extern or static definitions. For now, we
+	// will ignore any redefinitions.
+	if _, found := p.GlobalVariables[n.Name]; found {
+		return nil, nil, ""
+	}
+
 	theType, err := types.ResolveType(p, n.Type)
 	p.AddMessage(ast.GenerateWarningMessage(err, n))
+
+	p.GlobalVariables[n.Name] = theType
 
 	name := n.Name
 	preStmts := []goast.Stmt{}
@@ -217,7 +226,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 					token.ASSIGN,
 					util.NewCallExpr(
 						"noarch.NewFile",
-						goast.NewIdent("os."+util.Ucfirst(name[2:len(name)-1])),
+						util.NewTypeIdent("os."+util.Ucfirst(name[2:len(name)-1])),
 					),
 				),
 			)
@@ -232,7 +241,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 					token.ASSIGN,
 					util.NewCallExpr(
 						"noarch.NewFile",
-						goast.NewIdent("os."+util.Ucfirst(name)),
+						util.NewTypeIdent("os."+util.Ucfirst(name)),
 					),
 				),
 			)
@@ -250,9 +259,9 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 		Specs: []goast.Spec{
 			&goast.ValueSpec{
 				Names: []*goast.Ident{
-					goast.NewIdent(name),
+					util.NewIdent(name),
 				},
-				Type:   goast.NewIdent(theType),
+				Type:   util.NewTypeIdent(theType),
 				Values: defaultValue,
 			},
 		},
