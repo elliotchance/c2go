@@ -25,7 +25,7 @@ func (p *Program) Imports() []string {
     for _, t := range p.typesAlreadyDefined {
         _, ok := p.Unions[t]
         if ok {
-            add_import("refect")
+            add_import("reflect")
             add_import("unsafe")
             break
         }
