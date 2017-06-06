@@ -3,9 +3,11 @@ package types
 import (
     "errors"
     "fmt"
+    "strconv"
     "strings"
 
     "github.com/elliotchance/c2go/program"
+    "github.com/elliotchance/c2go/util"
 )
 
 func removePrefix(s, prefix string) string {
@@ -128,9 +130,26 @@ func SizeOf(p *program.Program, cType string) (int, error) {
 
     case "long double":
         return 16, nil
+    }
 
-    default:
+    // Get size for array types like: `base_type [count]`
+    groups := util.GroupsFromRegex(`^(?P<type>.+) ?[(?P<count>\d+)\]$`, cType)
+    fmt.Println("Gr:", groups)
+
+    if groups == nil {
         return pointerSize, errors.New(
             fmt.Sprintf("cannot determine size of: %s", cType))
     }
+
+    base_size, err := SizeOf(p, groups["type"])
+    if err != nil {
+        return nil, err
+    }
+
+    count, err := strconv.Atoi(groups["count"])
+    if err != nil {
+        return nil, err
+    }
+
+    return base_size * count, nil
 }
