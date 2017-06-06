@@ -69,7 +69,7 @@ func SizeOf(p *program.Program, cType string) (int, error) {
     if strings.HasPrefix(cType, "union ") {
         byte_count := 0
 
-        s := p.Structs[cType[6:]]
+        s := p.Unions[cType[6:]]
         if s == nil {
             return 0, errors.New(fmt.Sprintf("could not sizeof: %s", cType))
         }

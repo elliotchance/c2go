@@ -8,6 +8,18 @@ union programming
     char *pointer;
 };
 
+void f(union programming *addr)
+{
+    char *s = "Show string member.";
+
+    addr->constant += 4.56;
+    addr->constant++;
+    printf("%f\n", addr->constant);
+
+    addr->pointer = s;
+    printf("%s\n", addr->pointer);
+}
+
 int main()
 {
     union programming variable;
@@ -23,6 +35,8 @@ int main()
 
     variable.pointer = s;
     printf("%s\n", variable.pointer);
+
+    f(&variable);
 
     return 0;
 }

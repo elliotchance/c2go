@@ -47,7 +47,11 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
     p.TypeIsNowDefined(name)
 
     s := program.NewStruct(n)
-    p.Structs[s.Name] = s
+    if s.IsUnion {
+        p.Unions[s.Name] = s
+    } else {
+        p.Structs[s.Name] = s
+    }
 
     // TODO: Some platform structs are ignored.
     // https://github.com/elliotchance/c2go/issues/85

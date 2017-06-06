@@ -1,13 +1,12 @@
 package transpiler
 
 import (
-    "strconv"
     "strings"
 
     goast "go/ast"
     "go/token"
 
-    //"github.com/elliotchance/c2go/types"
+    "github.com/elliotchance/c2go/util"
 )
 
 func transpileUnion(name string, size int, fields []*goast.Field) []goast.Decl {
@@ -20,10 +19,7 @@ func transpileUnion(name string, size int, fields []*goast.Field) []goast.Decl {
                     Name: goast.NewIdent(name),
                     Type: &goast.ArrayType{
                         Elt: goast.NewIdent("byte"),
-                        Len: &goast.BasicLit{
-                            Kind:  token.INT,
-                            Value: strconv.Itoa(size), // Size of the union
-                        },
+                        Len: util.NewIntLit(size), // Size of the union
                     },
                 },
             },
@@ -85,11 +81,8 @@ func transpileUnion(name string, size int, fields []*goast.Field) []goast.Decl {
                                             &goast.UnaryExpr{
                                                 Op: token.AND,
                                                 X: &goast.IndexExpr{
-                                                    X:  goast.NewIdent("self"),
-                                                    Index: &goast.BasicLit{
-                                                        Kind:  token.INT,
-                                                        Value: "0",
-                                                    },
+                                                    X:     goast.NewIdent("self"),
+                                                    Index: util.NewIntLit(0),
                                                 },
                                             },
                                         },
@@ -371,6 +364,13 @@ func transpileUnion(name string, size int, fields []*goast.Field) []goast.Decl {
                             },
                         },
                     },
+                    Results: &goast.FieldList{
+                        List: []*goast.Field{
+                            &goast.Field{
+                                Type: f.Type,
+                            },
+                        },
+                    },
                 },
                 Body: &goast.BlockStmt{
                     List: []goast.Stmt{
@@ -383,6 +383,11 @@ func transpileUnion(name string, size int, fields []*goast.Field) []goast.Decl {
                                 Args: []goast.Expr{
                                     goast.NewIdent("v"),
                                 },
+                            },
+                        },
+                        &goast.ReturnStmt{
+                            Results: []goast.Expr{
+                                goast.NewIdent("v"),
                             },
                         },
                     },
