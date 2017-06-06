@@ -203,12 +203,12 @@ func transpileUnion(name string, size int, fields []*goast.Field) []goast.Decl {
 
 	// Methods for each union field
 	for _, f := range fields {
-		fieldId := strings.Title(f.Names[0].Name)
+		fieldID := strings.Title(f.Names[0].Name)
 
 		res = append(res,
 			// Setter method (SetXX)
 			&goast.FuncDecl{
-				Name: util.NewIdent("Set" + fieldId),
+				Name: util.NewIdent("Set" + fieldID),
 				Recv: &goast.FieldList{
 					List: []*goast.Field{
 						{
@@ -252,7 +252,7 @@ func transpileUnion(name string, size int, fields []*goast.Field) []goast.Decl {
 
 			// Getter method (GetXX)
 			&goast.FuncDecl{
-				Name: util.NewIdent("Get" + fieldId),
+				Name: util.NewIdent("Get" + fieldID),
 				Recv: &goast.FieldList{
 					List: []*goast.Field{
 						{

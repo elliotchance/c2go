@@ -49,10 +49,10 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 					setterName := fmt.Sprintf("%s.Set%s", ref.Name, methodSuffix)
 
 					// Call-Expression argument
-					argLhs := util.NewCallExpr(getterName)
+					argLHS := util.NewCallExpr(getterName)
 					argOp := binaryOperator
-					argRhs := util.NewIntLit(1)
-					argValue := util.NewBinaryExpr(argLhs, argOp, argRhs)
+					argRHS := util.NewIntLit(1)
+					argValue := util.NewBinaryExpr(argLHS, argOp, argRHS)
 
 					// Make Go expression
 					resExpr := util.NewCallExpr(setterName, argValue)

@@ -154,10 +154,10 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
 				setterName := fmt.Sprintf("%s.Set%s", ref.Name, methodSuffix)
 
 				// Call-Expression argument
-				argLhs := util.NewCallExpr(getterName)
+				argLHS := util.NewCallExpr(getterName)
 				argOp := getTokenForOperator(binaryOperation)
-				argRhs := right
-				argValue := util.NewBinaryExpr(argLhs, argOp, argRhs)
+				argRHS := right
+				argValue := util.NewBinaryExpr(argLHS, argOp, argRHS)
 
 				// Make Go expression
 				resExpr := util.NewCallExpr(setterName, argValue)
