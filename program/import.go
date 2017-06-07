@@ -3,8 +3,6 @@ package program
 import (
     "strconv"
     "strings"
-
-    "github.com/elliotchance/c2go/util"
 )
 
 // Imports returns all of the Go imports for this program.
