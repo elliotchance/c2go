@@ -32,7 +32,7 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 		// Construct code for assigning value to an union field
 		memberExpr, ok := n.Children[0].(*ast.MemberExpr)
 		if ok {
-			ref := memberExpr.GetDeclRef()
+			ref := memberExpr.GetDeclRefExpr()
 			if ref != nil {
 				binaryOperator := token.ADD
 				if operator == token.DEC {

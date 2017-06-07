@@ -138,7 +138,7 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
 	// Construct code for computing compound assign operation to an union field
 	memberExpr, ok := n.Children[0].(*ast.MemberExpr)
 	if ok {
-		ref := memberExpr.GetDeclRef()
+		ref := memberExpr.GetDeclRefExpr()
 		if ref != nil {
 			// Get operator by removing last char that is '=' (e.g.: += becomes +)
 			binaryOperation := n.Opcode

@@ -9,23 +9,8 @@ union programming
     char *pointer;
 };
 
-void f(union programming *addr)
+void init() union programming
 {
-    char *s = "Show string member.";
-    float v = 1.23+4.56+1.;
-
-    addr->constant += 4.56;
-    addr->constant++;
-    is_eq(addr->constant, v);
-
-    addr->pointer = s;
-    is_streq(addr->pointer, "Show string member.");
-}
-
-int main()
-{
-    plan(4);
-
     union programming variable;
     char *s = "Programming in Software Development.";
 
@@ -35,9 +20,37 @@ int main()
     variable.constant = 1.23;
     is_eq(variable.constant, 1.23);
 
-    f(&variable);
+    return variable
+}
+
+void pass_by_ref(union programming *addr)
+{
+    char *s = "Show string member.";
+    float v = 1.23+4.56;
+
+    addr->constant += 4.56;
+    is_eq(addr->constant, v);
+
+    addr->pointer = s;
+    is_streq(addr->pointer, "Show string member.");
+}
+
+void var_by_val(union programming value)
+{
+    value.constant++;
+
+    is_eq(value.constant, 2.23);
+}
+
+int main()
+{
+    plan(5);
+
+    union programming variable;
+
+    variable = init();
+    var_by_val(variable);
+    pass_by_ref(&variable);
 
     done_testing();
-
-    return 0;
 }

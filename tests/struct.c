@@ -9,22 +9,29 @@ struct programming
     char *pointer;
 };
 
-void f(struct programming *addr)
+void pass_by_ref(struct programming *addr)
 {
     char *s = "Show string member.";
-    float v = 1.23+4.56+1.;
+    float v = 1.23+4.56;
 
     addr->constant += 4.56;
-    addr->constant++;
     addr->pointer = s;
 
     is_eq(addr->constant, v);
     is_streq(addr->pointer, "Show string member.");
 }
 
+void pass_by_val(struct programming value)
+{
+    value.constant++;
+
+    is_eq(value.constant, 2.23);
+    is_streq(value.pointer, "Programming in Software Development.");
+}
+
 int main()
 {
-    plan(4);
+    plan(5);
 
     struct programming variable;
     char *s = "Programming in Software Development.";
@@ -35,9 +42,8 @@ int main()
     is_eq(variable.constant, 1.23);
     is_streq(variable.pointer, "Programming in Software Development.");
 
-    f(&variable);
+    pass_by_val(variable);
+    pass_by_ref(&variable);
 
     done_testing();
-
-    return 0;
 }

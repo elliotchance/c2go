@@ -147,7 +147,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 			// Construct code for assigning value to an union field
 			memberExpr, ok := n.Children[0].(*ast.MemberExpr)
 			if ok {
-				ref := memberExpr.GetDeclRef()
+				ref := memberExpr.GetDeclRefExpr()
 				if ref != nil {
 					union := p.GetStruct(ref.Type)
 					if union.IsUnion {
