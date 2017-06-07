@@ -77,8 +77,8 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 	types := []string{
 		// Integer types
 		"byte",
-		"int", "int16", "int32", "int64",
-		"uint16", "uint32", "uint64",
+		"int", "int8", "int16", "int32", "int64",
+		"uint8", "uint16", "uint32", "uint64",
 
 		// Floating-point types.
 		"float32", "float64",
