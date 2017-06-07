@@ -33,7 +33,7 @@ union MyUnion
     double a;
     char b;
     int c;
-}
+};
 
 short a;
 int b;

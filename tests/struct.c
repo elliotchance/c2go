@@ -31,7 +31,7 @@ void pass_by_val(struct programming value)
 
 int main()
 {
-    plan(5);
+    plan(6);
 
     struct programming variable;
     char *s = "Programming in Software Development.";

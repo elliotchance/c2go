@@ -9,7 +9,7 @@ union programming
     char *pointer;
 };
 
-void init() union programming
+union programming init_var()
 {
     union programming variable;
     char *s = "Programming in Software Development.";
@@ -20,7 +20,7 @@ void init() union programming
     variable.constant = 1.23;
     is_eq(variable.constant, 1.23);
 
-    return variable
+    return variable;
 }
 
 void pass_by_ref(union programming *addr)
@@ -48,7 +48,7 @@ int main()
 
     union programming variable;
 
-    variable = init();
+    variable = init_var();
     var_by_val(variable);
     pass_by_ref(&variable);
 
