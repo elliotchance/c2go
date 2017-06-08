@@ -8,7 +8,8 @@ int main()
 {
 	plan(19);
 
-    int i = 10, j = 1;
+    int i = 10;
+    signed char j = 1;
     float f = 3.14159f;
     double d = 0.0;
     char c = 'A';
