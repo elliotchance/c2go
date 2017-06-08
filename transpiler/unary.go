@@ -29,6 +29,39 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 	// the expression with a magic position?) we will have to return a
 	// BinaryExpr with the same functionality.
 	if operator == token.INC || operator == token.DEC {
+		// Construct code for assigning value to an union field
+		memberExpr, ok := n.Children[0].(*ast.MemberExpr)
+		if ok {
+			ref := memberExpr.GetDeclRefExpr()
+			if ref != nil {
+				binaryOperator := token.ADD
+				if operator == token.DEC {
+					binaryOperator = token.SUB
+				}
+
+				union := p.GetStruct(ref.Type)
+				if union != nil && union.IsUnion {
+					// Method suffix for using getters and setters of Go union type
+					methodSuffix := strings.Title(memberExpr.Name)
+
+					// Method names
+					getterName := fmt.Sprintf("%s.Get%s", ref.Name, methodSuffix)
+					setterName := fmt.Sprintf("%s.Set%s", ref.Name, methodSuffix)
+
+					// Call-Expression argument
+					argLHS := util.NewCallExpr(getterName)
+					argOp := binaryOperator
+					argRHS := util.NewIntLit(1)
+					argValue := util.NewBinaryExpr(argLHS, argOp, argRHS)
+
+					// Make Go expression
+					resExpr := util.NewCallExpr(setterName, argValue)
+
+					return resExpr, n.Type, preStmts, postStmts, nil
+				}
+			}
+		}
+
 		binaryOperator := "+="
 		if operator == token.DEC {
 			binaryOperator = "-="

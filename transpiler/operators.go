@@ -6,6 +6,7 @@ package transpiler
 import (
 	"fmt"
 	"go/token"
+	"strings"
 
 	goast "go/ast"
 
@@ -122,19 +123,51 @@ func transpileParenExpr(n *ast.ParenExpr, p *program.Program) (
 }
 
 func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.Program) (
-	*goast.BinaryExpr, string, []goast.Stmt, []goast.Stmt, error) {
+	goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
 	operator := getTokenForOperator(n.Opcode)
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
-	left, _, newPre, newPost, err := transpileToExpr(n.Children[0], p)
+	right, rightType, newPre, newPost, err := transpileToExpr(n.Children[1], p)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	right, rightType, newPre, newPost, err := transpileToExpr(n.Children[1], p)
+	// Construct code for computing compound assign operation to an union field
+	memberExpr, ok := n.Children[0].(*ast.MemberExpr)
+	if ok {
+		ref := memberExpr.GetDeclRefExpr()
+		if ref != nil {
+			// Get operator by removing last char that is '=' (e.g.: += becomes +)
+			binaryOperation := n.Opcode
+			binaryOperation = binaryOperation[:(len(binaryOperation) - 1)]
+
+			union := p.GetStruct(ref.Type)
+			if union != nil && union.IsUnion {
+				// Method suffix for using getters and setters of Go union type
+				methodSuffix := strings.Title(memberExpr.Name)
+
+				// Method names
+				getterName := fmt.Sprintf("%s.Get%s", ref.Name, methodSuffix)
+				setterName := fmt.Sprintf("%s.Set%s", ref.Name, methodSuffix)
+
+				// Call-Expression argument
+				argLHS := util.NewCallExpr(getterName)
+				argOp := getTokenForOperator(binaryOperation)
+				argRHS := right
+				argValue := util.NewBinaryExpr(argLHS, argOp, argRHS)
+
+				// Make Go expression
+				resExpr := util.NewCallExpr(setterName, argValue)
+
+				return resExpr, "", preStmts, postStmts, nil
+			}
+		}
+	}
+
+	left, _, newPre, newPost, err := transpileToExpr(n.Children[0], p)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}

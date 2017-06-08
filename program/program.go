@@ -16,6 +16,16 @@ import (
 	"github.com/elliotchance/c2go/util"
 )
 
+// StructRegistry is a map of Struct for struct types and union type
+type StructRegistry map[string]*Struct
+
+// HasType method check if type exists
+func (sr StructRegistry) HasType(typename string) bool {
+	_, exists := sr[typename]
+
+	return exists
+}
+
 // Program contains all of the input, output and transpition state of a C
 // program to a Go program.
 type Program struct {
@@ -44,7 +54,8 @@ type Program struct {
 
 	// The definitions for defined structs.
 	// TODO: This field should be protected through proper getters and setters.
-	Structs map[string]*Struct
+	Structs StructRegistry
+	Unions  StructRegistry
 
 	// If verbose is on progress messages will be printed immediately as code
 	// comments (so that they do not intefere with the program output).
@@ -66,7 +77,8 @@ func NewProgram() *Program {
 		imports:             []string{},
 		typesAlreadyDefined: []string{},
 		startupStatements:   []goast.Stmt{},
-		Structs:             make(map[string]*Struct),
+		Structs:             make(StructRegistry),
+		Unions:              make(StructRegistry),
 		Verbose:             false,
 		messages:            []string{},
 		GlobalVariables:     map[string]string{},
@@ -90,6 +102,34 @@ func (p *Program) AddMessage(message string) bool {
 
 	p.messages = append(p.messages, message)
 	return true
+}
+
+// GetStruct returns a struct object (representing struct type or union type) or nil if doesn't exist.
+// This method can get struct or union in the same way and distinguish only by the IsUnion field.
+// `name` argument is the C like `struct a_struct`, it allow pointer type like `union a_union *`.
+// Pointer types used in a DeclRefExpr in the case a deferenced structure by using `->` operator
+// to access to a field like this: a_struct->member .
+//
+// This method is used in collaboration with the fiel "c2go/program".*Struct.IsUnion to simplify the
+// code like in function "c2go/transpiler".transpileMemberExpr() where the same *Struct value returned
+// by this method is used in the 2 cases, in the case where the value has a struct type
+// and in the case where the value has an union type.
+func (p *Program) GetStruct(name string) *Struct {
+	last := len(name) - 1
+
+	// That allow to get struct from pointer type
+	if name[last] == '*' {
+		name = name[:last]
+	}
+
+	name = strings.TrimSpace(name)
+
+	res, ok := p.Structs[name]
+	if ok {
+		return res
+	}
+
+	return p.Unions[name]
 }
 
 func (p *Program) TypeIsAlreadyDefined(typeName string) bool {

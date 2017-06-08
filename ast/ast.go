@@ -169,6 +169,8 @@ func Position(node Node) string {
 		return n.Position
 	case *WarnUnusedResultAttr:
 		return n.Position
+	case *WeakAttr:
+		return n.Position
 	case *WhileStmt:
 		return n.Position
 	default:
@@ -380,6 +382,8 @@ func Parse(line string) Node {
 		return parseVarDecl(line)
 	case "WarnUnusedResultAttr":
 		return parseWarnUnusedResultAttr(line)
+	case "WeakAttr":
+		return parseWeakAttr(line)
 	case "WhileStmt":
 		return parseWhileStmt(line)
 	case "NullStmt":

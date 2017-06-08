@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"go/token"
+	"strings"
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
@@ -157,7 +158,7 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program) 
 }
 
 func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
-	*goast.SelectorExpr, string, []goast.Stmt, []goast.Stmt, error) {
+	goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
@@ -172,7 +173,7 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	p.AddMessage(ast.GenerateWarningMessage(err, n))
 
 	// lhsType will be something like "struct foo"
-	structType := p.Structs[lhsType]
+	structType := p.GetStruct(lhsType)
 	rhs := n.Name
 	rhsType := "void *"
 	if structType == nil {
@@ -195,6 +196,15 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	if util.InStrings(lhsResolvedType, []string{"darwin.Float2", "darwin.Double2"}) {
 		rhs = util.GetExportedName(rhs)
 		rhsType = "int"
+	}
+
+	// Construct code for getting value to an union field
+	if structType != nil && structType.IsUnion {
+		ident := lhs.(*goast.Ident)
+		funcName := fmt.Sprintf("%s.Get%s", ident.Name, strings.Title(n.Name))
+		resExpr := util.NewCallExpr(funcName)
+
+		return resExpr, rhsType, preStmts, postStmts, nil
 	}
 
 	return &goast.SelectorExpr{

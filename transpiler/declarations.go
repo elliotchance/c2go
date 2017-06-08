@@ -47,12 +47,10 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 	p.TypeIsNowDefined(name)
 
 	s := program.NewStruct(n)
-	p.Structs["struct "+s.Name] = s
-
-	// TODO: Unions are not supported.
-	// https://github.com/elliotchance/c2go/issues/84
-	if n.Kind == "union" {
-		return nil
+	if s.IsUnion {
+		p.Unions["union "+s.Name] = s
+	} else {
+		p.Structs["struct "+s.Name] = s
 	}
 
 	// TODO: Some platform structs are ignored.
@@ -64,6 +62,7 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 	}
 
 	var fields []*goast.Field
+
 	for _, c := range n.Children {
 		if field, ok := c.(*ast.FieldDecl); ok {
 			f, _ := transpileFieldDecl(p, field)
@@ -77,19 +76,38 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 		}
 	}
 
-	p.File.Decls = append(p.File.Decls, &goast.GenDecl{
-		Tok: token.TYPE,
-		Specs: []goast.Spec{
-			&goast.TypeSpec{
-				Name: util.NewIdent(name),
-				Type: &goast.StructType{
-					Fields: &goast.FieldList{
-						List: fields,
+	if s.IsUnion {
+		// Union size
+		size, err := types.SizeOf(p, "union "+name)
+
+		// In normal case no error is returned,
+		if err != nil {
+			// but if we catch one, send it as a aarning
+			message := fmt.Sprintf("could not determine the size of type `union %s` for that reason: %s", name, err)
+			p.AddMessage(ast.GenerateWarningMessage(errors.New(message), n))
+		} else {
+			// So, we got size, then
+			// Add imports needed
+			p.AddImports("reflect", "unsafe")
+
+			// Declaration for implementing union type
+			p.File.Decls = append(p.File.Decls, transpileUnion(name, size, fields)...)
+		}
+	} else {
+		p.File.Decls = append(p.File.Decls, &goast.GenDecl{
+			Tok: token.TYPE,
+			Specs: []goast.Spec{
+				&goast.TypeSpec{
+					Name: util.NewIdent(name),
+					Type: &goast.StructType{
+						Fields: &goast.FieldList{
+							List: fields,
+						},
 					},
 				},
 			},
-		},
-	})
+		})
+	}
 
 	return nil
 }
