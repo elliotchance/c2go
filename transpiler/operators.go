@@ -145,7 +145,7 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
 			binaryOperation = binaryOperation[:(len(binaryOperation) - 1)]
 
 			union := p.GetStruct(ref.Type)
-			if union.IsUnion {
+			if union != nil && union.IsUnion {
 				// Method suffix for using getters and setters of Go union type
 				methodSuffix := strings.Title(memberExpr.Name)
 

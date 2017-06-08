@@ -150,7 +150,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 				ref := memberExpr.GetDeclRefExpr()
 				if ref != nil {
 					union := p.GetStruct(ref.Type)
-					if union.IsUnion {
+					if union != nil && union.IsUnion {
 						funcName := fmt.Sprintf("%s.Set%s", ref.Name, strings.Title(memberExpr.Name))
 						resExpr := util.NewCallExpr(funcName, right)
 						resType := types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType)
