@@ -45,6 +45,7 @@ type Program struct {
 	// The definitions for defined structs.
 	// TODO: This field should be protected through proper getters and setters.
 	Structs map[string]*Struct
+	Unions  map[string]*Struct
 
 	// If verbose is on progress messages will be printed immediately as code
 	// comments (so that they do not intefere with the program output).
@@ -67,6 +68,7 @@ func NewProgram() *Program {
 		typesAlreadyDefined: []string{},
 		startupStatements:   []goast.Stmt{},
 		Structs:             make(map[string]*Struct),
+		Unions:              make(map[string]*Struct),
 		Verbose:             false,
 		messages:            []string{},
 		GlobalVariables:     map[string]string{},
@@ -90,6 +92,16 @@ func (p *Program) AddMessage(message string) bool {
 
 	p.messages = append(p.messages, message)
 	return true
+}
+
+// GetStruct returns a struct object (representing struct type or union type) or nil if doesn't exist
+func (p *Program) GetStruct(name string) *Struct {
+	res, ok := p.Structs[name]
+	if ok {
+		return res
+	}
+
+	return p.Unions[name]
 }
 
 func (p *Program) TypeIsAlreadyDefined(typeName string) bool {

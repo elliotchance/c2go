@@ -1,42 +1,42 @@
-// Tests for structures.
+// Tests for unions.
 
 #include <stdio.h>
-#include "tests.h"
 
-struct programming
+union programming
 {
     float constant;
     char *pointer;
 };
 
-void f(struct programming *addr)
+void f(union programming *addr)
 {
     char *s = "Show string member.";
 
     addr->constant += 4.56;
     addr->constant++;
-    addr->pointer = s;
-
     printf("%f\n", addr->constant);
+
+    addr->pointer = s;
     printf("%s\n", addr->pointer);
 }
 
 int main()
 {
-    plan(2);
-
-    struct programming variable;
+    union programming variable;
     char *s = "Programming in Software Development.";
 
-    variable.constant = 1.23;
-    variable.pointer = s;
+    /*union {
+        float constant;
+        char *pointer;
+    } local_union = */
 
-    is_eq(variable.constant, 1.23);
-    is_streq(variable.pointer, "Programming in Software Development.");
+    variable.constant = 1.23;
+    printf("%f\n", variable.constant);
+
+    variable.pointer = s;
+    printf("%s\n", variable.pointer);
 
     f(&variable);
-    
-    done_testing();
-    
+
     return 0;
 }

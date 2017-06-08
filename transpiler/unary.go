@@ -29,6 +29,53 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 	// the expression with a magic position?) we will have to return a
 	// BinaryExpr with the same functionality.
 	if operator == token.INC || operator == token.DEC {
+		// Construct code for assigning value to an union field
+		member_expr, ok := n.Children[0].(*ast.MemberExpr)
+		if ok {
+			ref := member_expr.GetDeclRef()
+			if ref != nil {
+				typename, err := types.ResolveType(p, ref.Type)
+				if err != nil {
+					return nil, "", preStmts, postStmts, err
+				}
+
+				if typename[0] == '*' {
+					typename = typename[1:]
+				}
+
+				binaryOperator := token.ADD
+				if operator == token.DEC {
+					binaryOperator = token.SUB
+				}
+
+				method_suffix := strings.Title(member_expr.Name)
+
+				union := p.GetStruct(typename)
+				if union.IsUnion {
+					resExpr := &goast.CallExpr{
+						Fun: &goast.SelectorExpr{
+							X:   goast.NewIdent(ref.Name),
+							Sel: goast.NewIdent("Set" + method_suffix),
+						},
+						Args: []goast.Expr{
+							util.NewBinaryExpr(
+								&goast.CallExpr{
+									Fun: &goast.SelectorExpr{
+										X:   goast.NewIdent(ref.Name),
+										Sel: goast.NewIdent("Get" + method_suffix),
+									},
+								},
+								binaryOperator,
+								util.NewIntLit(1),
+							),
+						},
+					}
+
+					return resExpr, n.Type, preStmts, postStmts, nil
+				}
+			}
+		}
+
 		binaryOperator := "+="
 		if operator == token.DEC {
 			binaryOperator = "-="

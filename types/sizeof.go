@@ -3,9 +3,11 @@ package types
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/util"
 )
 
 func removePrefix(s, prefix string) string {
@@ -65,6 +67,45 @@ func SizeOf(p *program.Program, cType string) (int, error) {
 		return totalBytes, nil
 	}
 
+	// An union will be the max size of its parts.
+	if strings.HasPrefix(cType, "union ") {
+		byte_count := 0
+
+		s := p.Unions[cType[6:]]
+		if s == nil {
+			return 0, errors.New(fmt.Sprintf("could not sizeof: %s", cType))
+		}
+
+		for _, t := range s.Fields {
+			var bytes int
+			var err error
+
+			switch f := t.(type) {
+			case string:
+				bytes, err = SizeOf(p, f)
+
+			case *program.Struct:
+				bytes, err = SizeOf(p, f.Name)
+			}
+
+			if err != nil {
+				return 0, err
+			}
+
+			if byte_count < bytes {
+				byte_count = bytes
+			}
+		}
+
+		// The size of an union is rounded up to fit the size of the pointer of
+		// the OS.
+		if byte_count%pointerSize != 0 {
+			byte_count += pointerSize - (byte_count % pointerSize)
+		}
+
+		return byte_count, nil
+	}
+
 	// Function pointers are one byte?
 	if strings.Index(cType, "(") >= 0 {
 		return 1, nil
@@ -89,9 +130,24 @@ func SizeOf(p *program.Program, cType string) (int, error) {
 
 	case "long double":
 		return 16, nil
-
-	default:
-		return pointerSize, errors.New(
-			fmt.Sprintf("cannot determine size of: %s", cType))
 	}
+
+	// Get size for array types like: `base_type [count]`
+	groups := util.GroupsFromRegex(`^(?P<type>[^ ]+) *\[(?P<count>\d+)\]$`, cType)
+	if groups == nil {
+		return pointerSize, errors.New(
+			fmt.Sprintf("cannot determine size of: `%s`", cType))
+	}
+
+	base_size, err := SizeOf(p, groups["type"])
+	if err != nil {
+		return 0, err
+	}
+
+	count, err := strconv.Atoi(groups["count"])
+	if err != nil {
+		return 0, err
+	}
+
+	return base_size * count, nil
 }

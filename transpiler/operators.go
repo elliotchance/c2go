@@ -6,6 +6,7 @@ package transpiler
 import (
 	"fmt"
 	"go/token"
+	"strings"
 
 	goast "go/ast"
 
@@ -122,19 +123,64 @@ func transpileParenExpr(n *ast.ParenExpr, p *program.Program) (
 }
 
 func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.Program) (
-	*goast.BinaryExpr, string, []goast.Stmt, []goast.Stmt, error) {
+	goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
 	operator := getTokenForOperator(n.Opcode)
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
-	left, _, newPre, newPost, err := transpileToExpr(n.Children[0], p)
+	right, rightType, newPre, newPost, err := transpileToExpr(n.Children[1], p)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	right, rightType, newPre, newPost, err := transpileToExpr(n.Children[1], p)
+	// Construct code for computing compound assign operation to an union field
+	member_expr, ok := n.Children[0].(*ast.MemberExpr)
+	if ok {
+		ref := member_expr.GetDeclRef()
+		if ref != nil {
+			typename, err := types.ResolveType(p, ref.Type)
+			if err != nil {
+				return nil, "", preStmts, postStmts, err
+			}
+
+			if typename[0] == '*' {
+				typename = typename[1:]
+			}
+
+			binaryOperation := n.Opcode
+			binaryOperation = binaryOperation[:(len(binaryOperation) - 1)]
+
+			method_suffix := strings.Title(member_expr.Name)
+
+			union := p.GetStruct(typename)
+			if union.IsUnion {
+				resExpr := &goast.CallExpr{
+					Fun: &goast.SelectorExpr{
+						X:   goast.NewIdent(ref.Name),
+						Sel: goast.NewIdent("Set" + method_suffix),
+					},
+					Args: []goast.Expr{
+						&goast.BinaryExpr{
+							X: &goast.CallExpr{
+								Fun: &goast.SelectorExpr{
+									X:   goast.NewIdent(ref.Name),
+									Sel: goast.NewIdent("Get" + method_suffix),
+								},
+							},
+							Y:  right,
+							Op: getTokenForOperator(binaryOperation),
+						},
+					},
+				}
+
+				return resExpr, "", preStmts, postStmts, nil
+			}
+		}
+	}
+
+	left, _, newPre, newPost, err := transpileToExpr(n.Children[0], p)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}

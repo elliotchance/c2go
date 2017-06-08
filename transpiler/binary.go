@@ -7,6 +7,7 @@ import (
 	goast "go/ast"
 	"go/token"
 	"reflect"
+	"strings"
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
@@ -16,7 +17,7 @@ import (
 )
 
 func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
-	*goast.BinaryExpr, string, []goast.Stmt, []goast.Stmt, error) {
+	goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 	var err error
@@ -141,6 +142,39 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 
 			if p.AddMessage(ast.GenerateWarningMessage(err, n)) && right == nil {
 				right = util.NewNil()
+			}
+
+			// Construct code for assigning value to an union field
+			member_expr, ok := n.Children[0].(*ast.MemberExpr)
+			if ok {
+				ref := member_expr.GetDeclRef()
+				if ref != nil {
+					typename, err := types.ResolveType(p, ref.Type)
+					if err != nil {
+						return nil, "", preStmts, postStmts, err
+					}
+
+					if typename[0] == '*' {
+						typename = typename[1:]
+					}
+
+					union := p.GetStruct(typename)
+					if union.IsUnion {
+						resExpr := &goast.CallExpr{
+							Fun: &goast.SelectorExpr{
+								X:   goast.NewIdent(ref.Name),
+								Sel: goast.NewIdent("Set" + strings.Title(member_expr.Name)),
+							},
+							Args: []goast.Expr{
+								right,
+							},
+						}
+
+						resType := types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType)
+
+						return resExpr, resType, preStmts, postStmts, nil
+					}
+				}
 			}
 		}
 	}

@@ -7,7 +7,31 @@ import (
 
 // Imports returns all of the Go imports for this program.
 func (p *Program) Imports() []string {
-	return p.imports
+	imports := p.imports
+
+	// Add "last-minute" import
+	add_import := func(imp string) {
+		imp = strconv.Quote(imp)
+		for _, i := range imports {
+			if i == imp {
+				return
+			}
+		}
+
+		imports = append(imports, imp)
+	}
+
+	// Imports packages for unions if at least an union is defined
+	for _, t := range p.typesAlreadyDefined {
+		_, ok := p.Unions[t]
+		if ok {
+			add_import("reflect")
+			add_import("unsafe")
+			break
+		}
+	}
+
+	return imports
 }
 
 // AddImport will append an absolute import if it is unique to the list of

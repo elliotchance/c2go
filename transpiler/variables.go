@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"go/token"
+	"strings"
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
@@ -157,7 +158,7 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program) 
 }
 
 func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
-	*goast.SelectorExpr, string, []goast.Stmt, []goast.Stmt, error) {
+	goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
@@ -195,6 +196,31 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	if util.InStrings(lhsResolvedType, []string{"darwin.Float2", "darwin.Double2"}) {
 		rhs = util.GetExportedName(rhs)
 		rhsType = "int"
+	}
+
+	// Construct code for getting value to an union field
+	ref := n.GetDeclRef()
+	if ref != nil {
+		typename, err := types.ResolveType(p, ref.Type)
+		if err != nil {
+			return nil, "", preStmts, postStmts, err
+		}
+
+		if typename[0] == '*' {
+			typename = typename[1:]
+		}
+
+		union := p.GetStruct(typename)
+		if union.IsUnion {
+			resExpr := &goast.CallExpr{
+				Fun: &goast.SelectorExpr{
+					X:   goast.NewIdent(ref.Name),
+					Sel: goast.NewIdent("Get" + strings.Title(n.Name)),
+				},
+			}
+
+			return resExpr, rhsType, preStmts, postStmts, nil
+		}
 	}
 
 	return &goast.SelectorExpr{
