@@ -199,7 +199,7 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	}
 
 	// Construct code for getting value to an union field
-	if structType.IsUnion {
+	if structType != nil && structType.IsUnion {
 		ident := lhs.(*goast.Ident)
 		funcName := fmt.Sprintf("%s.Get%s", ident.Name, strings.Title(n.Name))
 		resExpr := util.NewCallExpr(funcName)

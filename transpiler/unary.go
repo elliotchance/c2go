@@ -40,7 +40,7 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 				}
 
 				union := p.GetStruct(ref.Type)
-				if union.IsUnion {
+				if union != nil && union.IsUnion {
 					// Method suffix for using getters and setters of Go union type
 					methodSuffix := strings.Title(memberExpr.Name)
 
