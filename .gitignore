@@ -11,3 +11,7 @@
 /c2go
 /.vscode
 *.coverprofile
+
+# Vim backups
+*.go~
+*.go.swp

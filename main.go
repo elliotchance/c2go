@@ -2,6 +2,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -150,8 +151,20 @@ func Start(args ProgramArgs) {
 	Check("", err)
 
 	// 2. Preprocess
-	pp, err := exec.Command("clang", "-E", args.inputFile).Output()
-	Check("preprocess failed: ", err)
+	var pp []byte
+	{
+		cmd := exec.Command("clang", "-E", args.inputFile)
+		var out bytes.Buffer
+		var stderr bytes.Buffer
+		cmd.Stdout = &out
+		cmd.Stderr = &stderr
+		err = cmd.Run()
+		if err != nil {
+			fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
+			Check("preprocess failed: ", err)
+		}
+		pp = []byte(out.String())
+	}
 
 	pp_file_path := path.Join(os.TempDir(), "pp.c")
 	err = ioutil.WriteFile(pp_file_path, pp, 0644)
