@@ -26,6 +26,7 @@ import (
 // See https://github.com/elliotchance/c2go/wiki/Release-Process
 const Version = "0.13.3"
 
+// ProgramArgs - argument of program
 type ProgramArgs struct {
 	verbose     bool
 	ast         bool
@@ -106,6 +107,7 @@ func buildTree(nodes []treeNode, depth int) []ast.Node {
 	return results
 }
 
+// ToJSON - tree convert to JSON
 func ToJSON(tree []interface{}) []map[string]interface{} {
 	r := make([]map[string]interface{}, len(tree))
 
@@ -135,12 +137,14 @@ func ToJSON(tree []interface{}) []map[string]interface{} {
 	return r
 }
 
+// Check - checking error. Panic-nonfree function
 func Check(prefix string, e error) {
 	if e != nil {
 		panic(prefix + e.Error())
 	}
 }
 
+// Start - base function
 func Start(args ProgramArgs) {
 	if os.Getenv("GOPATH") == "" {
 		panic("The $GOPATH must be set.")
@@ -166,21 +170,21 @@ func Start(args ProgramArgs) {
 		pp = []byte(out.String())
 	}
 
-	pp_file_path := path.Join(os.TempDir(), "pp.c")
-	err = ioutil.WriteFile(pp_file_path, pp, 0644)
+	ppFilePath := path.Join(os.TempDir(), "pp.c")
+	err = ioutil.WriteFile(ppFilePath, pp, 0644)
 	Check("writing to /tmp/pp.c failed: ", err)
 
 	// 3. Generate JSON from AST
-	ast_pp, err := exec.Command("clang", "-Xclang", "-ast-dump", "-fsyntax-only", pp_file_path).Output()
+	astPP, err := exec.Command("clang", "-Xclang", "-ast-dump", "-fsyntax-only", ppFilePath).Output()
 	if err != nil {
 		// If clang fails it still prints out the AST, so we have to run it
 		// again to get the real error.
-		errBody, _ := exec.Command("clang", pp_file_path).CombinedOutput()
+		errBody, _ := exec.Command("clang", ppFilePath).CombinedOutput()
 
 		panic("clang failed: " + err.Error() + ":\n\n" + string(errBody))
 	}
 
-	lines := readAST(ast_pp)
+	lines := readAST(astPP)
 	if args.ast {
 		for _, l := range lines {
 			fmt.Println(l)
@@ -252,7 +256,8 @@ func main() {
 
 	switch os.Args[1] {
 	case "ast":
-		astCommand.Parse(os.Args[2:])
+		err := astCommand.Parse(os.Args[2:])
+		Check("Ast command cannot parse", err)
 
 		if *astHelpFlag || astCommand.NArg() == 0 {
 			fmt.Fprintf(os.Stderr, "Usage: %s ast file.c\n", os.Args[0])
@@ -265,7 +270,8 @@ func main() {
 
 		Start(args)
 	case "transpile":
-		transpileCommand.Parse(os.Args[2:])
+		err := transpileCommand.Parse(os.Args[2:])
+		Check("Transpile command cannot parse", err)
 
 		if *transpileHelpFlag || transpileCommand.NArg() == 0 {
 			fmt.Fprintf(os.Stderr, "Usage: %s transpile [-V] [-o file.go] [-p package] file.c\n", os.Args[0])
