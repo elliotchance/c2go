@@ -19,6 +19,9 @@ func TestStartPreprocess(t *testing.T) {
 	if err != nil {
 		t.Errorf("Cannot create temp file for execute test")
 	}
+	defer func() {
+		_ = os.Remove(tempFile.Name())
+	}()
 
 	fmt.Fprintf(tempFile, "#include <AbsoluteWrongInclude.h>\nint main(void){\nwrong\n}")
 
