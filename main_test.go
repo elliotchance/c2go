@@ -84,9 +84,9 @@ func TestIntegrationScripts(t *testing.T) {
 			cProgram.isZero = err == nil
 
 			programArgs := analyze.ProgramArgs{
-				inputFile:   file,
-				outputFile:  "build/main.go",
-				packageName: "main",
+				InputFile:   file,
+				OutputFile:  "build/main.go",
+				PackageName: "main",
 			}
 
 			// Compile Go
