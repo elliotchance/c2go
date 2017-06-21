@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Konstantin8105/c2go/analyze"
+	"github.com/elliotchance/c2go/analyze"
 )
 
 func TestStartPreprocess(t *testing.T) {

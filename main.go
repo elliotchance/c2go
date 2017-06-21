@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Konstantin8105/c2go/analyze"
+	"github.com/elliotchance/c2go/analyze"
 )
 
 // Version can be requested through the command line with:

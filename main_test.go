@@ -15,7 +15,7 @@ import (
 
 	"regexp"
 
-	"github.com/Konstantin8105/c2go/analyze"
+	"github.com/elliotchance/c2go/analyze"
 	"github.com/elliotchance/c2go/util"
 )
 
