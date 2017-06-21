@@ -15,3 +15,4 @@
 # Vim backups
 *.go~
 *.go.swp
+*.un~

@@ -57,7 +57,10 @@ func main() {
 	switch os.Args[1] {
 	case "ast":
 		err := astCommand.Parse(os.Args[2:])
-		analyze.Check("Ast command cannot parse", err)
+		if err != nil {
+			fmt.Printf("Ast command cannot parse: %v", err)
+			return
+		}
 
 		if *astHelpFlag || astCommand.NArg() == 0 {
 			fmt.Fprintf(os.Stderr, "Usage: %s ast file.c\n", os.Args[0])
@@ -73,7 +76,10 @@ func main() {
 		}
 	case "transpile":
 		err := transpileCommand.Parse(os.Args[2:])
-		analyze.Check("Transpile command cannot parse", err)
+		if err != nil {
+			fmt.Printf("Transpile command cannot parse: %v", err)
+			return
+		}
 
 		if *transpileHelpFlag || transpileCommand.NArg() == 0 {
 			fmt.Fprintf(os.Stderr, "Usage: %s transpile [-V] [-o file.go] [-p package] file.c\n", os.Args[0])
