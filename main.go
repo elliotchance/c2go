@@ -159,7 +159,6 @@ func Start(args ProgramArgs) error {
 		cmd.Stderr = &stderr
 		err = cmd.Run()
 		if err != nil {
-			// TODO: try to find broken include headers
 			return fmt.Errorf("preprocess failed: %v\nStdErr = %v", err, stderr.String())
 		}
 		pp = []byte(out.String())
