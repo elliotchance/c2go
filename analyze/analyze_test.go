@@ -30,14 +30,10 @@ func TestStartPreprocess(t *testing.T) {
 		t.Errorf("Cannot close the temp file")
 	}
 
-	fmt.Println("tempDir  = ", tempDir)
-	fmt.Println("tempFile = ", tempFile)
-
 	var args analyze.ProgramArgs
 	args.InputFile = tempFile.Name()
 
 	err = analyze.Start(args)
-	fmt.Println("err = ", err)
 	if err == nil {
 		t.Errorf("Cannot test preprocess of application")
 	}
