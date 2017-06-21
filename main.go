@@ -59,7 +59,7 @@ func main() {
 		err := astCommand.Parse(os.Args[2:])
 		if err != nil {
 			fmt.Printf("Ast command cannot parse: %v", err)
-			return
+			os.Exit(1)
 		}
 
 		if *astHelpFlag || astCommand.NArg() == 0 {
@@ -73,12 +73,13 @@ func main() {
 
 		if err = analyze.Start(args); err != nil {
 			fmt.Printf("Error: %v", err)
+			os.Exit(1)
 		}
 	case "transpile":
 		err := transpileCommand.Parse(os.Args[2:])
 		if err != nil {
 			fmt.Printf("Transpile command cannot parse: %v", err)
-			return
+			os.Exit(1)
 		}
 
 		if *transpileHelpFlag || transpileCommand.NArg() == 0 {
@@ -93,6 +94,7 @@ func main() {
 
 		if err = analyze.Start(args); err != nil {
 			fmt.Printf("Error: %v", err)
+			os.Exit(1)
 		}
 	default:
 		flag.Usage()
