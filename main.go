@@ -140,7 +140,7 @@ func ToJSON(tree []interface{}) []map[string]interface{} {
 // Start - base function
 func Start(args ProgramArgs) error {
 	if os.Getenv("GOPATH") == "" {
-		panic("The $GOPATH must be set.")
+		return fmt.Errorf("The $GOPATH must be set")
 	}
 
 	// 1. Compile it first (checking for errors)
@@ -159,6 +159,7 @@ func Start(args ProgramArgs) error {
 		cmd.Stderr = &stderr
 		err = cmd.Run()
 		if err != nil {
+			// TODO: try to find broken include headers
 			return fmt.Errorf("preprocess failed: %v\nStdErr = %v", err, stderr.String())
 		}
 		pp = []byte(out.String())
@@ -215,6 +216,18 @@ func Start(args ProgramArgs) error {
 
 	return nil
 }
+
+// NewTempFile - returns temp file
+func NewTempFile(dir, prefix, suffix string) (*os.File, error) {
+	for index := 1; index < 10000; index++ {
+		path := filepath.Join(dir, fmt.Sprintf("%s%03d%s", prefix, index, suffix))
+		if _, err := os.Stat(path); err != nil {
+			return os.Create(path)
+		}
+	}
+	return nil, fmt.Errorf("could not create file of the form %s%03d%s", prefix, 1, suffix)
+}
+
 func main() {
 	var (
 		versionFlag       = flag.Bool("v", false, "print the version and exit")

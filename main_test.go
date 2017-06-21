@@ -160,7 +160,7 @@ func TestStartPreprocess(t *testing.T) {
 
 	// create temp file with garantee
 	// wrong file body
-	tempFile, err := New(tempDir, "c2go", "preprocess.c")
+	tempFile, err := NewTempFile(tempDir, "c2go", "preprocess.c")
 	if err != nil {
 		t.Errorf("Cannot create temp file for execute test")
 	}
@@ -184,14 +184,31 @@ func TestStartPreprocess(t *testing.T) {
 	}
 }
 
-// New returns an unused filename for output files.
-func New(dir, prefix, suffix string) (*os.File, error) {
-	for index := 1; index < 10000; index++ {
-		path := filepath.Join(dir, fmt.Sprintf("%s%03d%s", prefix, index, suffix))
-		if _, err := os.Stat(path); err != nil {
-			return os.Create(path)
-		}
+func TestGoPath(t *testing.T) {
+	gopath := "GOPATH"
+
+	existEnv := os.Getenv(gopath)
+	if existEnv == "" {
+		t.Errorf("Please create value $GOPATH of the environment variable")
 	}
-	// Give up
-	return nil, fmt.Errorf("could not create file of the form %s%03d%s", prefix, 1, suffix)
+
+	// reset value of env.var.
+	err := os.Setenv(gopath, "")
+	if err != nil {
+		t.Errorf("Cannot set value of the environment variable")
+	}
+
+	// return env.var.
+	defer func() {
+		err = os.Setenv(gopath, existEnv)
+		if err != nil {
+			t.Errorf("Please create value $GOPATH of the environment variable")
+		}
+	}()
+
+	// testing
+	err = Start(*(new(ProgramArgs)))
+	if err == nil {
+		t.Errorf("We have to check $GOPATH")
+	}
 }
