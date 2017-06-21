@@ -15,7 +15,6 @@ import (
 
 	"regexp"
 
-	"github.com/elliotchance/c2go/analyze"
 	"github.com/elliotchance/c2go/util"
 )
 
@@ -83,14 +82,14 @@ func TestIntegrationScripts(t *testing.T) {
 			err = cmd.Run()
 			cProgram.isZero = err == nil
 
-			programArgs := analyze.ProgramArgs{
-				InputFile:   file,
-				OutputFile:  "build/main.go",
-				PackageName: "main",
+			programArgs := ProgramArgs{
+				inputFile:   file,
+				outputFile:  "build/main.go",
+				packageName: "main",
 			}
 
 			// Compile Go
-			analyze.Start(programArgs)
+			Start(programArgs)
 
 			buildErr, err := exec.Command("go", "build", "-o", goPath, "build/main.go").CombinedOutput()
 			if err != nil {
@@ -153,4 +152,46 @@ func TestIntegrationScripts(t *testing.T) {
 	if isVerbose {
 		fmt.Printf("TAP: # Total tests: %d\n", totalTapTests)
 	}
+}
+
+func TestStartPreprocess(t *testing.T) {
+	// temp dir
+	tempDir := os.TempDir()
+
+	// create temp file with garantee
+	// wrong file body
+	tempFile, err := New(tempDir, "c2go", "preprocess.c")
+	if err != nil {
+		t.Errorf("Cannot create temp file for execute test")
+	}
+	defer func() {
+		_ = os.Remove(tempFile.Name())
+	}()
+
+	fmt.Fprintf(tempFile, "#include <AbsoluteWrongInclude.h>\nint main(void){\nwrong\n}")
+
+	err = tempFile.Close()
+	if err != nil {
+		t.Errorf("Cannot close the temp file")
+	}
+
+	var args ProgramArgs
+	args.inputFile = tempFile.Name()
+
+	err = Start(args)
+	if err == nil {
+		t.Errorf("Cannot test preprocess of application")
+	}
+}
+
+// New returns an unused filename for output files.
+func New(dir, prefix, suffix string) (*os.File, error) {
+	for index := 1; index < 10000; index++ {
+		path := filepath.Join(dir, fmt.Sprintf("%s%03d%s", prefix, index, suffix))
+		if _, err := os.Stat(path); err != nil {
+			return os.Create(path)
+		}
+	}
+	// Give up
+	return nil, fmt.Errorf("could not create file of the form %s%03d%s", prefix, 1, suffix)
 }
