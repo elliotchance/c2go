@@ -15,6 +15,7 @@ import (
 
 	"regexp"
 
+	"github.com/Konstantin8105/c2go/analyze"
 	"github.com/elliotchance/c2go/util"
 )
 
@@ -82,14 +83,14 @@ func TestIntegrationScripts(t *testing.T) {
 			err = cmd.Run()
 			cProgram.isZero = err == nil
 
-			programArgs := ProgramArgs{
+			programArgs := analyze.ProgramArgs{
 				inputFile:   file,
 				outputFile:  "build/main.go",
 				packageName: "main",
 			}
 
 			// Compile Go
-			Start(programArgs)
+			analyze.Start(programArgs)
 
 			buildErr, err := exec.Command("go", "build", "-o", goPath, "build/main.go").CombinedOutput()
 			if err != nil {
