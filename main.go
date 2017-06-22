@@ -2,6 +2,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -25,6 +26,7 @@ import (
 // See https://github.com/elliotchance/c2go/wiki/Release-Process
 const Version = "0.13.3"
 
+// ProgramArgs - arguments of program
 type ProgramArgs struct {
 	verbose     bool
 	ast         bool
@@ -105,6 +107,7 @@ func buildTree(nodes []treeNode, depth int) []ast.Node {
 	return results
 }
 
+// ToJSON - tree convert to JSON
 func ToJSON(tree []interface{}) []map[string]interface{} {
 	r := make([]map[string]interface{}, len(tree))
 
@@ -134,40 +137,50 @@ func ToJSON(tree []interface{}) []map[string]interface{} {
 	return r
 }
 
-func Check(prefix string, e error) {
-	if e != nil {
-		panic(prefix + e.Error())
-	}
-}
-
-func Start(args ProgramArgs) {
+// Start - base function
+func Start(args ProgramArgs) error {
 	if os.Getenv("GOPATH") == "" {
-		panic("The $GOPATH must be set.")
+		return fmt.Errorf("The $GOPATH must be set")
 	}
 
 	// 1. Compile it first (checking for errors)
 	_, err := os.Stat(args.inputFile)
-	Check("", err)
+	if err != nil {
+		return fmt.Errorf("Input file is not found")
+	}
 
 	// 2. Preprocess
-	pp, err := exec.Command("clang", "-E", args.inputFile).Output()
-	Check("preprocess failed: ", err)
+	var pp []byte
+	{
+		cmd := exec.Command("clang", "-E", args.inputFile)
+		var out bytes.Buffer
+		var stderr bytes.Buffer
+		cmd.Stdout = &out
+		cmd.Stderr = &stderr
+		err = cmd.Run()
+		if err != nil {
+			return fmt.Errorf("preprocess failed: %v\nStdErr = %v", err, stderr.String())
+		}
+		pp = []byte(out.String())
+	}
 
-	pp_file_path := path.Join(os.TempDir(), "pp.c")
-	err = ioutil.WriteFile(pp_file_path, pp, 0644)
-	Check("writing to /tmp/pp.c failed: ", err)
+	ppFilePath := path.Join(os.TempDir(), "pp.c")
+	err = ioutil.WriteFile(ppFilePath, pp, 0644)
+	if err != nil {
+		return fmt.Errorf("writing to /tmp/pp.c failed: %v", err)
+	}
 
 	// 3. Generate JSON from AST
-	ast_pp, err := exec.Command("clang", "-Xclang", "-ast-dump", "-fsyntax-only", pp_file_path).Output()
+	astPP, err := exec.Command("clang", "-Xclang", "-ast-dump", "-fsyntax-only", ppFilePath).Output()
 	if err != nil {
 		// If clang fails it still prints out the AST, so we have to run it
 		// again to get the real error.
-		errBody, _ := exec.Command("clang", pp_file_path).CombinedOutput()
+		errBody, _ := exec.Command("clang", ppFilePath).CombinedOutput()
 
 		panic("clang failed: " + err.Error() + ":\n\n" + string(errBody))
 	}
 
-	lines := readAST(ast_pp)
+	lines := readAST(astPP)
 	if args.ast {
 		for _, l := range lines {
 			fmt.Println(l)
@@ -196,7 +209,22 @@ func Start(args ProgramArgs) {
 	}
 
 	err = ioutil.WriteFile(outputFilePath, []byte(p.String()), 0755)
-	Check("writing C output file failed: ", err)
+	if err != nil {
+		return fmt.Errorf("writing C output file failed: %v", err)
+	}
+
+	return nil
+}
+
+// newTempFile - returns temp file
+func newTempFile(dir, prefix, suffix string) (*os.File, error) {
+	for index := 1; index < 10000; index++ {
+		path := filepath.Join(dir, fmt.Sprintf("%s%03d%s", prefix, index, suffix))
+		if _, err := os.Stat(path); err != nil {
+			return os.Create(path)
+		}
+	}
+	return nil, fmt.Errorf("could not create file: %s%03d%s", prefix, 1, suffix)
 }
 
 func main() {
@@ -239,7 +267,11 @@ func main() {
 
 	switch os.Args[1] {
 	case "ast":
-		astCommand.Parse(os.Args[2:])
+		err := astCommand.Parse(os.Args[2:])
+		if err != nil {
+			fmt.Printf("ast command cannot parse: %v", err)
+			os.Exit(1)
+		}
 
 		if *astHelpFlag || astCommand.NArg() == 0 {
 			fmt.Fprintf(os.Stderr, "Usage: %s ast file.c\n", os.Args[0])
@@ -249,10 +281,12 @@ func main() {
 
 		args.ast = true
 		args.inputFile = astCommand.Arg(0)
-
-		Start(args)
 	case "transpile":
-		transpileCommand.Parse(os.Args[2:])
+		err := transpileCommand.Parse(os.Args[2:])
+		if err != nil {
+			fmt.Printf("transpile command cannot parse: %v", err)
+			os.Exit(1)
+		}
 
 		if *transpileHelpFlag || transpileCommand.NArg() == 0 {
 			fmt.Fprintf(os.Stderr, "Usage: %s transpile [-V] [-o file.go] [-p package] file.c\n", os.Args[0])
@@ -263,10 +297,13 @@ func main() {
 		args.inputFile = transpileCommand.Arg(0)
 		args.outputFile = *outputFlag
 		args.packageName = *packageFlag
-
-		Start(args)
 	default:
 		flag.Usage()
+		os.Exit(1)
+	}
+
+	if err := Start(args); err != nil {
+		fmt.Printf("Error: %v", err)
 		os.Exit(1)
 	}
 }

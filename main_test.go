@@ -89,7 +89,10 @@ func TestIntegrationScripts(t *testing.T) {
 			}
 
 			// Compile Go
-			Start(programArgs)
+			err = Start(programArgs)
+			if err != nil {
+				t.Fatalf("error: %s\n%s", err, out)
+			}
 
 			buildErr, err := exec.Command("go", "build", "-o", goPath, "build/main.go").CombinedOutput()
 			if err != nil {
@@ -151,5 +154,62 @@ func TestIntegrationScripts(t *testing.T) {
 
 	if isVerbose {
 		fmt.Printf("TAP: # Total tests: %d\n", totalTapTests)
+	}
+}
+
+func TestStartPreprocess(t *testing.T) {
+	// temp dir
+	tempDir := os.TempDir()
+
+	// create temp file with garantee
+	// wrong file body
+	tempFile, err := newTempFile(tempDir, "c2go", "preprocess.c")
+	if err != nil {
+		t.Errorf("Cannot create temp file for execute test")
+	}
+	defer os.Remove(tempFile.Name())
+
+	fmt.Fprintf(tempFile, "#include <AbsoluteWrongInclude.h>\nint main(void){\nwrong();\n}")
+
+	err = tempFile.Close()
+	if err != nil {
+		t.Errorf("Cannot close the temp file")
+	}
+
+	var args ProgramArgs
+	args.inputFile = tempFile.Name()
+
+	err = Start(args)
+	if err == nil {
+		t.Errorf("Cannot test preprocess of application")
+	}
+}
+
+func TestGoPath(t *testing.T) {
+	gopath := "GOPATH"
+
+	existEnv := os.Getenv(gopath)
+	if existEnv == "" {
+		t.Errorf("$GOPATH is not set")
+	}
+
+	// return env.var.
+	defer func() {
+		err := os.Setenv(gopath, existEnv)
+		if err != nil {
+			t.Errorf("Cannot restore the value of $GOPATH")
+		}
+	}()
+
+	// reset value of env.var.
+	err := os.Setenv(gopath, "")
+	if err != nil {
+		t.Errorf("Cannot set value of $GOPATH")
+	}
+
+	// testing
+	err = Start(ProgramArgs{})
+	if err == nil {
+		t.Errorf(err.Error())
 	}
 }
