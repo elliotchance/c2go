@@ -216,15 +216,15 @@ func Start(args ProgramArgs) error {
 	return nil
 }
 
-// NewTempFile - returns temp file
-func NewTempFile(dir, prefix, suffix string) (*os.File, error) {
+// newTempFile - returns temp file
+func newTempFile(dir, prefix, suffix string) (*os.File, error) {
 	for index := 1; index < 10000; index++ {
 		path := filepath.Join(dir, fmt.Sprintf("%s%03d%s", prefix, index, suffix))
 		if _, err := os.Stat(path); err != nil {
 			return os.Create(path)
 		}
 	}
-	return nil, fmt.Errorf("could not create file of the form %s%03d%s", prefix, 1, suffix)
+	return nil, fmt.Errorf("could not create file: %s%03d%s", prefix, 1, suffix)
 }
 
 func main() {
@@ -269,7 +269,7 @@ func main() {
 	case "ast":
 		err := astCommand.Parse(os.Args[2:])
 		if err != nil {
-			fmt.Printf("Ast command cannot parse: %v", err)
+			fmt.Printf("ast command cannot parse: %v", err)
 			os.Exit(1)
 		}
 
@@ -281,15 +281,10 @@ func main() {
 
 		args.ast = true
 		args.inputFile = astCommand.Arg(0)
-
-		if err = Start(args); err != nil {
-			fmt.Printf("Error: %v", err)
-			os.Exit(1)
-		}
 	case "transpile":
 		err := transpileCommand.Parse(os.Args[2:])
 		if err != nil {
-			fmt.Printf("Transpile command cannot parse: %v", err)
+			fmt.Printf("transpile command cannot parse: %v", err)
 			os.Exit(1)
 		}
 
@@ -302,13 +297,13 @@ func main() {
 		args.inputFile = transpileCommand.Arg(0)
 		args.outputFile = *outputFlag
 		args.packageName = *packageFlag
-
-		if err = Start(args); err != nil {
-			fmt.Printf("Error: %v", err)
-			os.Exit(1)
-		}
 	default:
 		flag.Usage()
+		os.Exit(1)
+	}
+
+	if err := Start(args); err != nil {
+		fmt.Printf("Error: %v", err)
 		os.Exit(1)
 	}
 }
