@@ -195,7 +195,7 @@ func TestGoPath(t *testing.T) {
 
 	// return env.var.
 	defer func() {
-		err = os.Setenv(gopath, existEnv)
+		err := os.Setenv(gopath, existEnv)
 		if err != nil {
 			t.Errorf("Cannot restore the value of $GOPATH")
 		}
@@ -208,7 +208,7 @@ func TestGoPath(t *testing.T) {
 	}
 
 	// testing
-	err = Start(&ProgramArgs{})
+	err = Start(ProgramArgs{})
 	if err == nil {
 		t.Errorf(err.Error())
 	}
