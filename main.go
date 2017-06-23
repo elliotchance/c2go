@@ -2,6 +2,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"flag"
 	"fmt"
@@ -138,6 +139,44 @@ func ToJSON(tree []interface{}) []map[string]interface{} {
 }
 */
 
+// stringToLines - convert string to string lines
+func stringToLines(s string) (lines []string, err error) {
+	scanner := bufio.NewScanner(strings.NewReader(s))
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+
+	if err = scanner.Err(); err != nil {
+		return lines, fmt.Errorf("reading standard input: %v", err)
+	}
+
+	return lines, nil
+}
+
+type headerTypes bool
+
+const (
+	systemHeader   headerTypes = true
+	internalHeader headerTypes = false
+)
+
+type include struct {
+	headerName string
+	typeHeader headerTypes
+}
+
+func (inc include) String() (s string) {
+	s += fmt.Sprintf("\tHeader name : %v\n", inc.headerName)
+	s += fmt.Sprintf("\tType : ")
+	switch inc.typeHeader {
+	case systemHeader:
+		s += fmt.Sprintf("System header\n")
+	case internalHeader:
+		s += fmt.Sprintf("Internal header\n")
+	}
+	return
+}
+
 // parseForFoundLostIncluse - parsing string to
 // found lost includes in c code after clang
 //
@@ -149,13 +188,34 @@ func ToJSON(tree []interface{}) []map[string]interface{} {
 //                #include <stdio.h>
 //                         ^~~~~~~~~
 //                1 error generated.
-//
-// Example of output:
-// <AbsoluteWrongInclude.h>
-// <stdio.h>
-// "gsl/gsl.h"
-func parseForFoundLostIncluse(s string) (out []string) {
-	return out
+func parseForFoundLostIncluse(s string) (includes []include, err error) {
+	lines, err := stringToLines(s)
+	if err != nil {
+		return includes, err
+	}
+	includeName := "#include"
+	regSystem := regexp.MustCompile("<(.*?)>")
+	regInternal := regexp.MustCompile("\"(.*?)\"")
+	for _, line := range lines {
+		if !strings.Contains(line, includeName) {
+			continue
+		}
+		// Now, we know - the string line have "#include"
+		// Find the name of header file
+		var inc include
+		if strings.ContainsAny(line, "<>") {
+			// system header
+			inc.headerName = regSystem.FindString(line)
+			inc.typeHeader = systemHeader
+		} else {
+			// internal header
+			inc.headerName = regInternal.FindString(line)
+			inc.typeHeader = internalHeader
+		}
+		inc.headerName = inc.headerName[1 : len(inc.headerName)-1]
+		includes = append(includes, inc)
+	}
+	return includes, nil
 }
 
 // Start - base function
@@ -181,12 +241,17 @@ func Start(args ProgramArgs) error {
 		err = cmd.Run()
 		if err != nil {
 			var errorResult string
-			// parse error output for found lost includes
-			lostIncludes := parseForFoundLostIncluse(stderr.String())
-			for _, lostInclude := range lostIncludes {
-				errorResult += fmt.Sprintf("Lost #include: %v\n", lostInclude)
-			}
+			// add error message from stdErr
 			errorResult += fmt.Sprintf("preprocess failed: %v\nStdErr = %v\n", err, stderr.String())
+			// parse error output for found lost includes
+			lostIncludes, err := parseForFoundLostIncluse(stderr.String())
+			if err != nil {
+				errorResult += fmt.Sprintf("Cannot parse for found lost includes: %v", err)
+			} else {
+				for _, lostInclude := range lostIncludes {
+					errorResult += fmt.Sprintf("Lost #include:\n %v\n", lostInclude)
+				}
+			}
 			return fmt.Errorf(errorResult)
 		}
 		pp = []byte(out.String())
