@@ -10,7 +10,6 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
-	"reflect"
 	"regexp"
 	"strings"
 
@@ -107,6 +106,7 @@ func buildTree(nodes []treeNode, depth int) []ast.Node {
 	return results
 }
 
+/* Dead code
 // ToJSON - tree convert to JSON
 func ToJSON(tree []interface{}) []map[string]interface{} {
 	r := make([]map[string]interface{}, len(tree))
@@ -136,6 +136,7 @@ func ToJSON(tree []interface{}) []map[string]interface{} {
 
 	return r
 }
+*/
 
 // Start - base function
 func Start(args ProgramArgs) error {
