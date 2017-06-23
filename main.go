@@ -250,7 +250,7 @@ func Start(args ProgramArgs) error {
 				if !haveLostInternalHeader {
 					// now, we found lost system header file
 					// so, we can try remove lost system header file and try again
-					panic(fmt.Errorf("Present state of error = %v", errorResult))
+					//panic(fmt.Errorf("Present state of error = %v", errorResult))
 				}
 				for _, lostInclude := range lostIncludes {
 					errorResult += fmt.Sprintf("Lost header file #include:\n %v\n", lostInclude)
