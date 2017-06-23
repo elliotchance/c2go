@@ -248,8 +248,28 @@ func Start(args ProgramArgs) error {
 			if err != nil {
 				errorResult += fmt.Sprintf("Cannot parse for found lost includes: %v", err)
 			} else {
+				// NEED TO APPROVE
+				// Theoretically: system headers is not need for transpiling,
+				// and system header need only for clang correct working,
+				// but internal header is important
+				var haveLostInternalHeader bool
 				for _, lostInclude := range lostIncludes {
-					errorResult += fmt.Sprintf("Lost #include:\n %v\n", lostInclude)
+					if lostInclude.typeHeader == internalHeader {
+						haveLostInternalHeader = true
+						break
+					}
+				}
+				if haveLostInternalHeader {
+					for _, lostInclude := range lostIncludes {
+						errorResult += fmt.Sprintf("Lost #include:\n %v\n", lostInclude)
+					}
+				} else {
+					// now, we found lost system header file
+					// so, we can try remove lost system header file and try again
+
+					// ADD : MORE LOGIC
+
+					panic(fmt.Errorf("Present state of error = %v", errorResult))
 				}
 			}
 			return fmt.Errorf(errorResult)
