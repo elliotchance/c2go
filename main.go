@@ -245,17 +245,13 @@ func Start(args ProgramArgs) error {
 						break
 					}
 				}
-				if haveLostInternalHeader {
-					for _, lostInclude := range lostIncludes {
-						errorResult += fmt.Sprintf("Lost #include:\n %v\n", lostInclude)
-					}
-				} else {
+				if !haveLostInternalHeader {
 					// now, we found lost system header file
 					// so, we can try remove lost system header file and try again
-
-					// ADD : MORE LOGIC
-
 					panic(fmt.Errorf("Present state of error = %v", errorResult))
+				}
+				for _, lostInclude := range lostIncludes {
+					errorResult += fmt.Sprintf("Lost header file #include:\n %v\n", lostInclude)
 				}
 			}
 			return fmt.Errorf(errorResult)
