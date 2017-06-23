@@ -257,6 +257,11 @@ func main() {
 		// print flags of ast command
 		fmt.Println("\nFlags of ast command:")
 		astCommand.PrintDefaults()
+
+		// examples
+		fmt.Println("\nExamples of flag using:")
+		fmt.Println("c2go -h\n\treturn the help\n")
+		fmt.Println("c2go transpile -o source.go source.c\n\ttranspiling file source.c to Go file with name source.go\n")
 	}
 
 	flag.Parse()
