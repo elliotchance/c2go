@@ -138,6 +138,24 @@ func ToJSON(tree []interface{}) []map[string]interface{} {
 }
 */
 
+// parseForFoundLostIncluse - parsing string to
+// found lost includes in c code after clang
+// Example of input:
+// E:\Temp\c2go001preprocess.c:1:10: fatal error: 'AbsoluteWrongInclude.h' file not found
+// #include <AbsoluteWrongInclude.h>
+//          ^~~~~~~~~~~~~~~~~~~~~~~~
+// tests\struct.c:3:10: fatal error: 'stdio.h' file not found
+//                #include <stdio.h>
+//                         ^~~~~~~~~
+//                1 error generated.
+// Example of output:
+// <AbsoluteWrongInclude.h>
+// <stdio.h>
+// "gsl/gsl.h"
+func parseForFoundLostIncluse(s string) (out []string) {
+	return out
+}
+
 // Start - base function
 func Start(args ProgramArgs) error {
 	if os.Getenv("GOPATH") == "" {
@@ -160,7 +178,14 @@ func Start(args ProgramArgs) error {
 		cmd.Stderr = &stderr
 		err = cmd.Run()
 		if err != nil {
-			return fmt.Errorf("preprocess failed: %v\nStdErr = %v", err, stderr.String())
+			var errorResult string
+			// parse error output for found lost includes
+			lostIncludes := parseForFoundLostIncluse(stderr.String())
+			for _, lostInclude := range lostIncludes {
+				errorResult += fmt.Sprintf("Lost #include: %v\n", lostInclude)
+			}
+			errorResult += fmt.Sprintf("preprocess failed: %v\nStdErr = %v\n", err, stderr.String())
+			return fmt.Errorf(errorResult)
 		}
 		pp = []byte(out.String())
 	}
