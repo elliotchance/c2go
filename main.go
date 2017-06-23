@@ -140,6 +140,7 @@ func ToJSON(tree []interface{}) []map[string]interface{} {
 
 // parseForFoundLostIncluse - parsing string to
 // found lost includes in c code after clang
+//
 // Example of input:
 // E:\Temp\c2go001preprocess.c:1:10: fatal error: 'AbsoluteWrongInclude.h' file not found
 // #include <AbsoluteWrongInclude.h>
@@ -148,6 +149,7 @@ func ToJSON(tree []interface{}) []map[string]interface{} {
 //                #include <stdio.h>
 //                         ^~~~~~~~~
 //                1 error generated.
+//
 // Example of output:
 // <AbsoluteWrongInclude.h>
 // <stdio.h>
