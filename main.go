@@ -219,6 +219,8 @@ func Start(args ProgramArgs) error {
 	// 2. Preprocess
 	var pp []byte
 	{
+		// See : https://clang.llvm.org/docs/CommandGuide/clang.html
+		// clang -E <file>    Run the preprocessor stage.
 		cmd := exec.Command("clang", "-E", args.inputFile)
 		var out bytes.Buffer
 		var stderr bytes.Buffer
@@ -299,7 +301,6 @@ func Start(args ProgramArgs) error {
 	if outputFilePath == "" {
 		cleanFileName := filepath.Clean(filepath.Base(args.inputFile))
 		extension := filepath.Ext(args.inputFile)
-
 		outputFilePath = cleanFileName[0:len(cleanFileName)-len(extension)] + ".go"
 	}
 
