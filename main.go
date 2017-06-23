@@ -260,8 +260,8 @@ func main() {
 
 		// examples
 		fmt.Println("\nExamples of flag using:")
-		fmt.Println("c2go -h\n\treturn the help\n")
-		fmt.Println("c2go transpile -o source.go source.c\n\ttranspiling file source.c to Go file with name source.go\n")
+		fmt.Println("\nc2go -h\n\treturn the help", "")
+		fmt.Println("\nc2go transpile -o source.go source.c\n\ttranspiling file source.c to Go file with name source.go")
 	}
 
 	flag.Parse()
