@@ -2,7 +2,6 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"flag"
 	"fmt"
@@ -14,6 +13,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/Konstantin8105/c2go/util"
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/transpiler"
@@ -139,20 +139,6 @@ func ToJSON(tree []interface{}) []map[string]interface{} {
 }
 */
 
-// stringToLines - convert string to string lines
-func stringToLines(s string) (lines []string, err error) {
-	scanner := bufio.NewScanner(strings.NewReader(s))
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-
-	if err = scanner.Err(); err != nil {
-		return lines, fmt.Errorf("reading standard input: %v", err)
-	}
-
-	return lines, nil
-}
-
 type headerTypes bool
 
 const (
@@ -189,7 +175,7 @@ func (inc include) String() (s string) {
 //                         ^~~~~~~~~
 //                1 error generated.
 func parseForFoundLostIncluse(s string) (includes []include, err error) {
-	lines, err := stringToLines(s)
+	lines, err := util.StringToLines(s)
 	if err != nil {
 		return includes, err
 	}

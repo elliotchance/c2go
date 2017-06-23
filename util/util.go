@@ -1,6 +1,8 @@
 package util
 
 import (
+	"bufio"
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -40,4 +42,18 @@ func GetExportedName(field string) string {
 	}
 
 	return Ucfirst(strings.TrimLeft(field, "*_"))
+}
+
+// StringToLines - convert string to string lines
+func StringToLines(s string) (lines []string, err error) {
+	scanner := bufio.NewScanner(strings.NewReader(s))
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+
+	if err = scanner.Err(); err != nil {
+		return lines, fmt.Errorf("reading standard input: %v", err)
+	}
+
+	return lines, nil
 }
