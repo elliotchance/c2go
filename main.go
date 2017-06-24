@@ -13,7 +13,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/Konstantin8105/c2go/util"
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/transpiler"
@@ -139,71 +138,6 @@ func ToJSON(tree []interface{}) []map[string]interface{} {
 }
 */
 
-type headerTypes bool
-
-const (
-	systemHeader   headerTypes = true
-	internalHeader headerTypes = false
-)
-
-type include struct {
-	headerName string
-	typeHeader headerTypes
-}
-
-func (inc include) String() (s string) {
-	s += fmt.Sprintf("\tHeader name : %v\n", inc.headerName)
-	s += fmt.Sprintf("\tType : ")
-	switch inc.typeHeader {
-	case systemHeader:
-		s += fmt.Sprintf("System header\n")
-	case internalHeader:
-		s += fmt.Sprintf("Internal header\n")
-	}
-	return
-}
-
-// parseForFoundLostIncluse - parsing string to
-// found lost includes in c code after clang
-//
-// Example of input:
-// E:\Temp\c2go001preprocess.c:1:10: fatal error: 'AbsoluteWrongInclude.h' file not found
-// #include <AbsoluteWrongInclude.h>
-//          ^~~~~~~~~~~~~~~~~~~~~~~~
-// tests\struct.c:3:10: fatal error: 'stdio.h' file not found
-//                #include <stdio.h>
-//                         ^~~~~~~~~
-//                1 error generated.
-func parseForFoundLostIncluse(s string) (includes []include, err error) {
-	lines, err := util.StringToLines(s)
-	if err != nil {
-		return includes, err
-	}
-	includeName := "#include"
-	regSystem := regexp.MustCompile("<(.*?)>")
-	regInternal := regexp.MustCompile("\"(.*?)\"")
-	for _, line := range lines {
-		if !strings.Contains(line, includeName) {
-			continue
-		}
-		// Now, we know - the string line have "#include"
-		// Find the name of header file
-		var inc include
-		if strings.ContainsAny(line, "<>") {
-			// system header
-			inc.headerName = regSystem.FindString(line)
-			inc.typeHeader = systemHeader
-		} else {
-			// internal header
-			inc.headerName = regInternal.FindString(line)
-			inc.typeHeader = internalHeader
-		}
-		inc.headerName = inc.headerName[1 : len(inc.headerName)-1]
-		includes = append(includes, inc)
-	}
-	return includes, nil
-}
-
 // Start - base function
 func Start(args ProgramArgs) error {
 	if os.Getenv("GOPATH") == "" {
@@ -231,31 +165,6 @@ func Start(args ProgramArgs) error {
 			var errorResult string
 			// add error message from stdErr
 			errorResult += fmt.Sprintf("preprocess failed: %v\nStdErr = %v\n", err, stderr.String())
-			// parse error output for found lost includes
-			lostIncludes, err := parseForFoundLostIncluse(stderr.String())
-			if err != nil {
-				errorResult += fmt.Sprintf("Cannot parse for found lost includes: %v", err)
-			} else {
-				// NEED TO APPROVE
-				// Theoretically: system headers is not need for transpiling,
-				// and system header need only for clang correct working,
-				// but internal header is important
-				var haveLostInternalHeader bool
-				for _, lostInclude := range lostIncludes {
-					if lostInclude.typeHeader == internalHeader {
-						haveLostInternalHeader = true
-						break
-					}
-				}
-				if !haveLostInternalHeader {
-					// now, we found lost system header file
-					// so, we can try remove lost system header file and try again
-					//panic(fmt.Errorf("Present state of error = %v", errorResult))
-				}
-				for _, lostInclude := range lostIncludes {
-					errorResult += fmt.Sprintf("Lost header file #include:\n %v\n", lostInclude)
-				}
-			}
 			return fmt.Errorf(errorResult)
 		}
 		pp = []byte(out.String())
