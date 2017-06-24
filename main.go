@@ -162,10 +162,7 @@ func Start(args ProgramArgs) error {
 		cmd.Stderr = &stderr
 		err = cmd.Run()
 		if err != nil {
-			var errorResult string
-			// add error message from stdErr
-			errorResult += fmt.Sprintf("preprocess failed: %v\nStdErr = %v\n", err, stderr.String())
-			return fmt.Errorf(errorResult)
+			return fmt.Errorf(fmt.Sprintf("preprocess failed: %v\nStdErr = %v\n", err, stderr.String())
 		}
 		pp = []byte(out.String())
 	}
