@@ -106,38 +106,6 @@ func buildTree(nodes []treeNode, depth int) []ast.Node {
 	return results
 }
 
-/* Dead code
-// ToJSON - tree convert to JSON
-func ToJSON(tree []interface{}) []map[string]interface{} {
-	r := make([]map[string]interface{}, len(tree))
-
-	for j, n := range tree {
-		rn := reflect.ValueOf(n).Elem()
-		r[j] = make(map[string]interface{})
-		r[j]["node"] = rn.Type().Name()
-
-		for i := 0; i < rn.NumField(); i++ {
-			name := strings.ToLower(rn.Type().Field(i).Name)
-			value := rn.Field(i).Interface()
-
-			if name == "children" {
-				v := value.([]interface{})
-
-				if len(v) == 0 {
-					continue
-				}
-
-				value = ToJSON(v)
-			}
-
-			r[j][name] = value
-		}
-	}
-
-	return r
-}
-*/
-
 // Start - base function
 func Start(args ProgramArgs) error {
 	if os.Getenv("GOPATH") == "" {
@@ -254,15 +222,6 @@ func main() {
 		// print flags of transpile command
 		fmt.Println("\nFlags of transpile command:")
 		transpileCommand.PrintDefaults()
-
-		// print flags of ast command
-		fmt.Println("\nFlags of ast command:")
-		astCommand.PrintDefaults()
-
-		// examples
-		fmt.Println("\nExamples of flag using:")
-		fmt.Println("\nc2go -h\n\treturn the help", "")
-		fmt.Println("\nc2go transpile -o source.go source.c\n\ttranspiling file source.c to Go file with name source.go")
 	}
 
 	flag.Parse()

@@ -22,9 +22,6 @@ func ResolveTypeForBinaryOperator(p *program.Program, operator, leftType, rightT
 			return p;
 		}
 	*/
-	if operator == "," {
-		panic("Now, Algorithm is not fully ready")
-	}
 
 	return leftType
 }
