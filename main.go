@@ -218,10 +218,6 @@ func main() {
 		usage += "Flags:\n"
 		fmt.Fprintf(os.Stderr, usage, os.Args[0])
 		flag.PrintDefaults()
-
-		// print flags of transpile command
-		fmt.Println("\nFlags of transpile command:")
-		transpileCommand.PrintDefaults()
 	}
 
 	flag.Parse()
