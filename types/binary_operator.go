@@ -14,14 +14,5 @@ func ResolveTypeForBinaryOperator(p *program.Program, operator, leftType, rightT
 		return "bool"
 	}
 
-	/*
-		Example of c code:
-		int fact(int n) {
-			int lcv, p;
-			for(p=1, lcv=2; lcv <= n; p=p*lcv, lcv++); // <<== Here 2 timer in initialization and increment
-			return p;
-		}
-	*/
-
 	return leftType
 }

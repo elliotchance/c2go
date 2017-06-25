@@ -170,15 +170,7 @@ func Start(args ProgramArgs) error {
 		panic(err)
 	}
 
-	outputFilePath := args.outputFile
-
-	if outputFilePath == "" {
-		cleanFileName := filepath.Clean(filepath.Base(args.inputFile))
-		extension := filepath.Ext(args.inputFile)
-		outputFilePath = cleanFileName[0:len(cleanFileName)-len(extension)] + ".go"
-	}
-
-	err = ioutil.WriteFile(outputFilePath, []byte(p.String()), 0755)
+	err = ioutil.WriteFile(args.outputFile, []byte(p.String()), 0755)
 	if err != nil {
 		return fmt.Errorf("writing C output file failed: %v", err)
 	}
@@ -270,6 +262,13 @@ func main() {
 	default:
 		flag.Usage()
 		os.Exit(1)
+	}
+
+	// Prepare output file name
+	if args.outputFile == "" {
+		cleanFileName := filepath.Clean(filepath.Base(args.inputFile))
+		extension := filepath.Ext(args.inputFile)
+		args.outputFile = cleanFileName[0:len(cleanFileName)-len(extension)] + ".go"
 	}
 
 	if err := Start(args); err != nil {
