@@ -3,7 +3,7 @@
 
 int main()
 {
-    plan(22);
+    plan(23);
 
     int i = 0;
 
@@ -45,24 +45,26 @@ int main()
             break;
     }
 
-	diag("Very big name of argument");	
-	int veryBigNameeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee = 0;
-	for (veryBigNameeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee = 0;
-			veryBigNameeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee < 3; 
-			veryBigNameeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee++){
-		pass("%d", veryBigNameeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee); 
-	}	
-/*
 	diag("big ininitialization");
-	for ( i = 0, j = 0 ; i < 5 ; i++){
+	for ( i = 0, j = 0 ; i < 2 ; i++){
 		pass("%d %d", i, j);
 	}
 	
 	diag("big ininitialization");
-	for ( i = 0, j = 0 ; i < 5 ; ){
+	for ( i = 0, j = 0 ; i < 2 ; ){
 		pass("%d %d", i, j);
 		i++;
 		j++;
+	}
+/*
+
+	diag("big ininitialization");
+	int k;
+	for ( i = 0, j = 0 , k = 0; i < 2 ; ){
+		pass("%d %d %d", i, j, k);
+		i++;
+		j+=2;
+		k+=3;
 	}
 
 	diag("big increment");

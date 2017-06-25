@@ -131,17 +131,29 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 
 	// If we have 2 and more initializations like
 	// in operator for
-	// for( a = 0, b = 0; a < 5; a ++)
+	// for( a = 0, b = 0, c = 0; a < 5; a ++)
 	switch children[0].(type) {
 	case *ast.BinaryOperator:
 		c := children[0].(*ast.BinaryOperator)
 		if c.Operator == "," {
 			// recursive action to code like that:
+			// a = 0;
 			// b = 0;
-			// for(a = 0 ; a < 5 ; a++)
+			// for(c = 0 ; a < 5 ; a++)
 			//
 			//lastIndex := len(c.Children) - 1
-			// TODO
+			if len(c.Children) != 2 {
+				panic(fmt.Errorf("Expected 2 children in BinaryOperator with comma, got %#v", c.Children))
+			}
+			// Add after in preStmts
+			beforeFor, newPre, newPost, err := transpileToStmt(c.Children[0], p)
+			if err != nil {
+				return nil, nil, nil, err
+			}
+			preStmts = append(preStmts, beforeFor)
+			preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+			// Now, in init only one
+			children[0] = c.Children[len(c.Children)-1]
 		}
 	}
 
