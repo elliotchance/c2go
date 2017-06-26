@@ -56,37 +56,6 @@ int main()
 		i++;
 		j++;
 	}
-/*
-
-	diag("big ininitialization");
-	int k;
-	for ( i = 0, j = 0 , k = 0; i < 2 ; ){
-		pass("%d %d %d", i, j, k);
-		i++;
-		j+=2;
-		k+=3;
-	}
-
-	diag("big increment");
-	j = 0;
-	for ( i = 0 ; i < 5 ; i++, j++){
-		pass("%d %d", i, j);
-	}
-
-	diag("big increment");
-	i = 0;
-	j = 0;
-	for ( ; i < 5 ; i++, j++){
-		pass("%d %d", i, j);
-	}
-*/
-//	diag("big ininitialization and increment");
-//	for (/*comment*/ i = 0 /*comment*/,/*comment*/ j = 0 /*comment*/; 
-//			i </*comment*/ 5 ;
-//		   	i++ /* comment*/ , f++ /*comment*/
-//			){
-//		pass("%d %d", i, j);
-//	}
 
     done_testing();
 }

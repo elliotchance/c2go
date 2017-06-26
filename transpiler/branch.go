@@ -141,10 +141,6 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 			// b = 0;
 			// for(c = 0 ; a < 5 ; a++)
 			//
-			//lastIndex := len(c.Children) - 1
-			if len(c.Children) != 2 {
-				panic(fmt.Errorf("Expected 2 children in BinaryOperator with comma, got %#v", c.Children))
-			}
 			// Add after in preStmts
 			beforeFor, newPre, newPost, err := transpileToStmt(c.Children[0], p)
 			if err != nil {

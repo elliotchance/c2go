@@ -60,11 +60,10 @@ func TestIntegrationScripts(t *testing.T) {
 
 	totalTapTests := 0
 
-	// Create build folder
-	os.Mkdir("build/", os.ModePerm)
-	defer os.RemoveAll("build")
-
 	for _, file := range files {
+		// Create build folder
+		os.Mkdir("build/", os.ModePerm)
+
 		t.Run(file, func(t *testing.T) {
 			cProgram := programOut{}
 			goProgram := programOut{}
