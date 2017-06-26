@@ -129,6 +129,30 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 		panic("non-nil child 1 in ForStmt")
 	}
 
+	// If we have 2 and more initializations like
+	// in operator for
+	// for( a = 0, b = 0, c = 0; a < 5; a ++)
+	switch children[0].(type) {
+	case *ast.BinaryOperator:
+		c := children[0].(*ast.BinaryOperator)
+		if c.Operator == "," {
+			// recursive action to code like that:
+			// a = 0;
+			// b = 0;
+			// for(c = 0 ; a < 5 ; a++)
+			//
+			// Add after in preStmts
+			beforeFor, newPre, newPost, err := transpileToStmt(c.Children[0], p)
+			if err != nil {
+				return nil, nil, nil, err
+			}
+			preStmts = append(preStmts, beforeFor)
+			preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+			// Now, in init only one
+			children[0] = c.Children[len(c.Children)-1]
+		}
+	}
+
 	init, newPre, newPost, err := transpileToStmt(children[0], p)
 	if err != nil {
 		return nil, nil, nil, err

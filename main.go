@@ -10,7 +10,6 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
-	"reflect"
 	"regexp"
 	"strings"
 
@@ -107,36 +106,6 @@ func buildTree(nodes []treeNode, depth int) []ast.Node {
 	return results
 }
 
-// ToJSON - tree convert to JSON
-func ToJSON(tree []interface{}) []map[string]interface{} {
-	r := make([]map[string]interface{}, len(tree))
-
-	for j, n := range tree {
-		rn := reflect.ValueOf(n).Elem()
-		r[j] = make(map[string]interface{})
-		r[j]["node"] = rn.Type().Name()
-
-		for i := 0; i < rn.NumField(); i++ {
-			name := strings.ToLower(rn.Type().Field(i).Name)
-			value := rn.Field(i).Interface()
-
-			if name == "children" {
-				v := value.([]interface{})
-
-				if len(v) == 0 {
-					continue
-				}
-
-				value = ToJSON(v)
-			}
-
-			r[j][name] = value
-		}
-	}
-
-	return r
-}
-
 // Start - base function
 func Start(args ProgramArgs) error {
 	if os.Getenv("GOPATH") == "" {
@@ -152,6 +121,8 @@ func Start(args ProgramArgs) error {
 	// 2. Preprocess
 	var pp []byte
 	{
+		// See : https://clang.llvm.org/docs/CommandGuide/clang.html
+		// clang -E <file>    Run the preprocessor stage.
 		cmd := exec.Command("clang", "-E", args.inputFile)
 		var out bytes.Buffer
 		var stderr bytes.Buffer
