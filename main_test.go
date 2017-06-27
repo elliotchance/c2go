@@ -18,13 +18,6 @@ import (
 	"github.com/elliotchance/c2go/util"
 )
 
-var (
-	cPath  = "build/a.out"
-	goPath = "build/go.out"
-	stdin  = "7"
-	args   = []string{"some", "args"}
-)
-
 type programOut struct {
 	stdout bytes.Buffer
 	stderr bytes.Buffer
@@ -65,10 +58,20 @@ func TestIntegrationScripts(t *testing.T) {
 	// Create build folder
 	os.Mkdir(buildFolder, os.ModePerm)
 
+	t.Parallel()
+	var (
+		cPath  = buildFolder + os.PathSeparator + "a.out"
+		goPath = buildFolder + os.PathSeparator + "go.out"
+		stdin  = "7"
+		args   = []string{"some", "args"}
+	)
+
 	for _, file := range files {
 		t.Run(file, func(t *testing.T) {
 			cProgram := programOut{}
 			goProgram := programOut{}
+
+			create sub dir for test
 
 			// Compile C.
 			out, err := exec.Command("clang", "-lm", "-o", cPath, file).CombinedOutput()
