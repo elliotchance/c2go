@@ -53,25 +53,39 @@ func TestIntegrationScripts(t *testing.T) {
 
 	totalTapTests := 0
 
-	buildFolder = "build"
-	os.RemoveAll(buildFolder)
+	var (
+		buildFolder  = "build"
+		cFileName    = "a.out"
+		goFileName   = "go.out"
+		mainFileName = "main.go"
+		stdin        = "7"
+		args         = []string{"some", "args"}
+		separator    = string(os.PathSeparator)
+	)
+
 	// Create build folder
-	os.Mkdir(buildFolder, os.ModePerm)
+	err = os.MkdirAll(buildFolder, os.ModePerm)
+	if err != nil {
+		t.Fatalf("error: %v", err)
+	}
 
 	t.Parallel()
-	var (
-		cPath  = buildFolder + os.PathSeparator + "a.out"
-		goPath = buildFolder + os.PathSeparator + "go.out"
-		stdin  = "7"
-		args   = []string{"some", "args"}
-	)
 
 	for _, file := range files {
 		t.Run(file, func(t *testing.T) {
 			cProgram := programOut{}
 			goProgram := programOut{}
 
-			// TODO: create sub dir for test
+			// create subfolders for test
+			subFolder := buildFolder + separator + strings.Split(file, ".")[0] + separator
+			cPath := subFolder + cFileName
+			goPath := subFolder + goFileName
+
+			// Create build folder
+			err := os.MkdirAll(subFolder, os.ModePerm)
+			if err != nil {
+				t.Fatalf("error: %v", err)
+			}
 
 			// Compile C.
 			out, err := exec.Command("clang", "-lm", "-o", cPath, file).CombinedOutput()
@@ -89,7 +103,7 @@ func TestIntegrationScripts(t *testing.T) {
 
 			programArgs := ProgramArgs{
 				inputFile:   file,
-				outputFile:  buildFolder + os.PathSeparator + "main.go",
+				outputFile:  subFolder + separator + mainFileName,
 				packageName: "main",
 			}
 
@@ -99,9 +113,17 @@ func TestIntegrationScripts(t *testing.T) {
 				t.Fatalf("error: %s\n%s", err, out)
 			}
 
-			buildErr, err := exec.Command("go", "build", "-o", goPath, buildFolder+os.PathSeparator+"main.go").CombinedOutput()
-			if err != nil {
-				t.Fatal(string(buildErr), err)
+			fmt.Println("sdsdsdsdsds")
+			{
+				buildErr := exec.Command("go", "build", "-o", goPath, subFolder+mainFileName)
+				var out bytes.Buffer
+				var stderr bytes.Buffer
+				buildErr.Stdout = &out
+				buildErr.Stderr = &stderr
+				err = buildErr.Run()
+				if err != nil {
+					t.Fatalf("preprocess failed: %v\nStdErr = %v", err, stderr.String())
+				}
 			}
 
 			// Run Go program
