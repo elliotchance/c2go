@@ -71,7 +71,7 @@ func TestIntegrationScripts(t *testing.T) {
 			cProgram := programOut{}
 			goProgram := programOut{}
 
-			create sub dir for test
+			// TODO: create sub dir for test
 
 			// Compile C.
 			out, err := exec.Command("clang", "-lm", "-o", cPath, file).CombinedOutput()
@@ -99,7 +99,7 @@ func TestIntegrationScripts(t *testing.T) {
 				t.Fatalf("error: %s\n%s", err, out)
 			}
 
-			buildErr, err := exec.Command("go", "build", "-o", goPath, "build/main.go").CombinedOutput()
+			buildErr, err := exec.Command("go", "build", "-o", goPath, buildFolder+os.PathSeparator+"main.go").CombinedOutput()
 			if err != nil {
 				t.Fatal(string(buildErr), err)
 			}
