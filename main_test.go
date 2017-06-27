@@ -52,7 +52,6 @@ func TestIntegrationScripts(t *testing.T) {
 	isVerbose := flag.CommandLine.Lookup("test.v").Value.String() == "true"
 
 	totalTapTests := 0
-
 	var (
 		buildFolder  = "build"
 		cFileName    = "a.out"
@@ -62,12 +61,6 @@ func TestIntegrationScripts(t *testing.T) {
 		args         = []string{"some", "args"}
 		separator    = string(os.PathSeparator)
 	)
-
-	// Create build folder
-	err = os.MkdirAll(buildFolder, os.ModePerm)
-	if err != nil {
-		t.Fatalf("error: %v", err)
-	}
 
 	t.Parallel()
 
@@ -82,7 +75,7 @@ func TestIntegrationScripts(t *testing.T) {
 			goPath := subFolder + goFileName
 
 			// Create build folder
-			err := os.MkdirAll(subFolder, os.ModePerm)
+			err = os.MkdirAll(subFolder, os.ModePerm)
 			if err != nil {
 				t.Fatalf("error: %v", err)
 			}
@@ -113,17 +106,9 @@ func TestIntegrationScripts(t *testing.T) {
 				t.Fatalf("error: %s\n%s", err, out)
 			}
 
-			fmt.Println("sdsdsdsdsds")
-			{
-				buildErr := exec.Command("go", "build", "-o", goPath, subFolder+mainFileName)
-				var out bytes.Buffer
-				var stderr bytes.Buffer
-				buildErr.Stdout = &out
-				buildErr.Stderr = &stderr
-				err = buildErr.Run()
-				if err != nil {
-					t.Fatalf("preprocess failed: %v\nStdErr = %v", err, stderr.String())
-				}
+			buildErr, err := exec.Command("go", "build", "-o", goPath, subFolder+mainFileName).CombinedOutput()
+			if err != nil {
+				t.Fatal(string(buildErr), err)
 			}
 
 			// Run Go program
