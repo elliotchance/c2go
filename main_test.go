@@ -89,7 +89,7 @@ func TestIntegrationScripts(t *testing.T) {
 
 			programArgs := ProgramArgs{
 				inputFile:   file,
-				outputFile:  "build/main.go",
+				outputFile:  buildFolder + os.PathSeparator + "main.go",
 				packageName: "main",
 			}
 
