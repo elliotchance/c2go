@@ -12,7 +12,6 @@ import (
 	"strings"
 	"syscall"
 	"testing"
-	"time"
 
 	"regexp"
 
@@ -81,24 +80,18 @@ func TestIntegrationScripts(t *testing.T) {
 				t.Fatalf("error: %v", err)
 			}
 
-			start := time.Now()
 			// Compile C.
 			out, err := exec.Command("clang", "-lm", "-o", cPath, file).CombinedOutput()
 			if err != nil {
 				t.Fatalf("error: %s\n%s", err, out)
 			}
-			elapsed := time.Since(start)
-			fmt.Println("Time for clang -lm is:", elapsed)
 
 			// Run C program
-			start = time.Now()
 			cmd := exec.Command(cPath, args...)
 			cmd.Stdin = strings.NewReader(stdin)
 			cmd.Stdout = &cProgram.stdout
 			cmd.Stderr = &cProgram.stderr
 			err = cmd.Run()
-			elapsed = time.Since(start)
-			fmt.Println("Time for run c code is:", elapsed)
 			cProgram.isZero = err == nil
 
 			programArgs := ProgramArgs{
@@ -113,13 +106,10 @@ func TestIntegrationScripts(t *testing.T) {
 				t.Fatalf("error: %s\n%s", err, out)
 			}
 
-			start = time.Now()
 			buildErr, err := exec.Command("go", "build", "-o", goPath, subFolder+mainFileName).CombinedOutput()
 			if err != nil {
 				t.Fatal(string(buildErr), err)
 			}
-			elapsed = time.Since(start)
-			fmt.Println("Time for run \"go build\" is:", elapsed)
 
 			// Run Go program
 			cmd = exec.Command(goPath, args...)
