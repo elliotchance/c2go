@@ -162,6 +162,11 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 		}
 	}
 
+	if operator == token.COMMA {
+		//
+		fmt.Println("COMMA")
+	}
+
 	return util.NewBinaryExpr(left, operator, right),
 		types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType),
 		preStmts, postStmts, nil
