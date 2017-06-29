@@ -21,7 +21,7 @@ import (
 // For solving - we have to separate the
 // binary operator "," to 2 parts:
 // part 1(pre ): left part  - typically one or more some expessions
-// part 2(post): right part - always only one expression, with or witout
+// part 2(stmt): right part - always only one expression, with or witout
 //               logical operators like "==", "!=", ...
 func transpileBinaryOperatorComma(n *ast.BinaryOperator, p *program.Program) (
 	stmt goast.Stmt, preStmts []goast.Stmt, err error) {
