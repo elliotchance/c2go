@@ -141,15 +141,14 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 			// b = 0;
 			// for(c = 0 ; a < 5 ; a++)
 			//
-			// Add after in preStmts
-			beforeFor, newPre, newPost, err := transpileToStmt(c.Children[0], p)
+			before, newPre, newPost, err := transpileToStmt(c.Children[0], p)
 			if err != nil {
 				return nil, nil, nil, err
 			}
-			preStmts = append(preStmts, beforeFor)
-			preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
-			// Now, in init only initialization
-			children[0] = c.Children[len(c.Children)-1]
+			preStmts = append(preStmts, newPre...)
+			preStmts = append(preStmts, before)
+			preStmts = append(preStmts, newPost...)
+			children[0] = c.Children[1]
 		}
 	}
 
@@ -176,7 +175,6 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 			// b++
 			// }
 			//
-			// Add after in preStmts
 			var compound ast.CompoundStmt
 			compound.Children = append(compound.Children, children[4])
 			compound.Children = append(compound.Children, c.Children[0:len(c.Children)-1]...)
