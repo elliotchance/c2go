@@ -3,7 +3,7 @@
 
 int main()
 {
-    plan(23);
+    plan(25);
 
     int i = 0;
 
@@ -55,6 +55,13 @@ int main()
 		pass("%d %d", i, j);
 		i++;
 		j++;
+	}
+
+	diag("big increment");
+	i = 0;
+	j = 0;
+	for (;i < 2;i++,j++){
+		pass("%d %d", i, j);
 	}
 
     done_testing();
