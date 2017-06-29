@@ -16,6 +16,31 @@ import (
 	"github.com/elliotchance/c2go/util"
 )
 
+// Comma problem. Example:
+// for (int i=0,j=0;i+=1,j<5;i++,j++){...}
+// For solving - we have to separate the
+// binary operator "," to 2 parts:
+// part 1(pre ): left part  - typically one or more some expessions
+// part 2(post): right part - always only one expression, with or witout
+//               logical operators like "==", "!=", ...
+func transpileBinaryOperatorComma(n *ast.BinaryOperator, p *program.Program) (
+	stmt goast.Stmt, preStmts []goast.Stmt, err error) {
+
+	left, err := transpileToStmts(n.Children[0], p)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	right, err := transpileToStmts(n.Children[1], p)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	preStmts = append(preStmts, left...)
+
+	return right[0], preStmts, nil
+}
+
 func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 	goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
 	preStmts := []goast.Stmt{}
@@ -160,11 +185,6 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 				}
 			}
 		}
-	}
-
-	if operator == token.COMMA {
-		//
-		fmt.Println("COMMA")
 	}
 
 	return util.NewBinaryExpr(left, operator, right),

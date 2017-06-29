@@ -148,7 +148,7 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 			}
 			preStmts = append(preStmts, beforeFor)
 			preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
-			// Now, in init only one
+			// Now, in init only initialization
 			children[0] = c.Children[len(c.Children)-1]
 		}
 	}
