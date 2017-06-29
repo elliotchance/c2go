@@ -3,7 +3,7 @@
 
 int main()
 {
-    plan(27);
+    plan(31);
 
     int i = 0;
 
@@ -46,12 +46,12 @@ int main()
     }
 
 	diag("big ininitialization");
-	for ( i = 0, j = 0 ; i < 2 ; i++){
+	for ( i = 0, j = 0 ; i < 3 ; i++){
 		pass("%d %d", i, j);
 	}
 	
 	diag("big ininitialization");
-	for ( i = 0, j = 0 ; i < 2 ; ){
+	for ( i = 0, j = 0 ; i < 3 ; ){
 		pass("%d %d", i, j);
 		i++;
 		j++;
@@ -60,14 +60,14 @@ int main()
 	diag("big increment");
 	i = 0;
 	j = 0;
-	for (;i < 2;i++,j++){
+	for (;i < 3;i++,j++){
 		pass("%d %d", i, j);
 	}
 
-	diag("bif condition");
-	i = 0;
+	diag("big condition");
+	i = -1;
 	j = 0;
-	for(;i++,j<2;){
+	for(;i++,j<3;){
 		pass("%d %d", i, j);
 		j++;
 	}
