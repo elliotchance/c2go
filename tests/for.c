@@ -3,7 +3,7 @@
 
 int main()
 {
-    plan(25);
+    plan(27);
 
     int i = 0;
 
@@ -62,6 +62,14 @@ int main()
 	j = 0;
 	for (;i < 2;i++,j++){
 		pass("%d %d", i, j);
+	}
+
+	diag("bif condition");
+	i = 0;
+	j = 0;
+	for(;i++,j<2;){
+		pass("%d %d", i, j);
+		j++;
 	}
 
     done_testing();
