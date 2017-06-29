@@ -140,7 +140,6 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 			// a = 0;
 			// b = 0;
 			// for(c = 0 ; a < 5 ; a++)
-			//
 			before, newPre, newPost, err := transpileToStmt(c.Children[0], p)
 			if err != nil {
 				return nil, nil, nil, err
@@ -169,16 +168,17 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 			// recursive action to code like that:
 			// a = 0;
 			// b = 0;
-			// for(a = 0 ; a < 5 ; c+=2){
-			// body
-			// a++;
-			// b++
+			// for(a = 0 ; a < 5 ; ){
+			// 		body
+			// 		a++;
+			// 		b++;
+			//		c+=2;
 			// }
 			//
 			compound := children[4].(*ast.CompoundStmt)
-			compound.Children = append(compound.Children, c.Children[0:len(c.Children)-1]...)
+			compound.Children = append(compound.Children, c.Children[0:len(c.Children)]...)
 			children[4] = compound
-			children[3] = c.Children[len(c.Children)-1]
+			children[3] = nil
 		}
 	}
 
@@ -189,33 +189,52 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
+	// If we have 2 and more conditions
+	// in operator for
+	// for( a = 0; b = c, b++, a < 5; a ++)
+	switch children[2].(type) {
+	case *ast.BinaryOperator:
+		c := children[2].(*ast.BinaryOperator)
+		if c.Operator == "," {
+			// recursive action to code like that:
+			// a = 0;
+			// b = 0;
+			// for(a = 0 ; ; c+=2){
+			// 		b = c;
+			// 		b++;
+			//		if (!(a < 5))
+			// 			break;
+			// 		body
+			// }
+			tempSlice := c.Children[0 : len(c.Children)-1]
+
+			var condition ast.IfStmt
+			condition.AddChild(nil)
+			var par ast.ParenExpr
+			par.AddChild(c.Children[len(c.Children)-1])
+			var unitary ast.UnaryOperator
+			unitary.AddChild(&par)
+			unitary.Operator = "!"
+			condition.AddChild(&unitary)
+			var c ast.CompoundStmt
+			c.AddChild(&ast.BreakStmt{})
+			condition.AddChild(&c)
+			condition.AddChild(nil)
+
+			tempSlice = append(tempSlice, &condition)
+
+			compound := children[4].(*ast.CompoundStmt)
+			compound.Children = append(tempSlice, compound.Children...)
+			children[4] = compound
+
+			children[2] = nil
+		}
+	}
+
 	// The condition can be nil. This means an infinite loop and will be
 	// rendered in Go as "for {".
 	var condition goast.Expr
 	if children[2] != nil {
-		// If we have 2 and more conditions
-		// in operator for
-		// for( a = 0; b = c, b++, a < 5; a ++)
-		switch children[2].(type) {
-		case *ast.BinaryOperator:
-			c := children[2].(*ast.BinaryOperator)
-			if c.Operator == "," {
-				// recursive action to code like that:
-				// a = 0;
-				// b = 0;
-				// for(a = 0 ; a < 5 ; c+=2){
-				// body
-				// b = c
-				// b++
-				// }
-				//
-
-				compound := children[4].(*ast.CompoundStmt)
-				compound.Children = append(c.Children[0:len(c.Children)-1], compound.Children...)
-				children[4] = compound
-				children[2] = c.Children[len(c.Children)-1]
-			}
-		}
 		var conditionType string
 		var newPre, newPost []goast.Stmt
 		condition, conditionType, newPre, newPost, err = transpileToExpr(children[2], p)
