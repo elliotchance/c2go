@@ -175,10 +175,9 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 			// b++
 			// }
 			//
-			var compound ast.CompoundStmt
-			compound.Children = append(compound.Children, children[4])
+			compound := children[4].(*ast.CompoundStmt)
 			compound.Children = append(compound.Children, c.Children[0:len(c.Children)-1]...)
-			children[4] = &compound
+			children[4] = compound
 			children[3] = c.Children[len(c.Children)-1]
 		}
 	}
@@ -210,10 +209,10 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 				// b++
 				// }
 				//
-				var compound ast.CompoundStmt
-				compound.Children = append(compound.Children, c.Children[0:len(c.Children)-1]...)
-				compound.Children = append(compound.Children, children[4])
-				children[4] = &compound
+
+				compound := children[4].(*ast.CompoundStmt)
+				compound.Children = append(c.Children[0:len(c.Children)-1], compound.Children...)
+				children[4] = compound
 				children[2] = c.Children[len(c.Children)-1]
 			}
 		}
