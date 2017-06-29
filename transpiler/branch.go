@@ -160,6 +160,31 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
+	// If we have 2 and more increments
+	// in operator for
+	// for( a = 0; a < 5; a ++, b++, c+=2)
+	switch children[3].(type) {
+	case *ast.BinaryOperator:
+		c := children[3].(*ast.BinaryOperator)
+		if c.Operator == "," {
+			// recursive action to code like that:
+			// a = 0;
+			// b = 0;
+			// for(a = 0 ; a < 5 ; c+=2){
+			// body
+			// a++;
+			// b++
+			// }
+			//
+			// Add after in preStmts
+			var compound ast.CompoundStmt
+			compound.Children = append(compound.Children, children[4])
+			compound.Children = append(compound.Children, c.Children[0:len(c.Children)-1]...)
+			children[4] = &compound
+			children[3] = c.Children[len(c.Children)-1]
+		}
+	}
+
 	post, newPre, newPost, err := transpileToStmt(children[3], p)
 	if err != nil {
 		return nil, nil, nil, err
