@@ -45,12 +45,12 @@ int main()
             break;
     }
 
-	diag("big ininitialization");
+	diag("big initialization 1");
 	for ( i = 0, j = 0 ; i < 3 ; i++){
 		pass("%d %d", i, j);
 	}
 	
-	diag("big ininitialization");
+	diag("big initialization 2");
 	for ( i = 0, j = 0 ; i < 3 ; ){
 		pass("%d %d", i, j);
 		i++;

@@ -132,9 +132,8 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 	// If we have 2 and more initializations like
 	// in operator for
 	// for( a = 0, b = 0, c = 0; a < 5; a ++)
-	switch children[0].(type) {
+	switch c := children[0].(type) {
 	case *ast.BinaryOperator:
-		c := children[0].(*ast.BinaryOperator)
 		if c.Operator == "," {
 			// recursive action to code like that:
 			// a = 0;
@@ -161,9 +160,8 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 	// If we have 2 and more increments
 	// in operator for
 	// for( a = 0; a < 5; a ++, b++, c+=2)
-	switch children[3].(type) {
+	switch c := children[3].(type) {
 	case *ast.BinaryOperator:
-		c := children[3].(*ast.BinaryOperator)
 		if c.Operator == "," {
 			// recursive action to code like that:
 			// a = 0;
@@ -192,9 +190,8 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 	// If we have 2 and more conditions
 	// in operator for
 	// for( a = 0; b = c, b++, a < 5; a ++)
-	switch children[2].(type) {
+	switch c := children[2].(type) {
 	case *ast.BinaryOperator:
-		c := children[2].(*ast.BinaryOperator)
 		if c.Operator == "," {
 			// recursive action to code like that:
 			// a = 0;
