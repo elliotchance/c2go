@@ -6,7 +6,7 @@
 
 int main()
 {
-	plan(19);
+	plan(30);
 
     int i = 10;
     signed char j = 1;
@@ -74,6 +74,36 @@ int main()
 
     i >>= j;
         is_eq(i, 4);
+
+	diag("Operator equal for 1 variables");
+	int x;
+	x = 0;
+		is_eq(x, 0);
+
+	diag("Operator equal for 2 variables");
+	int y;
+	x = y = 1;
+		is_eq(x, 1);
+		is_eq(y, 1);
+	
+	diag("Operator comma in initialization");
+	int x2 = 0, y2 = 1;
+		is_eq(x2, 0);
+		is_eq(y2, 1);
+
+	diag("Operator equal for 3 variables");
+	int a,b,c2;
+	a = b = c2 = 3;
+		is_eq(a, 3);
+		is_eq(b, 3);
+		is_eq(c2, 3);
+	
+	diag("Huge comma problem for Equal operator")
+	int q,w,e;
+	q = 7, w = q + 3, e = q + w;
+		is_eq(q, 7);
+		is_eq(w, 10);
+		is_eq(e, 17);
 
 	done_testing();
 }

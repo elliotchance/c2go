@@ -47,6 +47,102 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 	postStmts := []goast.Stmt{}
 	var err error
 
+	// Example of C code
+	// a = b = 1
+	// // Operation equal transpile from right to left
+	// Solving:
+	// b = 1, a = b
+	// // Operation comma tranpile from left to right
+	// If we have for example:
+	// a = b = c = 1
+	// then solution is:
+	// c = 1, b = c, a = b
+	// |-----------|
+	// this part, created in according to
+	// recursive working
+	// Example of AST tree for problem:
+	// |-BinaryOperator 0x2f17870 <line:13:2, col:10> 'int' '='
+	// | |-DeclRefExpr 0x2f177d8 <col:2> 'int' lvalue Var 0x2f176d8 'x' 'int'
+	// | `-BinaryOperator 0x2f17848 <col:6, col:10> 'int' '='
+	// |   |-DeclRefExpr 0x2f17800 <col:6> 'int' lvalue Var 0x2f17748 'y' 'int'
+	// |   `-IntegerLiteral 0x2f17828 <col:10> 'int' 1
+	//
+	// Example of AST tree for solution:
+	// |-BinaryOperator 0x368e8d8 <line:13:2, col:13> 'int' ','
+	// | |-BinaryOperator 0x368e820 <col:2, col:6> 'int' '='
+	// | | |-DeclRefExpr 0x368e7d8 <col:2> 'int' lvalue Var 0x368e748 'y' 'int'
+	// | | `-IntegerLiteral 0x368e800 <col:6> 'int' 1
+	// | `-BinaryOperator 0x368e8b0 <col:9, col:13> 'int' '='
+	// |   |-DeclRefExpr 0x368e848 <col:9> 'int' lvalue Var 0x368e6d8 'x' 'int'
+	// |   `-ImplicitCastExpr 0x368e898 <col:13> 'int' <LValueToRValue>
+	// |     `-DeclRefExpr 0x368e870 <col:13> 'int' lvalue Var 0x368e748 'y' 'int'
+	if getTokenForOperator(n.Operator) == token.ASSIGN {
+		switch c := n.Children[1].(type) {
+		case *ast.BinaryOperator:
+			{
+				if getTokenForOperator(c.Operator) == token.ASSIGN {
+					var bSecond ast.BinaryOperator
+					bSecond.Type = c.Type
+					bSecond.Operator = "="
+					bSecond.AddChild(n.Children[0])
+
+					var impl ast.ImplicitCastExpr
+					impl.Type = c.Type
+					impl.Kind = "LValueToRValue"
+					impl.AddChild(n.Children[1].(*ast.BinaryOperator).Children[0].(*ast.DeclRefExpr))
+					bSecond.AddChild(&impl)
+
+					var bComma ast.BinaryOperator
+					bComma.Operator = ","
+					bComma.Type = c.Type
+					bComma.AddChild(n.Children[1])
+					bComma.AddChild(&bSecond)
+					return transpileBinaryOperator(&bComma, p)
+				}
+			}
+		}
+	}
+
+	// Example of C code
+	// a = 1, b = a
+	// Solving
+	// a = 1; // preStmts
+	// b = a; // n
+	// Example of AST tree for problem:
+	// |-BinaryOperator 0x368e8d8 <line:13:2, col:13> 'int' ','
+	// | |-BinaryOperator 0x368e820 <col:2, col:6> 'int' '='
+	// | | |-DeclRefExpr 0x368e7d8 <col:2> 'int' lvalue Var 0x368e748 'y' 'int'
+	// | | `-IntegerLiteral 0x368e800 <col:6> 'int' 1
+	// | `-BinaryOperator 0x368e8b0 <col:9, col:13> 'int' '='
+	// |   |-DeclRefExpr 0x368e848 <col:9> 'int' lvalue Var 0x368e6d8 'x' 'int'
+	// |   `-ImplicitCastExpr 0x368e898 <col:13> 'int' <LValueToRValue>
+	// |     `-DeclRefExpr 0x368e870 <col:13> 'int' lvalue Var 0x368e748 'y' 'int'
+	//
+	// Example of AST tree for solution:
+	// |-BinaryOperator 0x21a7820 <line:13:2, col:6> 'int' '='
+	// | |-DeclRefExpr 0x21a77d8 <col:2> 'int' lvalue Var 0x21a7748 'y' 'int'
+	// | `-IntegerLiteral 0x21a7800 <col:6> 'int' 1
+	// |-BinaryOperator 0x21a78b0 <line:14:2, col:6> 'int' '='
+	// | |-DeclRefExpr 0x21a7848 <col:2> 'int' lvalue Var 0x21a76d8 'x' 'int'
+	// | `-ImplicitCastExpr 0x21a7898 <col:6> 'int' <LValueToRValue>
+	// |   `-DeclRefExpr 0x21a7870 <col:6> 'int' lvalue Var 0x21a7748 'y' 'int'
+	if getTokenForOperator(n.Operator) == token.COMMA {
+		stmts, st, newPre, newPost, err := transpileToExpr(n.Children[0], p)
+		if err != nil {
+			return nil, "", nil, nil, err
+		}
+		preStmts = append(preStmts, newPre...)
+		preStmts = append(preStmts, util.NewExprStmt(stmts))
+		postStmts = append(postStmts, newPost...)
+		stmts, st, newPre, newPost, err = transpileToExpr(n.Children[1], p)
+		if err != nil {
+			return nil, "", nil, nil, err
+		}
+		preStmts = append(preStmts, newPre...)
+		postStmts = append(postStmts, newPost...)
+		return stmts, st, preStmts, postStmts, nil
+	}
+
 	left, leftType, newPre, newPost, err := transpileToExpr(n.Children[0], p)
 	if err != nil {
 		return nil, "", nil, nil, err
