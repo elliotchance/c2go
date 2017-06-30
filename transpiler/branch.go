@@ -173,9 +173,12 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 			//		c+=2;
 			// }
 			//
-			compound := children[4].(*ast.CompoundStmt)
+			var compound ast.CompoundStmt
+			if children[4] != nil {
+				compound = *children[4].(*ast.CompoundStmt)
+			}
 			compound.Children = append(compound.Children, c.Children[0:len(c.Children)]...)
-			children[4] = compound
+			children[4] = &compound
 			children[3] = nil
 		}
 	}
