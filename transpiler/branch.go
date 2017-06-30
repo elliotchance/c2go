@@ -375,7 +375,15 @@ func transpileWhileStmt(n *ast.WhileStmt, p *program.Program) (
 //    |     `-<<<NULL>>>
 func transpileDoStmt(n *ast.DoStmt, p *program.Program) (
 	*goast.ForStmt, []goast.Stmt, []goast.Stmt, error) {
-	// TODO :
+	var forOperator ast.ForStmt
+	forOperator.AddChild(nil)
+	forOperator.AddChild(nil)
+	forOperator.AddChild(nil)
+	forOperator.AddChild(nil)
+	forOperator.AddChild(n.Children[0])
+	// add case If for break
+	panic("Add if-break case")
+	return transpileForStmt(&forOperator, p)
 }
 
 func transpileContinueStmt(n *ast.ContinueStmt, p *program.Program) (*goast.BranchStmt, error) {
