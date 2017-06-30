@@ -3,7 +3,7 @@
 
 int main()
 {
-    plan(32);
+    plan(33);
 
     int i = 0;
 
@@ -74,6 +74,10 @@ int main()
 
 	diag("Without body and with 2 and more increments");
 	for(i = 0, j = 0; i < 2; j++,i++);
+	pass("%d",i)
+
+	diag("Without body and with 2 and more conditions");
+	for(i = 0, j = 0; j++,i++,i < 2; );
 	pass("%d",i)
 
     done_testing();

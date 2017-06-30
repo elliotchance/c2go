@@ -224,9 +224,13 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 
 			tempSlice = append(tempSlice, &condition)
 
-			compound := children[4].(*ast.CompoundStmt)
+			var compound ast.CompoundStmt
+			// if body is exist
+			if children[4] != nil {
+				compound = *children[4].(*ast.CompoundStmt)
+			}
 			compound.Children = append(tempSlice, compound.Children...)
-			children[4] = compound
+			children[4] = &compound
 
 			children[2] = nil
 		}
