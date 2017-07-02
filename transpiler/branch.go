@@ -129,12 +129,56 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 		panic("non-nil child 1 in ForStmt")
 	}
 
+	// If we have 2 and more initializations like
+	// in operator for
+	// for( a = 0, b = 0, c = 0; a < 5; a ++)
+	switch c := children[0].(type) {
+	case *ast.BinaryOperator:
+		if c.Operator == "," {
+			// recursive action to code like that:
+			// a = 0;
+			// b = 0;
+			// for(c = 0 ; a < 5 ; a++)
+			before, newPre, newPost, err := transpileToStmt(c.Children[0], p)
+			if err != nil {
+				return nil, nil, nil, err
+			}
+			preStmts = append(preStmts, newPre...)
+			preStmts = append(preStmts, before)
+			preStmts = append(preStmts, newPost...)
+			children[0] = c.Children[1]
+		}
+	}
+
 	init, newPre, newPost, err := transpileToStmt(children[0], p)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
+	// If we have 2 and more increments
+	// in operator for
+	// for( a = 0; a < 5; a ++, b++, c+=2)
+	switch c := children[3].(type) {
+	case *ast.BinaryOperator:
+		if c.Operator == "," {
+			// recursive action to code like that:
+			// a = 0;
+			// b = 0;
+			// for(a = 0 ; a < 5 ; ){
+			// 		body
+			// 		a++;
+			// 		b++;
+			//		c+=2;
+			// }
+			//
+			compound := children[4].(*ast.CompoundStmt)
+			compound.Children = append(compound.Children, c.Children[0:len(c.Children)]...)
+			children[4] = compound
+			children[3] = nil
+		}
+	}
 
 	post, newPre, newPost, err := transpileToStmt(children[3], p)
 	if err != nil {
@@ -143,12 +187,46 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	body, newPre, newPost, err := transpileToBlockStmt(children[4], p)
-	if err != nil {
-		return nil, nil, nil, err
-	}
+	// If we have 2 and more conditions
+	// in operator for
+	// for( a = 0; b = c, b++, a < 5; a ++)
+	switch c := children[2].(type) {
+	case *ast.BinaryOperator:
+		if c.Operator == "," {
+			// recursive action to code like that:
+			// a = 0;
+			// b = 0;
+			// for(a = 0 ; ; c+=2){
+			// 		b = c;
+			// 		b++;
+			//		if (!(a < 5))
+			// 			break;
+			// 		body
+			// }
+			tempSlice := c.Children[0 : len(c.Children)-1]
 
-	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+			var condition ast.IfStmt
+			condition.AddChild(nil)
+			var par ast.ParenExpr
+			par.AddChild(c.Children[len(c.Children)-1])
+			var unitary ast.UnaryOperator
+			unitary.AddChild(&par)
+			unitary.Operator = "!"
+			condition.AddChild(&unitary)
+			var c ast.CompoundStmt
+			c.AddChild(&ast.BreakStmt{})
+			condition.AddChild(&c)
+			condition.AddChild(nil)
+
+			tempSlice = append(tempSlice, &condition)
+
+			compound := children[4].(*ast.CompoundStmt)
+			compound.Children = append(tempSlice, compound.Children...)
+			children[4] = compound
+
+			children[2] = nil
+		}
+	}
 
 	// The condition can be nil. This means an infinite loop and will be
 	// rendered in Go as "for {".
@@ -170,6 +248,13 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 			condition = util.NewNil()
 		}
 	}
+
+	body, newPre, newPost, err := transpileToBlockStmt(children[4], p)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	return &goast.ForStmt{
 		Init: init,

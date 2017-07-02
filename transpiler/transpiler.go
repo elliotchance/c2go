@@ -211,6 +211,12 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 	case *ast.CompoundStmt:
 		stmt, preStmts, postStmts, err = transpileCompoundStmt(n, p)
 		return
+
+	case *ast.BinaryOperator:
+		if n.Operator == "," {
+			stmt, preStmts, err = transpileBinaryOperatorComma(n, p)
+			return
+		}
 	}
 
 	// We do not care about the return type.
