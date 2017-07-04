@@ -132,7 +132,8 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 		if err != nil {
 			return nil, "", nil, nil, err
 		}
-		preStmts = append(preStmts, newPre..., util.NewExprStmt(stmts))
+		preStmts = append(preStmts, newPre...)
+		preStmts = append(preStmts, util.NewExprStmt(stmts))
 		postStmts = append(postStmts, newPost...)
 		stmts, st, newPre, newPost, err = transpileToExpr(n.Children[1], p)
 		if err != nil {
