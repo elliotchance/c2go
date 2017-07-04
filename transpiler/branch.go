@@ -380,10 +380,49 @@ func transpileDoStmt(n *ast.DoStmt, p *program.Program) (
 	forOperator.AddChild(nil)
 	forOperator.AddChild(nil)
 	forOperator.AddChild(nil)
-	forOperator.AddChild(n.Children[0])
-	// add case If for break
-	panic("Add if-break case")
+	c := n.Children[0].(*ast.CompoundStmt)
+	ifBreak := createIfWithNotConditionAndBreak(n.Children[1])
+	c.AddChild(&ifBreak)
+	forOperator.AddChild(c)
 	return transpileForStmt(&forOperator, p)
+}
+
+// createIfWithNotConditionAndBreak - create operator IF like on next example
+// of C code:
+// if ( !(condition) ) {
+//		break;
+// }
+// Example of AST tree:
+//  `-IfStmt 0x3bb1da8 <line:15:3, line:17:3>
+//    |-<<<NULL>>>
+//    |-UnaryOperator 0x3bb1d60 <line:15:6, col:11> 'int' prefix '!'
+//    | `-ParenExpr 0x3bb1d40 <col:7, col:11> 'int'
+//    |   `- CONDITION
+//    |-CompoundStmt 0x3bb1d88 <col:13, line:17:3>
+//    | `-BreakStmt 0x3bb1d80 <line:16:4>
+//    `-<<<NULL>>>
+func createIfWithNotConditionAndBreak(condition ast.Node) (ifStmt ast.IfStmt) {
+
+	ifStmt.AddChild(nil)
+
+	var par ast.ParenExpr
+	var unitary ast.UnaryOperator
+	switch con := condition.(type) {
+	case *ast.BinaryOperator:
+		par.Type = con.Type
+		unitary.Type = con.Type
+	}
+	par.AddChild(condition)
+	unitary.Operator = "!"
+	unitary.AddChild(&par)
+
+	ifStmt.AddChild(&unitary)
+	var c ast.CompoundStmt
+	c.AddChild(&ast.BreakStmt{})
+	ifStmt.AddChild(&c)
+	ifStmt.AddChild(nil)
+
+	return
 }
 
 func transpileContinueStmt(n *ast.ContinueStmt, p *program.Program) (*goast.BranchStmt, error) {
