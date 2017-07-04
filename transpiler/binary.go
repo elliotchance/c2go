@@ -81,9 +81,10 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 		case *ast.BinaryOperator:
 			{
 				if getTokenForOperator(c.Operator) == token.ASSIGN {
-					var bSecond ast.BinaryOperator
-					bSecond.Type = c.Type
-					bSecond.Operator = "="
+					bSecond := ast.BinaryOperator{
+						Type:     c.Type,
+						Operator: "=",
+					}
 					bSecond.AddChild(n.Children[0])
 
 					var impl ast.ImplicitCastExpr
@@ -131,8 +132,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 		if err != nil {
 			return nil, "", nil, nil, err
 		}
-		preStmts = append(preStmts, newPre...)
-		preStmts = append(preStmts, util.NewExprStmt(stmts))
+		preStmts = append(preStmts, newPre..., util.NewExprStmt(stmts))
 		postStmts = append(postStmts, newPost...)
 		stmts, st, newPre, newPost, err = transpileToExpr(n.Children[1], p)
 		if err != nil {

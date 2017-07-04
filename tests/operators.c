@@ -6,7 +6,7 @@
 
 int main()
 {
-	plan(30);
+	plan(33);
 
     int i = 10;
     signed char j = 1;
@@ -77,8 +77,8 @@ int main()
 
 	diag("Operator equal for 1 variables");
 	int x;
-	x = 0;
-		is_eq(x, 0);
+	x = 42;
+		is_eq(x, 42);
 
 	diag("Operator equal for 2 variables");
 	int y;
@@ -104,6 +104,16 @@ int main()
 		is_eq(q, 7);
 		is_eq(w, 10);
 		is_eq(e, 17);
+
+	diag("Huge comma problem for Equal operator with Multiplication")
+	float qF,wF,eF;
+	qF = 7., wF = qF * 3., eF = qF * wF;
+	float expectedQ = 7.;
+	float expectedW = 7. * 3.;
+	float expectedE = 7. * (7. * 3.);
+		is_eq(qF, expectedQ); 
+		is_eq(wF, expectedW);
+		is_eq(eF, expectedE);
 
 	done_testing();
 }
