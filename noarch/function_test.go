@@ -24,18 +24,18 @@ func TestBoolToInt(t *testing.T) {
 	}
 }
 
-func test_b() interface{} {
+func testB() interface{} {
 	return "b"
 }
-func test_c() interface{} {
+func testC() interface{} {
 	return "c"
 }
 
 func TestTernary(t *testing.T) {
-	if result := Ternary(true, test_b, test_c); result.(string) != "b" {
+	if result := Ternary(true, testB, testC); result.(string) != "b" {
 		t.Errorf("Ternary - true is Fail")
 	}
-	if result := Ternary(false, test_b, test_c); result.(string) != "c" {
+	if result := Ternary(false, testB, testC); result.(string) != "c" {
 		t.Errorf("Ternary - false is Fail")
 	}
 }
