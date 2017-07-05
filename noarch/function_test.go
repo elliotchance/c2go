@@ -24,6 +24,26 @@ func TestBoolToInt(t *testing.T) {
 	}
 }
 
+func TestNotInt(t *testing.T) {
+	tests := []struct {
+		input int
+		want  int
+	}{
+		{0, 1},
+		{1, 0},
+		{42, 0},
+	}
+	for _, tt := range tests {
+		name := fmt.Sprintf("%#v", tt.input)
+
+		t.Run(name, func(t *testing.T) {
+			if got := NotInt(tt.input); got != tt.want {
+				t.Errorf("NotInt() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func testB() interface{} {
 	return "b"
 }
