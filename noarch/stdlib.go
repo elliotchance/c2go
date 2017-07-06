@@ -24,9 +24,24 @@ func Atoi(a []byte) int {
 	return v
 }
 
-func Strtol(a, b []byte, c int) int32 {
-	// TODO: This is a bad implementation
-	return 65535
+// Strtol - see detail on site:
+// http://www.cplusplus.com/reference/cstdlib/strtol/
+func Strtol(a []byte, b *[]byte, base int) (value int32) {
+	var countByteForInt int
+	for i := 0; i < len(a); i++ {
+		countByteForInt = len(a) - 1 - i
+		s, err := strconv.ParseInt(string(a[0:countByteForInt+1]), base, 32)
+		value = int32(s)
+		if err != nil {
+			continue
+		}
+		break
+	}
+	if countByteForInt == 0 {
+		panic("function Strtol: Cannot found integer")
+	}
+	*b = a[countByteForInt+1 : len(a)]
+	return value
 }
 
 // Free doesn't do anything since memory is managed by the Go garbage collector.
