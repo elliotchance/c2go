@@ -30,7 +30,7 @@ type ProgramArgs struct {
 	verbose     bool
 	ast         bool
 	inputFile   string
-	includeDir  string // TODO []string?
+	includeDir  string // []string?
 	outputFile  string
 	packageName string
 }
