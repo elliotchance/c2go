@@ -18,13 +18,6 @@ import (
 	"github.com/elliotchance/c2go/util"
 )
 
-var (
-	cPath  = "build/a.out"
-	goPath = "build/go.out"
-	stdin  = "7"
-	args   = []string{"some", "args"}
-)
-
 type programOut struct {
 	stdout bytes.Buffer
 	stderr bytes.Buffer
@@ -59,14 +52,33 @@ func TestIntegrationScripts(t *testing.T) {
 	isVerbose := flag.CommandLine.Lookup("test.v").Value.String() == "true"
 
 	totalTapTests := 0
+	var (
+		buildFolder  = "build"
+		cFileName    = "a.out"
+		goFileName   = "go.out"
+		mainFileName = "main.go"
+		stdin        = "7"
+		args         = []string{"some", "args"}
+		separator    = string(os.PathSeparator)
+	)
+
+	t.Parallel()
 
 	for _, file := range files {
-		// Create build folder
-		os.Mkdir("build/", os.ModePerm)
-
 		t.Run(file, func(t *testing.T) {
 			cProgram := programOut{}
 			goProgram := programOut{}
+
+			// create subfolders for test
+			subFolder := buildFolder + separator + strings.Split(file, ".")[0] + separator
+			cPath := subFolder + cFileName
+			goPath := subFolder + goFileName
+
+			// Create build folder
+			err = os.MkdirAll(subFolder, os.ModePerm)
+			if err != nil {
+				t.Fatalf("error: %v", err)
+			}
 
 			// Compile C.
 			out, err := exec.Command("clang", "-lm", "-o", cPath, file).CombinedOutput()
@@ -84,7 +96,7 @@ func TestIntegrationScripts(t *testing.T) {
 
 			programArgs := ProgramArgs{
 				inputFile:   file,
-				outputFile:  "build/main.go",
+				outputFile:  subFolder + separator + mainFileName,
 				packageName: "main",
 			}
 
@@ -94,7 +106,7 @@ func TestIntegrationScripts(t *testing.T) {
 				t.Fatalf("error: %s\n%s", err, out)
 			}
 
-			buildErr, err := exec.Command("go", "build", "-o", goPath, "build/main.go").CombinedOutput()
+			buildErr, err := exec.Command("go", "build", "-o", goPath, subFolder+mainFileName).CombinedOutput()
 			if err != nil {
 				t.Fatal(string(buildErr), err)
 			}
