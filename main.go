@@ -23,7 +23,7 @@ import (
 //     c2go -v
 //
 // See https://github.com/elliotchance/c2go/wiki/Release-Process
-const Version = "0.13.5"
+const Version = "0.13.6"
 
 // ProgramArgs - arguments of program
 type ProgramArgs struct {
