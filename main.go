@@ -55,16 +55,9 @@ func convertLinesToNodes(lines []string) []treeNode {
 		// have semantic importance: for example, they represent omitted
 		// for-loop conditions, as in for(;;).
 		line = strings.Replace(line, "<<<NULL>>>", "NullStmt", 1)
-
-		indentAndType := regexp.MustCompile("^([|\\- `]*)(\\w+)").FindStringSubmatch(line)
-		if len(indentAndType) == 0 {
-			panic(fmt.Sprintf("Cannot understand line '%s'", line))
-		}
-
-		offset := len(indentAndType[1])
-		node := ast.Parse(line[offset:])
-
-		indentLevel := len(indentAndType[1]) / 2
+		trimmed := strings.TrimLeft(line, "|\\- `")
+		node := ast.Parse(trimmed)
+		indentLevel := (len(line) - len(trimmed)) / 2
 		nodes = append(nodes, treeNode{indentLevel, node})
 	}
 
