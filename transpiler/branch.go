@@ -173,13 +173,16 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 			//		c+=2;
 			// }
 			//
-			var compound ast.CompoundStmt
-			// if body is exist
+			var compound *ast.CompoundStmt
 			if children[4] != nil {
-				compound = *children[4].(*ast.CompoundStmt)
+				// if body is exist
+				compound = children[4].(*ast.CompoundStmt)
+			} else {
+				// if body is not exist
+				compound = new(ast.CompoundStmt)
 			}
 			compound.Children = append(compound.Children, c.Children[0:len(c.Children)]...)
-			children[4] = &compound
+			children[4] = compound
 			children[3] = nil
 		}
 	}
@@ -224,14 +227,16 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 
 			tempSlice = append(tempSlice, &condition)
 
-			var compound ast.CompoundStmt
-			// if body is exist
+			var compound *ast.CompoundStmt
 			if children[4] != nil {
-				compound = *children[4].(*ast.CompoundStmt)
+				// if body is exist
+				compound = children[4].(*ast.CompoundStmt)
+			} else {
+				// if body is not exist
+				compound = new(ast.CompoundStmt)
 			}
 			compound.Children = append(tempSlice, compound.Children...)
-			children[4] = &compound
-
+			children[4] = compound
 			children[2] = nil
 		}
 	}
