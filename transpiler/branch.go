@@ -277,40 +277,70 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 	}, preStmts, postStmts, nil
 }
 
+// transpileWhileStmt - transpiler for operator While.
+// We have only operator FOR in Go, but in C we also have
+// operator WHILE. So, we have to convert to operator FOR.
+// We choose directly convertion  from AST C code to AST C code, for
+// - avoid dublicate of code in realization WHILE and FOR.
+// - create only one operator FOR powerfull.
+// Example of C code with operator WHILE:
+//	while(i > 0){
+//		printf("While: %d\n",i);
+//		i--;
+//	}
+// AST for that code:
+//    |-WhileStmt 0x2530a10 <line:6:2, line:9:2>
+//    | |-<<<NULL>>>
+//    | |-BinaryOperator 0x25307f0 <line:6:8, col:12> 'int' '>'
+//    | | |-ImplicitCastExpr 0x25307d8 <col:8> 'int' <LValueToRValue>
+//    | | | `-DeclRefExpr 0x2530790 <col:8> 'int' lvalue Var 0x25306f8 'i' 'int'
+//    | | `-IntegerLiteral 0x25307b8 <col:12> 'int' 0
+//    | `-CompoundStmt 0x25309e8 <col:14, line:9:2>
+//    |   |-CallExpr 0x2530920 <line:7:3, col:25> 'int'
+//    |   | |-ImplicitCastExpr 0x2530908 <col:3> 'int (*)(const char *, ...)' <FunctionToPointerDecay>
+//    |   | | `-DeclRefExpr 0x2530818 <col:3> 'int (const char *, ...)' Function 0x2523ee8 'printf' 'int (const char *, ...)'
+//    |   | |-ImplicitCastExpr 0x2530970 <col:10> 'const char *' <BitCast>
+//    |   | | `-ImplicitCastExpr 0x2530958 <col:10> 'char *' <ArrayToPointerDecay>
+//    |   | |   `-StringLiteral 0x2530878 <col:10> 'char [11]' lvalue "While: %d\n"
+//    |   | `-ImplicitCastExpr 0x2530988 <col:24> 'int' <LValueToRValue>
+//    |   |   `-DeclRefExpr 0x25308b0 <col:24> 'int' lvalue Var 0x25306f8 'i' 'int'
+//    |   `-UnaryOperator 0x25309c8 <line:8:3, col:4> 'int' postfix '--'
+//    |     `-DeclRefExpr 0x25309a0 <col:3> 'int' lvalue Var 0x25306f8 'i' 'int'
+//
+// Example of C code with operator FOR:
+//	for (;i > 0;){
+//		printf("For: %d\n",i);
+//		i--;
+//	}
+// AST for that code:
+//    |-ForStmt 0x2530d08 <line:11:2, line:14:2>
+//    | |-<<<NULL>>>
+//    | |-<<<NULL>>>
+//    | |-BinaryOperator 0x2530b00 <line:11:8, col:12> 'int' '>'
+//    | | |-ImplicitCastExpr 0x2530ae8 <col:8> 'int' <LValueToRValue>
+//    | | | `-DeclRefExpr 0x2530aa0 <col:8> 'int' lvalue Var 0x25306f8 'i' 'int'
+//    | | `-IntegerLiteral 0x2530ac8 <col:12> 'int' 0
+//    | |-<<<NULL>>>
+//    | `-CompoundStmt 0x2530ce0 <col:15, line:14:2>
+//    |   |-CallExpr 0x2530bf8 <line:12:3, col:23> 'int'
+//    |   | |-ImplicitCastExpr 0x2530be0 <col:3> 'int (*)(const char *, ...)' <FunctionToPointerDecay>
+//    |   | | `-DeclRefExpr 0x2530b28 <col:3> 'int (const char *, ...)' Function 0x2523ee8 'printf' 'int (const char *, ...)'
+//    |   | |-ImplicitCastExpr 0x2530c48 <col:10> 'const char *' <BitCast>
+//    |   | | `-ImplicitCastExpr 0x2530c30 <col:10> 'char *' <ArrayToPointerDecay>
+//    |   | |   `-StringLiteral 0x2530b88 <col:10> 'char [9]' lvalue "For: %d\n"
+//    |   | `-ImplicitCastExpr 0x2530c60 <col:22> 'int' <LValueToRValue>
+//    |   |   `-DeclRefExpr 0x2530bb8 <col:22> 'int' lvalue Var 0x25306f8 'i' 'int'
+//    |   `-UnaryOperator 0x2530ca0 <line:13:3, col:4> 'int' postfix '--'
+//    |     `-DeclRefExpr 0x2530c78 <col:3> 'int' lvalue Var 0x25306f8 'i' 'int'
 func transpileWhileStmt(n *ast.WhileStmt, p *program.Program) (
 	*goast.ForStmt, []goast.Stmt, []goast.Stmt, error) {
-	preStmts := []goast.Stmt{}
-	postStmts := []goast.Stmt{}
-
-	// TODO: The first child of a WhileStmt appears to always be null.
-	// Are there any cases where it is used?
-	children := n.Children[1:]
-
-	body, newPre, newPost, err := transpileToBlockStmt(children[1], p)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
-
-	condition, conditionType, newPre, newPost, err := transpileToExpr(children[0], p)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
-
-	cond, err := types.CastExpr(p, condition, conditionType, "bool")
-	p.AddMessage(ast.GenerateWarningOrErrorMessage(err, n, cond == nil))
-
-	if cond == nil {
-		cond = util.NewNil()
-	}
-
-	return &goast.ForStmt{
-		Cond: cond,
-		Body: body,
-	}, preStmts, postStmts, nil
+	var forOperator ast.ForStmt
+	forOperator.AddChild(nil)
+	forOperator.AddChild(nil)
+	forOperator.AddChild(n.Children[1])
+	forOperator.AddChild(nil)
+	forOperator.AddChild(n.Children[2])
+	return transpileForStmt(&forOperator, p)
 }
 
 func transpileDoStmt(n *ast.DoStmt, p *program.Program) (
