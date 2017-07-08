@@ -343,47 +343,121 @@ func transpileWhileStmt(n *ast.WhileStmt, p *program.Program) (
 	return transpileForStmt(&forOperator, p)
 }
 
+// transpileDoStmt - transpiler for operator Do...While
+// We have only operators FOR and IF in Go, but in C we also have
+// operator DO...WHILE. So, we have to convert to operators FOR and IF.
+// We choose directly convertion  from AST C code to AST C code, for:
+// - avoid dublicate of code in realization DO...WHILE and FOR.
+// - create only one powerfull operator FOR.
+// Example of C code with operator DO...WHILE:
+//	do{
+//		printf("While: %d\n",i);
+//		i--;
+//	}while(i > 0);
+// AST for that code:
+//    |-DoStmt 0x3bb1a68 <line:7:2, line:10:14>
+//    | |-CompoundStmt 0x3bb19b8 <line:7:4, line:10:2>
+//    | | |-CallExpr 0x3bb18f0 <line:8:3, col:25> 'int'
+//    | | | |-ImplicitCastExpr 0x3bb18d8 <col:3> 'int (*)(const char *, ...)' <FunctionToPointerDecay>
+//    | | | | `-DeclRefExpr 0x3bb17e0 <col:3> 'int (const char *, ...)' Function 0x3ba4ee8 'printf' 'int (const char *, ...)'
+//    | | | |-ImplicitCastExpr 0x3bb1940 <col:10> 'const char *' <BitCast>
+//    | | | | `-ImplicitCastExpr 0x3bb1928 <col:10> 'char *' <ArrayToPointerDecay>
+//    | | | |   `-StringLiteral 0x3bb1848 <col:10> 'char [11]' lvalue "While: %d\n"
+//    | | | `-ImplicitCastExpr 0x3bb1958 <col:24> 'int' <LValueToRValue>
+//    | | |   `-DeclRefExpr 0x3bb1880 <col:24> 'int' lvalue Var 0x3bb16f8 'i' 'int'
+//    | | `-UnaryOperator 0x3bb1998 <line:9:3, col:4> 'int' postfix '--'
+//    | |   `-DeclRefExpr 0x3bb1970 <col:3> 'int' lvalue Var 0x3bb16f8 'i' 'int'
+//    | `-BinaryOperator 0x3bb1a40 <line:10:9, col:13> 'int' '>'
+//    |   |-ImplicitCastExpr 0x3bb1a28 <col:9> 'int' <LValueToRValue>
+//    |   | `-DeclRefExpr 0x3bb19e0 <col:9> 'int' lvalue Var 0x3bb16f8 'i' 'int'
+//    |   `-IntegerLiteral 0x3bb1a08 <col:13> 'int' 0
+//
+// Example of C code with operator FOR:
+//	for(;;){
+//		printf("For: %d\n",i);
+//		i--;
+//		if(!(i>0)){
+//			break;
+//		}
+//	}
+// AST for that code:
+//    |-ForStmt 0x3bb1e08 <line:12:2, line:18:2>
+//    | |-<<<NULL>>>
+//    | |-<<<NULL>>>
+//    | |-<<<NULL>>>
+//    | |-<<<NULL>>>
+//    | `-CompoundStmt 0x3bb1dd8 <line:12:9, line:18:2>
+//    |   |-CallExpr 0x3bb1bc8 <line:13:3, col:23> 'int'
+//    |   | |-ImplicitCastExpr 0x3bb1bb0 <col:3> 'int (*)(const char *, ...)' <FunctionToPointerDecay>
+//    |   | | `-DeclRefExpr 0x3bb1af8 <col:3> 'int (const char *, ...)' Function 0x3ba4ee8 'printf' 'int (const char *, ...)'
+//    |   | |-ImplicitCastExpr 0x3bb1c18 <col:10> 'const char *' <BitCast>
+//    |   | | `-ImplicitCastExpr 0x3bb1c00 <col:10> 'char *' <ArrayToPointerDecay>
+//    |   | |   `-StringLiteral 0x3bb1b58 <col:10> 'char [9]' lvalue "For: %d\n"
+//    |   | `-ImplicitCastExpr 0x3bb1c30 <col:22> 'int' <LValueToRValue>
+//    |   |   `-DeclRefExpr 0x3bb1b88 <col:22> 'int' lvalue Var 0x3bb16f8 'i' 'int'
+//    |   |-UnaryOperator 0x3bb1c70 <line:14:3, col:4> 'int' postfix '--'
+//    |   | `-DeclRefExpr 0x3bb1c48 <col:3> 'int' lvalue Var 0x3bb16f8 'i' 'int'
+//    |   `-IfStmt 0x3bb1da8 <line:15:3, line:17:3>
+//    |     |-<<<NULL>>>
+//    |     |-UnaryOperator 0x3bb1d60 <line:15:6, col:11> 'int' prefix '!'
+//    |     | `-ParenExpr 0x3bb1d40 <col:7, col:11> 'int'
+//    |     |   `-BinaryOperator 0x3bb1d18 <col:8, col:10> 'int' '>'
+//    |     |     |-ImplicitCastExpr 0x3bb1d00 <col:8> 'int' <LValueToRValue>
+//    |     |     | `-DeclRefExpr 0x3bb1c90 <col:8> 'int' lvalue Var 0x3bb16f8 'i' 'int'
+//    |     |     `-IntegerLiteral 0x3bb1ce0 <col:10> 'int' 0
+//    |     |-CompoundStmt 0x3bb1d88 <col:13, line:17:3>
+//    |     | `-BreakStmt 0x3bb1d80 <line:16:4>
+//    |     `-<<<NULL>>>
 func transpileDoStmt(n *ast.DoStmt, p *program.Program) (
 	*goast.ForStmt, []goast.Stmt, []goast.Stmt, error) {
-	preStmts := []goast.Stmt{}
-	postStmts := []goast.Stmt{}
-	children := n.Children
+	var forOperator ast.ForStmt
+	forOperator.AddChild(nil)
+	forOperator.AddChild(nil)
+	forOperator.AddChild(nil)
+	forOperator.AddChild(nil)
+	c := n.Children[0].(*ast.CompoundStmt)
+	ifBreak := createIfWithNotConditionAndBreak(n.Children[1])
+	c.AddChild(&ifBreak)
+	forOperator.AddChild(c)
+	return transpileForStmt(&forOperator, p)
+}
 
-	body, newPre, newPost, err := transpileToBlockStmt(children[0], p)
-	if err != nil {
-		return nil, nil, nil, err
+// createIfWithNotConditionAndBreak - create operator IF like on next example
+// of C code:
+// if ( !(condition) ) {
+//		break;
+// }
+// Example of AST tree:
+//  `-IfStmt 0x3bb1da8 <line:15:3, line:17:3>
+//    |-<<<NULL>>>
+//    |-UnaryOperator 0x3bb1d60 <line:15:6, col:11> 'int' prefix '!'
+//    | `-ParenExpr 0x3bb1d40 <col:7, col:11> 'int'
+//    |   `- CONDITION
+//    |-CompoundStmt 0x3bb1d88 <col:13, line:17:3>
+//    | `-BreakStmt 0x3bb1d80 <line:16:4>
+//    `-<<<NULL>>>
+func createIfWithNotConditionAndBreak(condition ast.Node) (ifStmt ast.IfStmt) {
+
+	ifStmt.AddChild(nil)
+
+	var par ast.ParenExpr
+	var unitary ast.UnaryOperator
+	switch con := condition.(type) {
+	case *ast.BinaryOperator:
+		par.Type = con.Type
+		unitary.Type = con.Type
 	}
+	par.AddChild(condition)
+	unitary.Operator = "!"
+	unitary.AddChild(&par)
 
-	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+	ifStmt.AddChild(&unitary)
+	var c ast.CompoundStmt
+	c.AddChild(&ast.BreakStmt{})
+	ifStmt.AddChild(&c)
+	ifStmt.AddChild(nil)
 
-	condition, conditionType, newPre, newPost, err := transpileToExpr(children[1], p)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
-
-	// Add IfStmt to the end of the loop to check the condition.
-	x, err := types.CastExpr(p, condition, conditionType, "bool")
-	p.AddMessage(ast.GenerateWarningOrErrorMessage(err, n, x == nil))
-
-	if x == nil {
-		x = util.NewNil()
-	}
-
-	body.List = append(body.List, &goast.IfStmt{
-		Cond: &goast.UnaryExpr{
-			Op: token.NOT,
-			X:  x,
-		},
-		Body: &goast.BlockStmt{
-			List: []goast.Stmt{&goast.BranchStmt{Tok: token.BREAK}},
-		},
-	})
-
-	return &goast.ForStmt{
-		Body: body,
-	}, preStmts, postStmts, nil
+	return
 }
 
 func transpileContinueStmt(n *ast.ContinueStmt, p *program.Program) (*goast.BranchStmt, error) {
