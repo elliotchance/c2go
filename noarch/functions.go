@@ -17,6 +17,7 @@ func NotInt(x int) int {
 	return 0
 }
 
+/* Dead code
 func NotUint16(x uint16) uint16 {
 	if x == 0 {
 		return 1
@@ -24,6 +25,7 @@ func NotUint16(x uint16) uint16 {
 
 	return 0
 }
+*/
 
 func Ternary(a bool, b, c func() interface{}) interface{} {
 	if a {
