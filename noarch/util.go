@@ -25,6 +25,9 @@ func NullTerminatedByteSlice(s []byte) string {
 	return string(newSlice)
 }
 
+// CStringIsNull will test is a C string is NULL. This is equivilent to:
+//
+//    s == NULL
 func CStringIsNull(s []byte) bool {
 	if s == nil || len(s) < 1 {
 		return true

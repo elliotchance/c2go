@@ -27,6 +27,40 @@ func GetArrayTypeAndSize(s string) (string, int) {
 	return "", -1
 }
 
+// CastExpr returns an expression that casts one type to another. For
+// reliability and flexability the existing type (fromType) must be structly
+// provided.
+//
+// There are lots of rules about how an expression is cast, but here are some
+// main points:
+//
+// 1. If fromType == toType (casting to the same type) OR toType == "void *",
+//    the original expression is returned unmodified.
+//
+// 2. There is a special type called "null" which is not defined in C, but
+//    rather an estimate of the NULL macro which evaluates to: (0). We cannot
+//    guarantee that original C used the NULL macro but it is a safe assumption
+//    for now.
+//
+//    The reason why NULL is special (or at least seamingly) is that it is often
+//    used in different value contexts. As a number, testing pointers and
+//    strings. Being able to better understand the original purpose of the code
+//    helps to generate cleaner and more Go-like output.
+//
+// 3. There is a set of known primitive number types like "int", "float", etc.
+//    These we know can be safely cast between each other by using the data type
+//    as a function. For example, 3 (int) to a float would produce:
+//    "float32(3)".
+//
+//    There are also some platform specific types and types that are shared in
+//    Go packages that are common aliases kept in this list.
+//
+// 4. If all else fails the fallback is to cast using a function. For example,
+//    Foo -> Bar, would return an expression similar to "noarch.FooToBar(expr)".
+//    This code would certainly fail with custom types, but that would likely be
+//    a bug. It is most useful to do this when dealing with compound types like
+//    FILE where those function probably exist (or should exist) in the noarch
+//    package.
 func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.Expr, error) {
 	// Let's assume that anything can be converted to a void pointer.
 	if toType == "void *" {
@@ -87,7 +121,7 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 		"__uint16_t", "size_t",
 
 		// Darwin specific
-		"__darwin_ct_rune_t", "darwin.Darwin_ct_rune_t",
+		"__darwin_ct_rune_t", "darwin.CtRuneT",
 	}
 	for _, v := range types {
 		if fromType == v && toType == "bool" {
@@ -209,6 +243,15 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 	return util.NewCallExpr(functionName, expr), nil
 }
 
+// IsNullExpr tries to determine if the expression is the result of the NULL
+// macro. In C, NULL is actually a macro that produces an expression like "(0)".
+//
+// There are no guarantees if the original C code used the NULL macro, but it is
+// usually a pretty good guess when we see this specific exression signature.
+//
+// Either way the return value from IsNullExpr should not change the
+// functionality of the code but can lead to hints that allow the Go produced to
+// be cleaner and more Go-like.
 func IsNullExpr(n goast.Expr) bool {
 	if p1, ok := n.(*goast.ParenExpr); ok {
 		if p2, ok := p1.X.(*goast.BasicLit); ok && p2.Value == "0" {

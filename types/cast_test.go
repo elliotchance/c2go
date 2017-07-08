@@ -13,7 +13,7 @@ import (
 	"go/token"
 )
 
-func ToJson(v interface{}) string {
+func toJSON(v interface{}) string {
 	b, _ := json.MarshalIndent(v, "", "  ")
 	return string(b)
 }
@@ -64,7 +64,7 @@ func TestCast(t *testing.T) {
 			}
 
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Cast()%s\n", util.ShowDiff(ToJson(got), ToJson(tt.want)))
+				t.Errorf("Cast()%s\n", util.ShowDiff(toJSON(got), toJSON(tt.want)))
 			}
 		})
 	}

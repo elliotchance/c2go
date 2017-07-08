@@ -12,10 +12,15 @@ import (
 	"strings"
 )
 
+// NewExprStmt returns a new ExprStmt from an expression. It is used when
+// converting a single expression into a statement for another receiver.
+//
+// It is recommended you use this method of instantiating the ExprStmt yourself
+// because NewExprStmt will check that the expr is not nil (or panic). This is
+// much more helpful when trying to debug why the Go source build crashes
+// becuase of a nil pointer - which eventually leads back to a nil expr.
 func NewExprStmt(expr goast.Expr) *goast.ExprStmt {
-	if expr == nil {
-		panic("expr is nil")
-	}
+	PanicIfNil(expr, "expr is nil")
 
 	return &goast.ExprStmt{
 		X: expr,
@@ -117,13 +122,15 @@ func NewFuncClosure(returnType string, stmts ...goast.Stmt) *goast.CallExpr {
 	}
 }
 
+// NewBinaryExpr create a new Go AST binary expression with a left, operator and
+// right operand.
+//
+// You should use this instead of BinaryExpr directly so that nil left and right
+// operands can be caught (and panic) before Go tried to render the source -
+// which would result in a very hard to debug error.
 func NewBinaryExpr(left goast.Expr, operator token.Token, right goast.Expr) *goast.BinaryExpr {
-	if left == nil {
-		panic("left is nil")
-	}
-	if right == nil {
-		panic("right is nil")
-	}
+	PanicIfNil(left, "left is nil")
+	PanicIfNil(right, "right is nil")
 
 	return &goast.BinaryExpr{
 		X:  left,
@@ -146,16 +153,7 @@ func NewTypeIdent(name string) goast.Expr {
 	return typeToExpr(name)
 }
 
-func NewIdents(names ...string) []goast.Expr {
-	idents := []goast.Expr{}
-
-	for _, name := range names {
-		idents = append(idents, NewIdent(name))
-	}
-
-	return idents
-}
-
+// NewStringLit returns a new Go basic literal with a string value.
 func NewStringLit(value string) *goast.BasicLit {
 	return &goast.BasicLit{
 		Kind:  token.STRING,
@@ -178,6 +176,7 @@ func NewFloatLit(value float64) *goast.BasicLit {
 	}
 }
 
+// NewNil returns a Go AST identity that can be used to represent "nil".
 func NewNil() *goast.Ident {
 	return NewIdent("nil")
 }

@@ -1,4 +1,13 @@
 // Package c2go contains the main function for running the executable.
+//
+// Installation
+//
+//     go get -u github.com/elliotchance/c2go
+//
+// Usage
+//
+//     c2go myfile.c
+//
 package main
 
 import (
@@ -16,6 +25,7 @@ import (
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/transpiler"
+	"reflect"
 )
 
 // Version can be requested through the command line with:
@@ -25,7 +35,12 @@ import (
 // See https://github.com/elliotchance/c2go/wiki/Release-Process
 const Version = "0.13.6"
 
-// ProgramArgs - arguments of program
+// ProgramArgs defines the options available when processing the program. There
+// is no constructor since the zeroed out values are the appropriaye defaults -
+// you need only set the options you need.
+//
+// TODO: Better separation on CLI modes
+// https://github.com/elliotchance/c2go/issues/134
 type ProgramArgs struct {
 	verbose     bool
 	ast         bool
@@ -99,7 +114,42 @@ func buildTree(nodes []treeNode, depth int) []ast.Node {
 	return results
 }
 
-// Start - base function
+func toJSON(tree []interface{}) []map[string]interface{} {
+	r := make([]map[string]interface{}, len(tree))
+
+	for j, n := range tree {
+		rn := reflect.ValueOf(n).Elem()
+		r[j] = make(map[string]interface{})
+		r[j]["node"] = rn.Type().Name()
+
+		for i := 0; i < rn.NumField(); i++ {
+			name := strings.ToLower(rn.Type().Field(i).Name)
+			value := rn.Field(i).Interface()
+
+			if name == "children" {
+				v := value.([]interface{})
+
+				if len(v) == 0 {
+					continue
+				}
+
+				value = toJSON(v)
+			}
+
+			r[j][name] = value
+		}
+	}
+
+	return r
+}
+
+func check(prefix string, e error) {
+	if e != nil {
+		panic(prefix + e.Error())
+	}
+}
+
+// Start begins transpiling an input file.
 func Start(args ProgramArgs) error {
 	if os.Getenv("GOPATH") == "" {
 		return fmt.Errorf("The $GOPATH must be set")

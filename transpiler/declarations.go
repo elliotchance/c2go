@@ -40,11 +40,11 @@ func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, str
 
 func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 	name := n.Name
-	if name == "" || p.TypeIsAlreadyDefined(name) {
+	if name == "" || p.IsTypeAlreadyDefined(name) {
 		return nil
 	}
 
-	p.TypeIsNowDefined(name)
+	p.DefineType(name)
 
 	s := program.NewStruct(n)
 	if s.IsUnion {
@@ -115,11 +115,11 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 	name := n.Name
 
-	if p.TypeIsAlreadyDefined(name) {
+	if p.IsTypeAlreadyDefined(name) {
 		return nil
 	}
 
-	p.TypeIsNowDefined(name)
+	p.DefineType(name)
 
 	resolvedType, err := types.ResolveType(p, n.Type)
 	p.AddMessage(ast.GenerateWarningMessage(err, n))
@@ -144,12 +144,8 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 		return nil
 	}
 
-	if name == "__mbstate_t" {
-		resolvedType = p.ImportType("github.com/elliotchance/c2go/darwin.C__mbstate_t")
-	}
-
 	if name == "__darwin_ct_rune_t" {
-		resolvedType = p.ImportType("github.com/elliotchance/c2go/darwin.Darwin_ct_rune_t")
+		resolvedType = p.ImportType("github.com/elliotchance/c2go/darwin.CtRuneT")
 	}
 
 	// TODO: Some platform structs are ignored.
@@ -228,7 +224,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 			p.AddImports("github.com/elliotchance/c2go/noarch", "os")
 			p.AppendStartupExpr(
 				util.NewBinaryExpr(
-					util.NewIdent(name),
+					goast.NewIdent(name),
 					token.ASSIGN,
 					util.NewCallExpr(
 						"noarch.NewFile",
@@ -243,7 +239,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 			p.AddImports("github.com/elliotchance/c2go/noarch", "os")
 			p.AppendStartupExpr(
 				util.NewBinaryExpr(
-					util.NewIdent(name),
+					goast.NewIdent(name),
 					token.ASSIGN,
 					util.NewCallExpr(
 						"noarch.NewFile",

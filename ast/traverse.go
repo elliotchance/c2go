@@ -1,10 +1,7 @@
-// Package traverse contains functions for traversing the clang AST.
-package traverse
+package ast
 
 import (
 	"reflect"
-
-	"github.com/elliotchance/c2go/ast"
 )
 
 // GetAllNodesOfType returns all of the nodes of the tree that match the type
@@ -12,8 +9,8 @@ import (
 //
 // The nodes returned may reference each other and there is no guarenteed order
 // in which the nodes are returned.
-func GetAllNodesOfType(root ast.Node, t reflect.Type) []ast.Node {
-	nodes := []ast.Node{}
+func GetAllNodesOfType(root Node, t reflect.Type) []Node {
+	nodes := []Node{}
 
 	if reflect.TypeOf(root) == t {
 		nodes = append(nodes, root)
@@ -27,315 +24,315 @@ func GetAllNodesOfType(root ast.Node, t reflect.Type) []ast.Node {
 	// comprehensive switch statements. Code that exists now or in the future
 	// should try to traverse package instead.
 	switch n := root.(type) {
-	case *ast.AlignedAttr:
+	case *AlignedAttr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.AlwaysInlineAttr:
+	case *AlwaysInlineAttr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.ArraySubscriptExpr:
+	case *ArraySubscriptExpr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.AsmLabelAttr:
+	case *AsmLabelAttr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.AvailabilityAttr:
+	case *AvailabilityAttr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.BinaryOperator:
+	case *BinaryOperator:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.BreakStmt:
+	case *BreakStmt:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.BuiltinType:
+	case *BuiltinType:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.CallExpr:
+	case *CallExpr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.CaseStmt:
+	case *CaseStmt:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.CharacterLiteral:
+	case *CharacterLiteral:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.CompoundStmt:
+	case *CompoundStmt:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.ConditionalOperator:
+	case *ConditionalOperator:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.ConstAttr:
+	case *ConstAttr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.ConstantArrayType:
+	case *ConstantArrayType:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.ContinueStmt:
+	case *ContinueStmt:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.CompoundAssignOperator:
+	case *CompoundAssignOperator:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.CStyleCastExpr:
+	case *CStyleCastExpr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.DeclRefExpr:
+	case *DeclRefExpr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.DeclStmt:
+	case *DeclStmt:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.DefaultStmt:
+	case *DefaultStmt:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.DeprecatedAttr:
+	case *DeprecatedAttr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.DoStmt:
+	case *DoStmt:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.ElaboratedType:
+	case *ElaboratedType:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.Enum:
+	case *Enum:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.EnumConstantDecl:
+	case *EnumConstantDecl:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.EnumDecl:
+	case *EnumDecl:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.EnumType:
+	case *EnumType:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.FieldDecl:
+	case *FieldDecl:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.FloatingLiteral:
+	case *FloatingLiteral:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.FormatAttr:
+	case *FormatAttr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.FunctionDecl:
+	case *FunctionDecl:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.FunctionProtoType:
+	case *FunctionProtoType:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.ForStmt:
+	case *ForStmt:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.GotoStmt:
+	case *GotoStmt:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.IfStmt:
+	case *IfStmt:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.ImplicitCastExpr:
+	case *ImplicitCastExpr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.ImplicitValueInitExpr:
+	case *ImplicitValueInitExpr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.IncompleteArrayType:
+	case *IncompleteArrayType:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.InitListExpr:
+	case *InitListExpr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.IntegerLiteral:
+	case *IntegerLiteral:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.LabelStmt:
+	case *LabelStmt:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.MallocAttr:
+	case *MallocAttr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.MaxFieldAlignmentAttr:
+	case *MaxFieldAlignmentAttr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.MemberExpr:
+	case *MemberExpr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.ModeAttr:
+	case *ModeAttr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.NoInlineAttr:
+	case *NoInlineAttr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.NoThrowAttr:
+	case *NoThrowAttr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.NonNullAttr:
+	case *NonNullAttr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.OffsetOfExpr:
+	case *OffsetOfExpr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.PackedAttr:
+	case *PackedAttr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.ParenExpr:
+	case *ParenExpr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.ParenType:
+	case *ParenType:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.ParmVarDecl:
+	case *ParmVarDecl:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.PointerType:
+	case *PointerType:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.PredefinedExpr:
+	case *PredefinedExpr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.PureAttr:
+	case *PureAttr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.QualType:
+	case *QualType:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.Record:
+	case *Record:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.RecordDecl:
+	case *RecordDecl:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.RecordType:
+	case *RecordType:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.RestrictAttr:
+	case *RestrictAttr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.ReturnStmt:
+	case *ReturnStmt:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.ReturnsTwiceAttr:
+	case *ReturnsTwiceAttr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.StringLiteral:
+	case *StringLiteral:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.SwitchStmt:
+	case *SwitchStmt:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.TranslationUnitDecl:
+	case *TranslationUnitDecl:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.TransparentUnionAttr:
+	case *TransparentUnionAttr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.Typedef:
+	case *Typedef:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.TypedefDecl:
+	case *TypedefDecl:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.TypedefType:
+	case *TypedefType:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.UnaryExprOrTypeTraitExpr:
+	case *UnaryExprOrTypeTraitExpr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.UnaryOperator:
+	case *UnaryOperator:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.VAArgExpr:
+	case *VAArgExpr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.VarDecl:
+	case *VarDecl:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.WarnUnusedResultAttr:
+	case *WeakAttr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.WeakAttr:
+	case *WarnUnusedResultAttr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
-	case *ast.WhileStmt:
+	case *WhileStmt:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}

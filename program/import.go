@@ -32,6 +32,13 @@ func (p *Program) AddImports(importPaths ...string) {
 	}
 }
 
+// ImportType imports a package for a fully qualified type and returns the local
+// type name. For example:
+//
+//     t := p.ImportType("github.com/elliotchance/c2go/darwin.CtRuneT")
+//
+// Will import "github.com/elliotchance/c2go/darwin" and return (value of t)
+// "darwin.CtRuneT".
 func (p *Program) ImportType(name string) string {
 	if strings.Index(name, ".") != -1 {
 		parts := strings.Split(name, ".")

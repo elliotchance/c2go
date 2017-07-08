@@ -74,6 +74,7 @@ func generateCharacterTable() {
 	}
 }
 
+// CtypeLoc handles __ctype_b_loc(). It returns a character table.
 func CtypeLoc() [][]uint16 {
 	if len(characterTable) == 0 {
 		generateCharacterTable()
@@ -82,10 +83,12 @@ func CtypeLoc() [][]uint16 {
 	return [][]uint16{characterTable}
 }
 
+// ToLower handles tolower().
 func ToLower(_c int) int {
 	return int(unicode.ToLower(rune(_c)))
 }
 
+// ToUpper handles toupper().
 func ToUpper(_c int) int {
 	return int(unicode.ToUpper(rune(_c)))
 }
