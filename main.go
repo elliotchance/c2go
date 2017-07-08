@@ -30,6 +30,7 @@ type ProgramArgs struct {
 	verbose     bool
 	ast         bool
 	inputFile   string
+	includeDir  string // []string?
 	outputFile  string
 	packageName string
 }
@@ -99,38 +100,46 @@ func buildTree(nodes []treeNode, depth int) []ast.Node {
 	return results
 }
 
+func preprocess(args ProgramArgs) ([]byte, error) {
+	// See : https://clang.llvm.org/docs/CommandGuide/clang.html
+	// clang -E <file>    Run the preprocessor stage.
+	var cmdargs []string
+	if dir := args.includeDir; dir != "" {
+		cmdargs = append(cmdargs, "-I"+dir)
+	}
+	cmdargs = append(cmdargs, "-E")
+	cmdargs = append(cmdargs, args.inputFile)
+
+	cmd := exec.Command("clang", cmdargs...)
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		return nil, fmt.Errorf("preprocess failed: %v\nStdErr = %v", err, stderr.String())
+	}
+	return out.Bytes(), nil
+}
+
 // Start - base function
 func Start(args ProgramArgs) error {
-	if os.Getenv("GOPATH") == "" {
+	if os.Getenv("GOPATH") == "" { // no need after go1.9?
 		return fmt.Errorf("The $GOPATH must be set")
 	}
 
 	// 1. Compile it first (checking for errors)
-	_, err := os.Stat(args.inputFile)
-	if err != nil {
+	if _, err := os.Stat(args.inputFile); err != nil {
 		return fmt.Errorf("Input file is not found")
 	}
 
 	// 2. Preprocess
-	var pp []byte
-	{
-		// See : https://clang.llvm.org/docs/CommandGuide/clang.html
-		// clang -E <file>    Run the preprocessor stage.
-		cmd := exec.Command("clang", "-E", args.inputFile)
-		var out bytes.Buffer
-		var stderr bytes.Buffer
-		cmd.Stdout = &out
-		cmd.Stderr = &stderr
-		err = cmd.Run()
-		if err != nil {
-			return fmt.Errorf("preprocess failed: %v\nStdErr = %v", err, stderr.String())
-		}
-		pp = []byte(out.String())
+	pp, err := preprocess(args)
+	if err != nil {
+		return fmt.Errorf("failed to preprocess: %v", err)
 	}
 
 	ppFilePath := path.Join(os.TempDir(), "pp.c")
-	err = ioutil.WriteFile(ppFilePath, pp, 0644)
-	if err != nil {
+	if err := ioutil.WriteFile(ppFilePath, pp, 0644); err != nil {
 		return fmt.Errorf("writing to /tmp/pp.c failed: %v", err)
 	}
 
@@ -193,14 +202,15 @@ func newTempFile(dir, prefix, suffix string) (*os.File, error) {
 
 func main() {
 	var (
-		versionFlag       = flag.Bool("v", false, "print the version and exit")
-		transpileCommand  = flag.NewFlagSet("transpile", flag.ContinueOnError)
-		verboseFlag       = transpileCommand.Bool("V", false, "print progress as comments")
-		outputFlag        = transpileCommand.String("o", "", "output Go generated code to the specified file")
-		packageFlag       = transpileCommand.String("p", "main", "set the name of the generated package")
-		transpileHelpFlag = transpileCommand.Bool("h", false, "print help information")
-		astCommand        = flag.NewFlagSet("ast", flag.ContinueOnError)
-		astHelpFlag       = astCommand.Bool("h", false, "print help information")
+		versionFlag          = flag.Bool("v", false, "print the version and exit")
+		transpileCommand     = flag.NewFlagSet("transpile", flag.ContinueOnError)
+		verboseFlag          = transpileCommand.Bool("V", false, "print progress as comments")
+		outputFlag           = transpileCommand.String("o", "", "output Go generated code to the specified file")
+		packageFlag          = transpileCommand.String("p", "main", "set the name of the generated package")
+		transpileHelpFlag    = transpileCommand.Bool("h", false, "print help information")
+		transpileIncludeFlag = transpileCommand.String("I", "", "argument to -I flag for clang")
+		astCommand           = flag.NewFlagSet("ast", flag.ContinueOnError)
+		astHelpFlag          = astCommand.Bool("h", false, "print help information")
 	)
 
 	flag.Usage = func() {
@@ -261,6 +271,7 @@ func main() {
 		args.inputFile = transpileCommand.Arg(0)
 		args.outputFile = *outputFlag
 		args.packageName = *packageFlag
+		args.includeDir = *transpileIncludeFlag
 	default:
 		flag.Usage()
 		os.Exit(1)
