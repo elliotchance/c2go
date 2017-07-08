@@ -114,15 +114,6 @@ func ResolveType(p *program.Program, s string) (string, error) {
 	s = strings.Replace(s, "*const", "*", -1)
 	s = strings.Trim(s, " \t\n\r")
 
-	// TODO: Unions are not supported.
-	// https://github.com/elliotchance/c2go/issues/84
-	//
-	// For now we will let them be interface{} so that it does not stop the
-	// transpilation.
-	if strings.HasPrefix(s, "union ") {
-		return "interface{}", errors.New("unions are not supported")
-	}
-
 	// FIXME: This is a hack to avoid casting in some situations.
 	if s == "" {
 		return s, errors.New("probably an incorrect type translation 1")
@@ -155,9 +146,14 @@ func ResolveType(p *program.Program, s string) (string, error) {
 	}
 
 	// Structures are by name.
-	if strings.HasPrefix(s, "struct ") {
+	if strings.HasPrefix(s, "struct ") || strings.HasPrefix(s, "union ") {
+		start := 6
+		if s[0] == 's' {
+			start++
+		}
+
 		if s[len(s)-1] == '*' {
-			s = s[7 : len(s)-2]
+			s = s[start : len(s)-2]
 
 			for _, v := range simpleResolveTypes {
 				if v == s {
@@ -168,7 +164,7 @@ func ResolveType(p *program.Program, s string) (string, error) {
 			return "*" + s, nil
 		}
 
-		s = s[7:]
+		s = s[start:]
 
 		for _, v := range simpleResolveTypes {
 			if v == s {
@@ -176,7 +172,7 @@ func ResolveType(p *program.Program, s string) (string, error) {
 			}
 		}
 
-		return s, nil
+		return ResolveType(p, s)
 	}
 
 	// Enums are by name.

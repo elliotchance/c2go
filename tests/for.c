@@ -3,7 +3,7 @@
 
 int main()
 {
-    plan(19);
+    plan(33);
 
     int i = 0;
 
@@ -44,6 +44,41 @@ int main()
         if (j > 3)
             break;
     }
+
+	diag("big initialization 1");
+	for ( i = 0, j = 0 ; i < 3 ; i++){
+		pass("%d %d", i, j);
+	}
+	
+	diag("big initialization 2");
+	for ( i = 0, j = 0 ; i < 3 ; ){
+		pass("%d %d", i, j);
+		i++;
+		j++;
+	}
+
+	diag("big increment");
+	i = 0;
+	j = 0;
+	for (;i < 3;i++,j++){
+		pass("%d %d", i, j);
+	}
+
+	diag("big condition");
+	i = -1;
+	j = 0;
+	for(;i++,j<3;){
+		pass("%d %d", i, j);
+		j++;
+	}
+
+	diag("Without body and with 2 and more increments");
+	for(i = 0, j = 0; i < 2; j++,i++);
+	pass("%d",i)
+
+	diag("Without body and with 2 and more conditions");
+	for(i = 0, j = 0; j++,i++,i < 2; );
+	pass("%d",i)
 
     done_testing();
 }

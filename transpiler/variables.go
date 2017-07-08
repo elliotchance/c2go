@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"go/token"
+	"strings"
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
@@ -15,7 +16,7 @@ import (
 
 func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (
 	*goast.Ident, string, error) {
-	return goast.NewIdent(n.Name), n.Type, nil
+	return util.NewIdent(n.Name), n.Type, nil
 }
 
 func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
@@ -58,7 +59,7 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 			util.NewCallExpr(
 				"make",
 				&goast.ArrayType{
-					Elt: goast.NewIdent(goArrayType),
+					Elt: util.NewTypeIdent(goArrayType),
 				},
 				util.NewIntLit(arraySize),
 				util.NewIntLit(arraySize),
@@ -74,8 +75,8 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 			Tok: token.VAR,
 			Specs: []goast.Spec{
 				&goast.ValueSpec{
-					Names:  []*goast.Ident{goast.NewIdent(a.Name)},
-					Type:   goast.NewIdent(t),
+					Names:  []*goast.Ident{util.NewIdent(a.Name)},
+					Type:   util.NewTypeIdent(t),
 					Values: defaultValue,
 				},
 			},
@@ -157,7 +158,7 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program) 
 }
 
 func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
-	*goast.SelectorExpr, string, []goast.Stmt, []goast.Stmt, error) {
+	goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
@@ -172,7 +173,7 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	p.AddMessage(ast.GenerateWarningMessage(err, n))
 
 	// lhsType will be something like "struct foo"
-	structType := p.Structs[lhsType]
+	structType := p.GetStruct(lhsType)
 	rhs := n.Name
 	rhsType := "void *"
 	if structType == nil {
@@ -197,8 +198,17 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 		rhsType = "int"
 	}
 
+	// Construct code for getting value to an union field
+	if structType != nil && structType.IsUnion {
+		ident := lhs.(*goast.Ident)
+		funcName := fmt.Sprintf("%s.Get%s", ident.Name, strings.Title(n.Name))
+		resExpr := util.NewCallExpr(funcName)
+
+		return resExpr, rhsType, preStmts, postStmts, nil
+	}
+
 	return &goast.SelectorExpr{
 		X:   lhs,
-		Sel: goast.NewIdent(rhs),
+		Sel: util.NewIdent(rhs),
 	}, rhsType, preStmts, postStmts, nil
 }

@@ -1,3 +1,4 @@
+#include <string.h> // strlen()
 #include <math.h> // signbit()
 
 // TODO: This can be removed and replaced with strcmp() when string.h is
@@ -101,7 +102,11 @@ static int last_test_was_ok = 1;
 //
 // If the number of checks at the end (done_testing) is not the same as the
 // value provided here then the suite will fail.
+//
+// To avoid Gcc warning (unused-function),
+// force to call here the function isnegzero()
 #define plan(numberOfTests)      \
+    isnegzero(1);                \
     total_tests = numberOfTests; \
     printf("1..%d\n", numberOfTests)
 

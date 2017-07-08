@@ -36,3 +36,25 @@ func parseMemberExpr(line string) *MemberExpr {
 func (n *MemberExpr) AddChild(node Node) {
 	n.Children = append(n.Children, node)
 }
+
+// GetDeclRefExpr gets DeclRefExpr from MemberExpr, or nil if there is no DeclRefExpr
+func (n *MemberExpr) GetDeclRefExpr() *DeclRefExpr {
+	for _, child := range n.Children {
+		res, ok := child.(*DeclRefExpr)
+		if ok {
+			return res
+		}
+
+		cast, ok := child.(*ImplicitCastExpr)
+		if ok {
+			res, ok = cast.Children[0].(*DeclRefExpr)
+			if ok {
+				return res
+			}
+
+		}
+	}
+
+	// There is no DeclRefExpr
+	return nil
+}

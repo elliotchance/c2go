@@ -141,8 +141,8 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 					Tok: token.VAR,
 					Specs: []goast.Spec{
 						&goast.ValueSpec{
-							Names: []*goast.Ident{goast.NewIdent(tempVariableName)},
-							Type:  goast.NewIdent("string"),
+							Names: []*goast.Ident{util.NewIdent(tempVariableName)},
+							Type:  util.NewTypeIdent("string"),
 						},
 					},
 				},
@@ -151,12 +151,12 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 			postStmts = append(postStmts, &goast.ExprStmt{
 				X: util.NewCallExpr("copy", &goast.SliceExpr{
 					X: e,
-				}, goast.NewIdent(tempVariableName)),
+				}, util.NewIdent(tempVariableName)),
 			})
 
 			e = &goast.UnaryExpr{
 				Op: token.AND,
-				X:  goast.NewIdent(tempVariableName),
+				X:  util.NewIdent(tempVariableName),
 			}
 		}
 

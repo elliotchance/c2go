@@ -18,13 +18,6 @@ import (
 	"github.com/elliotchance/c2go/util"
 )
 
-var (
-	cPath  = "build/a.out"
-	goPath = "build/go.out"
-	stdin  = "7"
-	args   = []string{"some", "args"}
-)
-
 type programOut struct {
 	stdout bytes.Buffer
 	stderr bytes.Buffer
@@ -59,14 +52,33 @@ func TestIntegrationScripts(t *testing.T) {
 	isVerbose := flag.CommandLine.Lookup("test.v").Value.String() == "true"
 
 	totalTapTests := 0
+	var (
+		buildFolder  = "build"
+		cFileName    = "a.out"
+		goFileName   = "go.out"
+		mainFileName = "main.go"
+		stdin        = "7"
+		args         = []string{"some", "args"}
+		separator    = string(os.PathSeparator)
+	)
+
+	t.Parallel()
 
 	for _, file := range files {
-		// Create build folder
-		os.Mkdir("build/", os.ModePerm)
-
 		t.Run(file, func(t *testing.T) {
 			cProgram := programOut{}
 			goProgram := programOut{}
+
+			// create subfolders for test
+			subFolder := buildFolder + separator + strings.Split(file, ".")[0] + separator
+			cPath := subFolder + cFileName
+			goPath := subFolder + goFileName
+
+			// Create build folder
+			err = os.MkdirAll(subFolder, os.ModePerm)
+			if err != nil {
+				t.Fatalf("error: %v", err)
+			}
 
 			// Compile C.
 			out, err := exec.Command("clang", "-lm", "-o", cPath, file).CombinedOutput()
@@ -84,14 +96,17 @@ func TestIntegrationScripts(t *testing.T) {
 
 			programArgs := ProgramArgs{
 				inputFile:   file,
-				outputFile:  "build/main.go",
+				outputFile:  subFolder + separator + mainFileName,
 				packageName: "main",
 			}
 
 			// Compile Go
-			Start(programArgs)
+			err = Start(programArgs)
+			if err != nil {
+				t.Fatalf("error: %s\n%s", err, out)
+			}
 
-			buildErr, err := exec.Command("go", "build", "-o", goPath, "build/main.go").CombinedOutput()
+			buildErr, err := exec.Command("go", "build", "-o", goPath, subFolder+mainFileName).CombinedOutput()
 			if err != nil {
 				t.Fatal(string(buildErr), err)
 			}
@@ -151,5 +166,62 @@ func TestIntegrationScripts(t *testing.T) {
 
 	if isVerbose {
 		fmt.Printf("TAP: # Total tests: %d\n", totalTapTests)
+	}
+}
+
+func TestStartPreprocess(t *testing.T) {
+	// temp dir
+	tempDir := os.TempDir()
+
+	// create temp file with garantee
+	// wrong file body
+	tempFile, err := newTempFile(tempDir, "c2go", "preprocess.c")
+	if err != nil {
+		t.Errorf("Cannot create temp file for execute test")
+	}
+	defer os.Remove(tempFile.Name())
+
+	fmt.Fprintf(tempFile, "#include <AbsoluteWrongInclude.h>\nint main(void){\nwrong();\n}")
+
+	err = tempFile.Close()
+	if err != nil {
+		t.Errorf("Cannot close the temp file")
+	}
+
+	var args ProgramArgs
+	args.inputFile = tempFile.Name()
+
+	err = Start(args)
+	if err == nil {
+		t.Errorf("Cannot test preprocess of application")
+	}
+}
+
+func TestGoPath(t *testing.T) {
+	gopath := "GOPATH"
+
+	existEnv := os.Getenv(gopath)
+	if existEnv == "" {
+		t.Errorf("$GOPATH is not set")
+	}
+
+	// return env.var.
+	defer func() {
+		err := os.Setenv(gopath, existEnv)
+		if err != nil {
+			t.Errorf("Cannot restore the value of $GOPATH")
+		}
+	}()
+
+	// reset value of env.var.
+	err := os.Setenv(gopath, "")
+	if err != nil {
+		t.Errorf("Cannot set value of $GOPATH")
+	}
+
+	// testing
+	err = Start(ProgramArgs{})
+	if err == nil {
+		t.Errorf(err.Error())
 	}
 }

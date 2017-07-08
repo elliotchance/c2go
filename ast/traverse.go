@@ -324,6 +324,10 @@ func GetAllNodesOfType(root Node, t reflect.Type) []Node {
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
+	case *WeakAttr:
+		for _, c := range n.Children {
+			nodes = append(nodes, GetAllNodesOfType(c, t)...)
+		}
 	case *WarnUnusedResultAttr:
 		for _, c := range n.Children {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)

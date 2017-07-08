@@ -22,7 +22,7 @@ func TestCast(t *testing.T) {
 	p := program.NewProgram()
 
 	type args struct {
-		expr     string
+		expr     goast.Expr
 		fromType string
 		toType   string
 	}
@@ -31,33 +31,32 @@ func TestCast(t *testing.T) {
 		want goast.Expr
 	}{
 		// Casting to the same type is not needed.
-		{args{"1", "int", "int"}, util.NewStringLit("1")},
-		{args{"2.3", "float", "float"}, util.NewStringLit("2.3")},
+		{args{util.NewIntLit(1), "int", "int"}, util.NewIntLit(1)},
+		{args{util.NewFloatLit(2.3), "float", "float"}, util.NewFloatLit(2.3)},
 
 		// Casting between numeric types.
-		{args{"1", "int", "float"}, util.NewCallExpr("float32", util.NewStringLit("1"))},
-		{args{"1", "int", "double"}, util.NewCallExpr("float64", util.NewStringLit("1"))},
-		{args{"1", "int", "__uint16_t"}, util.NewCallExpr("uint16", util.NewStringLit("1"))},
+		{args{util.NewIntLit(1), "int", "float"}, util.NewCallExpr("float32", util.NewIntLit(1))},
+		{args{util.NewIntLit(1), "int", "double"}, util.NewCallExpr("float64", util.NewIntLit(1))},
+		{args{util.NewIntLit(1), "int", "__uint16_t"}, util.NewCallExpr("uint16", util.NewIntLit(1))},
 
 		// Casting to bool
-		{args{"1", "int", "bool"}, util.NewBinaryExpr(util.NewStringLit("1"), token.NEQ, util.NewStringLit("0"))},
+		{args{util.NewIntLit(1), "int", "bool"}, util.NewBinaryExpr(util.NewIntLit(1), token.NEQ, util.NewIntLit(0))},
 
 		// Casting from bool. This is a special case becuase C int and bool
 		// values are very commonly used interchangably.
-		{args{"1", "bool", "int"}, util.NewCallExpr("noarch.BoolToInt", util.NewStringLit("1"))},
+		{args{util.NewIntLit(1), "bool", "int"}, util.NewCallExpr("noarch.BoolToInt", util.NewIntLit(1))},
 
 		// String types
 		// {args{"foo", "[3]char", "const char*"}, "1 != 0"},
 
-		{args{"false", "_Bool", "bool"}, util.NewStringLit("false")},
+		{args{util.NewIdent("false"), "_Bool", "bool"}, util.NewIdent("false")},
 	}
 
 	for _, tt := range tests {
 		name := fmt.Sprintf("%#v", tt.args)
 
 		t.Run(name, func(t *testing.T) {
-			e := util.NewStringLit(tt.args.expr)
-			got, err := CastExpr(p, e, tt.args.fromType, tt.args.toType)
+			got, err := CastExpr(p, tt.args.expr, tt.args.fromType, tt.args.toType)
 
 			if err != nil {
 				t.Error(err)
