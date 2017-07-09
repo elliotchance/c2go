@@ -95,6 +95,8 @@ func Position(node Node) string {
 		return n.Position
 	case *IncompleteArrayType:
 		return ""
+	case *IndirectFieldDecl:
+		return n.Position
 	case *InitListExpr:
 		return n.Position
 	case *IntegerLiteral:
@@ -308,6 +310,8 @@ func Parse(line string) Node {
 		return parseImplicitValueInitExpr(line)
 	case "IncompleteArrayType":
 		return parseIncompleteArrayType(line)
+	case "IndirectFieldDecl":
+		return parseIndirectFieldDecl(line)
 	case "InitListExpr":
 		return parseInitListExpr(line)
 	case "IntegerLiteral":
