@@ -52,6 +52,7 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 					argLHS := util.NewCallExpr(getterName)
 					argOp := binaryOperator
 					argRHS := util.NewIntLit(1)
+					argOp = token.ADD
 					argValue := util.NewBinaryExpr(argLHS, argOp, argRHS)
 
 					// Make Go expression
@@ -107,7 +108,8 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 
 		p.AddImport("github.com/elliotchance/c2go/noarch")
 
-		functionName := fmt.Sprintf("noarch.Not%s", util.Ucfirst(t))
+		functionName := fmt.Sprintf("noarch.Not%s",
+			util.GetExportedName(t))
 
 		return util.NewCallExpr(functionName, e),
 			eType, preStmts, postStmts, nil

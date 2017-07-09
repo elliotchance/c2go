@@ -27,6 +27,15 @@ func getName(firstChild ast.Node) string {
 	case *ast.ParenExpr:
 		return getName(fc.Children[0])
 
+	case *ast.UnaryOperator:
+		return getName(fc.Children[0])
+
+	case *ast.ImplicitCastExpr:
+		return getName(fc.Children[0])
+
+	case *ast.CStyleCastExpr:
+		return getName(fc.Children[0])
+
 	default:
 		panic(fmt.Sprintf("cannot CallExpr on: %#v", fc))
 	}

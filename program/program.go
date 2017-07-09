@@ -104,17 +104,23 @@ func (p *Program) AddMessage(message string) bool {
 	return true
 }
 
-// GetStruct returns a struct object (representing struct type or union type) or nil if doesn't exist.
-// This method can get struct or union in the same way and distinguish only by the IsUnion field.
-// `name` argument is the C like `struct a_struct`, it allow pointer type like `union a_union *`.
-// Pointer types used in a DeclRefExpr in the case a deferenced structure by using `->` operator
-// to access to a field like this: a_struct->member .
+// GetStruct returns a struct object (representing struct type or union type) or
+// nil if doesn't exist. This method can get struct or union in the same way and
+// distinguish only by the IsUnion field. `name` argument is the C like
+// `struct a_struct`, it allow pointer type like `union a_union *`. Pointer
+// types used in a DeclRefExpr in the case a deferenced structure by using `->`
+// operator to access to a field like this: a_struct->member .
 //
-// This method is used in collaboration with the fiel "c2go/program".*Struct.IsUnion to simplify the
-// code like in function "c2go/transpiler".transpileMemberExpr() where the same *Struct value returned
-// by this method is used in the 2 cases, in the case where the value has a struct type
-// and in the case where the value has an union type.
+// This method is used in collaboration with the field
+// "c2go/program".*Struct.IsUnion to simplify the code like in function
+// "c2go/transpiler".transpileMemberExpr() where the same *Struct value returned
+// by this method is used in the 2 cases, in the case where the value has a
+// struct type and in the case where the value has an union type.
 func (p *Program) GetStruct(name string) *Struct {
+	if name == "" {
+		return nil
+	}
+
 	last := len(name) - 1
 
 	// That allow to get struct from pointer type

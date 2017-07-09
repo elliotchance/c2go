@@ -43,9 +43,13 @@ func Atoi(s string) int {
 // GetExportedName returns a deterministic and Go safe name for a C type. For
 // example, "*__foo[]" will return "FooSlice".
 func GetExportedName(field string) string {
+	if field == "interface{}" {
+		return "Interface"
+	}
+
 	// Convert "[]byte" into "byteSlice". This also works with multiple slices,
 	// like "[][]byte" to "byteSliceSlice".
-	for field[:2] == "[]" {
+	for len(field) > 2 && field[:2] == "[]" {
 		field = field[2:] + "Slice"
 	}
 

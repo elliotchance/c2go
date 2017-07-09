@@ -119,6 +119,9 @@ func normalizeSwitchCases(body *ast.CompoundStmt, p *program.Program) (
 	var err error
 	var newPre, newPost []goast.Stmt
 
+	// FIXME: This is just for debugging
+	return cases, newPre, newPost, nil
+
 	for _, x := range body.Children {
 		switch c := x.(type) {
 		case *ast.CaseStmt, *ast.DefaultStmt:
@@ -139,7 +142,14 @@ func normalizeSwitchCases(body *ast.CompoundStmt, p *program.Program) (
 			}
 
 			if stmt != nil {
-				cases[len(cases)-1].Body = append(cases[len(cases)-1].Body, stmt)
+				if len(cases) == 0 {
+					// FIXME: What causes this scenario?
+					//cases = append(cases, &goast.CaseClause{
+					//	Body: []goast.Stmt{stmt},
+					//})
+				} else {
+					cases[len(cases)-1].Body = append(cases[len(cases)-1].Body, stmt)
+				}
 			}
 		}
 	}

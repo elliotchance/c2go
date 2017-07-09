@@ -21,17 +21,17 @@ import (
 func ctypeEnumValue(value int, t token.Token) goast.Expr {
 	// Produces an expression like: ((1 << (0)) << 8)
 	return &goast.ParenExpr{
-		X: &goast.BinaryExpr{
-			X: &goast.ParenExpr{
-				X: &goast.BinaryExpr{
-					X:  util.NewIntLit(1),
-					Op: token.SHL,
-					Y:  util.NewIntLit(value),
-				},
+		X: util.NewBinaryExpr(
+			&goast.ParenExpr{
+				X: util.NewBinaryExpr(
+					util.NewIntLit(1),
+					token.SHL,
+					util.NewIntLit(value),
+				),
 			},
-			Op: t,
-			Y:  util.NewIntLit(8),
-		},
+			t,
+			util.NewIntLit(8),
+		),
 	}
 }
 

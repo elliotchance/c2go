@@ -26,10 +26,11 @@ func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, str
 	fieldType, err := types.ResolveType(p, n.Type)
 	p.AddMessage(ast.GenerateWarningMessage(err, n))
 
-	// TODO: The name of a variable or field cannot be "type"
+	// TODO: The name of a variable or field cannot be a reserved word
 	// https://github.com/elliotchance/c2go/issues/83
-	if name == "type" {
-		name = "type_"
+	// Search for this issue in other areas of the codebase.
+	if util.IsGoKeyword(name) {
+		name += "_"
 	}
 
 	return &goast.Field{

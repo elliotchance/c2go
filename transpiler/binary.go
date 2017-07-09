@@ -46,6 +46,17 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 	postStmts := []goast.Stmt{}
 	var err error
 
+	operator := getTokenForOperator(n.Operator)
+	if operator == token.ASSIGN ||
+		operator == token.ADD_ASSIGN ||
+		operator == token.SUB_ASSIGN ||
+		operator == token.MUL_ASSIGN ||
+		operator == token.QUO_ASSIGN ||
+		operator == token.SHL_ASSIGN ||
+		operator == token.SHR_ASSIGN {
+		operator = token.ADD
+	}
+
 	// Example of C code
 	// a = b = 1
 	// // Operation equal transpile from right to left
@@ -78,27 +89,25 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 	if getTokenForOperator(n.Operator) == token.ASSIGN {
 		switch c := n.Children[1].(type) {
 		case *ast.BinaryOperator:
-			{
-				if getTokenForOperator(c.Operator) == token.ASSIGN {
-					bSecond := ast.BinaryOperator{
-						Type:     c.Type,
-						Operator: "=",
-					}
-					bSecond.AddChild(n.Children[0])
-
-					var impl ast.ImplicitCastExpr
-					impl.Type = c.Type
-					impl.Kind = "LValueToRValue"
-					impl.AddChild(n.Children[1].(*ast.BinaryOperator).Children[0].(*ast.DeclRefExpr))
-					bSecond.AddChild(&impl)
-
-					var bComma ast.BinaryOperator
-					bComma.Operator = ","
-					bComma.Type = c.Type
-					bComma.AddChild(n.Children[1])
-					bComma.AddChild(&bSecond)
-					return transpileBinaryOperator(&bComma, p)
+			if getTokenForOperator(c.Operator) == token.ASSIGN {
+				bSecond := ast.BinaryOperator{
+					Type:     c.Type,
+					Operator: "=",
 				}
+				bSecond.AddChild(n.Children[0])
+
+				var impl ast.ImplicitCastExpr
+				impl.Type = c.Type
+				impl.Kind = "LValueToRValue"
+				impl.AddChild(c.Children[0])
+				bSecond.AddChild(&impl)
+
+				var bComma ast.BinaryOperator
+				bComma.Operator = ","
+				bComma.Type = c.Type
+				bComma.AddChild(c)
+				bComma.AddChild(&bSecond)
+				return transpileBinaryOperator(&bComma, p)
 			}
 		}
 	}
@@ -157,7 +166,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	operator := getTokenForOperator(n.Operator)
+	//operator := getTokenForOperator(n.Operator)
 	returnType := types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType)
 
 	if operator == token.LAND || operator == token.LOR {
@@ -245,18 +254,28 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 				deref, err := types.GetDereferenceType(rightType)
 
 				if !p.AddMessage(ast.GenerateWarningMessage(err, n)) {
-					// This is some hackey to convert a reference to a variable
-					// into a slice that points to the same location. It will
-					// look similar to:
-					//
-					//     (*[1]int)(unsafe.Pointer(&a))[:]
-					//
-					p.AddImport("unsafe")
-					right = &goast.SliceExpr{
-						X: util.NewCallExpr(
-							fmt.Sprintf("(*[1]%s)", deref),
-							util.NewCallExpr("unsafe.Pointer", right),
-						),
+					resolvedDeref, err := types.ResolveType(p, deref)
+
+					// FIXME: I'm not sure how this situation arises.
+					if resolvedDeref == "" {
+						resolvedDeref = "interface{}"
+					}
+
+					if !p.AddMessage(ast.GenerateWarningMessage(err, n)) {
+						// This is a hack to convert a reference to a variable
+						// into a slice that points to the same location. It
+						// will look similar to:
+						//
+						//     (*[1]int)(unsafe.Pointer(&a))[:]
+						//
+						p.AddImport("unsafe")
+
+						right = &goast.SliceExpr{
+							X: util.NewCallExpr(
+								fmt.Sprintf("(*[1]%s)", resolvedDeref),
+								util.NewCallExpr("unsafe.Pointer", right),
+							),
+						}
 					}
 				}
 			}
