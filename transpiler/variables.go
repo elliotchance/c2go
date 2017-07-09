@@ -213,8 +213,13 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 		return resExpr, rhsType, preStmts, postStmts, nil
 	}
 
+	x := lhs
+	if n.IsPointer {
+		x = &goast.IndexExpr{X: x, Index: util.NewIntLit(0)}
+	}
+
 	return &goast.SelectorExpr{
-		X:   lhs,
+		X:   x,
 		Sel: util.NewIdent(rhs),
 	}, rhsType, preStmts, postStmts, nil
 }

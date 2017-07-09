@@ -47,15 +47,6 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 	var err error
 
 	operator := getTokenForOperator(n.Operator)
-	if operator == token.ASSIGN ||
-		operator == token.ADD_ASSIGN ||
-		operator == token.SUB_ASSIGN ||
-		operator == token.MUL_ASSIGN ||
-		operator == token.QUO_ASSIGN ||
-		operator == token.SHL_ASSIGN ||
-		operator == token.SHR_ASSIGN {
-		operator = token.ADD
-	}
 
 	// Example of C code
 	// a = b = 1
@@ -138,14 +129,14 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 	if getTokenForOperator(n.Operator) == token.COMMA {
 		stmts, st, newPre, newPost, err := transpileToExpr(n.Children[0], p)
 		if err != nil {
-			return nil, "", nil, nil, err
+			return nil, "unknown50", nil, nil, err
 		}
 		preStmts = append(preStmts, newPre...)
 		preStmts = append(preStmts, util.NewExprStmt(stmts))
 		postStmts = append(postStmts, newPost...)
 		stmts, st, newPre, newPost, err = transpileToExpr(n.Children[1], p)
 		if err != nil {
-			return nil, "", nil, nil, err
+			return nil, "unknown51", nil, nil, err
 		}
 		preStmts = append(preStmts, newPre...)
 		postStmts = append(postStmts, newPost...)
@@ -154,19 +145,18 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 
 	left, leftType, newPre, newPost, err := transpileToExpr(n.Children[0], p)
 	if err != nil {
-		return nil, "", nil, nil, err
+		return nil, "unknown52", nil, nil, err
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	right, rightType, newPre, newPost, err := transpileToExpr(n.Children[1], p)
 	if err != nil {
-		return nil, "", nil, nil, err
+		return nil, "unknown53", nil, nil, err
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	//operator := getTokenForOperator(n.Operator)
 	returnType := types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType)
 
 	if operator == token.LAND || operator == token.LOR {
@@ -182,7 +172,12 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 			right = util.NewNil()
 		}
 
-		return util.NewBinaryExpr(left, operator, right), "bool",
+		resolvedLeftType, err := types.ResolveType(p, leftType)
+		if err != nil {
+			panic(err)
+		}
+
+		return util.NewBinaryExpr(left, operator, right, resolvedLeftType), "bool",
 			preStmts, postStmts, nil
 	}
 
@@ -197,7 +192,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 			right = util.NewNil()
 		}
 
-		return util.NewBinaryExpr(left, operator, right), leftType,
+		return util.NewBinaryExpr(left, operator, right, "uint64"), leftType,
 			preStmts, postStmts, nil
 	}
 
@@ -224,28 +219,28 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 			preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 			if err != nil {
-				return nil, "", preStmts, postStmts, err
+				return nil, "unknown60", preStmts, postStmts, err
 			}
 
 			derefType, err := types.GetDereferenceType(leftType)
 			if err != nil {
-				return nil, "", preStmts, postStmts, err
+				return nil, "unknown61", preStmts, postStmts, err
 			}
 
 			toType, err := types.ResolveType(p, leftType)
 			if err != nil {
-				return nil, "", preStmts, postStmts, err
+				return nil, "unknown62", preStmts, postStmts, err
 			}
 
 			elementSize, err := types.SizeOf(p, derefType)
 			if err != nil {
-				return nil, "", preStmts, postStmts, err
+				return nil, "unknown63", preStmts, postStmts, err
 			}
 
 			right = util.NewCallExpr(
 				"make",
 				util.NewTypeIdent(toType),
-				util.NewBinaryExpr(allocSizeExpr, token.QUO, util.NewIntLit(elementSize)),
+				util.NewBinaryExpr(allocSizeExpr, token.QUO, util.NewIntLit(elementSize), "int"),
 			)
 		} else {
 			right, err = types.CastExpr(p, right, rightType, returnType)
@@ -262,20 +257,8 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 					}
 
 					if !p.AddMessage(ast.GenerateWarningMessage(err, n)) {
-						// This is a hack to convert a reference to a variable
-						// into a slice that points to the same location. It
-						// will look similar to:
-						//
-						//     (*[1]int)(unsafe.Pointer(&a))[:]
-						//
 						p.AddImport("unsafe")
-
-						right = &goast.SliceExpr{
-							X: util.NewCallExpr(
-								fmt.Sprintf("(*[1]%s)", resolvedDeref),
-								util.NewCallExpr("unsafe.Pointer", right),
-							),
-						}
+						right = util.CreateSliceFromReference(resolvedDeref, right)
 					}
 				}
 			}
@@ -302,7 +285,12 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 		}
 	}
 
-	return util.NewBinaryExpr(left, operator, right),
+	resolvedLeftType, err := types.ResolveType(p, leftType)
+	if err != nil {
+		panic(err)
+	}
+
+	return util.NewBinaryExpr(left, operator, right, resolvedLeftType),
 		types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType),
 		preStmts, postStmts, nil
 }

@@ -46,11 +46,11 @@ func typeToExpr(t string) goast.Expr {
 }
 
 func internalTypeToExpr(t string) goast.Expr {
-	// Something went wrong. We need to provide a value otherwise the AST will
-	// not output.
+	// I'm not sure if this is an error or not. It is caused by processing the
+	// resolved type of "void" which is "". It is used on functions to denote
+	// that it does not have a return type.
 	if t == "" {
-		// This panic will be handled by typeToExpr.
-		panic("blank type")
+		return nil
 	}
 
 	// Empty Interface
@@ -154,7 +154,7 @@ func NewFuncClosure(returnType string, stmts ...goast.Stmt) *goast.CallExpr {
 // You should use this instead of BinaryExpr directly so that nil left and right
 // operands can be caught (and panic) before Go tried to render the source -
 // which would result in a very hard to debug error.
-func NewBinaryExpr(left goast.Expr, operator token.Token, right goast.Expr) goast.Expr {
+func NewBinaryExpr(left goast.Expr, operator token.Token, right goast.Expr, returnType string) goast.Expr {
 	PanicIfNil(left, "left is nil")
 	PanicIfNil(right, "right is nil")
 
@@ -193,7 +193,7 @@ func NewBinaryExpr(left goast.Expr, operator token.Token, right goast.Expr) goas
 		returnStmt := &goast.ReturnStmt{
 			Results: []goast.Expr{left},
 		}
-		b = NewFuncClosure("int", NewExprStmt(b), returnStmt)
+		b = NewFuncClosure(returnType, NewExprStmt(b), returnStmt)
 	}
 
 	return b
@@ -289,4 +289,25 @@ func IsGoKeyword(w string) bool {
 	}
 
 	return false
+}
+
+func CreateSliceFromReference(goType string, expr goast.Expr) *goast.SliceExpr {
+	// This is a hack to convert a reference to a variable into a slice that
+	// points to the same location. It will look similar to:
+	//
+	//     (*[1]int)(unsafe.Pointer(&a))[:]
+	//
+	// You must always call this Go before using CreateSliceFromReference:
+	//
+	//     p.AddImport("unsafe")
+	//
+	return &goast.SliceExpr{
+		X: NewCallExpr(
+			fmt.Sprintf("(*[1]%s)", goType),
+			NewCallExpr("unsafe.Pointer", &goast.UnaryExpr{
+				X:  expr,
+				Op: token.AND,
+			}),
+		),
+	}
 }

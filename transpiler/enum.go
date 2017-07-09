@@ -27,10 +27,12 @@ func ctypeEnumValue(value int, t token.Token) goast.Expr {
 					util.NewIntLit(1),
 					token.SHL,
 					util.NewIntLit(value),
+					"int",
 				),
 			},
 			t,
 			util.NewIntLit(8),
+			"int",
 		),
 	}
 }

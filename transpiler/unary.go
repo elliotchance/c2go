@@ -15,12 +15,8 @@ import (
 	"go/token"
 )
 
-func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
-	goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
-	preStmts := []goast.Stmt{}
-	postStmts := []goast.Stmt{}
-	operator := getTokenForOperator(n.Operator)
-
+func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program,
+	operator token.Token) (goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
 	// Unfortunately we cannot use the Go increment operators because we are not
 	// providing any position information for tokens. This means that the ++/--
 	// would be placed before the expression and would be invalid in Go.
@@ -28,57 +24,139 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 	// Until it can be properly fixed (can we trick Go into to placing it after
 	// the expression with a magic position?) we will have to return a
 	// BinaryExpr with the same functionality.
-	if operator == token.INC || operator == token.DEC {
-		// Construct code for assigning value to an union field
-		memberExpr, ok := n.Children[0].(*ast.MemberExpr)
-		if ok {
-			ref := memberExpr.GetDeclRefExpr()
-			if ref != nil {
-				binaryOperator := token.ADD
-				if operator == token.DEC {
-					binaryOperator = token.SUB
-				}
 
-				union := p.GetStruct(ref.Type)
-				if union != nil && union.IsUnion {
-					// Method suffix for using getters and setters of Go union type
-					methodSuffix := strings.Title(memberExpr.Name)
+	// Construct code for assigning value to an union field
+	memberExpr, ok := n.Children[0].(*ast.MemberExpr)
+	if ok {
+		ref := memberExpr.GetDeclRefExpr()
+		if ref != nil {
+			binaryOperator := token.ADD
+			if operator == token.DEC {
+				binaryOperator = token.SUB
+			}
 
-					// Method names
-					getterName := fmt.Sprintf("%s.Get%s", ref.Name, methodSuffix)
-					setterName := fmt.Sprintf("%s.Set%s", ref.Name, methodSuffix)
+			union := p.GetStruct(ref.Type)
+			if union != nil && union.IsUnion {
+				// Method suffix for using getters and setters of Go union type
+				methodSuffix := strings.Title(memberExpr.Name)
 
-					// Call-Expression argument
-					argLHS := util.NewCallExpr(getterName)
-					argOp := binaryOperator
-					argRHS := util.NewIntLit(1)
-					argOp = token.ADD
-					argValue := util.NewBinaryExpr(argLHS, argOp, argRHS)
+				// Method names
+				getterName := fmt.Sprintf("%s.Get%s", ref.Name, methodSuffix)
+				setterName := fmt.Sprintf("%s.Set%s", ref.Name, methodSuffix)
 
-					// Make Go expression
-					resExpr := util.NewCallExpr(setterName, argValue)
+				// Call-Expression argument
+				argLHS := util.NewCallExpr(getterName)
+				argOp := binaryOperator
+				argRHS := util.NewIntLit(1)
+				argValue := util.NewBinaryExpr(argLHS, argOp, argRHS, "interface{}")
 
-					return resExpr, n.Type, preStmts, postStmts, nil
-				}
+				// Make Go expression
+				resExpr := util.NewCallExpr(setterName, argValue)
+
+				return resExpr, n.Type, nil, nil, nil
 			}
 		}
+	}
 
-		binaryOperator := "+="
-		if operator == token.DEC {
-			binaryOperator = "-="
-		}
+	binaryOperator := "+="
+	if operator == token.DEC {
+		binaryOperator = "-="
+	}
 
-		return transpileBinaryOperator(&ast.BinaryOperator{
-			Type:     n.Type,
-			Operator: binaryOperator,
-			Children: []ast.Node{
-				n.Children[0], &ast.IntegerLiteral{
-					Type:     "int",
-					Value:    "1",
-					Children: []ast.Node{},
-				},
+	return transpileBinaryOperator(&ast.BinaryOperator{
+		Type:     n.Type,
+		Operator: binaryOperator,
+		Children: []ast.Node{
+			n.Children[0], &ast.IntegerLiteral{
+				Type:     "int",
+				Value:    "1",
+				Children: []ast.Node{},
 			},
-		}, p)
+		},
+	}, p)
+}
+
+func transpileUnaryOperatorNot(n *ast.UnaryOperator, p *program.Program) (
+	goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
+	e, eType, preStmts, postStmts, err := transpileToExpr(n.Children[0], p)
+	if err != nil {
+		return nil, "", nil, nil, err
+	}
+
+	if eType == "bool" || eType == "_Bool" {
+		return &goast.UnaryExpr{
+			X:  e,
+			Op: token.NOT,
+		}, "bool", preStmts, postStmts, nil
+	}
+
+	t, err := types.ResolveType(p, eType)
+	p.AddMessage(ast.GenerateWarningMessage(err, n))
+
+	if t == "[]byte" {
+		return util.NewUnaryExpr(
+			token.NOT, util.NewCallExpr("noarch.CStringIsNull", e),
+		), "bool", preStmts, postStmts, nil
+	}
+
+	p.AddImport("github.com/elliotchance/c2go/noarch")
+
+	functionName := fmt.Sprintf("noarch.Not%s",
+		util.GetExportedName(t))
+
+	return util.NewCallExpr(functionName, e),
+		eType, preStmts, postStmts, nil
+}
+
+// Dereferencing.
+func transpileUnaryOperatorMul(n *ast.UnaryOperator, p *program.Program) (
+	goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
+	e, eType, preStmts, postStmts, err := transpileToExpr(n.Children[0], p)
+	if err != nil {
+		return nil, "", nil, nil, err
+	}
+
+	if eType == "const char *" {
+		return &goast.IndexExpr{
+			X:     e,
+			Index: util.NewIntLit(0),
+		}, "char", preStmts, postStmts, nil
+	}
+
+	t, err := types.GetDereferenceType(eType)
+	if err != nil {
+		return nil, "", preStmts, postStmts, err
+	}
+
+	// C is more relaxed with this syntax. In Go we convert all of the
+	// pointers to slices, so we have to be careful when dereference a slice
+	// that it actually takes the first element instead.
+	resolvedType, err := types.ResolveType(p, eType)
+	if strings.HasPrefix(resolvedType, "[]") {
+		return &goast.IndexExpr{
+			X:     e,
+			Index: util.NewIntLit(0),
+		}, t, preStmts, postStmts, nil
+	}
+
+	return &goast.StarExpr{
+		X: e,
+	}, t, preStmts, postStmts, nil
+}
+
+func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
+	goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
+	preStmts := []goast.Stmt{}
+	postStmts := []goast.Stmt{}
+	operator := getTokenForOperator(n.Operator)
+
+	switch operator {
+	case token.INC, token.DEC:
+		return transpileUnaryOperatorInc(n, p, operator)
+	case token.NOT:
+		return transpileUnaryOperatorNot(n, p)
+	case token.MUL:
+		return transpileUnaryOperatorMul(n, p)
 	}
 
 	// Otherwise handle like a unary operator.
@@ -89,65 +167,21 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	if operator == token.NOT {
-		if eType == "bool" || eType == "_Bool" {
-			return &goast.UnaryExpr{
-				X:  e,
-				Op: operator,
-			}, "bool", preStmts, postStmts, nil
-		}
-
-		t, err := types.ResolveType(p, eType)
-		p.AddMessage(ast.GenerateWarningMessage(err, n))
-
-		if t == "[]byte" {
-			return util.NewUnaryExpr(
-				token.NOT, util.NewCallExpr("noarch.CStringIsNull", e),
-			), "bool", preStmts, postStmts, nil
-		}
-
-		p.AddImport("github.com/elliotchance/c2go/noarch")
-
-		functionName := fmt.Sprintf("noarch.Not%s",
-			util.GetExportedName(t))
-
-		return util.NewCallExpr(functionName, e),
-			eType, preStmts, postStmts, nil
-	}
-
-	// Dereferencing.
-	if operator == token.MUL {
-		if eType == "const char *" {
-			return &goast.IndexExpr{
-				X:     e,
-				Index: util.NewIntLit(0),
-			}, "char", preStmts, postStmts, nil
-		}
-
-		t, err := types.GetDereferenceType(eType)
-		if err != nil {
-			return nil, "", preStmts, postStmts, err
-		}
-
-		// C is more relaxed with this syntax. In Go we convert all of the
-		// pointers to slices, so we have to be careful when dereference a slice
-		// that it actually takes the first element instead.
-		resolvedType, err := types.ResolveType(p, eType)
-		if strings.HasPrefix(resolvedType, "[]") {
-			return &goast.IndexExpr{
-				X:     e,
-				Index: util.NewIntLit(0),
-			}, t, preStmts, postStmts, nil
-		}
-
-		return &goast.StarExpr{
-			X: e,
-		}, t, preStmts, postStmts, nil
-	}
-
 	if operator == token.AND {
+		// FIXME: This will need to use a real slice to reference the original
+		// value.
+		resolvedType, err := types.ResolveType(p, eType)
+		if err != nil {
+			panic(err)
+		}
+
+		p.AddImport("unsafe")
+		e = util.CreateSliceFromReference(resolvedType, e)
+
 		// We now have a pointer to the original type.
 		eType += " *"
+
+		return e, eType, preStmts, postStmts, nil
 	}
 
 	return &goast.UnaryExpr{

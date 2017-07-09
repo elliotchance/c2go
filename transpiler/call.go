@@ -141,33 +141,33 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 		// We cannot use preallocated byte slices as strings in the same way we
 		// can do it in C. Instead we have to create a temporary string
 		// variable.
-		if functionName == "noarch.Fscanf" && arraySize != -1 {
-			tempVariableName := p.GetNextIdentifier("")
-
-			// var __temp string
-			preStmts = append(preStmts, &goast.DeclStmt{
-				Decl: &goast.GenDecl{
-					Tok: token.VAR,
-					Specs: []goast.Spec{
-						&goast.ValueSpec{
-							Names: []*goast.Ident{util.NewIdent(tempVariableName)},
-							Type:  util.NewTypeIdent("string"),
-						},
-					},
-				},
-			})
-
-			postStmts = append(postStmts, &goast.ExprStmt{
-				X: util.NewCallExpr("copy", &goast.SliceExpr{
-					X: e,
-				}, util.NewIdent(tempVariableName)),
-			})
-
-			e = &goast.UnaryExpr{
-				Op: token.AND,
-				X:  util.NewIdent(tempVariableName),
-			}
-		}
+		//if functionName == "noarch.Fscanf" && arraySize != -1 {
+		//	tempVariableName := p.GetNextIdentifier("")
+		//
+		//	// var __temp string
+		//	preStmts = append(preStmts, &goast.DeclStmt{
+		//		Decl: &goast.GenDecl{
+		//			Tok: token.VAR,
+		//			Specs: []goast.Spec{
+		//				&goast.ValueSpec{
+		//					Names: []*goast.Ident{util.NewIdent(tempVariableName)},
+		//					Type:  util.NewTypeIdent("string"),
+		//				},
+		//			},
+		//		},
+		//	})
+		//
+		//	postStmts = append(postStmts, &goast.ExprStmt{
+		//		X: util.NewCallExpr("copy", &goast.SliceExpr{
+		//			X: e,
+		//		}, util.NewIdent(tempVariableName)),
+		//	})
+		//
+		//	e = &goast.UnaryExpr{
+		//		Op: token.AND,
+		//		X:  util.NewIdent(tempVariableName),
+		//	}
+		//}
 
 		args = append(args, e)
 

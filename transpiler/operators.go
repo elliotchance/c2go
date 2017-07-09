@@ -156,9 +156,8 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
 				// Call-Expression argument
 				argLHS := util.NewCallExpr(getterName)
 				argOp := getTokenForOperator(binaryOperation)
-				argOp = token.ADD
 				argRHS := right
-				argValue := util.NewBinaryExpr(argLHS, argOp, argRHS)
+				argValue := util.NewBinaryExpr(argLHS, argOp, argRHS, "interface{}")
 
 				// Make Go expression
 				resExpr := util.NewCallExpr(setterName, argValue)
@@ -168,7 +167,7 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
 		}
 	}
 
-	left, _, newPre, newPost, err := transpileToExpr(n.Children[0], p)
+	left, leftType, newPre, newPost, err := transpileToExpr(n.Children[0], p)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
@@ -187,7 +186,13 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
 		}
 	}
 
-	return util.NewBinaryExpr(left, operator, right), "", preStmts, postStmts, nil
+	resolvedLeftType, err := types.ResolveType(p, leftType)
+	if err != nil {
+		panic(err)
+	}
+
+	return util.NewBinaryExpr(left, operator, right, resolvedLeftType),
+		"", preStmts, postStmts, nil
 }
 
 // getTokenForOperator returns the Go operator token for the provided C

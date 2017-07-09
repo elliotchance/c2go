@@ -370,9 +370,22 @@ func Fprintf(f *File, format []byte, args ...interface{}) int {
 // type specified by their corresponding format specifier within the format
 // string.
 func Fscanf(f *File, format []byte, args ...interface{}) int {
-	n, err := fmt.Fscanf(f.OsFile, string(format), args...)
+	realArgs := []interface{}{}
+
+	for _, arg := range args {
+		t := reflect.TypeOf(arg).Elem()
+		realArgs = append(realArgs, reflect.New(t).Elem().Addr().Interface())
+	}
+
+	n, err := fmt.Fscanf(f.OsFile, NullTerminatedByteSlice(format), realArgs...)
 	if err != nil {
+		panic(err)
 		return -1
+	}
+
+	for i, arg := range realArgs {
+		v := reflect.ValueOf(arg).Elem()
+		reflect.ValueOf(args[i]).Index(0).Set(v)
 	}
 
 	return n
@@ -534,10 +547,10 @@ func Fwrite(str []byte, size1, size2 int, stream *File) int {
 //
 // The ftell function can be used to retrieve the current position in the stream
 //as an integer value.
-func Fgetpos(f *File, pos *int) int {
+func Fgetpos(f *File, pos []int) int {
 	absolutePos := Fseek(f, 0, 1)
 	if pos != nil {
-		*pos = absolutePos
+		pos[0] = absolutePos
 	}
 
 	return absolutePos
@@ -560,8 +573,8 @@ func Fgetpos(f *File, pos *int) int {
 //
 // A similar function, fseek, can be used to set arbitrary positions on streams
 // open in binary mode.
-func Fsetpos(stream *File, pos *int) int {
-	return Fseek(stream, int32(*pos), 0)
+func Fsetpos(stream *File, pos []int) int {
+	return Fseek(stream, int32(pos[0]), 0)
 }
 
 // Printf handles printf().

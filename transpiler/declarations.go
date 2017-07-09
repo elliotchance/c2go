@@ -231,6 +231,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 						"noarch.NewFile",
 						util.NewTypeIdent("os."+util.Ucfirst(name[2:len(name)-1])),
 					),
+					"*noarch.File",
 				),
 			)
 
@@ -246,6 +247,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 						"noarch.NewFile",
 						util.NewTypeIdent("os."+util.Ucfirst(name)),
 					),
+					theType,
 				),
 			)
 
