@@ -1,5 +1,9 @@
 package noarch
 
+import (
+	"reflect"
+)
+
 // NullTerminatedByteSlice returns a string that contains all the bytes in the
 // provided C string up until the first NULL character.
 func NullTerminatedByteSlice(s []byte) string {
@@ -25,7 +29,7 @@ func NullTerminatedByteSlice(s []byte) string {
 	return string(newSlice)
 }
 
-// CStringIsNull will test is a C string is NULL. This is equivilent to:
+// CStringIsNull will test if a C string is NULL. This is equivalent to:
 //
 //    s == NULL
 func CStringIsNull(s []byte) bool {
@@ -34,4 +38,15 @@ func CStringIsNull(s []byte) bool {
 	}
 
 	return s[0] == 0
+}
+
+func CPointerToGoPointer(a interface{}) interface{} {
+	t := reflect.TypeOf(a).Elem()
+
+	return reflect.New(t).Elem().Addr().Interface()
+}
+
+func GoPointerToCPointer(destination interface{}, value interface{}) {
+	v := reflect.ValueOf(destination).Elem()
+	reflect.ValueOf(value).Index(0).Set(v)
 }

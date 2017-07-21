@@ -353,7 +353,19 @@ func Fflush(stream *File) int {
 // After the format parameter, the function expects at least as many additional
 // arguments as specified by format.
 func Fprintf(f *File, format []byte, args ...interface{}) int {
-	n, err := fmt.Fprintf(f.OsFile, string(format), args...)
+	realArgs := []interface{}{}
+
+	// Convert any C strings into Go strings.
+	typeOfByteSlice := reflect.TypeOf([]byte(nil))
+	for _, arg := range args {
+		if reflect.TypeOf(arg) == typeOfByteSlice {
+			realArgs = append(realArgs, NullTerminatedByteSlice(arg.([]byte)))
+		} else {
+			realArgs = append(realArgs, arg)
+		}
+	}
+
+	n, err := fmt.Fprintf(f.OsFile, NullTerminatedByteSlice(format), realArgs...)
 	if err != nil {
 		return -1
 	}
@@ -372,9 +384,14 @@ func Fprintf(f *File, format []byte, args ...interface{}) int {
 func Fscanf(f *File, format []byte, args ...interface{}) int {
 	realArgs := []interface{}{}
 
+	// Convert any C strings into Go strings.
+	typeOfByteSlice := reflect.TypeOf([]byte(nil))
 	for _, arg := range args {
-		t := reflect.TypeOf(arg).Elem()
-		realArgs = append(realArgs, reflect.New(t).Elem().Addr().Interface())
+		if reflect.TypeOf(arg) == typeOfByteSlice {
+			realArgs = append(realArgs, new(string))
+		} else {
+			realArgs = append(realArgs, CPointerToGoPointer(arg))
+		}
 	}
 
 	n, err := fmt.Fscanf(f.OsFile, NullTerminatedByteSlice(format), realArgs...)
@@ -383,9 +400,15 @@ func Fscanf(f *File, format []byte, args ...interface{}) int {
 		return -1
 	}
 
+	// Finalise values
+	typeOfStringRef := reflect.TypeOf(new(string))
 	for i, arg := range realArgs {
-		v := reflect.ValueOf(arg).Elem()
-		reflect.ValueOf(args[i]).Index(0).Set(v)
+		if reflect.TypeOf(arg) == typeOfStringRef {
+			s := *arg.(*string)
+			copy(args[i].([]byte), []byte(s))
+		} else {
+			GoPointerToCPointer(arg, args[i])
+		}
 	}
 
 	return n
