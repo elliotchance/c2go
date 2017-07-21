@@ -382,17 +382,7 @@ func Fprintf(f *File, format []byte, args ...interface{}) int {
 // type specified by their corresponding format specifier within the format
 // string.
 func Fscanf(f *File, format []byte, args ...interface{}) int {
-	realArgs := []interface{}{}
-
-	// Convert any C strings into Go strings.
-	typeOfByteSlice := reflect.TypeOf([]byte(nil))
-	for _, arg := range args {
-		if reflect.TypeOf(arg) == typeOfByteSlice {
-			realArgs = append(realArgs, new(string))
-		} else {
-			realArgs = append(realArgs, CPointerToGoPointer(arg))
-		}
-	}
+	realArgs := prepareArgsForScanf(args)
 
 	n, err := fmt.Fscanf(f.OsFile, NullTerminatedByteSlice(format), realArgs...)
 	if err != nil {
@@ -400,7 +390,12 @@ func Fscanf(f *File, format []byte, args ...interface{}) int {
 		return -1
 	}
 
-	// Finalise values
+	finalizeArgsForScanf(realArgs, args)
+
+	return n
+}
+
+func finalizeArgsForScanf(realArgs []interface{}, args []interface{}) {
 	typeOfStringRef := reflect.TypeOf(new(string))
 	for i, arg := range realArgs {
 		if reflect.TypeOf(arg) == typeOfStringRef {
@@ -410,8 +405,21 @@ func Fscanf(f *File, format []byte, args ...interface{}) int {
 			GoPointerToCPointer(arg, args[i])
 		}
 	}
+}
 
-	return n
+func prepareArgsForScanf(args []interface{}) []interface{} {
+	realArgs := []interface{}{}
+
+	typeOfByteSlice := reflect.TypeOf([]byte(nil))
+	for _, arg := range args {
+		if reflect.TypeOf(arg) == typeOfByteSlice {
+			realArgs = append(realArgs, new(string))
+		} else {
+			realArgs = append(realArgs, CPointerToGoPointer(arg))
+		}
+	}
+
+	return realArgs
 }
 
 func getc(f *os.File) int {
@@ -651,7 +659,9 @@ func Puts(str []byte) int {
 // type specified by their corresponding format specifier within the format
 // string.
 func Scanf(format []byte, args ...interface{}) int {
-	n, _ := fmt.Scanf(NullTerminatedByteSlice(format), args...)
+	realArgs := prepareArgsForScanf(args)
+	n, _ := fmt.Scanf(NullTerminatedByteSlice(format), realArgs...)
+	finalizeArgsForScanf(realArgs, args)
 
 	return n
 }
