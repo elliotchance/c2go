@@ -6,7 +6,6 @@ package transpiler
 import (
 	"fmt"
 	"go/token"
-	"strings"
 
 	goast "go/ast"
 
@@ -144,14 +143,17 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
 			binaryOperation := n.Opcode
 			binaryOperation = binaryOperation[:(len(binaryOperation) - 1)]
 
+			// TODO: Is this duplicate code in unary.go?
 			union := p.GetStruct(ref.Type)
 			if union != nil && union.IsUnion {
-				// Method suffix for using getters and setters of Go union type
-				methodSuffix := strings.Title(memberExpr.Name)
+				attrType, err := types.ResolveType(p, ref.Type)
+				if err != nil {
+					p.AddMessage(ast.GenerateWarningMessage(err, memberExpr))
+				}
 
 				// Method names
-				getterName := fmt.Sprintf("%s.Get%s", ref.Name, methodSuffix)
-				setterName := fmt.Sprintf("%s.Set%s", ref.Name, methodSuffix)
+				getterName := getFunctionNameForUnionGetter(ref.Name, attrType, memberExpr.Name)
+				setterName := getFunctionNameForUnionSetter(ref.Name, attrType, memberExpr.Name)
 
 				// Call-Expression argument
 				argLHS := util.NewCallExpr(getterName)

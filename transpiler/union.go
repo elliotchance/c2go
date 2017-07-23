@@ -6,6 +6,7 @@ import (
 	goast "go/ast"
 	"go/token"
 
+	"fmt"
 	"github.com/elliotchance/c2go/util"
 )
 
@@ -286,4 +287,20 @@ func transpileUnion(name string, size int, fields []*goast.Field) []goast.Decl {
 	}
 
 	return res
+}
+
+func getFunctionNameForUnionGetter(variableName, variableType, attributeName string) string {
+	if strings.HasPrefix(variableType, "[]") {
+		return fmt.Sprintf("%s[0].Get%s", variableName, strings.Title(attributeName))
+	}
+
+	return fmt.Sprintf("%s.Get%s", variableName, strings.Title(attributeName))
+}
+
+func getFunctionNameForUnionSetter(variableName, variableType, attributeName string) string {
+	if strings.HasPrefix(variableType, "[]") {
+		return fmt.Sprintf("%s[0].Set%s", variableName, strings.Title(attributeName))
+	}
+
+	return fmt.Sprintf("%s.Set%s", variableName, strings.Title(attributeName))
 }

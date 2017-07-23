@@ -3,16 +3,13 @@
 package transpiler
 
 import (
-	"fmt"
-	goast "go/ast"
-	"go/token"
-	"reflect"
-	"strings"
-
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/types"
 	"github.com/elliotchance/c2go/util"
+	goast "go/ast"
+	"go/token"
+	"reflect"
 )
 
 // Comma problem. Example:
@@ -274,7 +271,12 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 				if ref != nil {
 					union := p.GetStruct(ref.Type)
 					if union != nil && union.IsUnion {
-						funcName := fmt.Sprintf("%s.Set%s", ref.Name, strings.Title(memberExpr.Name))
+						attrType, err := types.ResolveType(p, ref.Type)
+						if err != nil {
+							p.AddMessage(ast.GenerateWarningMessage(err, memberExpr))
+						}
+
+						funcName := getFunctionNameForUnionSetter(ref.Name, attrType, memberExpr.Name)
 						resExpr := util.NewCallExpr(funcName, right)
 						resType := types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType)
 

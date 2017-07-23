@@ -35,14 +35,17 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program,
 				binaryOperator = token.SUB
 			}
 
+			// TODO: Is this duplicate code in operators.go?
 			union := p.GetStruct(ref.Type)
 			if union != nil && union.IsUnion {
-				// Method suffix for using getters and setters of Go union type
-				methodSuffix := strings.Title(memberExpr.Name)
+				attrType, err := types.ResolveType(p, ref.Type)
+				if err != nil {
+					p.AddMessage(ast.GenerateWarningMessage(err, memberExpr))
+				}
 
 				// Method names
-				getterName := fmt.Sprintf("%s.Get%s", ref.Name, methodSuffix)
-				setterName := fmt.Sprintf("%s.Set%s", ref.Name, methodSuffix)
+				getterName := getFunctionNameForUnionGetter(ref.Name, attrType, memberExpr.Name)
+				setterName := getFunctionNameForUnionSetter(ref.Name, attrType, memberExpr.Name)
 
 				// Call-Expression argument
 				argLHS := util.NewCallExpr(getterName)

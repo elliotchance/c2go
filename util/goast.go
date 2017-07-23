@@ -81,8 +81,33 @@ func internalTypeToExpr(t string) goast.Expr {
 		}
 	}
 
+	// Selector: "type.identifier"
+	if strings.Contains(t, ".") {
+		i := strings.IndexByte(t, '.')
+
+		return &goast.SelectorExpr{
+			X:   typeToExpr(t[0:i]),
+			Sel: NewIdent(t[i+1:]),
+		}
+	}
+
+	// Array access
+	match := regexp.MustCompile(`(.+)\[(\d+)\]$`).FindStringSubmatch(t)
+	if match != nil {
+		return &goast.IndexExpr{
+			X: typeToExpr(match[1]),
+			// This should use NewIntLit, but it doesn't seem right to
+			// cast the string to an integer to have it converted back to
+			// as string.
+			Index: &goast.BasicLit{
+				Kind:  token.INT,
+				Value: match[2],
+			},
+		}
+	}
+
 	// Fixed Length Array
-	match := regexp.MustCompile(`^\[(\d+)\](.+)$`).FindStringSubmatch(t)
+	match = regexp.MustCompile(`^\[(\d+)\](.+)$`).FindStringSubmatch(t)
 	if match != nil {
 		return &goast.ArrayType{
 			Elt: typeToExpr(match[2]),
@@ -93,16 +118,6 @@ func internalTypeToExpr(t string) goast.Expr {
 				Kind:  token.INT,
 				Value: match[1],
 			},
-		}
-	}
-
-	// Selector: "type.identifier"
-	if strings.Contains(t, ".") {
-		i := strings.IndexByte(t, '.')
-
-		return &goast.SelectorExpr{
-			X:   typeToExpr(t[0:i]),
-			Sel: NewIdent(t[i+1:]),
 		}
 	}
 

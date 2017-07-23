@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"go/token"
-	"strings"
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
@@ -207,7 +206,7 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	// Construct code for getting value to an union field
 	if structType != nil && structType.IsUnion {
 		ident := lhs.(*goast.Ident)
-		funcName := fmt.Sprintf("%s.Get%s", ident.Name, strings.Title(n.Name))
+		funcName := getFunctionNameForUnionGetter(ident.Name, lhsResolvedType, n.Name)
 		resExpr := util.NewCallExpr(funcName)
 
 		return resExpr, rhsType, preStmts, postStmts, nil
