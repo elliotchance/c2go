@@ -1,6 +1,16 @@
 #!/bin/bash
 
 set -e
+
+OUTFILE=/tmp/out.txt
+
+function cleanup {
+    if [ $? -ne 0 ]; then
+        [ ! -f /tmp/filename.pid ] || cat $OUTFILE
+    fi
+}
+trap cleanup EXIT
+
 echo "" > coverage.txt
 
 # The code below was copied from:
@@ -20,19 +30,29 @@ export PKGS_DELIM=$(echo "$PKGS" | paste -sd "," -)
 #
 # Exit code 123 will be returned if any of the tests fail.
 rm -f /tmp/out.txt
-go list -f 'go test -v -tags=integration -race -covermode count -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS |
-  xargs -I{} bash -c '{} >> /tmp/out.txt'
+go list -f 'go test \
+    -v \
+    -tags=integration \
+    -race \
+    -covermode count \
+    -coverprofile {{.Name}}.coverprofile \
+    -coverpkg $PKGS_DELIM \
+    {{.ImportPath}}' $PKGS | xargs -I{} bash -c "{} >> $OUTFILE"
 
 # Merge coverage profiles.
 COVERAGE_FILES=`ls -1 *.coverprofile 2>/dev/null | wc -l`
 if [ $COVERAGE_FILES != 0 ]; then
-  gocovmerge `ls *.coverprofile` > coverage.txt
-  rm *.coverprofile
+    gocovmerge `ls *.coverprofile` > coverage.txt
+    rm *.coverprofile
 fi
 
 # Print stats
-echo "Unit tests: " $(grep "=== RUN" /tmp/out.txt | wc -l)
-echo "Integration tests: " $(grep "# Total tests" /tmp/out.txt | cut -c21-)
+echo "Unit tests: " $(grep "=== RUN" $OUTFILE | wc -l)
+echo "Integration tests: " $(grep "# Total tests" $OUTFILE | cut -c21-)
+
+# Remove the outfile so it is not printed when an error happens beyond this
+# point.
+rm $OUTFILE
 
 # These steps are from the README to verify it can be installed and run as
 # documented.
