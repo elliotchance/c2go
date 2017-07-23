@@ -9,13 +9,13 @@ env:
 
 matrix:
   include:
-    - env: SCRIPT=test CLANG=3.8
-      os: linux
-    - env: SCRIPT=test CLANG=3.7
+    - env: SCRIPT=test CLANG=3.4
       os: linux
     - env: SCRIPT=test CLANG=3.6
       os: linux
-    - env: SCRIPT=test CLANG=3.4
+    - env: SCRIPT=test CLANG=3.7
+      os: linux
+    - env: SCRIPT=test CLANG=3.8
       os: linux
     - env: SCRIPT=lint CLANG=3.9
       os: linux

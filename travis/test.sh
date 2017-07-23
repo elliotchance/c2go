@@ -5,9 +5,13 @@ set -e
 OUTFILE=/tmp/out.txt
 
 function cleanup {
-    if [ $? -ne 0 ]; then
-        [ ! -f /tmp/filename.pid ] || cat $OUTFILE
+    EXIT_STATUS=$?
+
+    if [ $EXIT_STATUS != 0 ]; then
+        [ ! -f $OUTFILE ] || cat $OUTFILE
     fi
+
+    exit $EXIT_STATUS
 }
 trap cleanup EXIT
 
@@ -29,8 +33,8 @@ export PKGS_DELIM=$(echo "$PKGS" | paste -sd "," -)
 # with gocovmerge.
 #
 # Exit code 123 will be returned if any of the tests fail.
-rm -f /tmp/out.txt
-go list -f 'go test -v -tags=integration -race -covermode count -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS | xargs -I{} bash -c "{} >> $OUTFILE"
+rm -f $OUTFILE
+go list -f 'go test -v -tags integration -race -covermode count -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS | xargs -I{} bash -c "{} >> $OUTFILE"
 
 # Merge coverage profiles.
 COVERAGE_FILES=`ls -1 *.coverprofile 2>/dev/null | wc -l`
