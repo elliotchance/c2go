@@ -4,9 +4,9 @@ import (
 	"reflect"
 )
 
-// NullTerminatedByteSlice returns a string that contains all the bytes in the
+// CStringToString returns a string that contains all the bytes in the
 // provided C string up until the first NULL character.
-func NullTerminatedByteSlice(s []byte) string {
+func CStringToString(s []byte) string {
 	if s == nil {
 		return ""
 	}

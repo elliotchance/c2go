@@ -21,9 +21,9 @@ func AssertRtn(
 	fmt.Fprintf(
 		os.Stderr,
 		"Assertion failed: (%s), function %s, file %s, line %d.\n",
-		noarch.NullTerminatedByteSlice(expression),
-		noarch.NullTerminatedByteSlice(functionName),
-		noarch.NullTerminatedByteSlice(filePath),
+		noarch.CStringToString(expression),
+		noarch.CStringToString(functionName),
+		noarch.CStringToString(filePath),
 		lineNumber,
 	)
 	os.Exit(134)
