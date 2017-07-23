@@ -119,9 +119,6 @@ func normalizeSwitchCases(body *ast.CompoundStmt, p *program.Program) (
 	var err error
 	var newPre, newPost []goast.Stmt
 
-	// FIXME: This is just for debugging
-	return cases, newPre, newPost, nil
-
 	for _, x := range body.Children {
 		switch c := x.(type) {
 		case *ast.CaseStmt, *ast.DefaultStmt:
