@@ -30,14 +30,7 @@ export PKGS_DELIM=$(echo "$PKGS" | paste -sd "," -)
 #
 # Exit code 123 will be returned if any of the tests fail.
 rm -f /tmp/out.txt
-go list -f 'go test \
-    -v \
-    -tags=integration \
-    -race \
-    -covermode count \
-    -coverprofile {{.Name}}.coverprofile \
-    -coverpkg $PKGS_DELIM \
-    {{.ImportPath}}' $PKGS | xargs -I{} bash -c "{} >> $OUTFILE"
+go list -f 'go test -v -tags=integration -race -covermode count -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS | xargs -I{} bash -c "{} >> $OUTFILE"
 
 # Merge coverage profiles.
 COVERAGE_FILES=`ls -1 *.coverprofile 2>/dev/null | wc -l`
