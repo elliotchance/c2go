@@ -171,7 +171,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 
 		resolvedLeftType, err := types.ResolveType(p, leftType)
 		if err != nil {
-			panic(err)
+			p.AddMessage(ast.GenerateWarningMessage(err, n))
 		}
 
 		return util.NewBinaryExpr(left, operator, right, resolvedLeftType), "bool",
@@ -289,7 +289,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 
 	resolvedLeftType, err := types.ResolveType(p, leftType)
 	if err != nil {
-		panic(err)
+		p.AddMessage(ast.GenerateWarningMessage(err, n))
 	}
 
 	return util.NewBinaryExpr(left, operator, right, resolvedLeftType),

@@ -386,7 +386,6 @@ func Fscanf(f *File, format []byte, args ...interface{}) int {
 
 	n, err := fmt.Fscanf(f.OsFile, CStringToString(format), realArgs...)
 	if err != nil {
-		panic(err)
 		return -1
 	}
 

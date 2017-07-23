@@ -12,7 +12,6 @@ type MemberExpr struct {
 }
 
 func parseMemberExpr(line string) *MemberExpr {
-	// 0x7fcc758e34a0 <col:8, col:12> 'int' lvalue ->_w 0x7fcc758d60c8
 	groups := groupsFromRegex(
 		`<(?P<position>.*)>
 		 '(?P<type>.*?)'
@@ -41,7 +40,8 @@ func (n *MemberExpr) AddChild(node Node) {
 	n.Children = append(n.Children, node)
 }
 
-// GetDeclRefExpr gets DeclRefExpr from MemberExpr, or nil if there is no DeclRefExpr
+// GetDeclRefExpr gets DeclRefExpr from MemberExpr, or nil if there is no
+// DeclRefExpr
 func (n *MemberExpr) GetDeclRefExpr() *DeclRefExpr {
 	for _, child := range n.Children {
 		res, ok := child.(*DeclRefExpr)
