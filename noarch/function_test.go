@@ -44,18 +44,18 @@ func TestNotInt(t *testing.T) {
 	}
 }
 
-func testB() interface{} {
+func funcB() interface{} {
 	return "b"
 }
-func testC() interface{} {
+func funcC() interface{} {
 	return "c"
 }
 
 func TestTernary(t *testing.T) {
-	if result := Ternary(true, testB, testC); result.(string) != "b" {
+	if result := Ternary(true, funcB, funcC); result.(string) != "b" {
 		t.Errorf("Ternary - true is Fail")
 	}
-	if result := Ternary(false, testB, testC); result.(string) != "c" {
+	if result := Ternary(false, funcB, funcC); result.(string) != "c" {
 		t.Errorf("Ternary - false is Fail")
 	}
 }

@@ -44,20 +44,6 @@ func TestStrtol(t *testing.T) {
 			expectedValue:  2030300,
 			expectedString: []byte(" This is test"),
 		},
-		/* Tests for panic
-		{
-			inputBytes:     []byte("10011101011 This is test"),
-			inputBase:      0,
-			expectedValue:  0,
-			expectedString: []byte(" This is test"),
-		},
-		{
-			inputBytes:     []byte("a d 2030300 This is test"),
-			inputBase:      10,
-			expectedValue:  0,
-			expectedString: []byte("a d 2030300 This is test"),
-		},
-		*/
 	}
 
 	for _, tt := range tests {
