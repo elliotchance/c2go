@@ -15,7 +15,14 @@ import (
 
 func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (
 	*goast.Ident, string, error) {
-	return util.NewIdent(n.Name), n.Type, nil
+	theType := n.Type
+
+	// FIXME: This is for linux to make sure the globals have the right type.
+	if n.Name == "stdout" || n.Name == "stdin" || n.Name == "stderr" {
+		theType = "FILE *"
+	}
+
+	return util.NewIdent(n.Name), theType, nil
 }
 
 func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
