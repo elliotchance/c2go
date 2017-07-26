@@ -33,12 +33,7 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 	// and variables that the runtime expects to be ready.
 	p.File.Decls = append(p.File.Decls, &goast.FuncDecl{
 		Name: util.NewIdent("__init"),
-		Type: &goast.FuncType{
-			Params: &goast.FieldList{
-				List: []*goast.Field{},
-			},
-			Results: nil,
-		},
+		Type: util.NewFuncType(&goast.FieldList{}, ""),
 		Body: &goast.BlockStmt{
 			List: p.StartupStatements(),
 		},

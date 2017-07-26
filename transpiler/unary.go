@@ -175,7 +175,7 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 		// value.
 		resolvedType, err := types.ResolveType(p, eType)
 		if err != nil {
-			panic(err)
+			p.AddMessage(ast.GenerateWarningMessage(err, n))
 		}
 
 		p.AddImport("unsafe")

@@ -118,16 +118,9 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 		t, err := types.ResolveType(p, f.ReturnType)
 		p.AddMessage(ast.GenerateWarningMessage(err, n))
 
-		returnTypes := []*goast.Field{}
-		if t != "" {
-			returnTypes = append(returnTypes, &goast.Field{
-				Type: util.NewTypeIdent(t),
-			})
-		}
-
 		if p.Function != nil && p.Function.Name == "main" {
 			// main() function does not have a return type.
-			returnTypes = []*goast.Field{}
+			t = ""
 
 			// This collects statements that will be placed at the top of
 			// (before any other code) in main().
@@ -195,12 +188,7 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 
 		p.File.Decls = append(p.File.Decls, &goast.FuncDecl{
 			Name: util.NewIdent(n.Name),
-			Type: &goast.FuncType{
-				Params: fieldList,
-				Results: &goast.FieldList{
-					List: returnTypes,
-				},
-			},
+			Type: util.NewFuncType(fieldList, t),
 			Body: body,
 		})
 	}

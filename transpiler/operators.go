@@ -190,7 +190,7 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
 
 	resolvedLeftType, err := types.ResolveType(p, leftType)
 	if err != nil {
-		panic(err)
+		p.AddMessage(ast.GenerateWarningMessage(err, n))
 	}
 
 	return util.NewBinaryExpr(left, operator, right, resolvedLeftType),

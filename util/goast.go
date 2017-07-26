@@ -145,16 +145,7 @@ func NewCallExpr(functionName string, args ...goast.Expr) *goast.CallExpr {
 func NewFuncClosure(returnType string, stmts ...goast.Stmt) *goast.CallExpr {
 	return &goast.CallExpr{
 		Fun: &goast.FuncLit{
-			Type: &goast.FuncType{
-				Params: &goast.FieldList{},
-				Results: &goast.FieldList{
-					List: []*goast.Field{
-						&goast.Field{
-							Type: NewTypeIdent(returnType),
-						},
-					},
-				},
-			},
+			Type: NewFuncType(&goast.FieldList{}, returnType),
 			Body: &goast.BlockStmt{
 				List: stmts,
 			},
@@ -307,6 +298,11 @@ func IsGoKeyword(w string) bool {
 }
 
 func CreateSliceFromReference(goType string, expr goast.Expr) *goast.SliceExpr {
+	// If the Go type is blank it means that the C type is 'void'.
+	if goType == "" {
+		goType = "interface{}"
+	}
+
 	// This is a hack to convert a reference to a variable into a slice that
 	// points to the same location. It will look similar to:
 	//
@@ -324,5 +320,21 @@ func CreateSliceFromReference(goType string, expr goast.Expr) *goast.SliceExpr {
 				Op: token.AND,
 			}),
 		),
+	}
+}
+
+func NewFuncType(fieldList *goast.FieldList, returnType string) *goast.FuncType {
+	returnTypes := []*goast.Field{}
+	if returnType != "" {
+		returnTypes = append(returnTypes, &goast.Field{
+			Type: NewTypeIdent(returnType),
+		})
+	}
+
+	return &goast.FuncType{
+		Params: fieldList,
+		Results: &goast.FieldList{
+			List: returnTypes,
+		},
 	}
 }
