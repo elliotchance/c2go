@@ -289,18 +289,18 @@ func transpileUnion(name string, size int, fields []*goast.Field) []goast.Decl {
 	return res
 }
 
-func getFunctionNameForUnionGetter(variableName, variableType, attributeName string) string {
+func getFunctionNameForUnion(verb, variableName, variableType, attributeName string) string {
 	if strings.HasPrefix(variableType, "[]") {
-		return fmt.Sprintf("%s[0].Get%s", variableName, strings.Title(attributeName))
+		return fmt.Sprintf("%s[0].%s%s", variableName, verb, strings.Title(attributeName))
 	}
 
-	return fmt.Sprintf("%s.Get%s", variableName, strings.Title(attributeName))
+	return fmt.Sprintf("%s.%s%s", variableName, verb, strings.Title(attributeName))
+}
+
+func getFunctionNameForUnionGetter(variableName, variableType, attributeName string) string {
+	return getFunctionNameForUnion("Get", variableName, variableType, attributeName)
 }
 
 func getFunctionNameForUnionSetter(variableName, variableType, attributeName string) string {
-	if strings.HasPrefix(variableType, "[]") {
-		return fmt.Sprintf("%s[0].Set%s", variableName, strings.Title(attributeName))
-	}
-
-	return fmt.Sprintf("%s.Set%s", variableName, strings.Title(attributeName))
+	return getFunctionNameForUnion("Set", variableName, variableType, attributeName)
 }
