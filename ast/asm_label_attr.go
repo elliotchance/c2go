@@ -3,19 +3,23 @@ package ast
 type AsmLabelAttr struct {
 	Address      string
 	Position     string
+	Inherited    bool
 	FunctionName string
 	Children     []Node
 }
 
 func parseAsmLabelAttr(line string) *AsmLabelAttr {
 	groups := groupsFromRegex(
-		"<(?P<position>.*)> \"(?P<function>.+)\"",
+		`<(?P<position>.*)>
+		(?P<inherited> Inherited)?
+		 "(?P<function>.+)"`,
 		line,
 	)
 
 	return &AsmLabelAttr{
 		Address:      groups["address"],
 		Position:     groups["position"],
+		Inherited:    len(groups["inherited"]) > 0,
 		FunctionName: groups["function"],
 		Children:     []Node{},
 	}

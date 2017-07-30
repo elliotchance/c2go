@@ -200,6 +200,8 @@ func Start(args ProgramArgs) error {
 			fmt.Println(l)
 		}
 		fmt.Println()
+
+		return nil
 	}
 
 	nodes := convertLinesToNodes(lines)

@@ -33,12 +33,7 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 	// and variables that the runtime expects to be ready.
 	p.File.Decls = append(p.File.Decls, &goast.FuncDecl{
 		Name: util.NewIdent("__init"),
-		Type: &goast.FuncType{
-			Params: &goast.FieldList{
-				List: []*goast.Field{},
-			},
-			Results: nil,
-		},
+		Type: util.NewFuncType(&goast.FieldList{}, ""),
 		Body: &goast.BlockStmt{
 			List: p.StartupStatements(),
 		},
@@ -46,14 +41,6 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 
 	// Add the imports after everything else so we can ensure that they are all
 	// placed at the top.
-	// A valid Lparen position (Lparen.IsValid()) indicated a parenthesized
-	// declaration. According to the function definition, line should be
-	// greater than 0.
-	importDecl := &goast.GenDecl{
-		Tok:    token.IMPORT,
-		Lparen: 1,
-	}
-
 	for _, quotedImportPath := range p.Imports() {
 		importSpec := &goast.ImportSpec{
 			Path: &goast.BasicLit{
@@ -61,11 +48,13 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 				Value: quotedImportPath,
 			},
 		}
+		importDecl := &goast.GenDecl{
+			Tok: token.IMPORT,
+		}
 
 		importDecl.Specs = append(importDecl.Specs, importSpec)
+		p.File.Decls = append([]goast.Decl{importDecl}, p.File.Decls...)
 	}
-
-	p.File.Decls = append([]goast.Decl{importDecl}, p.File.Decls...)
 
 	return err
 }

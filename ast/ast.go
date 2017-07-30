@@ -165,6 +165,8 @@ func Position(node Node) string {
 		return n.Position
 	case *UnaryOperator:
 		return n.Position
+	case *UnusedAttr:
+		return n.Position
 	case *VAArgExpr:
 		return n.Position
 	case *VarDecl:
@@ -380,6 +382,8 @@ func Parse(line string) Node {
 		return parseUnaryExprOrTypeTraitExpr(line)
 	case "UnaryOperator":
 		return parseUnaryOperator(line)
+	case "UnusedAttr":
+		return parseUnusedAttr(line)
 	case "VAArgExpr":
 		return parseVAArgExpr(line)
 	case "VarDecl":

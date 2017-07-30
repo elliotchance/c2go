@@ -162,6 +162,8 @@ void test_fscanf()
     FILE *pFile;
 
     pFile = fopen("/tmp/myfile2.txt", "w+");
+    is_not_null(pFile);
+
     fprintf(pFile, "%f %s", 3.1416, "PI");
     rewind(pFile);
     fscanf(pFile, "%f", &f);
@@ -401,7 +403,7 @@ void test_feof()
 
 int main()
 {
-    plan(33);
+    plan(34);
 
     START_TEST(putchar)
     START_TEST(puts)

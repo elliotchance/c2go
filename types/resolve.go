@@ -116,7 +116,7 @@ func ResolveType(p *program.Program, s string) (string, error) {
 
 	// FIXME: This is a hack to avoid casting in some situations.
 	if s == "" {
-		return s, errors.New("probably an incorrect type translation 1")
+		return "interface{}", errors.New("probably an incorrect type translation 1")
 	}
 
 	// FIXME: I have no idea what this is.
@@ -157,11 +157,11 @@ func ResolveType(p *program.Program, s string) (string, error) {
 
 			for _, v := range simpleResolveTypes {
 				if v == s {
-					return "*" + p.ImportType(simpleResolveTypes[s]), nil
+					return "[]" + p.ImportType(simpleResolveTypes[s]), nil
 				}
 			}
 
-			return "*" + s, nil
+			return "[]" + strings.TrimSpace(s), nil
 		}
 
 		s = s[start:]

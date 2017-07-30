@@ -54,11 +54,11 @@ func Fopen(filePath, mode []byte) *File {
 	var file *os.File
 	var err error
 
-	sFilePath := NullTerminatedByteSlice(filePath)
+	sFilePath := CStringToString(filePath)
 
 	// TODO: Only some modes are supported by fopen()
 	// https://github.com/elliotchance/c2go/issues/89
-	switch NullTerminatedByteSlice(mode) {
+	switch CStringToString(mode) {
 	case "r":
 		file, err = os.Open(sFilePath)
 	case "r+":
@@ -107,7 +107,7 @@ func Fclose(f *File) int {
 //
 // Proper file access shall be available.
 func Remove(filePath []byte) int {
-	if os.Remove(NullTerminatedByteSlice(filePath)) != nil {
+	if os.Remove(CStringToString(filePath)) != nil {
 		return -1
 	}
 
@@ -130,8 +130,8 @@ func Remove(filePath []byte) int {
 //
 // Proper file access shall be available.
 func Rename(oldName, newName []byte) int {
-	from := NullTerminatedByteSlice(oldName)
-	to := NullTerminatedByteSlice(newName)
+	from := CStringToString(oldName)
+	to := CStringToString(newName)
 
 	if os.Rename(from, to) != nil {
 		return -1
@@ -353,7 +353,19 @@ func Fflush(stream *File) int {
 // After the format parameter, the function expects at least as many additional
 // arguments as specified by format.
 func Fprintf(f *File, format []byte, args ...interface{}) int {
-	n, err := fmt.Fprintf(f.OsFile, string(format), args...)
+	realArgs := []interface{}{}
+
+	// Convert any C strings into Go strings.
+	typeOfByteSlice := reflect.TypeOf([]byte(nil))
+	for _, arg := range args {
+		if reflect.TypeOf(arg) == typeOfByteSlice {
+			realArgs = append(realArgs, CStringToString(arg.([]byte)))
+		} else {
+			realArgs = append(realArgs, arg)
+		}
+	}
+
+	n, err := fmt.Fprintf(f.OsFile, CStringToString(format), realArgs...)
 	if err != nil {
 		return -1
 	}
@@ -370,12 +382,43 @@ func Fprintf(f *File, format []byte, args ...interface{}) int {
 // type specified by their corresponding format specifier within the format
 // string.
 func Fscanf(f *File, format []byte, args ...interface{}) int {
-	n, err := fmt.Fscanf(f.OsFile, string(format), args...)
+	realArgs := prepareArgsForScanf(args)
+
+	n, err := fmt.Fscanf(f.OsFile, CStringToString(format), realArgs...)
 	if err != nil {
 		return -1
 	}
 
+	finalizeArgsForScanf(realArgs, args)
+
 	return n
+}
+
+func finalizeArgsForScanf(realArgs []interface{}, args []interface{}) {
+	typeOfStringRef := reflect.TypeOf(new(string))
+	for i, arg := range realArgs {
+		if reflect.TypeOf(arg) == typeOfStringRef {
+			s := *arg.(*string)
+			copy(args[i].([]byte), []byte(s))
+		} else {
+			GoPointerToCPointer(arg, args[i])
+		}
+	}
+}
+
+func prepareArgsForScanf(args []interface{}) []interface{} {
+	realArgs := []interface{}{}
+
+	typeOfByteSlice := reflect.TypeOf([]byte(nil))
+	for _, arg := range args {
+		if reflect.TypeOf(arg) == typeOfByteSlice {
+			realArgs = append(realArgs, new(string))
+		} else {
+			realArgs = append(realArgs, CPointerToGoPointer(arg))
+		}
+	}
+
+	return realArgs
 }
 
 func getc(f *os.File) int {
@@ -534,10 +577,10 @@ func Fwrite(str []byte, size1, size2 int, stream *File) int {
 //
 // The ftell function can be used to retrieve the current position in the stream
 //as an integer value.
-func Fgetpos(f *File, pos *int) int {
+func Fgetpos(f *File, pos []int) int {
 	absolutePos := Fseek(f, 0, 1)
 	if pos != nil {
-		*pos = absolutePos
+		pos[0] = absolutePos
 	}
 
 	return absolutePos
@@ -560,8 +603,8 @@ func Fgetpos(f *File, pos *int) int {
 //
 // A similar function, fseek, can be used to set arbitrary positions on streams
 // open in binary mode.
-func Fsetpos(stream *File, pos *int) int {
-	return Fseek(stream, int32(*pos), 0)
+func Fsetpos(stream *File, pos []int) int {
+	return Fseek(stream, int32(pos[0]), 0)
 }
 
 // Printf handles printf().
@@ -577,13 +620,13 @@ func Printf(format []byte, args ...interface{}) int {
 	typeOfByteSlice := reflect.TypeOf([]byte(nil))
 	for _, arg := range args {
 		if reflect.TypeOf(arg) == typeOfByteSlice {
-			realArgs = append(realArgs, NullTerminatedByteSlice(arg.([]byte)))
+			realArgs = append(realArgs, CStringToString(arg.([]byte)))
 		} else {
 			realArgs = append(realArgs, arg)
 		}
 	}
 
-	n, _ := fmt.Printf(NullTerminatedByteSlice(format), realArgs...)
+	n, _ := fmt.Printf(CStringToString(format), realArgs...)
 
 	return n
 }
@@ -601,7 +644,7 @@ func Printf(format []byte, args ...interface{}) int {
 // destination, but it also appends a newline character at the end automatically
 // (which fputs does not).
 func Puts(str []byte) int {
-	n, _ := fmt.Println(NullTerminatedByteSlice(str))
+	n, _ := fmt.Println(CStringToString(str))
 
 	return n
 }
@@ -615,7 +658,9 @@ func Puts(str []byte) int {
 // type specified by their corresponding format specifier within the format
 // string.
 func Scanf(format []byte, args ...interface{}) int {
-	n, _ := fmt.Scanf(NullTerminatedByteSlice(format), args...)
+	realArgs := prepareArgsForScanf(args)
+	n, _ := fmt.Scanf(CStringToString(format), realArgs...)
+	finalizeArgsForScanf(realArgs, args)
 
 	return n
 }

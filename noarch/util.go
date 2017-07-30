@@ -1,8 +1,12 @@
 package noarch
 
-// NullTerminatedByteSlice returns a string that contains all the bytes in the
+import (
+	"reflect"
+)
+
+// CStringToString returns a string that contains all the bytes in the
 // provided C string up until the first NULL character.
-func NullTerminatedByteSlice(s []byte) string {
+func CStringToString(s []byte) string {
 	if s == nil {
 		return ""
 	}
@@ -25,7 +29,7 @@ func NullTerminatedByteSlice(s []byte) string {
 	return string(newSlice)
 }
 
-// CStringIsNull will test is a C string is NULL. This is equivilent to:
+// CStringIsNull will test if a C string is NULL. This is equivalent to:
 //
 //    s == NULL
 func CStringIsNull(s []byte) bool {
@@ -34,4 +38,27 @@ func CStringIsNull(s []byte) bool {
 	}
 
 	return s[0] == 0
+}
+
+// CPointerToGoPointer converts a C-style pointer into a Go-style pointer.
+//
+// C pointers are represented as slices that have one element pointing to where
+// the original C pointer would be referencing. This isn't useful if the pointed
+// value needs to be passed to another Go function in these libraries.
+//
+// See also GoPointerToCPointer.
+func CPointerToGoPointer(a interface{}) interface{} {
+	t := reflect.TypeOf(a).Elem()
+
+	return reflect.New(t).Elem().Addr().Interface()
+}
+
+// GoPointerToCPointer does the opposite of CPointerToGoPointer.
+//
+// A Go pointer (simply a pointer) is converted back into the original slice
+// structure (of the original slice reference) so that the calling functions
+// will be able to see the new data of that pointer.
+func GoPointerToCPointer(destination interface{}, value interface{}) {
+	v := reflect.ValueOf(destination).Elem()
+	reflect.ValueOf(value).Index(0).Set(v)
 }

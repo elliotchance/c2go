@@ -3,16 +3,13 @@
 package transpiler
 
 import (
-	"fmt"
-	goast "go/ast"
-	"go/token"
-	"reflect"
-	"strings"
-
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/types"
 	"github.com/elliotchance/c2go/util"
+	goast "go/ast"
+	"go/token"
+	"reflect"
 )
 
 // Comma problem. Example:
@@ -46,6 +43,8 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 	postStmts := []goast.Stmt{}
 	var err error
 
+	operator := getTokenForOperator(n.Operator)
+
 	// Example of C code
 	// a = b = 1
 	// // Operation equal transpile from right to left
@@ -78,27 +77,25 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 	if getTokenForOperator(n.Operator) == token.ASSIGN {
 		switch c := n.Children[1].(type) {
 		case *ast.BinaryOperator:
-			{
-				if getTokenForOperator(c.Operator) == token.ASSIGN {
-					bSecond := ast.BinaryOperator{
-						Type:     c.Type,
-						Operator: "=",
-					}
-					bSecond.AddChild(n.Children[0])
-
-					var impl ast.ImplicitCastExpr
-					impl.Type = c.Type
-					impl.Kind = "LValueToRValue"
-					impl.AddChild(n.Children[1].(*ast.BinaryOperator).Children[0].(*ast.DeclRefExpr))
-					bSecond.AddChild(&impl)
-
-					var bComma ast.BinaryOperator
-					bComma.Operator = ","
-					bComma.Type = c.Type
-					bComma.AddChild(n.Children[1])
-					bComma.AddChild(&bSecond)
-					return transpileBinaryOperator(&bComma, p)
+			if getTokenForOperator(c.Operator) == token.ASSIGN {
+				bSecond := ast.BinaryOperator{
+					Type:     c.Type,
+					Operator: "=",
 				}
+				bSecond.AddChild(n.Children[0])
+
+				var impl ast.ImplicitCastExpr
+				impl.Type = c.Type
+				impl.Kind = "LValueToRValue"
+				impl.AddChild(c.Children[0])
+				bSecond.AddChild(&impl)
+
+				var bComma ast.BinaryOperator
+				bComma.Operator = ","
+				bComma.Type = c.Type
+				bComma.AddChild(c)
+				bComma.AddChild(&bSecond)
+				return transpileBinaryOperator(&bComma, p)
 			}
 		}
 	}
@@ -129,14 +126,14 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 	if getTokenForOperator(n.Operator) == token.COMMA {
 		stmts, st, newPre, newPost, err := transpileToExpr(n.Children[0], p)
 		if err != nil {
-			return nil, "", nil, nil, err
+			return nil, "unknown50", nil, nil, err
 		}
 		preStmts = append(preStmts, newPre...)
 		preStmts = append(preStmts, util.NewExprStmt(stmts))
 		postStmts = append(postStmts, newPost...)
 		stmts, st, newPre, newPost, err = transpileToExpr(n.Children[1], p)
 		if err != nil {
-			return nil, "", nil, nil, err
+			return nil, "unknown51", nil, nil, err
 		}
 		preStmts = append(preStmts, newPre...)
 		postStmts = append(postStmts, newPost...)
@@ -145,19 +142,18 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 
 	left, leftType, newPre, newPost, err := transpileToExpr(n.Children[0], p)
 	if err != nil {
-		return nil, "", nil, nil, err
+		return nil, "unknown52", nil, nil, err
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	right, rightType, newPre, newPost, err := transpileToExpr(n.Children[1], p)
 	if err != nil {
-		return nil, "", nil, nil, err
+		return nil, "unknown53", nil, nil, err
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	operator := getTokenForOperator(n.Operator)
 	returnType := types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType)
 
 	if operator == token.LAND || operator == token.LOR {
@@ -173,7 +169,12 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 			right = util.NewNil()
 		}
 
-		return util.NewBinaryExpr(left, operator, right), "bool",
+		resolvedLeftType, err := types.ResolveType(p, leftType)
+		if err != nil {
+			p.AddMessage(ast.GenerateWarningMessage(err, n))
+		}
+
+		return util.NewBinaryExpr(left, operator, right, resolvedLeftType), "bool",
 			preStmts, postStmts, nil
 	}
 
@@ -188,7 +189,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 			right = util.NewNil()
 		}
 
-		return util.NewBinaryExpr(left, operator, right), leftType,
+		return util.NewBinaryExpr(left, operator, right, "uint64"), leftType,
 			preStmts, postStmts, nil
 	}
 
@@ -215,28 +216,28 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 			preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 			if err != nil {
-				return nil, "", preStmts, postStmts, err
+				return nil, "unknown60", preStmts, postStmts, err
 			}
 
 			derefType, err := types.GetDereferenceType(leftType)
 			if err != nil {
-				return nil, "", preStmts, postStmts, err
+				return nil, "unknown61", preStmts, postStmts, err
 			}
 
 			toType, err := types.ResolveType(p, leftType)
 			if err != nil {
-				return nil, "", preStmts, postStmts, err
+				return nil, "unknown62", preStmts, postStmts, err
 			}
 
 			elementSize, err := types.SizeOf(p, derefType)
 			if err != nil {
-				return nil, "", preStmts, postStmts, err
+				return nil, "unknown63", preStmts, postStmts, err
 			}
 
 			right = util.NewCallExpr(
 				"make",
 				util.NewTypeIdent(toType),
-				util.NewBinaryExpr(allocSizeExpr, token.QUO, util.NewIntLit(elementSize)),
+				util.NewBinaryExpr(allocSizeExpr, token.QUO, util.NewIntLit(elementSize), "int"),
 			)
 		} else {
 			right, err = types.CastExpr(p, right, rightType, returnType)
@@ -245,18 +246,16 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 				deref, err := types.GetDereferenceType(rightType)
 
 				if !p.AddMessage(ast.GenerateWarningMessage(err, n)) {
-					// This is some hackey to convert a reference to a variable
-					// into a slice that points to the same location. It will
-					// look similar to:
-					//
-					//     (*[1]int)(unsafe.Pointer(&a))[:]
-					//
-					p.AddImport("unsafe")
-					right = &goast.SliceExpr{
-						X: util.NewCallExpr(
-							fmt.Sprintf("(*[1]%s)", deref),
-							util.NewCallExpr("unsafe.Pointer", right),
-						),
+					resolvedDeref, err := types.ResolveType(p, deref)
+
+					// FIXME: I'm not sure how this situation arises.
+					if resolvedDeref == "" {
+						resolvedDeref = "interface{}"
+					}
+
+					if !p.AddMessage(ast.GenerateWarningMessage(err, n)) {
+						p.AddImport("unsafe")
+						right = util.CreateSliceFromReference(resolvedDeref, right)
 					}
 				}
 			}
@@ -272,7 +271,12 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 				if ref != nil {
 					union := p.GetStruct(ref.Type)
 					if union != nil && union.IsUnion {
-						funcName := fmt.Sprintf("%s.Set%s", ref.Name, strings.Title(memberExpr.Name))
+						attrType, err := types.ResolveType(p, ref.Type)
+						if err != nil {
+							p.AddMessage(ast.GenerateWarningMessage(err, memberExpr))
+						}
+
+						funcName := getFunctionNameForUnionSetter(ref.Name, attrType, memberExpr.Name)
 						resExpr := util.NewCallExpr(funcName, right)
 						resType := types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType)
 
@@ -283,7 +287,12 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 		}
 	}
 
-	return util.NewBinaryExpr(left, operator, right),
+	resolvedLeftType, err := types.ResolveType(p, leftType)
+	if err != nil {
+		p.AddMessage(ast.GenerateWarningMessage(err, n))
+	}
+
+	return util.NewBinaryExpr(left, operator, right, resolvedLeftType),
 		types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType),
 		preStmts, postStmts, nil
 }

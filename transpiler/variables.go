@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"go/token"
-	"strings"
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
@@ -16,7 +15,14 @@ import (
 
 func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (
 	*goast.Ident, string, error) {
-	return util.NewIdent(n.Name), n.Type, nil
+	theType := n.Type
+
+	// FIXME: This is for linux to make sure the globals have the right type.
+	if n.Name == "stdout" || n.Name == "stdin" || n.Name == "stderr" {
+		theType = "FILE *"
+	}
+
+	return util.NewIdent(n.Name), theType, nil
 }
 
 func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
@@ -185,11 +191,17 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 		//   1. Types need to be stripped of their pointer, 'FILE *' -> 'FILE'.
 		//   2. Types may refer to one or more other types in a chain that have
 		//      to be resolved before the real field type can be determined.
-		err = errors.New("cannot determine type for '" + lhsType +
+		err = errors.New("cannot determine type for LHS '" + lhsType +
 			"', will use 'void *' for all fields")
 		p.AddMessage(ast.GenerateWarningMessage(err, n))
 	} else {
-		rhsType = structType.Fields[rhs].(string)
+		if s, ok := structType.Fields[rhs].(string); ok {
+			rhsType = s
+		} else {
+			err = errors.New("cannot determine type for RHS, will use" +
+				" 'void *' for all fields")
+			p.AddMessage(ast.GenerateWarningMessage(err, n))
+		}
 	}
 
 	// FIXME: This is just a hack
@@ -201,14 +213,19 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	// Construct code for getting value to an union field
 	if structType != nil && structType.IsUnion {
 		ident := lhs.(*goast.Ident)
-		funcName := fmt.Sprintf("%s.Get%s", ident.Name, strings.Title(n.Name))
+		funcName := getFunctionNameForUnionGetter(ident.Name, lhsResolvedType, n.Name)
 		resExpr := util.NewCallExpr(funcName)
 
 		return resExpr, rhsType, preStmts, postStmts, nil
 	}
 
+	x := lhs
+	if n.IsPointer {
+		x = &goast.IndexExpr{X: x, Index: util.NewIntLit(0)}
+	}
+
 	return &goast.SelectorExpr{
-		X:   lhs,
+		X:   x,
 		Sel: util.NewIdent(rhs),
 	}, rhsType, preStmts, postStmts, nil
 }

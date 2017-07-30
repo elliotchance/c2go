@@ -16,10 +16,10 @@ func AssertFail(
 	fmt.Fprintf(
 		os.Stderr,
 		"a.out: %s:%d: %s: Assertion `%s' failed.\n",
-		noarch.NullTerminatedByteSlice(filePath),
+		noarch.CStringToString(filePath),
 		lineNumber,
-		noarch.NullTerminatedByteSlice(functionName),
-		noarch.NullTerminatedByteSlice(expression),
+		noarch.CStringToString(functionName),
+		noarch.CStringToString(expression),
 	)
 	os.Exit(134)
 
