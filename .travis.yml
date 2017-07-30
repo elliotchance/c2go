@@ -19,8 +19,6 @@ matrix:
       os: linux
     - env: SCRIPT=lint CLANG=3.9
       os: linux
-    - env: SCRIPT=sqlite3 CLANG=3.9
-      os: osx
 
 before_install:
   - |
