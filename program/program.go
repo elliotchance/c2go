@@ -234,9 +234,9 @@ func (p *Program) String() string {
 		// Looking at the full output of the AST (thousands of lines) and
 		// looking at those line numbers should give you a good idea where the
 		// error is coming from; by looking at the parents of the bad lines.
-		//goast.Print(p.FileSet, p.File)
+		goast.Print(p.FileSet, p.File)
 
-		panic(fmt.Sprintf("%+#v", err))
+		panic(err)
 	}
 
 	return buf.String()
