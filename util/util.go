@@ -43,7 +43,7 @@ func Atoi(s string) int {
 // GetExportedName returns a deterministic and Go safe name for a C type. For
 // example, "*__foo[]" will return "FooSlice".
 func GetExportedName(field string) string {
-	if field == "interface{}" {
+	if strings.HasPrefix(field, "interface{}") {
 		return "Interface"
 	}
 
