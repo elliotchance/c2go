@@ -33,7 +33,7 @@ import (
 //     c2go -v
 //
 // See https://github.com/elliotchance/c2go/wiki/Release-Process
-const Version = "0.14.0"
+const Version = "0.14.1"
 
 // ProgramArgs defines the options available when processing the program. There
 // is no constructor since the zeroed out values are the appropriaye defaults -
