@@ -3,21 +3,23 @@ package ast
 // AlignedAttr is a type of attribute that is optionally attached to a variable
 // or struct field definition.
 type AlignedAttr struct {
-	Address  string
-	Position string
-	Children []Node
+	Address   string
+	Position  string
+	IsAligned bool
+	Children  []Node
 }
 
 func parseAlignedAttr(line string) *AlignedAttr {
 	groups := groupsFromRegex(
-		"<(?P<position>.*)> aligned",
+		"<(?P<position>.*)>(?P<aligned> aligned)?",
 		line,
 	)
 
 	return &AlignedAttr{
-		Address:  groups["address"],
-		Position: groups["position"],
-		Children: []Node{},
+		Address:   groups["address"],
+		Position:  groups["position"],
+		IsAligned: len(groups["aligned"]) > 0,
+		Children:  []Node{},
 	}
 }
 
