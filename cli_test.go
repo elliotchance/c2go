@@ -21,50 +21,31 @@ func setupTest(args []string) (*bytes.Buffer, func()) {
 	}
 }
 
-// Test that help is printed if no files are given
-func TestTranspileNoFilesHelp(t *testing.T) {
-	output, teardown := setupTest([]string{"test", "transpile"})
-	defer teardown()
+var cliTests = map[string][]string{
+	// Test that help is printed if no files are given
+	"TranspileNoFilesHelp": []string{"test", "transpile"},
 
-	runCommand()
-	err := cupaloy.Snapshot(output.String())
-	if err != nil {
-		t.Fatalf("error: %s", err)
-	}
+	// Test that help is printed if help flag is set, even if file is given
+	"TranspileHelpFlag": []string{"test", "transpile", "-h", "foo.c"},
+
+	// Test that help is printed if no files are given
+	"AstNoFilesHelp": []string{"test", "ast"},
+
+	// Test that help is printed if help flag is set, even if file is given
+	"AstHelpFlag": []string{"test", "ast", "-h", "foo.c"},
 }
 
-// Test that help is printed if help flag is set, even if file is given
-func TestTranspileHelpFlag(t *testing.T) {
-	output, teardown := setupTest([]string{"test", "transpile", "-h", "foo.c"})
-	defer teardown()
+func TestCLI(t *testing.T) {
+	for testName, args := range cliTests {
+		t.Run(testName, func(t *testing.T) {
+			output, teardown := setupTest(args)
+			defer teardown()
 
-	runCommand()
-	err := cupaloy.Snapshot(output.String())
-	if err != nil {
-		t.Fatalf("error: %s", err)
-	}
-}
-
-// Test that help is printed if no files are given
-func TestAstNoFilesHelp(t *testing.T) {
-	output, teardown := setupTest([]string{"test", "ast"})
-	defer teardown()
-
-	runCommand()
-	err := cupaloy.Snapshot(output.String())
-	if err != nil {
-		t.Fatalf("error: %s", err)
-	}
-}
-
-// Test that help is printed if help flag is set, even if file is given
-func TestAstHelpFlag(t *testing.T) {
-	output, teardown := setupTest([]string{"test", "ast", "-h", "foo.c"})
-	defer teardown()
-
-	runCommand()
-	err := cupaloy.Snapshot(output.String())
-	if err != nil {
-		t.Fatalf("error: %s", err)
+			runCommand()
+			err := cupaloy.SnapshotMulti(testName, output.String())
+			if err != nil {
+				t.Fatalf("error: %s", err)
+			}
+		})
 	}
 }
