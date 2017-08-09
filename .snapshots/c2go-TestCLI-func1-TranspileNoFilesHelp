@@ -1,0 +1,1 @@
+(string) (len=256) "Usage: test transpile [-V] [-o file.go] [-p package] file.c\n  -V\tprint progress as comments\n  -h\tprint help information\n  -o string\n    \toutput Go generated code to the specified file\n  -p string\n    \tset the name of the generated package (default \"main\")\n"
