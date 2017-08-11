@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"github.com/bradleyjkemp/cupaloy"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -42,7 +43,8 @@ func TestCLI(t *testing.T) {
 			defer teardown()
 
 			runCommand()
-			err := cupaloy.SnapshotMulti(testName, output.String())
+			outputLines := strings.Split(output.String(), "\n")
+			err := cupaloy.SnapshotMulti(testName, outputLines)
 			if err != nil {
 				t.Fatalf("error: %s", err)
 			}
