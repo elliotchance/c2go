@@ -160,7 +160,27 @@ func NewFuncClosure(returnType string, stmts ...goast.Stmt) *goast.CallExpr {
 // You should use this instead of BinaryExpr directly so that nil left and right
 // operands can be caught (and panic) before Go tried to render the source -
 // which would result in a very hard to debug error.
-func NewBinaryExpr(left goast.Expr, operator token.Token, right goast.Expr, returnType string) goast.Expr {
+//
+// Assignment operators in C can be nested inside other expressions, like:
+//
+//     a + (b += 3)
+//
+// In Go this is not allowed. Since the operators mutate variables it is not
+// possible in some cases to move the statements before or after. The only safe
+// (and generic) way around this is to create an immediately executing closure,
+// like:
+//
+//     a + (func () int { b += 3; return b }())
+//
+// In a lot of cases this may be unnecessary and obfuscate the Go output but
+// these will have to be optimised over time and be strict about the
+// situation they are simplifying.
+//
+// If stmt is true then the binary expression is the whole statement. This means
+// that the closure above does not need to applied. This makes the output code
+// much neater.
+func NewBinaryExpr(left goast.Expr, operator token.Token, right goast.Expr,
+	returnType string, stmt bool) goast.Expr {
 	PanicIfNil(left, "left is nil")
 	PanicIfNil(right, "right is nil")
 
@@ -170,36 +190,27 @@ func NewBinaryExpr(left goast.Expr, operator token.Token, right goast.Expr, retu
 		Y:  right,
 	}
 
-	// Assignment operators in C can be nested inside other expressions, like:
-	//
-	//     a + (b += 3)
-	//
-	// In Go this is not allowed. Since the operators mutate variables it is not
-	// possible in some cases to move the statements before or after. The only
-	// safe way around this is to create an immediately executing closure, like:
-	//
-	//     a + (func () int { b += 3; return b }())
-	//
-	// In a lot of cases this may be unnecessary and obfuscate the Go output but
-	// these will have to be optimised over time and be strict about the
-	// situation they are simplifying.
-	switch operator {
-	case token.ASSIGN,
-		token.ADD_ASSIGN,
-		token.SUB_ASSIGN,
-		token.MUL_ASSIGN,
-		token.QUO_ASSIGN,
-		token.REM_ASSIGN,
-		token.AND_ASSIGN,
-		token.OR_ASSIGN,
-		token.XOR_ASSIGN,
-		token.SHL_ASSIGN,
-		token.SHR_ASSIGN,
-		token.AND_NOT_ASSIGN:
-		returnStmt := &goast.ReturnStmt{
-			Results: []goast.Expr{left},
+	// Wrap the assignment operator in a closure if we must.
+	if !stmt {
+		switch operator {
+		case token.ASSIGN,
+			token.ADD_ASSIGN,
+			token.SUB_ASSIGN,
+			token.MUL_ASSIGN,
+			token.QUO_ASSIGN,
+			token.REM_ASSIGN,
+			token.AND_ASSIGN,
+			token.OR_ASSIGN,
+			token.XOR_ASSIGN,
+			token.SHL_ASSIGN,
+			token.SHR_ASSIGN,
+			token.AND_NOT_ASSIGN:
+			returnStmt := &goast.ReturnStmt{
+				Results: []goast.Expr{left},
+			}
+
+			b = NewFuncClosure(returnType, NewExprStmt(b), returnStmt)
 		}
-		b = NewFuncClosure(returnType, NewExprStmt(b), returnStmt)
 	}
 
 	return b

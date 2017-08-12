@@ -40,7 +40,7 @@ func TestCast(t *testing.T) {
 		{args{util.NewIntLit(1), "int", "__uint16_t"}, util.NewCallExpr("uint16", util.NewIntLit(1))},
 
 		// Casting to bool
-		{args{util.NewIntLit(1), "int", "bool"}, util.NewBinaryExpr(util.NewIntLit(1), token.NEQ, util.NewIntLit(0), "bool")},
+		{args{util.NewIntLit(1), "int", "bool"}, util.NewBinaryExpr(util.NewIntLit(1), token.NEQ, util.NewIntLit(0), "bool", false)},
 
 		// Casting from bool. This is a special case becuase C int and bool
 		// values are very commonly used interchangably.

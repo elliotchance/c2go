@@ -60,7 +60,7 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
 		panic("non-nil child 0 in IfStmt")
 	}
 
-	conditional, conditionalType, newPre, newPost, err := transpileToExpr(children[1], p)
+	conditional, conditionalType, newPre, newPost, err := transpileToExpr(children[1], p, false)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -247,7 +247,7 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 	if children[2] != nil {
 		var conditionType string
 		var newPre, newPost []goast.Stmt
-		condition, conditionType, newPre, newPost, err = transpileToExpr(children[2], p)
+		condition, conditionType, newPre, newPost, err = transpileToExpr(children[2], p, false)
 		if err != nil {
 			return nil, nil, nil, err
 		}

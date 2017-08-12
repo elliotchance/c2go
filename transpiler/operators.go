@@ -33,21 +33,21 @@ func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
-	a, aType, newPre, newPost, err := transpileToExpr(n.Children[0], p)
+	a, aType, newPre, newPost, err := transpileToExpr(n.Children[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	b, bType, newPre, newPost, err := transpileToExpr(n.Children[1], p)
+	b, bType, newPre, newPost, err := transpileToExpr(n.Children[1], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	c, cType, newPre, newPost, err := transpileToExpr(n.Children[2], p)
+	c, cType, newPre, newPost, err := transpileToExpr(n.Children[2], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
@@ -104,7 +104,7 @@ func transpileParenExpr(n *ast.ParenExpr, p *program.Program) (
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
-	e, eType, newPre, newPost, err := transpileToExpr(n.Children[0], p)
+	e, eType, newPre, newPost, err := transpileToExpr(n.Children[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
@@ -121,13 +121,13 @@ func transpileParenExpr(n *ast.ParenExpr, p *program.Program) (
 	return r, eType, preStmts, postStmts, nil
 }
 
-func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.Program) (
+func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.Program, exprIsStmt bool) (
 	goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
 	operator := getTokenForOperator(n.Opcode)
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
-	right, rightType, newPre, newPost, err := transpileToExpr(n.Children[1], p)
+	right, rightType, newPre, newPost, err := transpileToExpr(n.Children[1], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
@@ -159,7 +159,7 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
 				argLHS := util.NewCallExpr(getterName)
 				argOp := getTokenForOperator(binaryOperation)
 				argRHS := right
-				argValue := util.NewBinaryExpr(argLHS, argOp, argRHS, "interface{}")
+				argValue := util.NewBinaryExpr(argLHS, argOp, argRHS, "interface{}", exprIsStmt)
 
 				// Make Go expression
 				resExpr := util.NewCallExpr(setterName, argValue)
@@ -169,7 +169,7 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
 		}
 	}
 
-	left, leftType, newPre, newPost, err := transpileToExpr(n.Children[0], p)
+	left, leftType, newPre, newPost, err := transpileToExpr(n.Children[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
@@ -193,7 +193,7 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
 		p.AddMessage(ast.GenerateWarningMessage(err, n))
 	}
 
-	return util.NewBinaryExpr(left, operator, right, resolvedLeftType),
+	return util.NewBinaryExpr(left, operator, right, resolvedLeftType, exprIsStmt),
 		"", preStmts, postStmts, nil
 }
 

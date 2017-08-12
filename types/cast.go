@@ -125,7 +125,15 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 	}
 	for _, v := range types {
 		if fromType == v && toType == "bool" {
-			return util.NewBinaryExpr(expr, token.NEQ, util.NewIntLit(0), toType), nil
+			e := util.NewBinaryExpr(
+				expr,
+				token.NEQ,
+				util.NewIntLit(0),
+				toType,
+				false,
+			)
+
+			return e, nil
 		}
 	}
 
@@ -191,7 +199,9 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 
 	// Anything that is a pointer can be compared to nil
 	if fromType[0] == '*' && toType == "bool" {
-		return util.NewBinaryExpr(expr, token.NEQ, util.NewNil(), toType), nil
+		e := util.NewBinaryExpr(expr, token.NEQ, util.NewNil(), toType, false)
+
+		return e, nil
 	}
 
 	if fromType == "[]byte" && toType == "bool" {

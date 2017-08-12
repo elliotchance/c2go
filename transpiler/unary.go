@@ -51,7 +51,7 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program,
 				argLHS := util.NewCallExpr(getterName)
 				argOp := binaryOperator
 				argRHS := util.NewIntLit(1)
-				argValue := util.NewBinaryExpr(argLHS, argOp, argRHS, "interface{}")
+				argValue := util.NewBinaryExpr(argLHS, argOp, argRHS, "interface{}", false)
 
 				// Make Go expression
 				resExpr := util.NewCallExpr(setterName, argValue)
@@ -76,12 +76,12 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program,
 				Children: []ast.Node{},
 			},
 		},
-	}, p)
+	}, p, false)
 }
 
 func transpileUnaryOperatorNot(n *ast.UnaryOperator, p *program.Program) (
 	goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
-	e, eType, preStmts, postStmts, err := transpileToExpr(n.Children[0], p)
+	e, eType, preStmts, postStmts, err := transpileToExpr(n.Children[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
@@ -114,7 +114,7 @@ func transpileUnaryOperatorNot(n *ast.UnaryOperator, p *program.Program) (
 // Dereferencing.
 func transpileUnaryOperatorMul(n *ast.UnaryOperator, p *program.Program) (
 	goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
-	e, eType, preStmts, postStmts, err := transpileToExpr(n.Children[0], p)
+	e, eType, preStmts, postStmts, err := transpileToExpr(n.Children[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
@@ -163,7 +163,7 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 	}
 
 	// Otherwise handle like a unary operator.
-	e, eType, newPre, newPost, err := transpileToExpr(n.Children[0], p)
+	e, eType, newPre, newPost, err := transpileToExpr(n.Children[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
