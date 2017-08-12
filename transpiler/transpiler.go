@@ -97,7 +97,7 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 		expr, exprType, preStmts, postStmts, err = transpileMemberExpr(n, p)
 
 	case *ast.ImplicitCastExpr:
-		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children[0], p, false)
+		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children[0], p, exprIsStmt)
 
 	case *ast.DeclRefExpr:
 		expr, exprType, err = transpileDeclRefExpr(n, p)
@@ -109,7 +109,7 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 		expr, exprType, preStmts, postStmts, err = transpileParenExpr(n, p)
 
 	case *ast.CStyleCastExpr:
-		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children[0], p, false)
+		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children[0], p, exprIsStmt)
 
 	case *ast.CharacterLiteral:
 		expr, exprType, err = transpileCharacterLiteral(n), "char", nil
@@ -209,7 +209,7 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 	}
 
 	// We do not care about the return type.
-	expr, _, preStmts, postStmts, err = transpileToExpr(node, p, false)
+	expr, _, preStmts, postStmts, err = transpileToExpr(node, p, true)
 	if err != nil {
 		return
 	}
