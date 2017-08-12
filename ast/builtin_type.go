@@ -19,6 +19,8 @@ func parseBuiltinType(line string) *BuiltinType {
 	}
 }
 
+// AddChild adds a new child node. Child nodes can then be accessed with the
+// Children attribute.
 func (n *BuiltinType) AddChild(node Node) {
 	n.Children = append(n.Children, node)
 }

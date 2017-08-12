@@ -33,21 +33,21 @@ func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
-	a, aType, newPre, newPost, err := transpileToExpr(n.Children[0], p)
+	a, aType, newPre, newPost, err := transpileToExpr(n.Children[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	b, bType, newPre, newPost, err := transpileToExpr(n.Children[1], p)
+	b, bType, newPre, newPost, err := transpileToExpr(n.Children[1], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	c, cType, newPre, newPost, err := transpileToExpr(n.Children[2], p)
+	c, cType, newPre, newPost, err := transpileToExpr(n.Children[2], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
@@ -104,7 +104,7 @@ func transpileParenExpr(n *ast.ParenExpr, p *program.Program) (
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
-	e, eType, newPre, newPost, err := transpileToExpr(n.Children[0], p)
+	e, eType, newPre, newPost, err := transpileToExpr(n.Children[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
@@ -121,20 +121,55 @@ func transpileParenExpr(n *ast.ParenExpr, p *program.Program) (
 	return r, eType, preStmts, postStmts, nil
 }
 
-func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.Program) (
-	*goast.BinaryExpr, string, []goast.Stmt, []goast.Stmt, error) {
+func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.Program, exprIsStmt bool) (
+	goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
 	operator := getTokenForOperator(n.Opcode)
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
-	left, _, newPre, newPost, err := transpileToExpr(n.Children[0], p)
+	right, rightType, newPre, newPost, err := transpileToExpr(n.Children[1], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	right, rightType, newPre, newPost, err := transpileToExpr(n.Children[1], p)
+	// Construct code for computing compound assign operation to an union field
+	memberExpr, ok := n.Children[0].(*ast.MemberExpr)
+	if ok {
+		ref := memberExpr.GetDeclRefExpr()
+		if ref != nil {
+			// Get operator by removing last char that is '=' (e.g.: += becomes +)
+			binaryOperation := n.Opcode
+			binaryOperation = binaryOperation[:(len(binaryOperation) - 1)]
+
+			// TODO: Is this duplicate code in unary.go?
+			union := p.GetStruct(ref.Type)
+			if union != nil && union.IsUnion {
+				attrType, err := types.ResolveType(p, ref.Type)
+				if err != nil {
+					p.AddMessage(ast.GenerateWarningMessage(err, memberExpr))
+				}
+
+				// Method names
+				getterName := getFunctionNameForUnionGetter(ref.Name, attrType, memberExpr.Name)
+				setterName := getFunctionNameForUnionSetter(ref.Name, attrType, memberExpr.Name)
+
+				// Call-Expression argument
+				argLHS := util.NewCallExpr(getterName)
+				argOp := getTokenForOperator(binaryOperation)
+				argRHS := right
+				argValue := util.NewBinaryExpr(argLHS, argOp, argRHS, "interface{}", exprIsStmt)
+
+				// Make Go expression
+				resExpr := util.NewCallExpr(setterName, argValue)
+
+				return resExpr, "", preStmts, postStmts, nil
+			}
+		}
+	}
+
+	left, leftType, newPre, newPost, err := transpileToExpr(n.Children[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
@@ -153,11 +188,13 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
 		}
 	}
 
-	return &goast.BinaryExpr{
-		X:  left,
-		Y:  right,
-		Op: operator,
-	}, "", preStmts, postStmts, nil
+	resolvedLeftType, err := types.ResolveType(p, leftType)
+	if err != nil {
+		p.AddMessage(ast.GenerateWarningMessage(err, n))
+	}
+
+	return util.NewBinaryExpr(left, operator, right, resolvedLeftType, exprIsStmt),
+		"", preStmts, postStmts, nil
 }
 
 // getTokenForOperator returns the Go operator token for the provided C

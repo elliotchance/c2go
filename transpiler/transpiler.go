@@ -56,12 +56,7 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 	// and variables that the runtime expects to be ready.
 	p.File.Decls = append(p.File.Decls, &goast.FuncDecl{
 		Name: util.NewIdent("__init"),
-		Type: &goast.FuncType{
-			Params: &goast.FieldList{
-				List: []*goast.Field{},
-			},
-			Results: nil,
-		},
+		Type: util.NewFuncType(&goast.FieldList{}, ""),
 		Body: &goast.BlockStmt{
 			List: p.StartupStatements(),
 		},
@@ -69,14 +64,6 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 
 	// Add the imports after everything else so we can ensure that they are all
 	// placed at the top.
-	// A valid Lparen position (Lparen.IsValid()) indicated a parenthesized
-	// declaration. According to the function definition, line should be
-	// greater than 0.
-	importDecl := &goast.GenDecl{
-		Tok:    token.IMPORT,
-		Lparen: 1,
-	}
-
 	for _, quotedImportPath := range p.Imports() {
 		importSpec := &goast.ImportSpec{
 			Path: &goast.BasicLit{
@@ -84,16 +71,18 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 				Value: quotedImportPath,
 			},
 		}
+		importDecl := &goast.GenDecl{
+			Tok: token.IMPORT,
+		}
 
 		importDecl.Specs = append(importDecl.Specs, importSpec)
+		p.File.Decls = append([]goast.Decl{importDecl}, p.File.Decls...)
 	}
-
-	p.File.Decls = append([]goast.Decl{importDecl}, p.File.Decls...)
 
 	return err
 }
 
-func transpileToExpr(node ast.Node, p *program.Program) (
+func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 	expr goast.Expr,
 	exprType string,
 	preStmts []goast.Stmt,
@@ -122,7 +111,7 @@ func transpileToExpr(node ast.Node, p *program.Program) (
 		expr, exprType, preStmts, postStmts, err = transpileArraySubscriptExpr(n, p)
 
 	case *ast.BinaryOperator:
-		expr, exprType, preStmts, postStmts, err = transpileBinaryOperator(n, p)
+		expr, exprType, preStmts, postStmts, err = transpileBinaryOperator(n, p, exprIsStmt)
 
 	case *ast.UnaryOperator:
 		expr, exprType, preStmts, postStmts, err = transpileUnaryOperator(n, p)
@@ -131,7 +120,7 @@ func transpileToExpr(node ast.Node, p *program.Program) (
 		expr, exprType, preStmts, postStmts, err = transpileMemberExpr(n, p)
 
 	case *ast.ImplicitCastExpr:
-		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children[0], p)
+		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children[0], p, exprIsStmt)
 
 	case *ast.DeclRefExpr:
 		expr, exprType, err = transpileDeclRefExpr(n, p)
@@ -143,7 +132,7 @@ func transpileToExpr(node ast.Node, p *program.Program) (
 		expr, exprType, preStmts, postStmts, err = transpileParenExpr(n, p)
 
 	case *ast.CStyleCastExpr:
-		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children[0], p)
+		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children[0], p, exprIsStmt)
 
 	case *ast.CharacterLiteral:
 		expr, exprType, err = transpileCharacterLiteral(n), "char", nil
@@ -152,7 +141,7 @@ func transpileToExpr(node ast.Node, p *program.Program) (
 		expr, exprType, preStmts, postStmts, err = transpileCallExpr(n, p)
 
 	case *ast.CompoundAssignOperator:
-		return transpileCompoundAssignOperator(n, p)
+		return transpileCompoundAssignOperator(n, p, exprIsStmt)
 
 	case *ast.UnaryExprOrTypeTraitExpr:
 		return transpileUnaryExprOrTypeTraitExpr(n, p)
@@ -234,10 +223,16 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 	case *ast.CompoundStmt:
 		stmt, preStmts, postStmts, err = transpileCompoundStmt(n, p)
 		return
+
+	case *ast.BinaryOperator:
+		if n.Operator == "," {
+			stmt, preStmts, err = transpileBinaryOperatorComma(n, p)
+			return
+		}
 	}
 
 	// We do not care about the return type.
-	expr, _, preStmts, postStmts, err = transpileToExpr(node, p)
+	expr, _, preStmts, postStmts, err = transpileToExpr(node, p, true)
 	if err != nil {
 		return
 	}

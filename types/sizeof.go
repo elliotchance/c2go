@@ -3,9 +3,11 @@ package types
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/util"
 )
 
 func removePrefix(s, prefix string) string {
@@ -35,7 +37,7 @@ func SizeOf(p *program.Program, cType string) (int, error) {
 
 		s := p.Structs[cType]
 		if s == nil {
-			return 0, errors.New(fmt.Sprintf("could not sizeof: %s", cType))
+			return 0, fmt.Errorf("could not sizeof: %s", cType)
 		}
 
 		for _, t := range s.Fields {
@@ -65,6 +67,45 @@ func SizeOf(p *program.Program, cType string) (int, error) {
 		return totalBytes, nil
 	}
 
+	// An union will be the max size of its parts.
+	if strings.HasPrefix(cType, "union ") {
+		byteCount := 0
+
+		s := p.Unions[cType]
+		if s == nil {
+			return 0, errors.New(fmt.Sprintf("could not sizeof: %s", cType))
+		}
+
+		for _, t := range s.Fields {
+			var bytes int
+			var err error
+
+			switch f := t.(type) {
+			case string:
+				bytes, err = SizeOf(p, f)
+
+			case *program.Struct:
+				bytes, err = SizeOf(p, f.Name)
+			}
+
+			if err != nil {
+				return 0, err
+			}
+
+			if byteCount < bytes {
+				byteCount = bytes
+			}
+		}
+
+		// The size of an union is rounded up to fit the size of the pointer of
+		// the OS.
+		if byteCount%pointerSize != 0 {
+			byteCount += pointerSize - (byteCount % pointerSize)
+		}
+
+		return byteCount, nil
+	}
+
 	// Function pointers are one byte?
 	if strings.Index(cType, "(") >= 0 {
 		return 1, nil
@@ -89,9 +130,24 @@ func SizeOf(p *program.Program, cType string) (int, error) {
 
 	case "long double":
 		return 16, nil
-
-	default:
-		return pointerSize, errors.New(
-			fmt.Sprintf("cannot determine size of: %s", cType))
 	}
+
+	// Get size for array types like: `base_type [count]`
+	groups := util.GroupsFromRegex(`^(?P<type>[^ ]+) *\[(?P<count>\d+)\]$`, cType)
+	if groups == nil {
+		return pointerSize, errors.New(
+			fmt.Sprintf("cannot determine size of: `%s`", cType))
+	}
+
+	baseSize, err := SizeOf(p, groups["type"])
+	if err != nil {
+		return 0, err
+	}
+
+	count, err := strconv.Atoi(groups["count"])
+	if err != nil {
+		return pointerSize, fmt.Errorf("cannot determine size of: %s", cType)
+	}
+
+	return baseSize * count, nil
 }

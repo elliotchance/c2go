@@ -6,9 +6,10 @@
 
 int main()
 {
-	plan(19);
+	plan(33);
 
-    int i = 10, j = 1;
+    int i = 10;
+    signed char j = 1;
     float f = 3.14159f;
     double d = 0.0;
     char c = 'A';
@@ -73,6 +74,46 @@ int main()
 
     i >>= j;
         is_eq(i, 4);
+
+	diag("Operator equal for 1 variables");
+	int x;
+	x = 42;
+		is_eq(x, 42);
+
+	diag("Operator equal for 2 variables");
+	int y;
+	x = y = 1;
+		is_eq(x, 1);
+		is_eq(y, 1);
+	
+	diag("Operator comma in initialization");
+	int x2 = 0, y2 = 1;
+		is_eq(x2, 0);
+		is_eq(y2, 1);
+
+	diag("Operator equal for 3 variables");
+	int a,b,c2;
+	a = b = c2 = 3;
+		is_eq(a, 3);
+		is_eq(b, 3);
+		is_eq(c2, 3);
+	
+	diag("Huge comma problem for Equal operator")
+	int q,w,e;
+	q = 7, w = q + 3, e = q + w;
+		is_eq(q, 7);
+		is_eq(w, 10);
+		is_eq(e, 17);
+
+	diag("Huge comma problem for Equal operator with Multiplication")
+	float qF,wF,eF;
+	qF = 7., wF = qF * 3., eF = qF * wF;
+	float expectedQ = 7.;
+	float expectedW = 7. * 3.;
+	float expectedE = 7. * (7. * 3.);
+		is_eq(qF, expectedQ); 
+		is_eq(wF, expectedW);
+		is_eq(eF, expectedE);
 
 	done_testing();
 }

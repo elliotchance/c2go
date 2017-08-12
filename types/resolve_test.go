@@ -19,6 +19,7 @@ var resolveTestCases = []resolveTestCase{
 	{"void *", "[]byte"},
 	{"unsigned short int", "uint16"},
 	{"_Bool", "bool"},
+	{"struct RowSetEntry *", "[]RowSetEntry"},
 }
 
 func TestResolve(t *testing.T) {

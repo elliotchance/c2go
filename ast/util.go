@@ -5,18 +5,6 @@ import (
 	"strings"
 )
 
-func ucfirst(word string) string {
-	if len(word) == 0 {
-		return ""
-	}
-
-	if len(word) == 1 {
-		strings.ToUpper(word)
-	}
-
-	return strings.ToUpper(string(word[0])) + word[1:]
-}
-
 func removeQuotes(s string) string {
 	s = strings.TrimSpace(s)
 

@@ -7,14 +7,19 @@ import (
 	"github.com/elliotchance/c2go/noarch"
 )
 
-func AssertFail(expression, filePath []byte, lineNumber uint32, functionName []byte) bool {
+// AssertFail handles __assert_fail().
+func AssertFail(
+	expression, filePath []byte,
+	lineNumber uint32,
+	functionName []byte,
+) bool {
 	fmt.Fprintf(
 		os.Stderr,
 		"a.out: %s:%d: %s: Assertion `%s' failed.\n",
-		noarch.NullTerminatedByteSlice(filePath),
+		noarch.CStringToString(filePath),
 		lineNumber,
-		noarch.NullTerminatedByteSlice(functionName),
-		noarch.NullTerminatedByteSlice(expression),
+		noarch.CStringToString(functionName),
+		noarch.CStringToString(expression),
 	)
 	os.Exit(134)
 

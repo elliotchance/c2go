@@ -1,0 +1,10 @@
+([]string) (len=8) {
+  (string) (len=59) "Usage: test transpile [-V] [-o file.go] [-p package] file.c",
+  (string) (len=31) "  -V\tprint progress as comments",
+  (string) (len=27) "  -h\tprint help information",
+  (string) (len=11) "  -o string",
+  (string) (len=51) "    \toutput Go generated code to the specified file",
+  (string) (len=11) "  -p string",
+  (string) (len=59) "    \tset the name of the generated package (default \"main\")",
+  (string) ""
+}

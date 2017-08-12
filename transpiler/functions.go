@@ -118,16 +118,9 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 		t, err := types.ResolveType(p, f.ReturnType)
 		p.AddMessage(ast.GenerateWarningMessage(err, n))
 
-		returnTypes := []*goast.Field{}
-		if t != "" {
-			returnTypes = append(returnTypes, &goast.Field{
-				Type: util.NewTypeIdent(t),
-			})
-		}
-
 		if p.Function != nil && p.Function.Name == "main" {
 			// main() function does not have a return type.
-			returnTypes = []*goast.Field{}
+			t = ""
 
 			// This collects statements that will be placed at the top of
 			// (before any other code) in main().
@@ -149,12 +142,10 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 
 				prependStmtsInMain = append(
 					prependStmtsInMain,
-					&goast.ExprStmt{
-						X: util.NewBinaryExpr(
-							fieldList.List[0].Names[0],
-							token.DEFINE,
-							util.NewCallExpr("len", util.NewIdent("os.Args")),
-						),
+					&goast.AssignStmt{
+						Lhs: []goast.Expr{fieldList.List[0].Names[0]},
+						Tok: token.DEFINE,
+						Rhs: []goast.Expr{util.NewCallExpr("len", util.NewTypeIdent("os.Args"))},
 					},
 				)
 			}
@@ -162,39 +153,30 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 			if len(fieldList.List) > 1 {
 				prependStmtsInMain = append(
 					prependStmtsInMain,
-					&goast.ExprStmt{
-						X: util.NewBinaryExpr(
-							fieldList.List[1].Names[0],
-							token.DEFINE,
-
-							// We must use goast.NewIdent here instead of
-							// util.NewTypeIdent because of the initialisation
-							// with "{}".
-							goast.NewIdent("[][]byte{}"),
-						),
+					&goast.AssignStmt{
+						Lhs: []goast.Expr{fieldList.List[1].Names[0]},
+						Tok: token.DEFINE,
+						Rhs: []goast.Expr{&goast.CompositeLit{Type: util.NewTypeIdent("[][]byte")}},
 					},
 					&goast.RangeStmt{
 						Key:   util.NewIdent("_"),
 						Value: util.NewIdent("argvSingle"),
 						Tok:   token.DEFINE,
-						X:     util.NewIdent("os.Args"),
+						X:     util.NewTypeIdent("os.Args"),
 						Body: &goast.BlockStmt{
 							List: []goast.Stmt{
-								&goast.ExprStmt{
-									X: util.NewBinaryExpr(
+								&goast.AssignStmt{
+									Lhs: []goast.Expr{fieldList.List[1].Names[0]},
+									Tok: token.ASSIGN,
+									Rhs: []goast.Expr{util.NewCallExpr(
+										"append",
 										fieldList.List[1].Names[0],
-										token.ASSIGN,
-										util.NewCallExpr(
-											"append",
-											fieldList.List[1].Names[0],
-											util.NewCallExpr("[]byte", util.NewIdent("argvSingle")),
-										),
-									),
+										util.NewCallExpr("[]byte", util.NewIdent("argvSingle")),
+									)},
 								},
 							},
 						},
-					},
-				)
+					})
 			}
 
 			// Prepend statements for main().
@@ -206,12 +188,7 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 
 		p.File.Decls = append(p.File.Decls, &goast.FuncDecl{
 			Name: util.NewIdent(n.Name),
-			Type: &goast.FuncType{
-				Params: fieldList,
-				Results: &goast.FieldList{
-					List: returnTypes,
-				},
-			},
+			Type: util.NewFuncType(fieldList, t),
 			Body: body,
 		})
 	}
@@ -247,7 +224,7 @@ func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (
 		return &goast.ReturnStmt{}, nil, nil, nil
 	}
 
-	e, eType, preStmts, postStmts, err := transpileToExpr(n.Children[0], p)
+	e, eType, preStmts, postStmts, err := transpileToExpr(n.Children[0], p, false)
 	if err != nil {
 		return nil, nil, nil, err
 	}

@@ -22,8 +22,8 @@ func TestNullTerminatedByteSlice(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NullTerminatedByteSlice(tt.args.s); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NullTerminatedByteSlice() = %v, want %v", got, tt.want)
+			if got := CStringToString(tt.args.s); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("CStringToString() = %v, want %v", got, tt.want)
 			}
 		})
 	}

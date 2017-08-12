@@ -28,12 +28,19 @@ struct MyStruct
     char c;
 };
 
+union MyUnion
+{
+    double a;
+    char b;
+    int c;
+};
+
 short a;
 int b;
 
 int main()
 {
-    plan(32);
+    plan(34);
 
     diag("Integer types");
     check_sizes(char, 1);
@@ -59,18 +66,23 @@ int main()
     b = 456;
     struct MyStruct s1;
     s1.b = 0;
+    union MyUnion u1;
+    u1.b = 0;
 
     is_eq(sizeof(a), 2);
     is_eq(sizeof(b), 4);
     is_eq(sizeof(s1), 16);
+    is_eq(sizeof(u1), 8);
 
     diag("Structures");
     is_eq(sizeof(struct MyStruct), 16);
 
+    diag("Unions");
+    is_eq(sizeof(union MyUnion), 8);
+
     diag("Function pointers");
     is_eq(sizeof(main), 1);
 
-    diag("TODO: Unions");
     diag("TODO: Test arrays of fixed size like: int[3]");
 
     done_testing();

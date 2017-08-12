@@ -26,10 +26,11 @@ func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, str
 	fieldType, err := types.ResolveType(p, n.Type)
 	p.AddMessage(ast.GenerateWarningMessage(err, n))
 
-	// TODO: The name of a variable or field cannot be "type"
+	// TODO: The name of a variable or field cannot be a reserved word
 	// https://github.com/elliotchance/c2go/issues/83
-	if name == "type" {
-		name = "type_"
+	// Search for this issue in other areas of the codebase.
+	if util.IsGoKeyword(name) {
+		name += "_"
 	}
 
 	return &goast.Field{
@@ -40,19 +41,17 @@ func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, str
 
 func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 	name := n.Name
-	if name == "" || p.TypeIsAlreadyDefined(name) {
+	if name == "" || p.IsTypeAlreadyDefined(name) {
 		return nil
 	}
 
-	p.TypeIsNowDefined(name)
+	p.DefineType(name)
 
 	s := program.NewStruct(n)
-	p.Structs["struct "+s.Name] = s
-
-	// TODO: Unions are not supported.
-	// https://github.com/elliotchance/c2go/issues/84
-	if n.Kind == "union" {
-		return nil
+	if s.IsUnion {
+		p.Unions["union "+s.Name] = s
+	} else {
+		p.Structs["struct "+s.Name] = s
 	}
 
 	// TODO: Some platform structs are ignored.
@@ -64,6 +63,7 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 	}
 
 	var fields []*goast.Field
+
 	for _, c := range n.Children {
 		if field, ok := c.(*ast.FieldDecl); ok {
 			f, _ := transpileFieldDecl(p, field)
@@ -77,19 +77,38 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 		}
 	}
 
-	p.File.Decls = append(p.File.Decls, &goast.GenDecl{
-		Tok: token.TYPE,
-		Specs: []goast.Spec{
-			&goast.TypeSpec{
-				Name: util.NewIdent(name),
-				Type: &goast.StructType{
-					Fields: &goast.FieldList{
-						List: fields,
+	if s.IsUnion {
+		// Union size
+		size, err := types.SizeOf(p, "union "+name)
+
+		// In normal case no error is returned,
+		if err != nil {
+			// but if we catch one, send it as a aarning
+			message := fmt.Sprintf("could not determine the size of type `union %s` for that reason: %s", name, err)
+			p.AddMessage(ast.GenerateWarningMessage(errors.New(message), n))
+		} else {
+			// So, we got size, then
+			// Add imports needed
+			p.AddImports("reflect", "unsafe")
+
+			// Declaration for implementing union type
+			p.File.Decls = append(p.File.Decls, transpileUnion(name, size, fields)...)
+		}
+	} else {
+		p.File.Decls = append(p.File.Decls, &goast.GenDecl{
+			Tok: token.TYPE,
+			Specs: []goast.Spec{
+				&goast.TypeSpec{
+					Name: util.NewIdent(name),
+					Type: &goast.StructType{
+						Fields: &goast.FieldList{
+							List: fields,
+						},
 					},
 				},
 			},
-		},
-	})
+		})
+	}
 
 	return nil
 }
@@ -97,11 +116,11 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 	name := n.Name
 
-	if p.TypeIsAlreadyDefined(name) {
+	if p.IsTypeAlreadyDefined(name) {
 		return nil
 	}
 
-	p.TypeIsNowDefined(name)
+	p.DefineType(name)
 
 	resolvedType, err := types.ResolveType(p, n.Type)
 	p.AddMessage(ast.GenerateWarningMessage(err, n))
@@ -126,12 +145,8 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 		return nil
 	}
 
-	if name == "__mbstate_t" {
-		resolvedType = p.ImportType("github.com/elliotchance/c2go/darwin.C__mbstate_t")
-	}
-
 	if name == "__darwin_ct_rune_t" {
-		resolvedType = p.ImportType("github.com/elliotchance/c2go/darwin.Darwin_ct_rune_t")
+		resolvedType = p.ImportType("github.com/elliotchance/c2go/darwin.CtRuneT")
 	}
 
 	// TODO: Some platform structs are ignored.
@@ -210,12 +225,14 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 			p.AddImports("github.com/elliotchance/c2go/noarch", "os")
 			p.AppendStartupExpr(
 				util.NewBinaryExpr(
-					util.NewIdent(name),
+					goast.NewIdent(name),
 					token.ASSIGN,
 					util.NewCallExpr(
 						"noarch.NewFile",
-						util.NewIdent("os."+util.Ucfirst(name[2:len(name)-1])),
+						util.NewTypeIdent("os."+util.Ucfirst(name[2:len(name)-1])),
 					),
+					"*noarch.File",
+					true,
 				),
 			)
 
@@ -225,12 +242,14 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 			p.AddImports("github.com/elliotchance/c2go/noarch", "os")
 			p.AppendStartupExpr(
 				util.NewBinaryExpr(
-					util.NewIdent(name),
+					goast.NewIdent(name),
 					token.ASSIGN,
 					util.NewCallExpr(
 						"noarch.NewFile",
-						util.NewIdent("os."+util.Ucfirst(name)),
+						util.NewTypeIdent("os."+util.Ucfirst(name)),
 					),
+					theType,
+					true,
 				),
 			)
 

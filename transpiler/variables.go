@@ -15,7 +15,14 @@ import (
 
 func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (
 	*goast.Ident, string, error) {
-	return util.NewIdent(n.Name), n.Type, nil
+	theType := n.Type
+
+	// FIXME: This is for linux to make sure the globals have the right type.
+	if n.Name == "stdout" || n.Name == "stdin" || n.Name == "stderr" {
+		theType = "FILE *"
+	}
+
+	return util.NewIdent(n.Name), theType, nil
 }
 
 func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
@@ -24,7 +31,7 @@ func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
 		return nil, "", nil, nil, nil
 	}
 
-	defaultValue, defaultValueType, newPre, newPost, err := transpileToExpr(a.Children[0], p)
+	defaultValue, defaultValueType, newPre, newPost, err := transpileToExpr(a.Children[0], p, false)
 	if err != nil {
 		return nil, defaultValueType, newPre, newPost, err
 	}
@@ -128,14 +135,14 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program) 
 	postStmts := []goast.Stmt{}
 
 	children := n.Children
-	expression, expressionType, newPre, newPost, err := transpileToExpr(children[0], p)
+	expression, expressionType, newPre, newPost, err := transpileToExpr(children[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	index, _, newPre, newPost, err := transpileToExpr(children[1], p)
+	index, _, newPre, newPost, err := transpileToExpr(children[1], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
@@ -157,11 +164,11 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program) 
 }
 
 func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
-	*goast.SelectorExpr, string, []goast.Stmt, []goast.Stmt, error) {
+	goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
-	lhs, lhsType, newPre, newPost, err := transpileToExpr(n.Children[0], p)
+	lhs, lhsType, newPre, newPost, err := transpileToExpr(n.Children[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
@@ -172,7 +179,7 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	p.AddMessage(ast.GenerateWarningMessage(err, n))
 
 	// lhsType will be something like "struct foo"
-	structType := p.Structs[lhsType]
+	structType := p.GetStruct(lhsType)
 	rhs := n.Name
 	rhsType := "void *"
 	if structType == nil {
@@ -184,11 +191,17 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 		//   1. Types need to be stripped of their pointer, 'FILE *' -> 'FILE'.
 		//   2. Types may refer to one or more other types in a chain that have
 		//      to be resolved before the real field type can be determined.
-		err = errors.New("cannot determine type for '" + lhsType +
+		err = errors.New("cannot determine type for LHS '" + lhsType +
 			"', will use 'void *' for all fields")
 		p.AddMessage(ast.GenerateWarningMessage(err, n))
 	} else {
-		rhsType = structType.Fields[rhs].(string)
+		if s, ok := structType.Fields[rhs].(string); ok {
+			rhsType = s
+		} else {
+			err = errors.New("cannot determine type for RHS, will use" +
+				" 'void *' for all fields")
+			p.AddMessage(ast.GenerateWarningMessage(err, n))
+		}
 	}
 
 	// FIXME: This is just a hack
@@ -197,8 +210,22 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 		rhsType = "int"
 	}
 
+	// Construct code for getting value to an union field
+	if structType != nil && structType.IsUnion {
+		ident := lhs.(*goast.Ident)
+		funcName := getFunctionNameForUnionGetter(ident.Name, lhsResolvedType, n.Name)
+		resExpr := util.NewCallExpr(funcName)
+
+		return resExpr, rhsType, preStmts, postStmts, nil
+	}
+
+	x := lhs
+	if n.IsPointer {
+		x = &goast.IndexExpr{X: x, Index: util.NewIntLit(0)}
+	}
+
 	return &goast.SelectorExpr{
-		X:   lhs,
+		X:   x,
 		Sel: util.NewIdent(rhs),
 	}, rhsType, preStmts, postStmts, nil
 }

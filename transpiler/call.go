@@ -27,6 +27,15 @@ func getName(firstChild ast.Node) string {
 	case *ast.ParenExpr:
 		return getName(fc.Children[0])
 
+	case *ast.UnaryOperator:
+		return getName(fc.Children[0])
+
+	case *ast.ImplicitCastExpr:
+		return getName(fc.Children[0])
+
+	case *ast.CStyleCastExpr:
+		return getName(fc.Children[0])
+
 	default:
 		panic(fmt.Sprintf("cannot CallExpr on: %#v", fc))
 	}
@@ -95,7 +104,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 	argTypes := []string{}
 	i := 0
 	for _, arg := range n.Children[1:] {
-		e, eType, newPre, newPost, err := transpileToExpr(arg, p)
+		e, eType, newPre, newPost, err := transpileToExpr(arg, p, false)
 		if err != nil {
 			return nil, "unknown2", nil, nil, err
 		}
@@ -113,7 +122,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 			if arraySize != -1 {
 				p.AddImport("github.com/elliotchance/c2go/noarch")
 				e = util.NewCallExpr(
-					"noarch.NullTerminatedByteSlice",
+					"noarch.CStringToString",
 					&goast.SliceExpr{X: e},
 				)
 			}
@@ -125,38 +134,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 			if i > len(functionDef.ArgumentTypes)-1 &&
 				(eType == "char *" || eType == "char*") {
 				p.AddImport("github.com/elliotchance/c2go/noarch")
-				e = util.NewCallExpr("noarch.NullTerminatedByteSlice", e)
-			}
-		}
-
-		// We cannot use preallocated byte slices as strings in the same way we
-		// can do it in C. Instead we have to create a temporary string
-		// variable.
-		if functionName == "noarch.Fscanf" && arraySize != -1 {
-			tempVariableName := p.GetNextIdentifier("")
-
-			// var __temp string
-			preStmts = append(preStmts, &goast.DeclStmt{
-				&goast.GenDecl{
-					Tok: token.VAR,
-					Specs: []goast.Spec{
-						&goast.ValueSpec{
-							Names: []*goast.Ident{util.NewIdent(tempVariableName)},
-							Type:  util.NewTypeIdent("string"),
-						},
-					},
-				},
-			})
-
-			postStmts = append(postStmts, &goast.ExprStmt{
-				X: util.NewCallExpr("copy", &goast.SliceExpr{
-					X: e,
-				}, util.NewIdent(tempVariableName)),
-			})
-
-			e = &goast.UnaryExpr{
-				Op: token.AND,
-				X:  util.NewIdent(tempVariableName),
+				e = util.NewCallExpr("noarch.CStringToString", e)
 			}
 		}
 

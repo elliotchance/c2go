@@ -18,29 +18,24 @@ import (
 //
 // TOOD: Ability to evaluate constant expressions at compile time
 // https://github.com/elliotchance/c2go/issues/77
-func ctypeEnumValue(value string, t token.Token) goast.Expr {
+func ctypeEnumValue(value int, t token.Token) goast.Expr {
 	// Produces an expression like: ((1 << (0)) << 8)
 	return &goast.ParenExpr{
-		X: &goast.BinaryExpr{
-			X: &goast.ParenExpr{
-				X: &goast.BinaryExpr{
-					X: &goast.BasicLit{
-						Kind:  token.INT,
-						Value: "1",
-					},
-					Op: token.SHL,
-					Y: &goast.BasicLit{
-						Kind:  token.INT,
-						Value: value,
-					},
-				},
+		X: util.NewBinaryExpr(
+			&goast.ParenExpr{
+				X: util.NewBinaryExpr(
+					util.NewIntLit(1),
+					token.SHL,
+					util.NewIntLit(value),
+					"int",
+					false,
+				),
 			},
-			Op: t,
-			Y: &goast.BasicLit{
-				Kind:  token.INT,
-				Value: "8",
-			},
-		},
+			t,
+			util.NewIntLit(8),
+			"int",
+			false,
+		),
 	}
 }
 
@@ -55,45 +50,45 @@ func transpileEnumConstantDecl(p *program.Program, n *ast.EnumConstantDecl) (
 	// ctypeEnumValue() function.
 	switch n.Name {
 	case "_ISupper":
-		value = ctypeEnumValue("0", token.SHL) // "((1 << (0)) << 8)"
+		value = ctypeEnumValue(0, token.SHL) // "((1 << (0)) << 8)"
 		valueType = "uint16"
 	case "_ISlower":
-		value = ctypeEnumValue("1", token.SHL) // "((1 << (1)) << 8)"
+		value = ctypeEnumValue(1, token.SHL) // "((1 << (1)) << 8)"
 		valueType = "uint16"
 	case "_ISalpha":
-		value = ctypeEnumValue("2", token.SHL) // "((1 << (2)) << 8)"
+		value = ctypeEnumValue(2, token.SHL) // "((1 << (2)) << 8)"
 		valueType = "uint16"
 	case "_ISdigit":
-		value = ctypeEnumValue("3", token.SHL) // "((1 << (3)) << 8)"
+		value = ctypeEnumValue(3, token.SHL) // "((1 << (3)) << 8)"
 		valueType = "uint16"
 	case "_ISxdigit":
-		value = ctypeEnumValue("4", token.SHL) // "((1 << (4)) << 8)"
+		value = ctypeEnumValue(4, token.SHL) // "((1 << (4)) << 8)"
 		valueType = "uint16"
 	case "_ISspace":
-		value = ctypeEnumValue("5", token.SHL) // "((1 << (5)) << 8)"
+		value = ctypeEnumValue(5, token.SHL) // "((1 << (5)) << 8)"
 		valueType = "uint16"
 	case "_ISprint":
-		value = ctypeEnumValue("6", token.SHL) // "((1 << (6)) << 8)"
+		value = ctypeEnumValue(6, token.SHL) // "((1 << (6)) << 8)"
 		valueType = "uint16"
 	case "_ISgraph":
-		value = ctypeEnumValue("7", token.SHL) // "((1 << (7)) << 8)"
+		value = ctypeEnumValue(7, token.SHL) // "((1 << (7)) << 8)"
 		valueType = "uint16"
 	case "_ISblank":
-		value = ctypeEnumValue("8", token.SHR) // "((1 << (8)) >> 8)"
+		value = ctypeEnumValue(8, token.SHR) // "((1 << (8)) >> 8)"
 		valueType = "uint16"
 	case "_IScntrl":
-		value = ctypeEnumValue("9", token.SHR) // "((1 << (9)) >> 8)"
+		value = ctypeEnumValue(9, token.SHR) // "((1 << (9)) >> 8)"
 		valueType = "uint16"
 	case "_ISpunct":
-		value = ctypeEnumValue("10", token.SHR) // "((1 << (10)) >> 8)"
+		value = ctypeEnumValue(10, token.SHR) // "((1 << (10)) >> 8)"
 		valueType = "uint16"
 	case "_ISalnum":
-		value = ctypeEnumValue("11", token.SHR) // "((1 << (11)) >> 8)"
+		value = ctypeEnumValue(11, token.SHR) // "((1 << (11)) >> 8)"
 		valueType = "uint16"
 	default:
 		if len(n.Children) > 0 {
 			var err error
-			value, _, preStmts, postStmts, err = transpileToExpr(n.Children[0], p)
+			value, _, preStmts, postStmts, err = transpileToExpr(n.Children[0], p, false)
 			if err != nil {
 				panic(err)
 			}

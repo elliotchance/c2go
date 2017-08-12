@@ -95,6 +95,8 @@ func Position(node Node) string {
 		return n.Position
 	case *IncompleteArrayType:
 		return ""
+	case *IndirectFieldDecl:
+		return n.Position
 	case *InitListExpr:
 		return n.Position
 	case *IntegerLiteral:
@@ -163,11 +165,15 @@ func Position(node Node) string {
 		return n.Position
 	case *UnaryOperator:
 		return n.Position
+	case *UnusedAttr:
+		return n.Position
 	case *VAArgExpr:
 		return n.Position
 	case *VarDecl:
 		return n.Position
 	case *WarnUnusedResultAttr:
+		return n.Position
+	case *WeakAttr:
 		return n.Position
 	case *WhileStmt:
 		return n.Position
@@ -306,6 +312,8 @@ func Parse(line string) Node {
 		return parseImplicitValueInitExpr(line)
 	case "IncompleteArrayType":
 		return parseIncompleteArrayType(line)
+	case "IndirectFieldDecl":
+		return parseIndirectFieldDecl(line)
 	case "InitListExpr":
 		return parseInitListExpr(line)
 	case "IntegerLiteral":
@@ -374,12 +382,16 @@ func Parse(line string) Node {
 		return parseUnaryExprOrTypeTraitExpr(line)
 	case "UnaryOperator":
 		return parseUnaryOperator(line)
+	case "UnusedAttr":
+		return parseUnusedAttr(line)
 	case "VAArgExpr":
 		return parseVAArgExpr(line)
 	case "VarDecl":
 		return parseVarDecl(line)
 	case "WarnUnusedResultAttr":
 		return parseWarnUnusedResultAttr(line)
+	case "WeakAttr":
+		return parseWeakAttr(line)
 	case "WhileStmt":
 		return parseWhileStmt(line)
 	case "NullStmt":

@@ -29,7 +29,7 @@ func transpileSwitchStmt(n *ast.SwitchStmt, p *program.Program) (
 
 	// The condition is the expression to be evaulated against each of the
 	// cases.
-	condition, _, newPre, newPost, err := transpileToExpr(n.Children[len(n.Children)-2], p)
+	condition, _, newPre, newPost, err := transpileToExpr(n.Children[len(n.Children)-2], p, false)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -122,7 +122,7 @@ func normalizeSwitchCases(body *ast.CompoundStmt, p *program.Program) (
 	for _, x := range body.Children {
 		switch c := x.(type) {
 		case *ast.CaseStmt, *ast.DefaultStmt:
-			cases, newPre, newPost, err = appendCaseOrDefaultToNormaliziedCases(cases, c, caseEndedWithBreak, p)
+			cases, newPre, newPost, err = appendCaseOrDefaultToNormalizedCases(cases, c, caseEndedWithBreak, p)
 			if err != nil {
 				return []*goast.CaseClause{}, nil, nil, err
 			}
@@ -138,7 +138,7 @@ func normalizeSwitchCases(body *ast.CompoundStmt, p *program.Program) (
 				return []*goast.CaseClause{}, nil, nil, err
 			}
 
-			if stmt != nil {
+			if stmt != nil && len(cases) > 0 {
 				cases[len(cases)-1].Body = append(cases[len(cases)-1].Body, stmt)
 			}
 		}
@@ -149,7 +149,7 @@ func normalizeSwitchCases(body *ast.CompoundStmt, p *program.Program) (
 	return cases, preStmts, postStmts, nil
 }
 
-func appendCaseOrDefaultToNormaliziedCases(cases []*goast.CaseClause,
+func appendCaseOrDefaultToNormalizedCases(cases []*goast.CaseClause,
 	stmt ast.Node, caseEndedWithBreak bool, p *program.Program) (
 	[]*goast.CaseClause, []goast.Stmt, []goast.Stmt, error) {
 	preStmts := []goast.Stmt{}
@@ -175,13 +175,17 @@ func appendCaseOrDefaultToNormaliziedCases(cases []*goast.CaseClause,
 		singleCase, err = transpileDefaultStmt(c, p)
 	}
 
+	if singleCase != nil {
+		cases = append(cases, singleCase)
+	}
+
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	if err != nil {
 		return []*goast.CaseClause{}, nil, nil, err
 	}
 
-	return append(cases, singleCase), preStmts, postStmts, nil
+	return cases, preStmts, postStmts, nil
 }
 
 func transpileCaseStmt(n *ast.CaseStmt, p *program.Program) (
@@ -189,7 +193,7 @@ func transpileCaseStmt(n *ast.CaseStmt, p *program.Program) (
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
-	c, _, newPre, newPost, err := transpileToExpr(n.Children[0], p)
+	c, _, newPre, newPost, err := transpileToExpr(n.Children[0], p, false)
 	if err != nil {
 		return nil, nil, nil, err
 	}
