@@ -224,7 +224,7 @@ func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (
 		return &goast.ReturnStmt{}, nil, nil, nil
 	}
 
-	e, eType, preStmts, postStmts, err := transpileToExpr(n.Children[0], p)
+	e, eType, preStmts, postStmts, err := transpileToExpr(n.Children[0], p, false)
 	if err != nil {
 		return nil, nil, nil, err
 	}

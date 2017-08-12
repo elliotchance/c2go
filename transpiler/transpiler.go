@@ -59,7 +59,7 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 	return err
 }
 
-func transpileToExpr(node ast.Node, p *program.Program) (
+func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 	expr goast.Expr,
 	exprType string,
 	preStmts []goast.Stmt,
@@ -88,7 +88,7 @@ func transpileToExpr(node ast.Node, p *program.Program) (
 		expr, exprType, preStmts, postStmts, err = transpileArraySubscriptExpr(n, p)
 
 	case *ast.BinaryOperator:
-		expr, exprType, preStmts, postStmts, err = transpileBinaryOperator(n, p)
+		expr, exprType, preStmts, postStmts, err = transpileBinaryOperator(n, p, exprIsStmt)
 
 	case *ast.UnaryOperator:
 		expr, exprType, preStmts, postStmts, err = transpileUnaryOperator(n, p)
@@ -97,7 +97,7 @@ func transpileToExpr(node ast.Node, p *program.Program) (
 		expr, exprType, preStmts, postStmts, err = transpileMemberExpr(n, p)
 
 	case *ast.ImplicitCastExpr:
-		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children[0], p)
+		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children[0], p, exprIsStmt)
 
 	case *ast.DeclRefExpr:
 		expr, exprType, err = transpileDeclRefExpr(n, p)
@@ -109,7 +109,7 @@ func transpileToExpr(node ast.Node, p *program.Program) (
 		expr, exprType, preStmts, postStmts, err = transpileParenExpr(n, p)
 
 	case *ast.CStyleCastExpr:
-		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children[0], p)
+		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children[0], p, exprIsStmt)
 
 	case *ast.CharacterLiteral:
 		expr, exprType, err = transpileCharacterLiteral(n), "char", nil
@@ -118,7 +118,7 @@ func transpileToExpr(node ast.Node, p *program.Program) (
 		expr, exprType, preStmts, postStmts, err = transpileCallExpr(n, p)
 
 	case *ast.CompoundAssignOperator:
-		return transpileCompoundAssignOperator(n, p)
+		return transpileCompoundAssignOperator(n, p, exprIsStmt)
 
 	case *ast.UnaryExprOrTypeTraitExpr:
 		return transpileUnaryExprOrTypeTraitExpr(n, p)
@@ -209,7 +209,7 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 	}
 
 	// We do not care about the return type.
-	expr, _, preStmts, postStmts, err = transpileToExpr(node, p)
+	expr, _, preStmts, postStmts, err = transpileToExpr(node, p, true)
 	if err != nil {
 		return
 	}

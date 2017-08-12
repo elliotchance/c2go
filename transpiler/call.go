@@ -104,7 +104,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 	argTypes := []string{}
 	i := 0
 	for _, arg := range n.Children[1:] {
-		e, eType, newPre, newPost, err := transpileToExpr(arg, p)
+		e, eType, newPre, newPost, err := transpileToExpr(arg, p, false)
 		if err != nil {
 			return nil, "unknown2", nil, nil, err
 		}

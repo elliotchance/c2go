@@ -37,7 +37,7 @@ func transpileBinaryOperatorComma(n *ast.BinaryOperator, p *program.Program) (
 	return right[0], preStmts, nil
 }
 
-func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
+func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsStmt bool) (
 	goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
@@ -95,7 +95,10 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 				bComma.Type = c.Type
 				bComma.AddChild(c)
 				bComma.AddChild(&bSecond)
-				return transpileBinaryOperator(&bComma, p)
+
+				// exprIsStmt now changes to false to stop any AST children from
+				// not being safely wrapped in a closure.
+				return transpileBinaryOperator(&bComma, p, false)
 			}
 		}
 	}
@@ -124,14 +127,14 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 	// | `-ImplicitCastExpr 0x21a7898 <col:6> 'int' <LValueToRValue>
 	// |   `-DeclRefExpr 0x21a7870 <col:6> 'int' lvalue Var 0x21a7748 'y' 'int'
 	if getTokenForOperator(n.Operator) == token.COMMA {
-		stmts, st, newPre, newPost, err := transpileToExpr(n.Children[0], p)
+		stmts, st, newPre, newPost, err := transpileToExpr(n.Children[0], p, false)
 		if err != nil {
 			return nil, "unknown50", nil, nil, err
 		}
 		preStmts = append(preStmts, newPre...)
 		preStmts = append(preStmts, util.NewExprStmt(stmts))
 		postStmts = append(postStmts, newPost...)
-		stmts, st, newPre, newPost, err = transpileToExpr(n.Children[1], p)
+		stmts, st, newPre, newPost, err = transpileToExpr(n.Children[1], p, false)
 		if err != nil {
 			return nil, "unknown51", nil, nil, err
 		}
@@ -140,14 +143,14 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 		return stmts, st, preStmts, postStmts, nil
 	}
 
-	left, leftType, newPre, newPost, err := transpileToExpr(n.Children[0], p)
+	left, leftType, newPre, newPost, err := transpileToExpr(n.Children[0], p, false)
 	if err != nil {
 		return nil, "unknown52", nil, nil, err
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	right, rightType, newPre, newPost, err := transpileToExpr(n.Children[1], p)
+	right, rightType, newPre, newPost, err := transpileToExpr(n.Children[1], p, false)
 	if err != nil {
 		return nil, "unknown53", nil, nil, err
 	}
@@ -174,8 +177,9 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 			p.AddMessage(ast.GenerateWarningMessage(err, n))
 		}
 
-		return util.NewBinaryExpr(left, operator, right, resolvedLeftType), "bool",
-			preStmts, postStmts, nil
+		expr := util.NewBinaryExpr(left, operator, right, resolvedLeftType, exprIsStmt)
+
+		return expr, "bool", preStmts, postStmts, nil
 	}
 
 	// The right hand argument of the shift left or shift right operators
@@ -189,8 +193,8 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 			right = util.NewNil()
 		}
 
-		return util.NewBinaryExpr(left, operator, right, "uint64"), leftType,
-			preStmts, postStmts, nil
+		return util.NewBinaryExpr(left, operator, right, "uint64", exprIsStmt),
+			leftType, preStmts, postStmts, nil
 	}
 
 	if operator == token.NEQ || operator == token.EQL {
@@ -212,7 +216,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 		allocSize := GetAllocationSizeNode(n.Children[1])
 
 		if allocSize != nil {
-			allocSizeExpr, _, newPre, newPost, err := transpileToExpr(allocSize, p)
+			allocSizeExpr, _, newPre, newPost, err := transpileToExpr(allocSize, p, false)
 			preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 			if err != nil {
@@ -237,7 +241,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 			right = util.NewCallExpr(
 				"make",
 				util.NewTypeIdent(toType),
-				util.NewBinaryExpr(allocSizeExpr, token.QUO, util.NewIntLit(elementSize), "int"),
+				util.NewBinaryExpr(allocSizeExpr, token.QUO, util.NewIntLit(elementSize), "int", false),
 			)
 		} else {
 			right, err = types.CastExpr(p, right, rightType, returnType)
@@ -292,7 +296,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program) (
 		p.AddMessage(ast.GenerateWarningMessage(err, n))
 	}
 
-	return util.NewBinaryExpr(left, operator, right, resolvedLeftType),
+	return util.NewBinaryExpr(left, operator, right, resolvedLeftType, exprIsStmt),
 		types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType),
 		preStmts, postStmts, nil
 }

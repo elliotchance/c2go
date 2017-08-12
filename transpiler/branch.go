@@ -60,7 +60,9 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
 		panic("non-nil child 0 in IfStmt")
 	}
 
-	conditional, conditionalType, newPre, newPost, err := transpileToExpr(children[1], p)
+	// The last parameter must be false because we are transpiling an
+	// expression - assignment operators need to be wrapped in closures.
+	conditional, conditionalType, newPre, newPost, err := transpileToExpr(children[1], p, false)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -247,7 +249,10 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 	if children[2] != nil {
 		var conditionType string
 		var newPre, newPost []goast.Stmt
-		condition, conditionType, newPre, newPost, err = transpileToExpr(children[2], p)
+
+		// The last parameter must be false because we are transpiling an
+		// expression - assignment operators need to be wrapped in closures.
+		condition, conditionType, newPre, newPost, err = transpileToExpr(children[2], p, false)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -340,6 +345,7 @@ func transpileWhileStmt(n *ast.WhileStmt, p *program.Program) (
 	forOperator.AddChild(n.Children[1])
 	forOperator.AddChild(nil)
 	forOperator.AddChild(n.Children[2])
+
 	return transpileForStmt(&forOperator, p)
 }
 
@@ -437,7 +443,6 @@ func transpileDoStmt(n *ast.DoStmt, p *program.Program) (
 //    | `-BreakStmt 0x3bb1d80 <line:16:4>
 //    `-<<<NULL>>>
 func createIfWithNotConditionAndBreak(condition ast.Node) (ifStmt ast.IfStmt) {
-
 	ifStmt.AddChild(nil)
 
 	var par ast.ParenExpr

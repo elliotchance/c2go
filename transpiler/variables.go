@@ -31,7 +31,7 @@ func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
 		return nil, "", nil, nil, nil
 	}
 
-	defaultValue, defaultValueType, newPre, newPost, err := transpileToExpr(a.Children[0], p)
+	defaultValue, defaultValueType, newPre, newPost, err := transpileToExpr(a.Children[0], p, false)
 	if err != nil {
 		return nil, defaultValueType, newPre, newPost, err
 	}
@@ -135,14 +135,14 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program) 
 	postStmts := []goast.Stmt{}
 
 	children := n.Children
-	expression, expressionType, newPre, newPost, err := transpileToExpr(children[0], p)
+	expression, expressionType, newPre, newPost, err := transpileToExpr(children[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	index, _, newPre, newPost, err := transpileToExpr(children[1], p)
+	index, _, newPre, newPost, err := transpileToExpr(children[1], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
@@ -168,7 +168,7 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
-	lhs, lhsType, newPre, newPost, err := transpileToExpr(n.Children[0], p)
+	lhs, lhsType, newPre, newPost, err := transpileToExpr(n.Children[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}

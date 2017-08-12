@@ -28,11 +28,13 @@ func ctypeEnumValue(value int, t token.Token) goast.Expr {
 					token.SHL,
 					util.NewIntLit(value),
 					"int",
+					false,
 				),
 			},
 			t,
 			util.NewIntLit(8),
 			"int",
+			false,
 		),
 	}
 }
@@ -86,7 +88,7 @@ func transpileEnumConstantDecl(p *program.Program, n *ast.EnumConstantDecl) (
 	default:
 		if len(n.Children) > 0 {
 			var err error
-			value, _, preStmts, postStmts, err = transpileToExpr(n.Children[0], p)
+			value, _, preStmts, postStmts, err = transpileToExpr(n.Children[0], p, false)
 			if err != nil {
 				panic(err)
 			}
