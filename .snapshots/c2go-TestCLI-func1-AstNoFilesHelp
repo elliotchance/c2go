@@ -1,1 +1,5 @@
-(string) (len=51) "Usage: test ast file.c\n  -h\tprint help information\n"
+([]string) (len=3) {
+  (string) (len=22) "Usage: test ast file.c",
+  (string) (len=27) "  -h\tprint help information",
+  (string) ""
+}
