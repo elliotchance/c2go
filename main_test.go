@@ -96,7 +96,7 @@ func TestIntegrationScripts(t *testing.T) {
 
 			programArgs := ProgramArgs{
 				inputFile:   file,
-				outputFile:  subFolder + separator + mainFileName,
+				outputFile:  subFolder + mainFileName,
 				packageName: "main",
 
 				// This appends a TestApp function to the output source so we
@@ -112,17 +112,24 @@ func TestIntegrationScripts(t *testing.T) {
 
 			// Run Go program. The "-v" option is important; without it most or
 			// all of the fmt.* output would be suppressed.
-			testName := strings.Split(file, ".")[0][6:]
-			cmd = exec.Command(
-				"go", "test",
+			args := []string{
+				"test",
 				programArgs.outputFile,
 				"-v",
-				"-race",
-				"-covermode=count",
-				"-coverprofile="+testName+".coverprofile",
-				"-coverpkg=./noarch,./linux,./darwin",
-				"--", "some", "args",
-			)
+			}
+			if strings.Index(file, "examples/") == -1 {
+				testName := strings.Split(file, ".")[0][6:]
+				args = append(
+					args,
+					"-race",
+					"-covermode=count",
+					"-coverprofile="+testName+".coverprofile",
+					"-coverpkg=./noarch,./linux,./darwin",
+				)
+			}
+			args = append(args, "--", "some", "args")
+
+			cmd = exec.Command("go", args...)
 			cmd.Stdin = strings.NewReader("7")
 			cmd.Stdout = &goProgram.stdout
 			cmd.Stderr = &goProgram.stderr
@@ -206,7 +213,9 @@ func TestIntegrationScripts(t *testing.T) {
 			// There is a separate check to see that both the C and Go programs
 			// return the same exit code.
 			removeLinesFromEnd := 5
-			if strings.HasPrefix(goOutLines[len(goOutLines)-3], "exit status") {
+			if strings.Index(file, "examples/") >= 0 {
+				removeLinesFromEnd = 4
+			} else if strings.HasPrefix(goOutLines[len(goOutLines)-3], "exit status") {
 				removeLinesFromEnd = 3
 			}
 
