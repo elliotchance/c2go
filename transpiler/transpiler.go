@@ -49,7 +49,6 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 			},
 			Body: &goast.BlockStmt{
 				List: []goast.Stmt{
-					// TODO: docs
 					util.NewExprStmt(&goast.Ident{Name: "os.Chdir(\"../../..\")"}),
 
 					// "go test" does not redirect stdin to the executable

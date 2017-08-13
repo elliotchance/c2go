@@ -224,7 +224,7 @@ func TestIntegrationScripts(t *testing.T) {
 			// If this is not an example we will extract the number of tests
 			// run.
 			if strings.Index(file, "examples/") == -1 && isVerbose {
-				firstLine := strings.Split(goProgram.stdout.String(), "\n")[0]
+				firstLine := strings.Split(goOut, "\n")[0]
 
 				matches := regexp.MustCompile(`1\.\.(\d+)`).
 					FindStringSubmatch(firstLine)
