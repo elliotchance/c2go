@@ -115,15 +115,15 @@ func TestIntegrationScripts(t *testing.T) {
 			testName := strings.Split(file, ".")[0][6:]
 			cmd = exec.Command(
 				"go", "test",
+				programArgs.outputFile,
 				"-v",
 				"-race",
-				"-covermode", "count",
-				"-coverprofile", testName+".coverprofile",
-				"-coverpkg", "./noarch,./linux,./darwin",
-				programArgs.outputFile,
+				"-covermode=count",
+				"-coverprofile="+testName+".coverprofile",
+				"-coverpkg=./noarch,./linux,./darwin",
 				"--", "some", "args",
 			)
-			cmd.Stdin = strings.NewReader(strings.Repeat("7", 1000))
+			cmd.Stdin = strings.NewReader("7")
 			cmd.Stdout = &goProgram.stdout
 			cmd.Stderr = &goProgram.stderr
 			err = cmd.Run()
