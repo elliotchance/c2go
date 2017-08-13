@@ -221,14 +221,16 @@ func TestIntegrationScripts(t *testing.T) {
 				t.Fatalf(util.ShowDiff(cOut, goOut))
 			}
 
-			// If this is not an example we will extact the number of tests run.
+			// If this is not an example we will extract the number of tests
+			// run.
 			if strings.Index(file, "examples/") == -1 && isVerbose {
 				firstLine := strings.Split(goProgram.stdout.String(), "\n")[0]
 
 				matches := regexp.MustCompile(`1\.\.(\d+)`).
 					FindStringSubmatch(firstLine)
 				if len(matches) == 0 {
-					t.Fatalf("Test did not output tap: %s", file)
+					t.Fatalf("Test did not output tap: %s, got:\n%s", file,
+						goProgram.stdout.String())
 				}
 
 				fmt.Printf("TAP: # %s: %s tests\n", file, matches[1])
