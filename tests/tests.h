@@ -270,7 +270,11 @@ static int last_test_was_ok = 1;
         diag("FAILED: Expected %d tests, but ran %d.", total_tests, current_test); \
         exit_status = 102;                                                         \
     }                                                                              \
-    return exit_status;
+    /* If we exit (with any status) the Go code coverage will not be generated. */ \
+    if (exit_status != 0) {                                                        \
+        return exit_status;                                                        \
+    }                                                                              \
+    return 0;
 
 // or_return will return (with an optional value provided) if the check failed.
 //

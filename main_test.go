@@ -112,7 +112,17 @@ func TestIntegrationScripts(t *testing.T) {
 
 			// Run Go program. The "-v" option is important; without it most or
 			// all of the fmt.* output would be suppressed.
-			cmd = exec.Command("go", "test", "-v", programArgs.outputFile, "--", "some", "args")
+			testName := strings.Split(file, ".")[0][6:]
+			cmd = exec.Command(
+				"go", "test",
+				"-v",
+				"-race",
+				"-covermode", "count",
+				"-coverprofile", testName+".coverprofile",
+				"-coverpkg", "./noarch,./linux,./darwin",
+				programArgs.outputFile,
+				"--", "some", "args",
+			)
 			cmd.Stdin = strings.NewReader(strings.Repeat("7", 1000))
 			cmd.Stdout = &goProgram.stdout
 			cmd.Stderr = &goProgram.stderr
@@ -127,11 +137,17 @@ func TestIntegrationScripts(t *testing.T) {
 				}
 			}
 
-			// Check stderr
-			if cProgram.stderr.String() != goProgram.stderr.String() {
-				t.Fatalf("Expected %q, Got: %q",
-					cProgram.stderr.String(),
-					goProgram.stderr.String())
+			// Check stderr. "go test" will produce warnings when packages are
+			// not referenced as dependencies. We need to strip out these
+			// warnings so it doesn't effect the comparison.
+			cProgramStderr := cProgram.stderr.String()
+			goProgramStderr := goProgram.stderr.String()
+
+			r := regexp.MustCompile("warning: no packages being tested depend on .+\n")
+			goProgramStderr = r.ReplaceAllString(goProgramStderr, "")
+
+			if cProgramStderr != goProgramStderr {
+				t.Fatalf("Expected %q, Got: %q", cProgramStderr, goProgramStderr)
 			}
 
 			// Check stdout
@@ -145,10 +161,13 @@ func TestIntegrationScripts(t *testing.T) {
 			//     1 ok - argc == 3 + offset
 			//     2 ok - argv[1 + offset] == "some"
 			//     3 ok - argv[2 + offset] == "args"
-			//     ok  	command-line-arguments	0.005s
+			//     --- PASS: TestApp (0.03s)
+			//     PASS
+			//     coverage: 0.0% of statements
+			//     ok  	command-line-arguments	1.050s
 			//
-			// The first and last line can be ignored as they are part of the go
-			// test suite and not part of the program output.
+			// The first line and 4 of the last lines can be ignored as they are
+			// part of the "go test" runner and not part of the program output.
 			//
 			// Note: There is a blank line at the end of the output so when we
 			// say the last line we are really talking about the second last
@@ -161,10 +180,11 @@ func TestIntegrationScripts(t *testing.T) {
 			//     === RUN   TestApp
 			//     1..0
 			//     10
-			//     exit status 134
-			//     FAIL	command-line-arguments	0.006s
+			//     # FAILED: There was 1 failed tests.
+			//     exit status 101
+			//     FAIL	command-line-arguments	0.041s
 			//
-			// The last two lines need to be removed.
+			// The last three lines need to be removed.
 			//
 			// Before we proceed comparing the raw output we should check that
 			// the header and footer of the output fits one of the two formats
@@ -179,15 +199,13 @@ func TestIntegrationScripts(t *testing.T) {
 					strings.Join(goOutLines, "\n"))
 			}
 
-			//panic(goOutLines)
-
 			// A failure will cause (always?) "go test" to output the exit code
 			// before the final line. We should also ignore this as its not part
 			// of our output.
 			//
 			// There is a separate check to see that both the C and Go programs
 			// return the same exit code.
-			removeLinesFromEnd := 2
+			removeLinesFromEnd := 5
 			if strings.HasPrefix(goOutLines[len(goOutLines)-3], "exit status") {
 				removeLinesFromEnd = 3
 			}
