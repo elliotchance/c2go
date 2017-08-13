@@ -50,6 +50,9 @@ type ProgramArgs struct {
 	inputFile   string
 	outputFile  string
 	packageName string
+
+	// A private option to output the Go as a *_test.go file.
+	outputAsTest bool
 }
 
 func readAST(data []byte) []string {
@@ -212,6 +215,7 @@ func Start(args ProgramArgs) error {
 
 	p := program.NewProgram()
 	p.Verbose = args.verbose
+	p.OutputAsTest = true // args.outputAsTest
 
 	err = transpiler.TranspileAST(args.inputFile, args.packageName, p, tree[0].(ast.Node))
 	if err != nil {

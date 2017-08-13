@@ -58,7 +58,7 @@ type Program struct {
 	Unions  StructRegistry
 
 	// If verbose is on progress messages will be printed immediately as code
-	// comments (so that they do not intefere with the program output).
+	// comments (so that they do not interfere with the program output).
 	Verbose bool
 
 	// Contains the messages (for example, "// Warning") generated when
@@ -69,6 +69,11 @@ type Program struct {
 	// A map of all the global variables (variables that exist outside of a
 	// function) and their types.
 	GlobalVariables map[string]string
+
+	// This option is not available through the command line. It is to allow the
+	// internal integration testing to generate the output in the form of a
+	// Go-test rather than a standalone Go file.
+	OutputAsTest bool
 }
 
 // NewProgram creates a new blank program.

@@ -34,7 +34,7 @@ type programOut struct {
 //
 // You can also run a single file with:
 //
-//     go test -tags=integration -run=TestIntegrationScripts/tests/ctype/isalnum.c
+//     go test -tags=integration -run=TestIntegrationScripts/tests/ctype.c
 //
 func TestIntegrationScripts(t *testing.T) {
 	testFiles, err := filepath.Glob("tests/*.c")
@@ -55,7 +55,6 @@ func TestIntegrationScripts(t *testing.T) {
 	var (
 		buildFolder  = "build"
 		cFileName    = "a.out"
-		goFileName   = "go.out"
 		mainFileName = "main.go"
 		stdin        = "7"
 		args         = []string{"some", "args"}
@@ -72,7 +71,6 @@ func TestIntegrationScripts(t *testing.T) {
 			// create subfolders for test
 			subFolder := buildFolder + separator + strings.Split(file, ".")[0] + separator
 			cPath := subFolder + cFileName
-			goPath := subFolder + goFileName
 
 			// Create build folder
 			err = os.MkdirAll(subFolder, os.ModePerm)
@@ -94,10 +92,16 @@ func TestIntegrationScripts(t *testing.T) {
 			err = cmd.Run()
 			cProgram.isZero = err == nil
 
+			mainFileName = "main_test.go"
+
 			programArgs := ProgramArgs{
 				inputFile:   file,
-				outputFile:  subFolder + separator + mainFileName,
+				outputFile:  subFolder + mainFileName,
 				packageName: "main",
+
+				// This appends a TestApp function to the output source so we
+				// can run "go test" against the produced binary.
+				outputAsTest: true,
 			}
 
 			// Compile Go
@@ -106,14 +110,27 @@ func TestIntegrationScripts(t *testing.T) {
 				t.Fatalf("error: %s\n%s", err, out)
 			}
 
-			buildErr, err := exec.Command("go", "build", "-o", goPath, subFolder+mainFileName).CombinedOutput()
-			if err != nil {
-				t.Fatal(string(buildErr), err)
+			// Run Go program. The "-v" option is important; without it most or
+			// all of the fmt.* output would be suppressed.
+			args := []string{
+				"test",
+				programArgs.outputFile,
+				"-v",
 			}
+			if strings.Index(file, "examples/") == -1 {
+				testName := strings.Split(file, ".")[0][6:]
+				args = append(
+					args,
+					"-race",
+					"-covermode=count",
+					"-coverprofile="+testName+".coverprofile",
+					"-coverpkg=./noarch,./linux,./darwin",
+				)
+			}
+			args = append(args, "--", "some", "args")
 
-			// Run Go program
-			cmd = exec.Command(goPath, args...)
-			cmd.Stdin = strings.NewReader(stdin)
+			cmd = exec.Command("go", args...)
+			cmd.Stdin = strings.NewReader("7")
 			cmd.Stdout = &goProgram.stdout
 			cmd.Stderr = &goProgram.stderr
 			err = cmd.Run()
@@ -127,35 +144,102 @@ func TestIntegrationScripts(t *testing.T) {
 				}
 			}
 
-			// Check if both exit codes are zero (or non-zero)
-			if cProgram.isZero != goProgram.isZero {
-				t.Fatalf("Exit statuses did not match.\n" +
-					util.ShowDiff(cProgram.stdout.String(),
-						goProgram.stdout.String()),
-				)
-			}
+			// Check stderr. "go test" will produce warnings when packages are
+			// not referenced as dependencies. We need to strip out these
+			// warnings so it doesn't effect the comparison.
+			cProgramStderr := cProgram.stderr.String()
+			goProgramStderr := goProgram.stderr.String()
 
-			// Check stderr
-			if cProgram.stderr.String() != goProgram.stderr.String() {
-				t.Fatalf("Expected %q, Got: %q",
-					cProgram.stderr.String(),
-					goProgram.stderr.String())
+			r := regexp.MustCompile("warning: no packages being tested depend on .+\n")
+			goProgramStderr = r.ReplaceAllString(goProgramStderr, "")
+
+			if cProgramStderr != goProgramStderr {
+				t.Fatalf("Expected %q, Got: %q", cProgramStderr, goProgramStderr)
 			}
 
 			// Check stdout
-			if cProgram.stdout.String() != goProgram.stdout.String() {
-				t.Fatalf(util.ShowDiff(cProgram.stdout.String(),
-					goProgram.stdout.String()))
+			cOut := cProgram.stdout.String()
+			goOutLines := strings.Split(goProgram.stdout.String(), "\n")
+
+			// An out put should look like this:
+			//
+			//     === RUN   TestApp
+			//     1..3
+			//     1 ok - argc == 3 + offset
+			//     2 ok - argv[1 + offset] == "some"
+			//     3 ok - argv[2 + offset] == "args"
+			//     --- PASS: TestApp (0.03s)
+			//     PASS
+			//     coverage: 0.0% of statements
+			//     ok  	command-line-arguments	1.050s
+			//
+			// The first line and 4 of the last lines can be ignored as they are
+			// part of the "go test" runner and not part of the program output.
+			//
+			// Note: There is a blank line at the end of the output so when we
+			// say the last line we are really talking about the second last
+			// line. Rather than trimming the whitespace off the C and Go output
+			// we will just make note of the different line index.
+			//
+			// Some tests are designed to fail, like assert.c. In this case the
+			// result output is slightly different:
+			//
+			//     === RUN   TestApp
+			//     1..0
+			//     10
+			//     # FAILED: There was 1 failed tests.
+			//     exit status 101
+			//     FAIL	command-line-arguments	0.041s
+			//
+			// The last three lines need to be removed.
+			//
+			// Before we proceed comparing the raw output we should check that
+			// the header and footer of the output fits one of the two formats
+			// in the examples above.
+			if goOutLines[0] != "=== RUN   TestApp" {
+				t.Fatalf("The header of the output cannot be understood:\n%s",
+					strings.Join(goOutLines, "\n"))
+			}
+			if !strings.HasPrefix(goOutLines[len(goOutLines)-2], "ok  \tcommand-line-arguments") &&
+				!strings.HasPrefix(goOutLines[len(goOutLines)-2], "FAIL\tcommand-line-arguments") {
+				t.Fatalf("The footer of the output cannot be understood:\n%v",
+					strings.Join(goOutLines, "\n"))
 			}
 
-			// If this is not an example we will extact the number of tests run.
+			// A failure will cause (always?) "go test" to output the exit code
+			// before the final line. We should also ignore this as its not part
+			// of our output.
+			//
+			// There is a separate check to see that both the C and Go programs
+			// return the same exit code.
+			removeLinesFromEnd := 5
+			if strings.Index(file, "examples/") >= 0 {
+				removeLinesFromEnd = 4
+			} else if strings.HasPrefix(goOutLines[len(goOutLines)-3], "exit status") {
+				removeLinesFromEnd = 3
+			}
+
+			goOut := strings.Join(goOutLines[1:len(goOutLines)-removeLinesFromEnd], "\n") + "\n"
+
+			// Check if both exit codes are zero (or non-zero)
+			if cProgram.isZero != goProgram.isZero {
+				t.Fatalf("Exit statuses did not match.\n%s", util.ShowDiff(cOut, goOut))
+			}
+
+			if cOut != goOut {
+				t.Fatalf(util.ShowDiff(cOut, goOut))
+			}
+
+			// If this is not an example we will extract the number of tests
+			// run.
 			if strings.Index(file, "examples/") == -1 && isVerbose {
-				firstLine := strings.Split(goProgram.stdout.String(), "\n")[0]
+				firstLine := strings.Split(goOut, "\n")[0]
 
 				matches := regexp.MustCompile(`1\.\.(\d+)`).
 					FindStringSubmatch(firstLine)
 				if len(matches) == 0 {
-					t.Fatalf("Test did not output tap: %s", file)
+					t.Fatalf("Test did not output tap: %s, got:\n%s", file,
+						goProgram.stdout.String())
 				}
 
 				fmt.Printf("TAP: # %s: %s tests\n", file, matches[1])
