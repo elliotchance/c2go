@@ -227,10 +227,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 				util.NewBinaryExpr(
 					goast.NewIdent(name),
 					token.ASSIGN,
-					util.NewCallExpr(
-						"noarch.NewFile",
-						util.NewTypeIdent("os."+util.Ucfirst(name[2:len(name)-1])),
-					),
+					util.NewTypeIdent("noarch."+util.Ucfirst(name[2:len(name)-1])),
 					"*noarch.File",
 					true,
 				),
@@ -244,10 +241,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 				util.NewBinaryExpr(
 					goast.NewIdent(name),
 					token.ASSIGN,
-					util.NewCallExpr(
-						"noarch.NewFile",
-						util.NewTypeIdent("os."+util.Ucfirst(name)),
-					),
+					util.NewTypeIdent("noarch."+util.Ucfirst(name)),
 					theType,
 					true,
 				),

@@ -31,6 +31,7 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 
 	if p.OutputAsTest {
 		p.AddImport("testing")
+		p.AddImport("io/ioutil")
 
 		// TODO: There should be a cleaner way to add a function to the program.
 		// This code was taken from the end of transpileFunctionDecl.
@@ -47,7 +48,27 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 				},
 			},
 			Body: &goast.BlockStmt{
-				List: []goast.Stmt{util.NewExprStmt(util.NewCallExpr("main"))},
+				List: []goast.Stmt{
+					// TODO: docs
+					util.NewExprStmt(&goast.Ident{Name: "os.Chdir(\"../../..\")"}),
+
+					// "go test" does not redirect stdin to the executable
+					// running the test so we need to override them in the test
+					// itself. See documentation for noarch.Stdin.
+					util.NewExprStmt(&goast.Ident{Name: "ioutil.WriteFile(\"build/stdin\", []byte{'7'}, 0777)"}),
+					util.NewExprStmt(
+						&goast.Ident{Name: "stdin, _ := os.Open(\"build/stdin\")"},
+					),
+					util.NewExprStmt(util.NewBinaryExpr(
+						&goast.Ident{Name: "noarch.Stdin"},
+						token.ASSIGN,
+						&goast.Ident{Name: "noarch.NewFile(stdin)"},
+						"*noarch.File",
+						true,
+					)),
+
+					util.NewExprStmt(util.NewCallExpr("main")),
+				},
 			},
 		})
 	}

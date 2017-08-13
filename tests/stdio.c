@@ -298,7 +298,7 @@ void test_fread()
     // obtain file size:
     fseek(pFile, 0, SEEK_END);
     lSize = ftell(pFile);
-    is_eq(lSize, 301);
+    is_eq(lSize, 216);
 
     rewind(pFile);
 
@@ -309,7 +309,7 @@ void test_fread()
     // See issue #107
     buffer[lSize - 1] = 0;
 
-    is_eq(strlen(buffer), 300);
+    is_eq(strlen(buffer), 215);
 
     // terminate
     fclose(pFile);

@@ -34,7 +34,7 @@ type programOut struct {
 //
 // You can also run a single file with:
 //
-//     go test -tags=integration -run=TestIntegrationScripts/tests/ctype/isalnum.c
+//     go test -tags=integration -run=TestIntegrationScripts/tests/ctype.c
 //
 func TestIntegrationScripts(t *testing.T) {
 	testFiles, err := filepath.Glob("tests/*.c")
@@ -110,15 +110,10 @@ func TestIntegrationScripts(t *testing.T) {
 				t.Fatalf("error: %s\n%s", err, out)
 			}
 
-			//buildErr, err := exec.Command("go", "build", "-o", goPath, subFolder+mainFileName).CombinedOutput()
-			//if err != nil {
-			//	t.Fatal(string(buildErr), err)
-			//}
-
 			// Run Go program. The "-v" option is important; without it most or
-			// all of the fmt.* output would be supressed.
+			// all of the fmt.* output would be suppressed.
 			cmd = exec.Command("go", "test", "-v", programArgs.outputFile, "--", "some", "args")
-			cmd.Stdin = strings.NewReader(stdin)
+			cmd.Stdin = strings.NewReader(strings.Repeat("7", 1000))
 			cmd.Stdout = &goProgram.stdout
 			cmd.Stderr = &goProgram.stderr
 			err = cmd.Run()
@@ -132,14 +127,6 @@ func TestIntegrationScripts(t *testing.T) {
 				}
 			}
 
-			// Check if both exit codes are zero (or non-zero)
-			if cProgram.isZero != goProgram.isZero {
-				t.Fatalf("Exit statuses did not match.\n" +
-					util.ShowDiff(cProgram.stdout.String(),
-						goProgram.stdout.String()),
-				)
-			}
-
 			// Check stderr
 			if cProgram.stderr.String() != goProgram.stderr.String() {
 				t.Fatalf("Expected %q, Got: %q",
@@ -151,17 +138,66 @@ func TestIntegrationScripts(t *testing.T) {
 			cOut := cProgram.stdout.String()
 			goOutLines := strings.Split(goProgram.stdout.String(), "\n")
 
-			// Skip the first line.
+			// An out put should look like this:
+			//
+			//     === RUN   TestApp
+			//     1..3
+			//     1 ok - argc == 3 + offset
+			//     2 ok - argv[1 + offset] == "some"
+			//     3 ok - argv[2 + offset] == "args"
+			//     ok  	command-line-arguments	0.005s
+			//
+			// The first and last line can be ignored as they are part of the go
+			// test suite and not part of the program output.
+			//
+			// Note: There is a blank line at the end of the output so when we
+			// say the last line we are really talking about the second last
+			// line. Rather than trimming the whitespace off the C and Go output
+			// we will just make note of the different line index.
+			//
+			// Some tests are designed to fail, like assert.c. In this case the
+			// result output is slightly different:
+			//
+			//     === RUN   TestApp
+			//     1..0
+			//     10
+			//     exit status 134
+			//     FAIL	command-line-arguments	0.006s
+			//
+			// The last two lines need to be removed.
+			//
+			// Before we proceed comparing the raw output we should check that
+			// the header and footer of the output fits one of the two formats
+			// in the examples above.
 			if goOutLines[0] != "=== RUN   TestApp" {
-				t.Fatalf("The first line from the Go stdout is incorrect.")
+				t.Fatalf("The header of the output cannot be understood:\n%s",
+					strings.Join(goOutLines, "\n"))
+			}
+			if !strings.HasPrefix(goOutLines[len(goOutLines)-2], "ok  \tcommand-line-arguments") &&
+				!strings.HasPrefix(goOutLines[len(goOutLines)-2], "FAIL\tcommand-line-arguments") {
+				t.Fatalf("The footer of the output cannot be understood:\n%v",
+					strings.Join(goOutLines, "\n"))
 			}
 
-			// Skip the last two lines.
-			if !strings.HasPrefix(goOutLines[len(goOutLines)-2], "ok  \tcommand-line-arguments") {
-				t.Fatalf("The second last line from the Go stdout is incorrect.")
+			//panic(goOutLines)
+
+			// A failure will cause (always?) "go test" to output the exit code
+			// before the final line. We should also ignore this as its not part
+			// of our output.
+			//
+			// There is a separate check to see that both the C and Go programs
+			// return the same exit code.
+			removeLinesFromEnd := 2
+			if strings.HasPrefix(goOutLines[len(goOutLines)-3], "exit status") {
+				removeLinesFromEnd = 3
 			}
 
-			goOut := strings.Join(goOutLines[1:len(goOutLines)-2], "\n") + "\n"
+			goOut := strings.Join(goOutLines[1:len(goOutLines)-removeLinesFromEnd], "\n") + "\n"
+
+			// Check if both exit codes are zero (or non-zero)
+			if cProgram.isZero != goProgram.isZero {
+				t.Fatalf("Exit statuses did not match.\n%s", util.ShowDiff(cOut, goOut))
+			}
 
 			if cOut != goOut {
 				t.Fatalf(util.ShowDiff(cOut, goOut))

@@ -7,14 +7,26 @@ int main(int argc, const char **argv)
 {
     plan(3);
 
-    is_eq(argc, 3);
+    // When this file is converted to go it is run through "go test" that needs
+    // some extra arguments before the standard C arguments. We need to adjust
+    // an offset so that the C program and the Go program read the same index
+    // for the first index of the real arguments.
+    int offset = 0;
 
-    // We cannot compare the zeroth argument becuase it will be different for C
+    // More than three arguments means it must be run under "go test". If not
+    // the assertion immediately below will fail.
+    if (argc > 3) {
+        offset = 2;
+    }
+
+    is_eq(argc, 3 + offset);
+
+    // We cannot compare the zeroth argument because it will be different for C
     // and Go.
     // is_streq(argv[0], "build/go.out");
 
-    is_streq(argv[1], "some");
-    is_streq(argv[2], "args");
+    is_streq(argv[1 + offset], "some");
+    is_streq(argv[2 + offset], "args");
 
     done_testing();
 }
