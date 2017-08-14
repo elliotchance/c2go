@@ -92,6 +92,14 @@ func TestIntegrationScripts(t *testing.T) {
 			err = cmd.Run()
 			cProgram.isZero = err == nil
 
+			// Check for special exit codes that signal that tests have failed.
+			if exitError, ok := err.(*exec.ExitError); ok {
+				exitStatus := exitError.Sys().(syscall.WaitStatus).ExitStatus()
+				if exitStatus == 101 || exitStatus == 102 {
+					t.Fatal(cProgram.stdout.String())
+				}
+			}
+
 			mainFileName = "main_test.go"
 
 			programArgs := ProgramArgs{
@@ -135,14 +143,6 @@ func TestIntegrationScripts(t *testing.T) {
 			cmd.Stderr = &goProgram.stderr
 			err = cmd.Run()
 			goProgram.isZero = err == nil
-
-			// Check for special exit codes that signal that tests have failed.
-			if exitError, ok := err.(*exec.ExitError); ok {
-				exitStatus := exitError.Sys().(syscall.WaitStatus).ExitStatus()
-				if exitStatus == 101 || exitStatus == 102 {
-					t.Fatal(goProgram.stdout.String())
-				}
-			}
 
 			// Check stderr. "go test" will produce warnings when packages are
 			// not referenced as dependencies. We need to strip out these
