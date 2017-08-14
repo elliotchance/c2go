@@ -170,6 +170,7 @@ var builtInFunctionDefinitions = []string{
 	"size_t strlen(const char*) -> noarch.Strlen",
 
 	// stdlib.h
+	"int abs(int) -> noarch.Abs",
 	"int atoi(const char*) -> noarch.Atoi",
 	"long strtol(const char *, char **, int) -> noarch.Strtol",
 	"void free(void*) -> noarch.Free",

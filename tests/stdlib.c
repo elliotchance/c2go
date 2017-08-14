@@ -84,7 +84,12 @@ void test_calloc()
 
 int main()
 {
-    plan(14);
+    plan(17);
+
+    diag("abs")
+    is_eq(abs(-5), 5);
+    is_eq(abs(7), 7);
+    is_eq(abs(0), 0);
 
     test_malloc1();
     test_malloc2();

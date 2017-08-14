@@ -5,6 +5,19 @@ import (
 	"unicode"
 )
 
+// Abs returns the absolute value of parameter n.
+//
+// In C++, this function is also overloaded in header <cmath> for floating-point
+// types (see cmath abs), in header <complex> for complex numbers (see complex
+// abs), and in header <valarray> for valarrays (see valarray abs).
+func Abs(n int) int {
+	if n < 0 {
+		return -n
+	}
+
+	return n
+}
+
 // Atoi parses the C-string str interpreting its content as an integral number,
 // which is returned as a value of type int.
 //
