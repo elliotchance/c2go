@@ -5,7 +5,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"unicode"
 )
 
 // Abs returns the absolute value of parameter n.
@@ -147,21 +146,18 @@ func Atof(str []byte) float64 {
 // integral number, or if no such sequence exists because either str is empty or
 // it contains only whitespace characters, no conversion is performed and zero
 // is returned.
-func Atoi(a []byte) int {
-	// TODO: It looks like atoi allows other non-digit characters. We need to
-	// only pull off the digit characters before we can do the conversion.
-	s := ""
+func Atoi(str []byte) int {
+	// First start by removing any trailing whitespace.
+	s := strings.TrimSpace(CStringToString(str))
 
-	for _, c := range a {
-		if !unicode.IsDigit(rune(c)) {
-			break
-		}
-
-		s += string(c)
+	r := regexp.MustCompile(`^([+-]?\d+)`)
+	match := r.FindStringSubmatch(s)
+	if match == nil {
+		return 0
 	}
 
-	// TODO: Does it always return 0 on error?
-	v, _ := strconv.Atoi(s)
+	// We do not care about the error here because it should be impossible.
+	v, _ := strconv.Atoi(match[1])
 
 	return v
 }
