@@ -84,7 +84,7 @@ void test_calloc()
 
 int main()
 {
-    plan(86);
+    plan(94);
 
     diag("abs")
     is_eq(abs(-5), 5);
@@ -167,6 +167,16 @@ int main()
     is_eq(atol(""), 0)
     is_eq(atol(" \t"), 0)
     is_eq(atol("123abc"), 123)
+
+    diag("atoll")
+    is_eq(atoll("123"), 123)
+    is_eq(atoll("+456"), 456)
+    is_eq(atoll("-52"), -52)
+    is_eq(atoll("foo"), 0)
+    is_eq(atoll(" \t123"), 123)
+    is_eq(atoll(""), 0)
+    is_eq(atoll(" \t"), 0)
+    is_eq(atoll("123abc"), 123)
 
     test_malloc1();
     test_malloc2();
