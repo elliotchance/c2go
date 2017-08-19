@@ -167,6 +167,16 @@ func Atoi(str []byte) int {
 // it contains only whitespace characters, no conversion is performed and zero
 // is returned.
 func Atol(str []byte) int32 {
+	return int32(Atoll(str))
+}
+
+// Atoll parses the C-string str interpreting its content as an integral number,
+// which is returned as a value of C type long long int.
+//
+// This function operates like atol to interpret the string, but produces
+// numbers of type long long int (see atol for details on the interpretation
+// process).
+func Atoll(str []byte) int64 {
 	// First start by removing any trailing whitespace.
 	s := strings.TrimSpace(CStringToString(str))
 
@@ -179,7 +189,7 @@ func Atol(str []byte) int32 {
 	// We do not care about the error here because it should be impossible.
 	v, _ := strconv.ParseInt(match[1], 10, 64)
 
-	return int32(v)
+	return v
 }
 
 // Strtol parses the C-string str interpreting its content as an integral number

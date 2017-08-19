@@ -26,6 +26,7 @@ var simpleResolveTypes = map[string]string{
 	"long double":        "float64",
 	"long int":           "int32",
 	"long long":          "int64",
+	"long long int":      "int64",
 	"long unsigned int":  "uint32",
 	"long":               "int32",
 	"short":              "int16",
