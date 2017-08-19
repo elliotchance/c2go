@@ -84,7 +84,7 @@ void test_calloc()
 
 int main()
 {
-    plan(70);
+    plan(78);
 
     diag("abs")
     is_eq(abs(-5), 5);
@@ -147,6 +147,16 @@ int main()
     is_nan(atof("-NANz123"));
     // This causes a segfault in C:
     // is_eq(atof(NULL), 0);
+
+    diag("atoi")
+    is_eq(atoi("123"), 123)
+    is_eq(atoi("+456"), 456)
+    is_eq(atoi("-52"), -52)
+    is_eq(atoi("foo"), 0)
+    is_eq(atoi(" \t123"), 123)
+    is_eq(atoi(""), 0)
+    is_eq(atoi(" \t"), 0)
+    is_eq(atoi("123abc"), 123)
 
     test_malloc1();
     test_malloc2();
