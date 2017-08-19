@@ -84,12 +84,69 @@ void test_calloc()
 
 int main()
 {
-    plan(17);
+    plan(70);
 
     diag("abs")
     is_eq(abs(-5), 5);
     is_eq(abs(7), 7);
     is_eq(abs(0), 0);
+
+    diag("atof")
+    is_eq(atof("123"), 123);
+    is_eq(atof("1.23"), 1.23);
+    is_eq(atof(""), 0);
+    is_eq(atof("1.2e6"), 1.2e6);
+    is_eq(atof(" \n123"), 123);
+    is_eq(atof("\t123foo"), 123);
+    is_eq(atof("+1.23"), 1.23);
+    is_eq(atof("-1.23"), -1.23);
+    is_eq(atof("1.2E-6"), 1.2e-6);
+    is_eq(atof("1a2b"), 1);
+    is_eq(atof("1a.2b"), 1);
+    is_eq(atof("a1.2b"), 0);
+    is_eq(atof("1.2Ee-6"), 1.2);
+    is_eq(atof("-1..23"), -1);
+    is_eq(atof("-1.2.3"), -1.2);
+    is_eq(atof("foo"), 0);
+    is_eq(atof("+1.2+3"), 1.2);
+    is_eq(atof("-1.-23"), -1);
+    is_eq(atof("-.23"), -0.23);
+    is_eq(atof(".4"), 0.4);
+    is_eq(atof("0xabc"), 2748);
+    is_eq(atof("0x1b9"), 441);
+    is_eq(atof("0x"), 0);
+    is_eq(atof("0X1f9"), 505);
+    is_eq(atof("-0X1f9"), -505);
+    is_eq(atof("+0x1f9"), 505);
+    is_eq(atof("0X"), 0);
+    is_eq(atof("0xfaz"), 250);
+    is_eq(atof("0Xzaf"), 0);
+    is_eq(atof("0xabcp2"), 10922);
+    is_eq(atof("0xabcP3"), 10922);
+    is_eq(atof("0xabcP2z"), 10922);
+    is_eq(atof("0xabcp-2"), 687);
+    is_eq(atof("0xabcp+2"), 10922);
+    is_inf(atof("inf"), 1);
+    is_inf(atof("INF"), 1);
+    is_inf(atof("Inf"), 1);
+    is_inf(atof("-Inf"), -1);
+    is_inf(atof("+INF"), 1);
+    is_inf(atof("infinity"), 1);
+    is_inf(atof("INFINITY"), 1);
+    is_inf(atof("Infinity"), 1);
+    is_inf(atof("+INFINITY"), 1);
+    is_inf(atof("-InfINITY"), -1);
+    is_nan(atof("nan"));
+    is_nan(atof("NaN"));
+    is_nan(atof("+NaN"));
+    is_nan(atof("NAN"));
+    is_nan(atof("-NAN"));
+    is_nan(atof("nanabc123"));
+    is_nan(atof("NANz123"));
+    is_nan(atof("NaN123z"));
+    is_nan(atof("-NANz123"));
+    // This causes a segfault in C:
+    // is_eq(atof(NULL), 0);
 
     test_malloc1();
     test_malloc2();

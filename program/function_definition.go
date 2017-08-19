@@ -171,6 +171,7 @@ var builtInFunctionDefinitions = []string{
 
 	// stdlib.h
 	"int abs(int) -> noarch.Abs",
+	"double atof(const char *) -> noarch.Atof",
 	"int atoi(const char*) -> noarch.Atoi",
 	"long strtol(const char *, char **, int) -> noarch.Strtol",
 	"void free(void*) -> noarch.Free",
