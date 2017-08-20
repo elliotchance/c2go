@@ -176,6 +176,7 @@ var builtInFunctionDefinitions = []string{
 	"long int atol(const char*) -> noarch.Atol",
 	"long long int atoll(const char*) -> noarch.Atoll",
 	"div_t div(int, int) -> noarch.Div",
+	"void exit(int) -> os.Exit",
 	"long strtol(const char *, char **, int) -> noarch.Strtol",
 	"void free(void*) -> noarch.Free",
 
