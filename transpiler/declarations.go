@@ -169,10 +169,12 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 		return nil
 	}
 
-	if name == "div_t" || name == "ldiv_t" {
+	if name == "div_t" || name == "ldiv_t" || name == "lldiv_t" {
 		intType := "int"
 		if name == "ldiv_t" {
 			intType = "long int"
+		} else if name == "lldiv_t" {
+			intType = "long long int"
 		}
 
 		// I don't know to extract the correct fields from the typedef to create

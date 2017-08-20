@@ -20,6 +20,12 @@ type LdivT struct {
 	Rem  int32 // remainder
 }
 
+// LldivT is the representation of "lldiv_t". It is used by lldiv().
+type LldivT struct {
+	Quot int64 // quotient
+	Rem  int64 // remainder
+}
+
 // Abs returns the absolute value of parameter n.
 //
 // In C++, this function is also overloaded in header <cmath> for floating-point
@@ -267,6 +273,16 @@ func Llabs(n int64) int64 {
 	}
 
 	return n
+}
+
+// Lldiv returns the integral quotient and remainder of the division of numer by
+// denom ( numer/denom ) as a structure of type lldiv_t, which has two members:
+// quot and rem.
+func Lldiv(numer, denom int64) LldivT {
+	return LldivT{
+		Quot: numer / denom,
+		Rem:  numer % denom,
+	}
 }
 
 // Strtol parses the C-string str interpreting its content as an integral number
