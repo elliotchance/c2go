@@ -84,7 +84,7 @@ void test_calloc()
 
 int main()
 {
-    plan(102);
+    plan(105);
 
     diag("abs")
     is_eq(abs(-5), 5);
@@ -191,6 +191,15 @@ int main()
     result = div(-17, -5);
     is_eq(result.quot, 3)
     is_eq(result.rem, -2)
+
+    // exit() is handled in tests/exit.c
+
+    // free() is handled with the malloc and calloc tests.
+
+    diag("getenv")
+    is_not_null(getenv("PATH"));
+    is_not_null(getenv("HOME"));
+    is_null(getenv("FOOBAR"));
 
     test_malloc1();
     test_malloc2();

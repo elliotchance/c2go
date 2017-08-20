@@ -29,6 +29,16 @@ func CStringToString(s []byte) string {
 	return string(newSlice)
 }
 
+// StringToCString returns the C string (also known as a null terminated string)
+// to be as used as a string in C.
+func StringToCString(s string) []byte {
+	cString := make([]byte, len(s)+1)
+	copy(cString, []byte(s))
+	cString[len(s)] = 0
+
+	return cString
+}
+
 // CStringIsNull will test if a C string is NULL. This is equivalent to:
 //
 //    s == NULL
