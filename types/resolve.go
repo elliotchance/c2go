@@ -48,12 +48,13 @@ var simpleResolveTypes = map[string]string{
 	// when using the NULL macro.
 	"null": "null",
 
-	// Are these built into some compilers?
+	// Non platform-specific types.
 	"uint32":     "uint32",
 	"uint64":     "uint64",
 	"__uint16_t": "uint16",
 	"__uint32_t": "uint32",
 	"__uint64_t": "uint64",
+	"div_t":      "github.com/elliotchance/c2go/noarch.DivT",
 
 	// Darwin specific
 	"__darwin_ct_rune_t": "github.com/elliotchance/c2go/darwin.CtRuneT",

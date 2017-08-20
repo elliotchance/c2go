@@ -13,6 +13,14 @@ import (
 	goast "go/ast"
 )
 
+// This map is used to rename struct member names.
+var structFieldTranslations = map[string]map[string]string{
+	"div_t": {
+		"quot": "Quot",
+		"rem":  "Rem",
+	},
+}
+
 func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (
 	*goast.Ident, string, error) {
 	theType := n.Type
@@ -222,6 +230,13 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	x := lhs
 	if n.IsPointer {
 		x = &goast.IndexExpr{X: x, Index: util.NewIntLit(0)}
+	}
+
+	// Check for member name translation.
+	if member, ok := structFieldTranslations[lhsType]; ok {
+		if alias, ok := member[rhs]; ok {
+			rhs = alias
+		}
 	}
 
 	return &goast.SelectorExpr{

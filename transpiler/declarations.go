@@ -169,6 +169,20 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 		return nil
 	}
 
+	if name == "div_t" {
+		// I don't know to extract the correct fields from the typedef to create
+		// the internal definition. This is used as noarch.DivT. The name of the
+		// struct is not prefixed with "struct " because it is a typedef.
+		p.Structs["div_t"] = &program.Struct{
+			Name:    "div_t",
+			IsUnion: false,
+			Fields: map[string]interface{}{
+				"quot": "int",
+				"rem":  "int",
+			},
+		}
+	}
+
 	p.File.Decls = append(p.File.Decls, &goast.GenDecl{
 		Tok: token.TYPE,
 		Specs: []goast.Spec{
@@ -233,7 +247,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 				),
 			)
 
-		// Below are for linux.
+			// Below are for linux.
 		case "stdout", "stdin", "stderr":
 			theType = "*noarch.File"
 			p.AddImports("github.com/elliotchance/c2go/noarch", "os")
