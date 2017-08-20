@@ -84,7 +84,7 @@ void test_calloc()
 
 int main()
 {
-    plan(108);
+    plan(116);
 
     diag("abs")
     is_eq(abs(-5), 5);
@@ -179,18 +179,23 @@ int main()
     is_eq(atoll("123abc"), 123)
 
     diag("div")
-    div_t result = div(17, 5);
-    is_eq(result.quot, 3)
-    is_eq(result.rem, 2)
-    result = div(-17, 5);
-    is_eq(result.quot, -3)
-    is_eq(result.rem, -2)
-    result = div(17, -5);
-    is_eq(result.quot, -3)
-    is_eq(result.rem, 2)
-    result = div(-17, -5);
-    is_eq(result.quot, 3)
-    is_eq(result.rem, -2)
+    {
+        div_t result = div(17, 5);
+        is_eq(result.quot, 3)
+        is_eq(result.rem, 2)
+
+        result = div(-17, 5);
+        is_eq(result.quot, -3)
+        is_eq(result.rem, -2)
+
+        result = div(17, -5);
+        is_eq(result.quot, -3)
+        is_eq(result.rem, 2)
+
+        result = div(-17, -5);
+        is_eq(result.quot, 3)
+        is_eq(result.rem, -2)
+    }
 
     // exit() is handled in tests/exit.c
 
@@ -205,6 +210,25 @@ int main()
     is_eq(labs(-5), 5);
     is_eq(labs(7), 7);
     is_eq(labs(0), 0);
+
+    diag("ldiv")
+    {
+        ldiv_t result = ldiv(17, 5);
+        is_eq(result.quot, 3)
+        is_eq(result.rem, 2)
+
+        result = ldiv(-17, 5);
+        is_eq(result.quot, -3)
+        is_eq(result.rem, -2)
+
+        result = ldiv(17, -5);
+        is_eq(result.quot, -3)
+        is_eq(result.rem, 2)
+
+        result = ldiv(-17, -5);
+        is_eq(result.quot, 3)
+        is_eq(result.rem, -2)
+    }
 
     test_malloc1();
     test_malloc2();

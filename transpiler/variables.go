@@ -19,6 +19,10 @@ var structFieldTranslations = map[string]map[string]string{
 		"quot": "Quot",
 		"rem":  "Rem",
 	},
+	"ldiv_t": {
+		"quot": "Quot",
+		"rem":  "Rem",
+	},
 }
 
 func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (

@@ -21,6 +21,7 @@ var resolveTestCases = []resolveTestCase{
 	{"_Bool", "bool"},
 	{"struct RowSetEntry *", "[]RowSetEntry"},
 	{"div_t", "noarch.DivT"},
+	{"ldiv_t", "noarch.LdivT"},
 }
 
 func TestResolve(t *testing.T) {
