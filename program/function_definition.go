@@ -180,6 +180,7 @@ var builtInFunctionDefinitions = []string{
 	"void free(void*) -> noarch.Free",
 	"char* getenv(const char *) -> noarch.Getenv",
 	"long int labs(long int) -> noarch.Labs",
+	"ldiv_t ldiv(long int, long int) -> noarch.Ldiv",
 	"long strtol(const char *, char **, int) -> noarch.Strtol",
 
 	// I'm not sure which header file these comes from?

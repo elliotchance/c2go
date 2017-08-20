@@ -169,16 +169,24 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 		return nil
 	}
 
-	if name == "div_t" {
+	if name == "div_t" || name == "ldiv_t" {
+		intType := "int"
+		if name == "ldiv_t" {
+			intType = "long int"
+		}
+
 		// I don't know to extract the correct fields from the typedef to create
-		// the internal definition. This is used as noarch.DivT. The name of the
-		// struct is not prefixed with "struct " because it is a typedef.
-		p.Structs["div_t"] = &program.Struct{
-			Name:    "div_t",
+		// the internal definition. This is used in the noarch package
+		// (stdio.go).
+		//
+		// The name of the struct is not prefixed with "struct " because it is a
+		// typedef.
+		p.Structs[name] = &program.Struct{
+			Name:    name,
 			IsUnion: false,
 			Fields: map[string]interface{}{
-				"quot": "int",
-				"rem":  "int",
+				"quot": intType,
+				"rem":  intType,
 			},
 		}
 	}
