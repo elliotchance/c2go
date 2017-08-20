@@ -84,7 +84,7 @@ void test_calloc()
 
 int main()
 {
-    plan(105);
+    plan(108);
 
     diag("abs")
     is_eq(abs(-5), 5);
@@ -200,6 +200,11 @@ int main()
     is_not_null(getenv("PATH"));
     is_not_null(getenv("HOME"));
     is_null(getenv("FOOBAR"));
+
+    diag("labs")
+    is_eq(labs(-5), 5);
+    is_eq(labs(7), 7);
+    is_eq(labs(0), 0);
 
     test_malloc1();
     test_malloc2();
