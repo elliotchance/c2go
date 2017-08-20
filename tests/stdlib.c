@@ -84,7 +84,7 @@ void test_calloc()
 
 int main()
 {
-    plan(119);
+    plan(127);
 
     diag("abs")
     is_eq(abs(-5), 5);
@@ -234,6 +234,25 @@ int main()
     is_eq(llabs(-5), 5);
     is_eq(llabs(7), 7);
     is_eq(llabs(0), 0);
+
+    diag("lldiv")
+    {
+        lldiv_t result = lldiv(17, 5);
+        is_eq(result.quot, 3)
+        is_eq(result.rem, 2)
+
+        result = lldiv(-17, 5);
+        is_eq(result.quot, -3)
+        is_eq(result.rem, -2)
+
+        result = lldiv(17, -5);
+        is_eq(result.quot, -3)
+        is_eq(result.rem, 2)
+
+        result = lldiv(-17, -5);
+        is_eq(result.quot, 3)
+        is_eq(result.rem, -2)
+    }
 
     test_malloc1();
     test_malloc2();
