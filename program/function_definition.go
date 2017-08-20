@@ -179,6 +179,7 @@ var builtInFunctionDefinitions = []string{
 	"void exit(int) -> os.Exit",
 	"void free(void*) -> noarch.Free",
 	"char* getenv(const char *) -> noarch.Getenv",
+	"long int labs(long int) -> noarch.Labs",
 	"long strtol(const char *, char **, int) -> noarch.Strtol",
 
 	// I'm not sure which header file these comes from?

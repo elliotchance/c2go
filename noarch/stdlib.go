@@ -231,6 +231,17 @@ func Getenv(name []byte) []byte {
 	return nil
 }
 
+// Labs returns the absolute value of parameter n ( /n/ ).
+//
+// This is the long int version of abs.
+func Labs(n int32) int32 {
+	if n < 0 {
+		return -n
+	}
+
+	return n
+}
+
 // Strtol parses the C-string str interpreting its content as an integral number
 // of the specified base, which is returned as a long int value. If endptr is
 // not a null pointer, the function also sets the value of endptr to point to
