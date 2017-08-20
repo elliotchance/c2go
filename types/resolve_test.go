@@ -20,6 +20,7 @@ var resolveTestCases = []resolveTestCase{
 	{"unsigned short int", "uint16"},
 	{"_Bool", "bool"},
 	{"struct RowSetEntry *", "[]RowSetEntry"},
+	{"div_t", "noarch.DivT"},
 }
 
 func TestResolve(t *testing.T) {

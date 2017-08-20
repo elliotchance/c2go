@@ -7,6 +7,12 @@ import (
 	"strings"
 )
 
+// DivT is the representation of "div_t". It is used by div().
+type DivT struct {
+	Quot int // quotient
+	Rem  int // remainder
+}
+
 // Abs returns the absolute value of parameter n.
 //
 // In C++, this function is also overloaded in header <cmath> for floating-point
@@ -190,6 +196,16 @@ func Atoll(str []byte) int64 {
 	v, _ := strconv.ParseInt(match[1], 10, 64)
 
 	return v
+}
+
+// Div returns the integral quotient and remainder of the division of numer by
+// denom ( numer/denom ) as a structure of type div_t, ldiv_t or lldiv_t, which
+// has two members: quot and rem.
+func Div(numer, denom int) DivT {
+	return DivT{
+		Quot: numer / denom,
+		Rem:  numer % denom,
+	}
 }
 
 // Strtol parses the C-string str interpreting its content as an integral number
