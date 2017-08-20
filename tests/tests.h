@@ -242,6 +242,16 @@ static int last_test_was_ok = 1;
 // Using non-floating-point values with this may give unexpected results.
 #define is_negzero(actual) is_true(isnegzero(actual));
 
+#define is_null(actual)             \
+    if (actual == NULL)             \
+    {                               \
+        pass("%s == NULL", #actual) \
+    }                               \
+    else                            \
+    {                               \
+        fail("%s == NULL", #actual) \
+    }
+
 #define is_not_null(actual)         \
     if (actual != NULL)             \
     {                               \

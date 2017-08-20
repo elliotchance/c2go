@@ -2,6 +2,7 @@ package noarch
 
 import (
 	"math"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -206,6 +207,28 @@ func Div(numer, denom int) DivT {
 		Quot: numer / denom,
 		Rem:  numer % denom,
 	}
+}
+
+// Getenv retrieves a C-string containing the value of the environment variable
+// whose name is specified as argument. If the requested variable is not part of
+// the environment list, the function returns a null pointer.
+//
+// The pointer returned points to an internal memory block, whose content or
+// validity may be altered by further calls to getenv (but not by other library
+// functions).
+//
+// The string pointed by the pointer returned by this function shall not be
+// modified by the program. Some systems and library implementations may allow
+// to change environmental variables with specific functions (putenv,
+// setenv...), but such functionality is non-portable.
+func Getenv(name []byte) []byte {
+	key := CStringToString(name)
+
+	if env, found := os.LookupEnv(key); found {
+		return StringToCString(env)
+	}
+
+	return nil
 }
 
 // Strtol parses the C-string str interpreting its content as an integral number

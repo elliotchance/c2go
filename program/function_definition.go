@@ -177,8 +177,9 @@ var builtInFunctionDefinitions = []string{
 	"long long int atoll(const char*) -> noarch.Atoll",
 	"div_t div(int, int) -> noarch.Div",
 	"void exit(int) -> os.Exit",
-	"long strtol(const char *, char **, int) -> noarch.Strtol",
 	"void free(void*) -> noarch.Free",
+	"char* getenv(const char *) -> noarch.Getenv",
+	"long strtol(const char *, char **, int) -> noarch.Strtol",
 
 	// I'm not sure which header file these comes from?
 	"uint32 __builtin_bswap32(uint32) -> darwin.BSwap32",
