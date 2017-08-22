@@ -197,6 +197,9 @@ int main()
         is_eq(result.rem, -2)
     }
 
+    diag("calloc")
+    test_calloc();
+
     // exit() is handled in tests/exit.c
 
     // free() is handled with the malloc and calloc tests.
@@ -254,10 +257,10 @@ int main()
         is_eq(result.rem, -2)
     }
 
+    diag("malloc")
     test_malloc1();
     test_malloc2();
     test_malloc3();
-    test_calloc();
 
     done_testing();
 }
