@@ -17,7 +17,7 @@ func TestFunctionDecl(t *testing.T) {
 			IsImplicit:   false,
 			IsUsed:       false,
 			IsReferenced: false,
-			Children:     []Node{},
+			ChildNodes:   []Node{},
 		},
 		`0x7fb5a90e2a50 </usr/include/sys/stdio.h:39:1, /usr/include/AvailabilityInternal.h:21697:126> /usr/include/sys/stdio.h:39:5 renameat 'int (int, const char *, int, const char *)'`: &FunctionDecl{
 			Addr:         0x7fb5a90e2a50,
@@ -30,7 +30,7 @@ func TestFunctionDecl(t *testing.T) {
 			IsImplicit:   false,
 			IsUsed:       false,
 			IsReferenced: false,
-			Children:     []Node{},
+			ChildNodes:   []Node{},
 		},
 		`0x7fb5a90e9b70 </usr/include/stdio.h:244:6> col:6 implicit fprintf 'int (FILE *, const char *, ...)' extern`: &FunctionDecl{
 			Addr:         0x7fb5a90e9b70,
@@ -43,7 +43,7 @@ func TestFunctionDecl(t *testing.T) {
 			IsImplicit:   true,
 			IsUsed:       false,
 			IsReferenced: false,
-			Children:     []Node{},
+			ChildNodes:   []Node{},
 		},
 		`0x7fb5a90e9d40 prev 0x7fb5a90e9b70 <col:1, /usr/include/sys/cdefs.h:351:63> /usr/include/stdio.h:244:6 fprintf 'int (FILE *, const char *, ...)'`: &FunctionDecl{
 			Addr:         0x7fb5a90e9d40,
@@ -56,7 +56,7 @@ func TestFunctionDecl(t *testing.T) {
 			IsImplicit:   false,
 			IsUsed:       false,
 			IsReferenced: false,
-			Children:     []Node{},
+			ChildNodes:   []Node{},
 		},
 		`0x7fb5a90ec210 <line:259:6> col:6 implicit used printf 'int (const char *, ...)' extern`: &FunctionDecl{
 			Addr:         0x7fb5a90ec210,
@@ -69,7 +69,7 @@ func TestFunctionDecl(t *testing.T) {
 			IsImplicit:   true,
 			IsUsed:       true,
 			IsReferenced: false,
-			Children:     []Node{},
+			ChildNodes:   []Node{},
 		},
 		`0x2ae30d8 </usr/include/math.h:65:3, /usr/include/x86_64-linux-gnu/sys/cdefs.h:57:54> <scratch space>:17:1 __acos 'double (double)' extern`: &FunctionDecl{
 			Addr:         0x2ae30d8,
@@ -82,7 +82,7 @@ func TestFunctionDecl(t *testing.T) {
 			IsImplicit:   false,
 			IsUsed:       false,
 			IsReferenced: false,
-			Children:     []Node{},
+			ChildNodes:   []Node{},
 		},
 		`0x7fc595071500 <line:26:1, line:69:1> line:26:5 referenced main 'int (int, char **)'`: &FunctionDecl{
 			Addr:         0x7fc595071500,
@@ -95,7 +95,7 @@ func TestFunctionDecl(t *testing.T) {
 			IsImplicit:   false,
 			IsUsed:       false,
 			IsReferenced: true,
-			Children:     []Node{},
+			ChildNodes:   []Node{},
 		},
 	}
 

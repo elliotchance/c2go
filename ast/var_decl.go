@@ -15,7 +15,7 @@ type VarDecl struct {
 	IsUsed       bool
 	IsCInit      bool
 	IsReferenced bool
-	Children     []Node
+	ChildNodes   []Node
 }
 
 func parseVarDecl(line string) *VarDecl {
@@ -47,18 +47,24 @@ func parseVarDecl(line string) *VarDecl {
 		IsUsed:       len(groups["used"]) > 0,
 		IsCInit:      len(groups["cinit"]) > 0,
 		IsReferenced: len(groups["referenced"]) > 0,
-		Children:     []Node{},
+		ChildNodes:   []Node{},
 	}
 }
 
 // AddChild adds a new child node. Child nodes can then be accessed with the
 // Children attribute.
 func (n *VarDecl) AddChild(node Node) {
-	n.Children = append(n.Children, node)
+	n.ChildNodes = append(n.ChildNodes, node)
 }
 
 // Address returns the numeric address of the node. See the documentation for
 // the Address type for more information.
 func (n *VarDecl) Address() Address {
 	return n.Addr
+}
+
+// Children returns the child nodes. If this node does not have any children or
+// this node does not support children it will always return an empty slice.
+func (n *VarDecl) Children() []Node {
+	return n.ChildNodes
 }

@@ -27,11 +27,11 @@ func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (
 
 func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
 	[]goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
-	if len(a.Children) == 0 {
+	if len(a.ChildNodes) == 0 {
 		return nil, "", nil, nil, nil
 	}
 
-	defaultValue, defaultValueType, newPre, newPost, err := transpileToExpr(a.Children[0], p, false)
+	defaultValue, defaultValueType, newPre, newPost, err := transpileToExpr(a.ChildNodes[0], p, false)
 	if err != nil {
 		return nil, defaultValueType, newPre, newPost, err
 	}
@@ -102,7 +102,7 @@ func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) (
 	// returns one or more DeclStmts.
 	decls := []goast.Stmt{}
 
-	for _, c := range n.Children {
+	for _, c := range n.ChildNodes {
 		switch a := c.(type) {
 		case *ast.RecordDecl:
 			// I'm not sure why this is ignored. Maybe we haven't found a
@@ -134,7 +134,7 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program) 
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
-	children := n.Children
+	children := n.ChildNodes
 	expression, expressionType, newPre, newPost, err := transpileToExpr(children[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
@@ -168,7 +168,7 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
-	lhs, lhsType, newPre, newPost, err := transpileToExpr(n.Children[0], p, false)
+	lhs, lhsType, newPre, newPost, err := transpileToExpr(n.ChildNodes[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}

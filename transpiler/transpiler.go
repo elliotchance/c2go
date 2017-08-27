@@ -140,7 +140,7 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 		expr, exprType, preStmts, postStmts, err = transpileMemberExpr(n, p)
 
 	case *ast.ImplicitCastExpr:
-		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children[0], p, exprIsStmt)
+		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.ChildNodes[0], p, exprIsStmt)
 
 	case *ast.DeclRefExpr:
 		expr, exprType, err = transpileDeclRefExpr(n, p)
@@ -152,7 +152,7 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 		expr, exprType, preStmts, postStmts, err = transpileParenExpr(n, p)
 
 	case *ast.CStyleCastExpr:
-		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children[0], p, exprIsStmt)
+		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.ChildNodes[0], p, exprIsStmt)
 
 	case *ast.CharacterLiteral:
 		expr, exprType, err = transpileCharacterLiteral(n), "char", nil
@@ -265,7 +265,7 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 func transpileToNode(node ast.Node, p *program.Program) error {
 	switch n := node.(type) {
 	case *ast.TranslationUnitDecl:
-		for _, c := range n.Children {
+		for _, c := range n.ChildNodes {
 			transpileToNode(c, p)
 		}
 

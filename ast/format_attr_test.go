@@ -14,7 +14,7 @@ func TestFormatAttr(t *testing.T) {
 			FunctionName: "printf",
 			Unknown1:     2,
 			Unknown2:     3,
-			Children:     []Node{},
+			ChildNodes:   []Node{},
 		},
 		`0x7fcc8d8ecff8 </usr/include/sys/cdefs.h:351:18, col:61> printf 2 3`: &FormatAttr{
 			Addr:         0x7fcc8d8ecff8,
@@ -24,7 +24,7 @@ func TestFormatAttr(t *testing.T) {
 			FunctionName: "printf",
 			Unknown1:     2,
 			Unknown2:     3,
-			Children:     []Node{},
+			ChildNodes:   []Node{},
 		},
 		`0x273b4d0 <line:357:12> Inherited printf 2 3`: &FormatAttr{
 			Addr:         0x273b4d0,
@@ -34,7 +34,7 @@ func TestFormatAttr(t *testing.T) {
 			FunctionName: "printf",
 			Unknown1:     2,
 			Unknown2:     3,
-			Children:     []Node{},
+			ChildNodes:   []Node{},
 		},
 	}
 

@@ -17,7 +17,7 @@ func TestVarDecl(t *testing.T) {
 			IsUsed:       false,
 			IsCInit:      false,
 			IsReferenced: false,
-			Children:     []Node{},
+			ChildNodes:   []Node{},
 		},
 		`0x7fd5e90e9078 <line:156:1, col:14> col:14 __stdinp 'FILE *' extern`: &VarDecl{
 			Addr:         0x7fd5e90e9078,
@@ -30,7 +30,7 @@ func TestVarDecl(t *testing.T) {
 			IsUsed:       false,
 			IsCInit:      false,
 			IsReferenced: false,
-			Children:     []Node{},
+			ChildNodes:   []Node{},
 		},
 		`0x7fd5e90ed630 <col:40, col:47> col:47 __size 'size_t':'unsigned long'`: &VarDecl{
 			Addr:         0x7fd5e90ed630,
@@ -43,7 +43,7 @@ func TestVarDecl(t *testing.T) {
 			IsUsed:       false,
 			IsCInit:      false,
 			IsReferenced: false,
-			Children:     []Node{},
+			ChildNodes:   []Node{},
 		},
 		`0x7fee35907a78 <col:4, col:8> col:8 used c 'int'`: &VarDecl{
 			Addr:         0x7fee35907a78,
@@ -56,7 +56,7 @@ func TestVarDecl(t *testing.T) {
 			IsUsed:       true,
 			IsCInit:      false,
 			IsReferenced: false,
-			Children:     []Node{},
+			ChildNodes:   []Node{},
 		},
 		`0x7fb0fd90ba30 <col:3, /usr/include/sys/_types.h:52:33> tests/assert/assert.c:13:9 used b 'int *' cinit`: &VarDecl{
 			Addr:         0x7fb0fd90ba30,
@@ -69,7 +69,7 @@ func TestVarDecl(t *testing.T) {
 			IsUsed:       true,
 			IsCInit:      true,
 			IsReferenced: false,
-			Children:     []Node{},
+			ChildNodes:   []Node{},
 		},
 		`0x7fb20308bd40 <col:5, col:11> col:11 referenced a 'short'`: &VarDecl{
 			Addr:         0x7fb20308bd40,
@@ -82,7 +82,7 @@ func TestVarDecl(t *testing.T) {
 			IsUsed:       false,
 			IsCInit:      false,
 			IsReferenced: true,
-			Children:     []Node{},
+			ChildNodes:   []Node{},
 		},
 	}
 
