@@ -73,3 +73,9 @@ func (n *MemberExpr) GetDeclRefExpr() *DeclRefExpr {
 	// There is no DeclRefExpr
 	return nil
 }
+
+// Address returns the numeric address of the node. See the documentation for
+// the Address type for more information.
+func (n *MemberExpr) Address() Address {
+	return n.Addr
+}

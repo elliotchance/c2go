@@ -30,3 +30,9 @@ func parseConstantArrayType(line string) *ConstantArrayType {
 func (n *ConstantArrayType) AddChild(node Node) {
 	n.Children = append(n.Children, node)
 }
+
+// Address returns the numeric address of the node. See the documentation for
+// the Address type for more information.
+func (n *ConstantArrayType) Address() Address {
+	return n.Addr
+}

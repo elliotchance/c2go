@@ -26,3 +26,9 @@ func parseModeAttr(line string) *ModeAttr {
 func (n *ModeAttr) AddChild(node Node) {
 	n.Children = append(n.Children, node)
 }
+
+// Address returns the numeric address of the node. See the documentation for
+// the Address type for more information.
+func (n *ModeAttr) Address() Address {
+	return n.Addr
+}
