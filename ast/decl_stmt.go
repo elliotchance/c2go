@@ -24,3 +24,9 @@ func parseDeclStmt(line string) *DeclStmt {
 func (n *DeclStmt) AddChild(node Node) {
 	n.Children = append(n.Children, node)
 }
+
+// Address returns the numeric address of the node. See the documentation for
+// the Address type for more information.
+func (n *DeclStmt) Address() Address {
+	return n.Addr
+}

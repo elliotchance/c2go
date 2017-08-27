@@ -24,3 +24,9 @@ func parseUnusedAttr(line string) *UnusedAttr {
 func (n *UnusedAttr) AddChild(node Node) {
 	n.Children = append(n.Children, node)
 }
+
+// Address returns the numeric address of the node. See the documentation for
+// the Address type for more information.
+func (n *UnusedAttr) Address() Address {
+	return n.Addr
+}

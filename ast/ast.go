@@ -11,6 +11,7 @@ import (
 
 // Node represents any node in the AST.
 type Node interface {
+	Address() Address
 	AddChild(node Node)
 }
 

@@ -24,3 +24,9 @@ func parseNoInlineAttr(line string) *NoInlineAttr {
 func (n *NoInlineAttr) AddChild(node Node) {
 	n.Children = append(n.Children, node)
 }
+
+// Address returns the numeric address of the node. See the documentation for
+// the Address type for more information.
+func (n *NoInlineAttr) Address() Address {
+	return n.Addr
+}

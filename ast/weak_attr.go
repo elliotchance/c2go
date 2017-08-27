@@ -24,3 +24,9 @@ func parseWeakAttr(line string) *WeakAttr {
 func (a *WeakAttr) AddChild(node Node) {
 	a.Children = append(a.Children, node)
 }
+
+// Address returns the numeric address of the node. See the documentation for
+// the Address type for more information.
+func (n *WeakAttr) Address() Address {
+	return n.Addr
+}

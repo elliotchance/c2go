@@ -24,3 +24,9 @@ func parseForStmt(line string) *ForStmt {
 func (n *ForStmt) AddChild(node Node) {
 	n.Children = append(n.Children, node)
 }
+
+// Address returns the numeric address of the node. See the documentation for
+// the Address type for more information.
+func (n *ForStmt) Address() Address {
+	return n.Addr
+}
