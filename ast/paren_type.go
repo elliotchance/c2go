@@ -35,3 +35,8 @@ func (n *ParenType) Address() Address {
 func (n *ParenType) Children() []Node {
 	return n.ChildNodes
 }
+
+// Position returns the position in the original source code.
+func (n *ParenType) Position() Position {
+	return Position{}
+}

@@ -85,13 +85,14 @@ func convertLinesToNodes(lines []string) []treeNode {
 	return nodes
 }
 
-// buildTree convert an array of nodes, each prefixed with a depth into a tree.
+// buildTree converts an array of nodes, each prefixed with a depth into a tree.
 func buildTree(nodes []treeNode, depth int) []ast.Node {
 	if len(nodes) == 0 {
 		return []ast.Node{}
 	}
 
-	// Split the list into sections, treat each section as a a tree with its own root.
+	// Split the list into sections, treat each section as a tree with its own
+	// root.
 	sections := [][]treeNode{}
 	for _, node := range nodes {
 		if node.indent == depth {
@@ -184,10 +185,10 @@ func Start(args ProgramArgs) error {
 		pp = []byte(out.String())
 	}
 
-	ppFilePath := path.Join(os.TempDir(), "pp.c")
+	ppFilePath := path.Join("/tmp", "pp.c")
 	err = ioutil.WriteFile(ppFilePath, pp, 0644)
 	if err != nil {
-		return fmt.Errorf("writing to /tmp/pp.c failed: %v", err)
+		return fmt.Errorf("writing to %s failed: %v", ppFilePath, err)
 	}
 
 	// 3. Generate JSON from AST
@@ -210,12 +211,12 @@ func Start(args ProgramArgs) error {
 		return nil
 	}
 
-	nodes := convertLinesToNodes(lines)
-	tree := buildTree(nodes, 0)
-
 	p := program.NewProgram()
 	p.Verbose = args.verbose
 	p.OutputAsTest = true // args.outputAsTest
+
+	nodes := convertLinesToNodes(lines)
+	tree := buildTree(nodes, 0)
 
 	err = transpiler.TranspileAST(args.inputFile, args.packageName, p, tree[0].(ast.Node))
 	if err != nil {
@@ -227,7 +228,6 @@ func Start(args ProgramArgs) error {
 	if outputFilePath == "" {
 		cleanFileName := filepath.Clean(filepath.Base(args.inputFile))
 		extension := filepath.Ext(args.inputFile)
-
 		outputFilePath = cleanFileName[0:len(cleanFileName)-len(extension)] + ".go"
 	}
 

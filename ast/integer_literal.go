@@ -2,7 +2,7 @@ package ast
 
 type IntegerLiteral struct {
 	Addr       Address
-	Position   string
+	Pos        string
 	Type       string
 	Value      string
 	ChildNodes []Node
@@ -16,7 +16,7 @@ func parseIntegerLiteral(line string) *IntegerLiteral {
 
 	return &IntegerLiteral{
 		Addr:       ParseAddress(groups["address"]),
-		Position:   groups["position"],
+		Pos:        groups["position"],
 		Type:       groups["type"],
 		Value:      groups["value"],
 		ChildNodes: []Node{},
@@ -39,4 +39,9 @@ func (n *IntegerLiteral) Address() Address {
 // this node does not support children it will always return an empty slice.
 func (n *IntegerLiteral) Children() []Node {
 	return n.ChildNodes
+}
+
+// Position returns the position in the original source code.
+func (n *IntegerLiteral) Position() Position {
+	return NewPositionFromString(n.Pos)
 }

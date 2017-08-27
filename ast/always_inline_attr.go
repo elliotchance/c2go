@@ -4,7 +4,7 @@ package ast
 // variable or struct field definition.
 type AlwaysInlineAttr struct {
 	Addr       Address
-	Position   string
+	Pos        string
 	ChildNodes []Node
 }
 
@@ -16,7 +16,7 @@ func parseAlwaysInlineAttr(line string) *AlwaysInlineAttr {
 
 	return &AlwaysInlineAttr{
 		Addr:       ParseAddress(groups["address"]),
-		Position:   groups["position"],
+		Pos:        groups["position"],
 		ChildNodes: []Node{},
 	}
 }
@@ -37,4 +37,9 @@ func (n *AlwaysInlineAttr) Address() Address {
 // this node does not support children it will always return an empty slice.
 func (n *AlwaysInlineAttr) Children() []Node {
 	return n.ChildNodes
+}
+
+// Position returns the position in the original source code.
+func (n *AlwaysInlineAttr) Position() Position {
+	return NewPositionFromString(n.Pos)
 }

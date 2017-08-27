@@ -36,3 +36,8 @@ func (n *Record) Address() Address {
 func (n *Record) Children() []Node {
 	return n.ChildNodes
 }
+
+// Position returns the position in the original source code.
+func (n *Record) Position() Position {
+	return Position{}
+}

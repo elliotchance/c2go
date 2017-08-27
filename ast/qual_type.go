@@ -38,3 +38,8 @@ func (n *QualType) Address() Address {
 func (n *QualType) Children() []Node {
 	return n.ChildNodes
 }
+
+// Position returns the position in the original source code.
+func (n *QualType) Position() Position {
+	return Position{}
+}

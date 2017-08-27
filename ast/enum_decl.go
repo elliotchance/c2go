@@ -6,7 +6,7 @@ import (
 
 type EnumDecl struct {
 	Addr       Address
-	Position   string
+	Pos        string
 	Position2  string
 	Name       string
 	ChildNodes []Node
@@ -20,7 +20,7 @@ func parseEnumDecl(line string) *EnumDecl {
 
 	return &EnumDecl{
 		Addr:       ParseAddress(groups["address"]),
-		Position:   groups["position"],
+		Pos:        groups["position"],
 		Position2:  groups["position2"],
 		Name:       strings.TrimSpace(groups["name"]),
 		ChildNodes: []Node{},
@@ -43,4 +43,9 @@ func (n *EnumDecl) Address() Address {
 // this node does not support children it will always return an empty slice.
 func (n *EnumDecl) Children() []Node {
 	return n.ChildNodes
+}
+
+// Position returns the position in the original source code.
+func (n *EnumDecl) Position() Position {
+	return NewPositionFromString(n.Pos)
 }

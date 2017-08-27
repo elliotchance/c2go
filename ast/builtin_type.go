@@ -36,3 +36,8 @@ func (n *BuiltinType) Address() Address {
 func (n *BuiltinType) Children() []Node {
 	return n.ChildNodes
 }
+
+// Position returns the position in the original source code.
+func (n *BuiltinType) Position() Position {
+	return Position{}
+}

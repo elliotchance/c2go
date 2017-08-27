@@ -2,7 +2,7 @@ package ast
 
 type LabelStmt struct {
 	Addr       Address
-	Position   string
+	Pos        string
 	Name       string
 	ChildNodes []Node
 }
@@ -15,7 +15,7 @@ func parseLabelStmt(line string) *LabelStmt {
 
 	return &LabelStmt{
 		Addr:       ParseAddress(groups["address"]),
-		Position:   groups["position"],
+		Pos:        groups["position"],
 		Name:       groups["name"],
 		ChildNodes: []Node{},
 	}
@@ -37,4 +37,9 @@ func (n *LabelStmt) Address() Address {
 // this node does not support children it will always return an empty slice.
 func (n *LabelStmt) Children() []Node {
 	return n.ChildNodes
+}
+
+// Position returns the position in the original source code.
+func (n *LabelStmt) Position() Position {
+	return NewPositionFromString(n.Pos)
 }

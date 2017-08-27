@@ -2,7 +2,7 @@ package ast
 
 type CompoundAssignOperator struct {
 	Addr                  Address
-	Position              string
+	Pos                   string
 	Type                  string
 	Opcode                string
 	ComputationLHSType    string
@@ -22,7 +22,7 @@ func parseCompoundAssignOperator(line string) *CompoundAssignOperator {
 
 	return &CompoundAssignOperator{
 		Addr:                  ParseAddress(groups["address"]),
-		Position:              groups["position"],
+		Pos:                   groups["position"],
 		Type:                  groups["type"],
 		Opcode:                groups["opcode"],
 		ComputationLHSType:    groups["clhstype"],
@@ -47,4 +47,9 @@ func (n *CompoundAssignOperator) Address() Address {
 // this node does not support children it will always return an empty slice.
 func (n *CompoundAssignOperator) Children() []Node {
 	return n.ChildNodes
+}
+
+// Position returns the position in the original source code.
+func (n *CompoundAssignOperator) Position() Position {
+	return NewPositionFromString(n.Pos)
 }

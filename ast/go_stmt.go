@@ -2,7 +2,7 @@ package ast
 
 type GotoStmt struct {
 	Addr       Address
-	Position   string
+	Pos        string
 	Name       string
 	Position2  string
 	ChildNodes []Node
@@ -16,7 +16,7 @@ func parseGotoStmt(line string) *GotoStmt {
 
 	return &GotoStmt{
 		Addr:       ParseAddress(groups["address"]),
-		Position:   groups["position"],
+		Pos:        groups["position"],
 		Name:       groups["name"],
 		Position2:  groups["position2"],
 		ChildNodes: []Node{},
@@ -39,4 +39,9 @@ func (n *GotoStmt) Address() Address {
 // this node does not support children it will always return an empty slice.
 func (n *GotoStmt) Children() []Node {
 	return n.ChildNodes
+}
+
+// Position returns the position in the original source code.
+func (n *GotoStmt) Position() Position {
+	return NewPositionFromString(n.Pos)
 }

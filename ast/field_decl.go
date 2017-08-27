@@ -6,7 +6,7 @@ import (
 
 type FieldDecl struct {
 	Addr       Address
-	Position   string
+	Pos        string
 	Position2  string
 	Name       string
 	Type       string
@@ -26,7 +26,7 @@ func parseFieldDecl(line string) *FieldDecl {
 
 	return &FieldDecl{
 		Addr:       ParseAddress(groups["address"]),
-		Position:   groups["position"],
+		Pos:        groups["position"],
 		Position2:  strings.TrimSpace(groups["position2"]),
 		Name:       strings.TrimSpace(groups["name"]),
 		Type:       groups["type"],
@@ -51,4 +51,9 @@ func (n *FieldDecl) Address() Address {
 // this node does not support children it will always return an empty slice.
 func (n *FieldDecl) Children() []Node {
 	return n.ChildNodes
+}
+
+// Position returns the position in the original source code.
+func (n *FieldDecl) Position() Position {
+	return NewPositionFromString(n.Pos)
 }

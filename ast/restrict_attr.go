@@ -2,7 +2,7 @@ package ast
 
 type RestrictAttr struct {
 	Addr       Address
-	Position   string
+	Pos        string
 	Name       string
 	ChildNodes []Node
 }
@@ -15,7 +15,7 @@ func parseRestrictAttr(line string) *RestrictAttr {
 
 	return &RestrictAttr{
 		Addr:       ParseAddress(groups["address"]),
-		Position:   groups["position"],
+		Pos:        groups["position"],
 		Name:       groups["name"],
 		ChildNodes: []Node{},
 	}
@@ -37,4 +37,9 @@ func (n *RestrictAttr) Address() Address {
 // this node does not support children it will always return an empty slice.
 func (n *RestrictAttr) Children() []Node {
 	return n.ChildNodes
+}
+
+// Position returns the position in the original source code.
+func (n *RestrictAttr) Position() Position {
+	return NewPositionFromString(n.Pos)
 }

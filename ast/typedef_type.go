@@ -38,3 +38,8 @@ func (n *TypedefType) Address() Address {
 func (n *TypedefType) Children() []Node {
 	return n.ChildNodes
 }
+
+// Position returns the position in the original source code.
+func (n *TypedefType) Position() Position {
+	return Position{}
+}

@@ -31,3 +31,8 @@ func (n *TranslationUnitDecl) Address() Address {
 func (n *TranslationUnitDecl) Children() []Node {
 	return n.ChildNodes
 }
+
+// Position returns the position in the original source code.
+func (n *TranslationUnitDecl) Position() Position {
+	return Position{}
+}

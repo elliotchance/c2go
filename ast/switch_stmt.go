@@ -2,7 +2,7 @@ package ast
 
 type SwitchStmt struct {
 	Addr       Address
-	Position   string
+	Pos        string
 	ChildNodes []Node
 }
 
@@ -11,7 +11,7 @@ func parseSwitchStmt(line string) *SwitchStmt {
 
 	return &SwitchStmt{
 		Addr:       ParseAddress(groups["address"]),
-		Position:   groups["position"],
+		Pos:        groups["position"],
 		ChildNodes: []Node{},
 	}
 }
@@ -32,4 +32,9 @@ func (n *SwitchStmt) Address() Address {
 // this node does not support children it will always return an empty slice.
 func (n *SwitchStmt) Children() []Node {
 	return n.ChildNodes
+}
+
+// Position returns the position in the original source code.
+func (n *SwitchStmt) Position() Position {
+	return NewPositionFromString(n.Pos)
 }

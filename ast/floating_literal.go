@@ -2,7 +2,7 @@ package ast
 
 type FloatingLiteral struct {
 	Addr       Address
-	Position   string
+	Pos        string
 	Type       string
 	Value      float64
 	ChildNodes []Node
@@ -16,7 +16,7 @@ func parseFloatingLiteral(line string) *FloatingLiteral {
 
 	return &FloatingLiteral{
 		Addr:       ParseAddress(groups["address"]),
-		Position:   groups["position"],
+		Pos:        groups["position"],
 		Type:       groups["type"],
 		Value:      atof(groups["value"]),
 		ChildNodes: []Node{},
@@ -39,4 +39,9 @@ func (n *FloatingLiteral) Address() Address {
 // this node does not support children it will always return an empty slice.
 func (n *FloatingLiteral) Children() []Node {
 	return n.ChildNodes
+}
+
+// Position returns the position in the original source code.
+func (n *FloatingLiteral) Position() Position {
+	return NewPositionFromString(n.Pos)
 }

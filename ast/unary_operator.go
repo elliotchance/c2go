@@ -2,7 +2,7 @@ package ast
 
 type UnaryOperator struct {
 	Addr       Address
-	Position   string
+	Pos        string
 	Type       string
 	IsLvalue   bool
 	IsPrefix   bool
@@ -23,7 +23,7 @@ func parseUnaryOperator(line string) *UnaryOperator {
 
 	return &UnaryOperator{
 		Addr:       ParseAddress(groups["address"]),
-		Position:   groups["position"],
+		Pos:        groups["position"],
 		Type:       groups["type"],
 		IsLvalue:   len(groups["lvalue"]) > 0,
 		IsPrefix:   len(groups["prefix"]) > 0,
@@ -48,4 +48,9 @@ func (n *UnaryOperator) Address() Address {
 // this node does not support children it will always return an empty slice.
 func (n *UnaryOperator) Children() []Node {
 	return n.ChildNodes
+}
+
+// Position returns the position in the original source code.
+func (n *UnaryOperator) Position() Position {
+	return NewPositionFromString(n.Pos)
 }

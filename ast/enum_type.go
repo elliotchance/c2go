@@ -36,3 +36,8 @@ func (n *EnumType) Address() Address {
 func (n *EnumType) Children() []Node {
 	return n.ChildNodes
 }
+
+// Position returns the position in the original source code.
+func (n *EnumType) Position() Position {
+	return Position{}
+}

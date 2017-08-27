@@ -2,7 +2,7 @@ package ast
 
 type NoInlineAttr struct {
 	Addr       Address
-	Position   string
+	Pos        string
 	ChildNodes []Node
 }
 
@@ -14,7 +14,7 @@ func parseNoInlineAttr(line string) *NoInlineAttr {
 
 	return &NoInlineAttr{
 		Addr:       ParseAddress(groups["address"]),
-		Position:   groups["position"],
+		Pos:        groups["position"],
 		ChildNodes: []Node{},
 	}
 }
@@ -35,4 +35,9 @@ func (n *NoInlineAttr) Address() Address {
 // this node does not support children it will always return an empty slice.
 func (n *NoInlineAttr) Children() []Node {
 	return n.ChildNodes
+}
+
+// Position returns the position in the original source code.
+func (n *NoInlineAttr) Position() Position {
+	return NewPositionFromString(n.Pos)
 }

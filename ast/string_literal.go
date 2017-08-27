@@ -7,7 +7,7 @@ import (
 
 type StringLiteral struct {
 	Addr       Address
-	Position   string
+	Pos        string
 	Type       string
 	Value      string
 	Lvalue     bool
@@ -27,7 +27,7 @@ func parseStringLiteral(line string) *StringLiteral {
 
 	return &StringLiteral{
 		Addr:       ParseAddress(groups["address"]),
-		Position:   groups["position"],
+		Pos:        groups["position"],
 		Type:       groups["type"],
 		Value:      s,
 		Lvalue:     true,
@@ -51,4 +51,9 @@ func (n *StringLiteral) Address() Address {
 // this node does not support children it will always return an empty slice.
 func (n *StringLiteral) Children() []Node {
 	return n.ChildNodes
+}
+
+// Position returns the position in the original source code.
+func (n *StringLiteral) Position() Position {
+	return NewPositionFromString(n.Pos)
 }

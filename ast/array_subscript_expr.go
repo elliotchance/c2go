@@ -2,7 +2,7 @@ package ast
 
 type ArraySubscriptExpr struct {
 	Addr       Address
-	Position   string
+	Pos        string
 	Type       string
 	Kind       string
 	ChildNodes []Node
@@ -16,7 +16,7 @@ func parseArraySubscriptExpr(line string) *ArraySubscriptExpr {
 
 	return &ArraySubscriptExpr{
 		Addr:       ParseAddress(groups["address"]),
-		Position:   groups["position"],
+		Pos:        groups["position"],
 		Type:       groups["type"],
 		Kind:       groups["kind"],
 		ChildNodes: []Node{},
@@ -39,4 +39,9 @@ func (n *ArraySubscriptExpr) Address() Address {
 // this node does not support children it will always return an empty slice.
 func (n *ArraySubscriptExpr) Children() []Node {
 	return n.ChildNodes
+}
+
+// Position returns the position in the original source code.
+func (n *ArraySubscriptExpr) Position() Position {
+	return NewPositionFromString(n.Pos)
 }

@@ -2,7 +2,7 @@ package ast
 
 type DefaultStmt struct {
 	Addr       Address
-	Position   string
+	Pos        string
 	ChildNodes []Node
 }
 
@@ -11,7 +11,7 @@ func parseDefaultStmt(line string) *DefaultStmt {
 
 	return &DefaultStmt{
 		Addr:       ParseAddress(groups["address"]),
-		Position:   groups["position"],
+		Pos:        groups["position"],
 		ChildNodes: []Node{},
 	}
 }
@@ -32,4 +32,9 @@ func (n *DefaultStmt) Address() Address {
 // this node does not support children it will always return an empty slice.
 func (n *DefaultStmt) Children() []Node {
 	return n.ChildNodes
+}
+
+// Position returns the position in the original source code.
+func (n *DefaultStmt) Position() Position {
+	return NewPositionFromString(n.Pos)
 }
