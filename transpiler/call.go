@@ -76,7 +76,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 
 	if functionDef == nil {
 		errorMessage := fmt.Sprintf("unknown function: %s", functionName)
-		p.AddMessage(ast.GenerateWarningMessage(errors.New(errorMessage), n))
+		p.AddMessage(p.GenerateWarningMessage(errors.New(errorMessage), n))
 
 		// We do not have a prototype for the function, but we should not exit
 		// here. Instead we will create a mock definition for it so that this
@@ -174,7 +174,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 				realArg, err = types.CastExpr(p, realArg, argTypes[i],
 					functionDef.ArgumentTypes[i])
 				p.AddMessage(
-					ast.GenerateWarningOrErrorMessage(err, n, realArg == nil),
+					p.GenerateWarningOrErrorMessage(err, n, realArg == nil),
 				)
 
 				if realArg == nil {
@@ -195,7 +195,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 				a, err = types.CastExpr(p, a, argTypes[i],
 					functionDef.ArgumentTypes[i])
 
-				if p.AddMessage(ast.GenerateWarningMessage(err, n)) {
+				if p.AddMessage(p.GenerateWarningMessage(err, n)) {
 					a = util.NewNil()
 				}
 			}

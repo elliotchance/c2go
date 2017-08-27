@@ -24,7 +24,7 @@ func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, str
 	}
 
 	fieldType, err := types.ResolveType(p, n.Type)
-	p.AddMessage(ast.GenerateWarningMessage(err, n))
+	p.AddMessage(p.GenerateWarningMessage(err, n))
 
 	// TODO: The name of a variable or field cannot be a reserved word
 	// https://github.com/elliotchance/c2go/issues/83
@@ -73,7 +73,7 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 			}
 		} else {
 			message := fmt.Sprintf("could not parse %v", c)
-			p.AddMessage(ast.GenerateWarningMessage(errors.New(message), c))
+			p.AddMessage(p.GenerateWarningMessage(errors.New(message), c))
 		}
 	}
 
@@ -85,7 +85,7 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 		if err != nil {
 			// but if we catch one, send it as a aarning
 			message := fmt.Sprintf("could not determine the size of type `union %s` for that reason: %s", name, err)
-			p.AddMessage(ast.GenerateWarningMessage(errors.New(message), n))
+			p.AddMessage(p.GenerateWarningMessage(errors.New(message), n))
 		} else {
 			// So, we got size, then
 			// Add imports needed
@@ -123,7 +123,7 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 	p.DefineType(name)
 
 	resolvedType, err := types.ResolveType(p, n.Type)
-	p.AddMessage(ast.GenerateWarningMessage(err, n))
+	p.AddMessage(p.GenerateWarningMessage(err, n))
 
 	// There is a case where the name of the type is also the definition,
 	// like:
@@ -192,7 +192,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 	}
 
 	theType, err := types.ResolveType(p, n.Type)
-	p.AddMessage(ast.GenerateWarningMessage(err, n))
+	p.AddMessage(p.GenerateWarningMessage(err, n))
 
 	p.GlobalVariables[n.Name] = theType
 

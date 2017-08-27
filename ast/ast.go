@@ -2,8 +2,6 @@
 package ast
 
 import (
-	"fmt"
-	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -199,46 +197,6 @@ func Position(node Node) string {
 	default:
 		panic(n)
 	}
-}
-
-// getNicerLineNumber tries to extract a more useful line number from a
-// position. If the line number cannot be determined then the original location
-// string is returned.
-func getNicerLineNumber(s string) string {
-	matches := regexp.MustCompile(`line:(\d+)`).FindStringSubmatch(s)
-	if len(matches) > 0 {
-		return fmt.Sprintf("line %s", matches[1])
-	}
-
-	return s
-}
-
-func GenerateErrorMessage(e error, n Node) string {
-	if e != nil {
-		structName := reflect.TypeOf(n).Elem().Name()
-		return fmt.Sprintf("// Error (%s): %s: %s", structName,
-			getNicerLineNumber(Position(n)), e.Error())
-	}
-
-	return ""
-}
-
-func GenerateWarningMessage(e error, n Node) string {
-	if e != nil {
-		structName := reflect.TypeOf(n).Elem().Name()
-		return fmt.Sprintf("// Warning (%s): %s: %s", structName,
-			getNicerLineNumber(Position(n)), e.Error())
-	}
-
-	return ""
-}
-
-func GenerateWarningOrErrorMessage(e error, n Node, isError bool) string {
-	if isError {
-		return GenerateErrorMessage(e, n)
-	}
-
-	return GenerateWarningMessage(e, n)
 }
 
 // Parse takes the coloured output of the clang AST command and returns a root

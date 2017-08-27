@@ -167,7 +167,7 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 		return transpileUnaryExprOrTypeTraitExpr(n, p)
 
 	default:
-		p.AddMessage(ast.GenerateWarningMessage(errors.New("cannot transpile to expr"), node))
+		p.AddMessage(p.GenerateWarningMessage(errors.New("cannot transpile to expr"), node))
 		expr = util.NewNil()
 	}
 
