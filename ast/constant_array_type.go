@@ -5,7 +5,7 @@ import (
 )
 
 type ConstantArrayType struct {
-	Address  string
+	Addr     Address
 	Type     string
 	Size     int
 	Children []Node
@@ -18,7 +18,7 @@ func parseConstantArrayType(line string) *ConstantArrayType {
 	)
 
 	return &ConstantArrayType{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Type:     groups["type"],
 		Size:     util.Atoi(groups["size"]),
 		Children: []Node{},

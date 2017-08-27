@@ -1,7 +1,7 @@
 package ast
 
 type InitListExpr struct {
-	Address  string
+	Addr     Address
 	Position string
 	Type     string
 	Children []Node
@@ -14,7 +14,7 @@ func parseInitListExpr(line string) *InitListExpr {
 	)
 
 	return &InitListExpr{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Type:     groups["type"],
 		Children: []Node{},

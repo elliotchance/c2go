@@ -1,7 +1,7 @@
 package ast
 
 type WarnUnusedResultAttr struct {
-	Address  string
+	Addr     Address
 	Position string
 	Children []Node
 }
@@ -10,7 +10,7 @@ func parseWarnUnusedResultAttr(line string) *WarnUnusedResultAttr {
 	groups := groupsFromRegex(`<(?P<position>.*)>( warn_unused_result)?`, line)
 
 	return &WarnUnusedResultAttr{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Children: []Node{},
 	}

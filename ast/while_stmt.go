@@ -1,7 +1,7 @@
 package ast
 
 type WhileStmt struct {
-	Address  string
+	Addr     Address
 	Position string
 	Children []Node
 }
@@ -13,7 +13,7 @@ func parseWhileStmt(line string) *WhileStmt {
 	)
 
 	return &WhileStmt{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Children: []Node{},
 	}

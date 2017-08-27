@@ -5,12 +5,29 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
 // Node represents any node in the AST.
 type Node interface {
 	AddChild(node Node)
+}
+
+// Address contains the memory address (originally outputted as a hexadecimal
+// string) from the clang AST. The address are not predictable between run and
+// are only useful for identifying nodes in a single AST.
+//
+// The Address is used like a primary key when storing the tree as a flat
+// structure.
+type Address uint64
+
+// ParseAddress returns the integer representation of the hexadecimal address
+// (like 0x7f8a1d8ccfd0). If the address cannot be parsed, 0 is returned.
+func ParseAddress(address string) Address {
+	addr, _ := strconv.ParseUint(address, 0, 64)
+
+	return Address(addr)
 }
 
 // Position returns the position of the node in the original file. If the

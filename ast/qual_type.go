@@ -1,7 +1,7 @@
 package ast
 
 type QualType struct {
-	Address  string
+	Addr     Address
 	Type     string
 	Kind     string
 	Children []Node
@@ -14,7 +14,7 @@ func parseQualType(line string) *QualType {
 	)
 
 	return &QualType{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Type:     groups["type"],
 		Kind:     groups["kind"],
 		Children: []Node{},

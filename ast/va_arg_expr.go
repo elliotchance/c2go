@@ -1,7 +1,7 @@
 package ast
 
 type VAArgExpr struct {
-	Address  string
+	Addr     Address
 	Position string
 	Type     string
 	Children []Node
@@ -14,7 +14,7 @@ func parseVAArgExpr(line string) *VAArgExpr {
 	)
 
 	return &VAArgExpr{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Type:     groups["type"],
 		Children: []Node{},

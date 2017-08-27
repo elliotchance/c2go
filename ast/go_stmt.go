@@ -1,7 +1,7 @@
 package ast
 
 type GotoStmt struct {
-	Address   string
+	Addr      Address
 	Position  string
 	Name      string
 	Position2 string
@@ -15,7 +15,7 @@ func parseGotoStmt(line string) *GotoStmt {
 	)
 
 	return &GotoStmt{
-		Address:   groups["address"],
+		Addr:      ParseAddress(groups["address"]),
 		Position:  groups["position"],
 		Name:      groups["name"],
 		Position2: groups["position2"],

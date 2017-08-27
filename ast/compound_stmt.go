@@ -1,7 +1,7 @@
 package ast
 
 type CompoundStmt struct {
-	Address  string
+	Addr     Address
 	Position string
 	Children []Node
 
@@ -16,7 +16,7 @@ func parseCompoundStmt(line string) *CompoundStmt {
 	)
 
 	return &CompoundStmt{
-		Address:         groups["address"],
+		Addr:            ParseAddress(groups["address"]),
 		Position:        groups["position"],
 		Children:        []Node{},
 		BelongsToSwitch: false,

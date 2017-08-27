@@ -1,7 +1,7 @@
 package ast
 
 type ArraySubscriptExpr struct {
-	Address  string
+	Addr     Address
 	Position string
 	Type     string
 	Kind     string
@@ -15,7 +15,7 @@ func parseArraySubscriptExpr(line string) *ArraySubscriptExpr {
 	)
 
 	return &ArraySubscriptExpr{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Type:     groups["type"],
 		Kind:     groups["kind"],

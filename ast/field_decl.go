@@ -5,7 +5,7 @@ import (
 )
 
 type FieldDecl struct {
-	Address    string
+	Addr       Address
 	Position   string
 	Position2  string
 	Name       string
@@ -25,7 +25,7 @@ func parseFieldDecl(line string) *FieldDecl {
 	)
 
 	return &FieldDecl{
-		Address:    groups["address"],
+		Addr:       ParseAddress(groups["address"]),
 		Position:   groups["position"],
 		Position2:  strings.TrimSpace(groups["position2"]),
 		Name:       strings.TrimSpace(groups["name"]),

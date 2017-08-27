@@ -1,7 +1,7 @@
 package ast
 
 type TransparentUnionAttr struct {
-	Address  string
+	Addr     Address
 	Position string
 	Children []Node
 }
@@ -10,7 +10,7 @@ func parseTransparentUnionAttr(line string) *TransparentUnionAttr {
 	groups := groupsFromRegex(`<(?P<position>.*)>`, line)
 
 	return &TransparentUnionAttr{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Children: []Node{},
 	}

@@ -3,7 +3,7 @@ package ast
 import "strings"
 
 type IndirectFieldDecl struct {
-	Address   string
+	Addr      Address
 	Position  string
 	Position2 string
 	Implicit  bool
@@ -23,7 +23,7 @@ func parseIndirectFieldDecl(line string) *IndirectFieldDecl {
 	)
 
 	return &IndirectFieldDecl{
-		Address:   groups["address"],
+		Addr:      ParseAddress(groups["address"]),
 		Position:  groups["position"],
 		Position2: strings.TrimSpace(groups["position2"]),
 		Implicit:  len(groups["implicit"]) > 0,

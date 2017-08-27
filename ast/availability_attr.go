@@ -5,7 +5,7 @@ import (
 )
 
 type AvailabilityAttr struct {
-	Address       string
+	Addr          Address
 	Position      string
 	OS            string
 	Version       string
@@ -33,7 +33,7 @@ func parseAvailabilityAttr(line string) *AvailabilityAttr {
 	)
 
 	return &AvailabilityAttr{
-		Address:       groups["address"],
+		Addr:          ParseAddress(groups["address"]),
 		Position:      groups["position"],
 		OS:            groups["os"],
 		Version:       groups["version"],

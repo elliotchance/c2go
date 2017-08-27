@@ -1,7 +1,7 @@
 package ast
 
 type DefaultStmt struct {
-	Address  string
+	Addr     Address
 	Position string
 	Children []Node
 }
@@ -10,7 +10,7 @@ func parseDefaultStmt(line string) *DefaultStmt {
 	groups := groupsFromRegex(`<(?P<position>.*)>`, line)
 
 	return &DefaultStmt{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Children: []Node{},
 	}

@@ -3,7 +3,7 @@ package ast
 // AlwaysInlineAttr is a type of attribute that is optionally attached to a
 // variable or struct field definition.
 type AlwaysInlineAttr struct {
-	Address  string
+	Addr     Address
 	Position string
 	Children []Node
 }
@@ -15,7 +15,7 @@ func parseAlwaysInlineAttr(line string) *AlwaysInlineAttr {
 	)
 
 	return &AlwaysInlineAttr{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Children: []Node{},
 	}

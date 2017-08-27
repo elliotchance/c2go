@@ -1,7 +1,7 @@
 package ast
 
 type Record struct {
-	Address  string
+	Addr     Address
 	Type     string
 	Children []Node
 }
@@ -13,7 +13,7 @@ func parseRecord(line string) *Record {
 	)
 
 	return &Record{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Type:     groups["type"],
 		Children: []Node{},
 	}

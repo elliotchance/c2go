@@ -1,7 +1,7 @@
 package ast
 
 type NoInlineAttr struct {
-	Address  string
+	Addr     Address
 	Position string
 	Children []Node
 }
@@ -13,7 +13,7 @@ func parseNoInlineAttr(line string) *NoInlineAttr {
 	)
 
 	return &NoInlineAttr{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Children: []Node{},
 	}

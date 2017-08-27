@@ -1,7 +1,7 @@
 package ast
 
 type ImplicitValueInitExpr struct {
-	Address  string
+	Addr     Address
 	Position string
 	Type1    string
 	Type2    string
@@ -15,7 +15,7 @@ func parseImplicitValueInitExpr(line string) *ImplicitValueInitExpr {
 	)
 
 	return &ImplicitValueInitExpr{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Type1:    groups["type1"],
 		Type2:    groups["type2"],

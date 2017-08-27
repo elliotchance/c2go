@@ -1,7 +1,7 @@
 package ast
 
 type ModeAttr struct {
-	Address  string
+	Addr     Address
 	Position string
 	Name     string
 	Children []Node
@@ -14,7 +14,7 @@ func parseModeAttr(line string) *ModeAttr {
 	)
 
 	return &ModeAttr{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Name:     groups["name"],
 		Children: []Node{},

@@ -1,7 +1,7 @@
 package ast
 
 type PointerType struct {
-	Address  string
+	Addr     Address
 	Type     string
 	Children []Node
 }
@@ -13,7 +13,7 @@ func parsePointerType(line string) *PointerType {
 	)
 
 	return &PointerType{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Type:     groups["type"],
 		Children: []Node{},
 	}

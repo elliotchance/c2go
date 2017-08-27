@@ -1,7 +1,7 @@
 package ast
 
 type Enum struct {
-	Address  string
+	Addr     Address
 	Name     string
 	Children []Node
 }
@@ -13,7 +13,7 @@ func parseEnum(line string) *Enum {
 	)
 
 	return &Enum{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Name:     groups["name"],
 		Children: []Node{},
 	}

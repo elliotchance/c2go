@@ -1,7 +1,7 @@
 package ast
 
 type UnusedAttr struct {
-	Address  string
+	Addr     Address
 	Position string
 	Children []Node
 }
@@ -13,7 +13,7 @@ func parseUnusedAttr(line string) *UnusedAttr {
 	)
 
 	return &UnusedAttr{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Children: []Node{},
 	}

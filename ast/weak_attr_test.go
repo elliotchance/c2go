@@ -7,7 +7,7 @@ import (
 func TestWeakAttr(t *testing.T) {
 	nodes := map[string]Node{
 		`0x56069ece5110 <line:736:22>`: &WeakAttr{
-			Address:  "0x56069ece5110",
+			Addr:     0x56069ece5110,
 			Position: "line:736:22",
 			Children: []Node{},
 		},

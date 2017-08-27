@@ -5,7 +5,7 @@ import (
 )
 
 type EnumDecl struct {
-	Address   string
+	Addr      Address
 	Position  string
 	Position2 string
 	Name      string
@@ -19,7 +19,7 @@ func parseEnumDecl(line string) *EnumDecl {
 	)
 
 	return &EnumDecl{
-		Address:   groups["address"],
+		Addr:      ParseAddress(groups["address"]),
 		Position:  groups["position"],
 		Position2: groups["position2"],
 		Name:      strings.TrimSpace(groups["name"]),

@@ -1,7 +1,7 @@
 package ast
 
 type DeclStmt struct {
-	Address  string
+	Addr     Address
 	Position string
 	Children []Node
 }
@@ -13,7 +13,7 @@ func parseDeclStmt(line string) *DeclStmt {
 	)
 
 	return &DeclStmt{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Children: []Node{},
 	}

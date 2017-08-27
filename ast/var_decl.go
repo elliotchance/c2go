@@ -5,7 +5,7 @@ import (
 )
 
 type VarDecl struct {
-	Address      string
+	Addr         Address
 	Position     string
 	Position2    string
 	Name         string
@@ -37,7 +37,7 @@ func parseVarDecl(line string) *VarDecl {
 	}
 
 	return &VarDecl{
-		Address:      groups["address"],
+		Addr:         ParseAddress(groups["address"]),
 		Position:     groups["position"],
 		Position2:    strings.TrimSpace(groups["position2"]),
 		Name:         strings.TrimSpace(groups["name"]),

@@ -1,7 +1,7 @@
 package ast
 
 type AsmLabelAttr struct {
-	Address      string
+	Addr         Address
 	Position     string
 	Inherited    bool
 	FunctionName string
@@ -17,7 +17,7 @@ func parseAsmLabelAttr(line string) *AsmLabelAttr {
 	)
 
 	return &AsmLabelAttr{
-		Address:      groups["address"],
+		Addr:         ParseAddress(groups["address"]),
 		Position:     groups["position"],
 		Inherited:    len(groups["inherited"]) > 0,
 		FunctionName: groups["function"],

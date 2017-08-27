@@ -1,7 +1,7 @@
 package ast
 
 type IncompleteArrayType struct {
-	Address  string
+	Addr     Address
 	Type     string
 	Children []Node
 }
@@ -13,7 +13,7 @@ func parseIncompleteArrayType(line string) *IncompleteArrayType {
 	)
 
 	return &IncompleteArrayType{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Type:     groups["type"],
 		Children: []Node{},
 	}

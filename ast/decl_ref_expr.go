@@ -1,7 +1,7 @@
 package ast
 
 type DeclRefExpr struct {
-	Address  string
+	Addr     Address
 	Position string
 	Type     string
 	Lvalue   bool
@@ -26,7 +26,7 @@ func parseDeclRefExpr(line string) *DeclRefExpr {
 	)
 
 	return &DeclRefExpr{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Type:     groups["type"],
 		Lvalue:   len(groups["lvalue"]) > 0,

@@ -1,7 +1,7 @@
 package ast
 
 type ElaboratedType struct {
-	Address  string
+	Addr     Address
 	Type     string
 	Tags     string
 	Children []Node
@@ -14,7 +14,7 @@ func parseElaboratedType(line string) *ElaboratedType {
 	)
 
 	return &ElaboratedType{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Type:     groups["type"],
 		Tags:     groups["tags"],
 		Children: []Node{},

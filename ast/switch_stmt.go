@@ -1,7 +1,7 @@
 package ast
 
 type SwitchStmt struct {
-	Address  string
+	Addr     Address
 	Position string
 	Children []Node
 }
@@ -10,7 +10,7 @@ func parseSwitchStmt(line string) *SwitchStmt {
 	groups := groupsFromRegex(`<(?P<position>.*)>`, line)
 
 	return &SwitchStmt{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Children: []Node{},
 	}
