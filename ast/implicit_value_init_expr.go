@@ -2,7 +2,7 @@ package ast
 
 type ImplicitValueInitExpr struct {
 	Addr       Address
-	Position   string
+	Pos        string
 	Type1      string
 	Type2      string
 	ChildNodes []Node
@@ -16,7 +16,7 @@ func parseImplicitValueInitExpr(line string) *ImplicitValueInitExpr {
 
 	return &ImplicitValueInitExpr{
 		Addr:       ParseAddress(groups["address"]),
-		Position:   groups["position"],
+		Pos:        groups["position"],
 		Type1:      groups["type1"],
 		Type2:      groups["type2"],
 		ChildNodes: []Node{},
@@ -39,4 +39,9 @@ func (n *ImplicitValueInitExpr) Address() Address {
 // this node does not support children it will always return an empty slice.
 func (n *ImplicitValueInitExpr) Children() []Node {
 	return n.ChildNodes
+}
+
+// Position returns the position in the original source code.
+func (n *ImplicitValueInitExpr) Position() Position {
+	return NewPositionFromString(n.Pos)
 }

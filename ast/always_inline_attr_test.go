@@ -8,7 +8,7 @@ func TestAlwaysInlineAttr(t *testing.T) {
 	nodes := map[string]Node{
 		`0x7fce780f5018 </usr/include/sys/cdefs.h:313:68> always_inline`: &AlwaysInlineAttr{
 			Addr:       0x7fce780f5018,
-			Position:   "/usr/include/sys/cdefs.h:313:68",
+			Pos:        "/usr/include/sys/cdefs.h:313:68",
 			ChildNodes: []Node{},
 		},
 	}

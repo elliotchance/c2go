@@ -2,7 +2,7 @@ package ast
 
 type VAArgExpr struct {
 	Addr       Address
-	Position   string
+	Pos        string
 	Type       string
 	ChildNodes []Node
 }
@@ -15,7 +15,7 @@ func parseVAArgExpr(line string) *VAArgExpr {
 
 	return &VAArgExpr{
 		Addr:       ParseAddress(groups["address"]),
-		Position:   groups["position"],
+		Pos:        groups["position"],
 		Type:       groups["type"],
 		ChildNodes: []Node{},
 	}
@@ -37,4 +37,9 @@ func (n *VAArgExpr) Address() Address {
 // this node does not support children it will always return an empty slice.
 func (n *VAArgExpr) Children() []Node {
 	return n.ChildNodes
+}
+
+// Position returns the position in the original source code.
+func (n *VAArgExpr) Position() Position {
+	return NewPositionFromString(n.Pos)
 }

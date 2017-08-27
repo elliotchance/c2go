@@ -2,7 +2,7 @@ package ast
 
 type ContinueStmt struct {
 	Addr       Address
-	Position   string
+	Pos        string
 	ChildNodes []Node
 }
 
@@ -14,7 +14,7 @@ func parseContinueStmt(line string) *ContinueStmt {
 
 	return &ContinueStmt{
 		Addr:       ParseAddress(groups["address"]),
-		Position:   groups["position"],
+		Pos:        groups["position"],
 		ChildNodes: []Node{},
 	}
 }
@@ -35,4 +35,9 @@ func (n *ContinueStmt) Address() Address {
 // this node does not support children it will always return an empty slice.
 func (n *ContinueStmt) Children() []Node {
 	return n.ChildNodes
+}
+
+// Position returns the position in the original source code.
+func (n *ContinueStmt) Position() Position {
+	return NewPositionFromString(n.Pos)
 }

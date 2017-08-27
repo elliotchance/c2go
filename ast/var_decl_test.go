@@ -8,7 +8,7 @@ func TestVarDecl(t *testing.T) {
 	nodes := map[string]Node{
 		`0x7fd5e90e5a00 <col:14> col:17 'int'`: &VarDecl{
 			Addr:         0x7fd5e90e5a00,
-			Position:     "col:14",
+			Pos:          "col:14",
 			Position2:    "col:17",
 			Name:         "",
 			Type:         "int",
@@ -21,7 +21,7 @@ func TestVarDecl(t *testing.T) {
 		},
 		`0x7fd5e90e9078 <line:156:1, col:14> col:14 __stdinp 'FILE *' extern`: &VarDecl{
 			Addr:         0x7fd5e90e9078,
-			Position:     "line:156:1, col:14",
+			Pos:          "line:156:1, col:14",
 			Position2:    "col:14",
 			Name:         "__stdinp",
 			Type:         "FILE *",
@@ -34,7 +34,7 @@ func TestVarDecl(t *testing.T) {
 		},
 		`0x7fd5e90ed630 <col:40, col:47> col:47 __size 'size_t':'unsigned long'`: &VarDecl{
 			Addr:         0x7fd5e90ed630,
-			Position:     "col:40, col:47",
+			Pos:          "col:40, col:47",
 			Position2:    "col:47",
 			Name:         "__size",
 			Type:         "size_t",
@@ -47,7 +47,7 @@ func TestVarDecl(t *testing.T) {
 		},
 		`0x7fee35907a78 <col:4, col:8> col:8 used c 'int'`: &VarDecl{
 			Addr:         0x7fee35907a78,
-			Position:     "col:4, col:8",
+			Pos:          "col:4, col:8",
 			Position2:    "col:8",
 			Name:         "c",
 			Type:         "int",
@@ -60,7 +60,7 @@ func TestVarDecl(t *testing.T) {
 		},
 		`0x7fb0fd90ba30 <col:3, /usr/include/sys/_types.h:52:33> tests/assert/assert.c:13:9 used b 'int *' cinit`: &VarDecl{
 			Addr:         0x7fb0fd90ba30,
-			Position:     "col:3, /usr/include/sys/_types.h:52:33",
+			Pos:          "col:3, /usr/include/sys/_types.h:52:33",
 			Position2:    "tests/assert/assert.c:13:9",
 			Name:         "b",
 			Type:         "int *",
@@ -73,7 +73,7 @@ func TestVarDecl(t *testing.T) {
 		},
 		`0x7fb20308bd40 <col:5, col:11> col:11 referenced a 'short'`: &VarDecl{
 			Addr:         0x7fb20308bd40,
-			Position:     "col:5, col:11",
+			Pos:          "col:5, col:11",
 			Position2:    "col:11",
 			Name:         "a",
 			Type:         "short",

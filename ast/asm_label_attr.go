@@ -2,7 +2,7 @@ package ast
 
 type AsmLabelAttr struct {
 	Addr         Address
-	Position     string
+	Pos          string
 	Inherited    bool
 	FunctionName string
 	ChildNodes   []Node
@@ -18,7 +18,7 @@ func parseAsmLabelAttr(line string) *AsmLabelAttr {
 
 	return &AsmLabelAttr{
 		Addr:         ParseAddress(groups["address"]),
-		Position:     groups["position"],
+		Pos:          groups["position"],
 		Inherited:    len(groups["inherited"]) > 0,
 		FunctionName: groups["function"],
 		ChildNodes:   []Node{},
@@ -41,4 +41,9 @@ func (n *AsmLabelAttr) Address() Address {
 // this node does not support children it will always return an empty slice.
 func (n *AsmLabelAttr) Children() []Node {
 	return n.ChildNodes
+}
+
+// Position returns the position in the original source code.
+func (n *AsmLabelAttr) Position() Position {
+	return NewPositionFromString(n.Pos)
 }

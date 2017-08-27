@@ -2,7 +2,7 @@ package ast
 
 type BinaryOperator struct {
 	Addr       Address
-	Position   string
+	Pos        string
 	Type       string
 	Operator   string
 	ChildNodes []Node
@@ -16,7 +16,7 @@ func parseBinaryOperator(line string) *BinaryOperator {
 
 	return &BinaryOperator{
 		Addr:       ParseAddress(groups["address"]),
-		Position:   groups["position"],
+		Pos:        groups["position"],
 		Type:       groups["type"],
 		Operator:   groups["operator"],
 		ChildNodes: []Node{},
@@ -39,4 +39,9 @@ func (n *BinaryOperator) Address() Address {
 // this node does not support children it will always return an empty slice.
 func (n *BinaryOperator) Children() []Node {
 	return n.ChildNodes
+}
+
+// Position returns the position in the original source code.
+func (n *BinaryOperator) Position() Position {
+	return NewPositionFromString(n.Pos)
 }

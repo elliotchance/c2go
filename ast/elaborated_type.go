@@ -38,3 +38,8 @@ func (n *ElaboratedType) Address() Address {
 func (n *ElaboratedType) Children() []Node {
 	return n.ChildNodes
 }
+
+// Position returns the position in the original source code.
+func (n *ElaboratedType) Position() Position {
+	return Position{}
+}

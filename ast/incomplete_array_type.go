@@ -36,3 +36,8 @@ func (n *IncompleteArrayType) Address() Address {
 func (n *IncompleteArrayType) Children() []Node {
 	return n.ChildNodes
 }
+
+// Position returns the position in the original source code.
+func (n *IncompleteArrayType) Position() Position {
+	return Position{}
+}

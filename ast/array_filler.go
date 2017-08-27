@@ -28,3 +28,8 @@ func (n *ArrayFiller) Address() Address {
 func (n *ArrayFiller) Children() []Node {
 	return n.ChildNodes
 }
+
+// Position returns the position in the original source code.
+func (n *ArrayFiller) Position() Position {
+	return Position{}
+}

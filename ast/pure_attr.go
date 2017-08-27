@@ -2,7 +2,7 @@ package ast
 
 type PureAttr struct {
 	Addr       Address
-	Position   string
+	Pos        string
 	Implicit   bool
 	Inherited  bool
 	ChildNodes []Node
@@ -18,7 +18,7 @@ func parsePureAttr(line string) *PureAttr {
 
 	return &PureAttr{
 		Addr:       ParseAddress(groups["address"]),
-		Position:   groups["position"],
+		Pos:        groups["position"],
 		Implicit:   len(groups["implicit"]) > 0,
 		Inherited:  len(groups["inherited"]) > 0,
 		ChildNodes: []Node{},
@@ -41,4 +41,9 @@ func (n *PureAttr) Address() Address {
 // this node does not support children it will always return an empty slice.
 func (n *PureAttr) Children() []Node {
 	return n.ChildNodes
+}
+
+// Position returns the position in the original source code.
+func (n *PureAttr) Position() Position {
+	return NewPositionFromString(n.Pos)
 }

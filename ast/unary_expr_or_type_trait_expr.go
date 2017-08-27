@@ -2,7 +2,7 @@ package ast
 
 type UnaryExprOrTypeTraitExpr struct {
 	Addr       Address
-	Position   string
+	Pos        string
 	Type1      string
 	Function   string
 	Type2      string
@@ -20,7 +20,7 @@ func parseUnaryExprOrTypeTraitExpr(line string) *UnaryExprOrTypeTraitExpr {
 
 	return &UnaryExprOrTypeTraitExpr{
 		Addr:       ParseAddress(groups["address"]),
-		Position:   groups["position"],
+		Pos:        groups["position"],
 		Type1:      groups["type1"],
 		Function:   groups["function"],
 		Type2:      removeQuotes(groups["type2"]),
@@ -44,4 +44,9 @@ func (n *UnaryExprOrTypeTraitExpr) Address() Address {
 // this node does not support children it will always return an empty slice.
 func (n *UnaryExprOrTypeTraitExpr) Children() []Node {
 	return n.ChildNodes
+}
+
+// Position returns the position in the original source code.
+func (n *UnaryExprOrTypeTraitExpr) Position() Position {
+	return NewPositionFromString(n.Pos)
 }

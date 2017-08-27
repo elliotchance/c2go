@@ -6,7 +6,7 @@ import (
 
 type ParmVarDecl struct {
 	Addr       Address
-	Position   string
+	Pos        string
 	Position2  string
 	Name       string
 	Type       string
@@ -38,7 +38,7 @@ func parseParmVarDecl(line string) *ParmVarDecl {
 
 	return &ParmVarDecl{
 		Addr:       ParseAddress(groups["address"]),
-		Position:   groups["position"],
+		Pos:        groups["position"],
 		Position2:  strings.TrimSpace(groups["position2"]),
 		Name:       strings.TrimSpace(groups["name"]),
 		Type:       groups["type"],
@@ -64,4 +64,9 @@ func (n *ParmVarDecl) Address() Address {
 // this node does not support children it will always return an empty slice.
 func (n *ParmVarDecl) Children() []Node {
 	return n.ChildNodes
+}
+
+// Position returns the position in the original source code.
+func (n *ParmVarDecl) Position() Position {
+	return NewPositionFromString(n.Pos)
 }

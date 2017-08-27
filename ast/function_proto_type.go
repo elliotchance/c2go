@@ -38,3 +38,8 @@ func (n *FunctionProtoType) Address() Address {
 func (n *FunctionProtoType) Children() []Node {
 	return n.ChildNodes
 }
+
+// Position returns the position in the original source code.
+func (n *FunctionProtoType) Position() Position {
+	return Position{}
+}

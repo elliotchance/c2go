@@ -36,3 +36,8 @@ func (n *PointerType) Address() Address {
 func (n *PointerType) Children() []Node {
 	return n.ChildNodes
 }
+
+// Position returns the position in the original source code.
+func (n *PointerType) Position() Position {
+	return Position{}
+}

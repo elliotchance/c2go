@@ -42,3 +42,8 @@ func (n *ConstantArrayType) Address() Address {
 func (n *ConstantArrayType) Children() []Node {
 	return n.ChildNodes
 }
+
+// Position returns the position in the original source code.
+func (n *ConstantArrayType) Position() Position {
+	return Position{}
+}

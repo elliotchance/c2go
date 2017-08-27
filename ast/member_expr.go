@@ -2,7 +2,7 @@ package ast
 
 type MemberExpr struct {
 	Addr       Address
-	Position   string
+	Pos        string
 	Type       string
 	Type2      string
 	Name       string
@@ -33,7 +33,7 @@ func parseMemberExpr(line string) *MemberExpr {
 
 	return &MemberExpr{
 		Addr:       ParseAddress(groups["address"]),
-		Position:   groups["position"],
+		Pos:        groups["position"],
 		Type:       groups["type"],
 		Type2:      type2,
 		IsPointer:  groups["pointer"] == "->",
@@ -84,4 +84,9 @@ func (n *MemberExpr) Address() Address {
 // this node does not support children it will always return an empty slice.
 func (n *MemberExpr) Children() []Node {
 	return n.ChildNodes
+}
+
+// Position returns the position in the original source code.
+func (n *MemberExpr) Position() Position {
+	return NewPositionFromString(n.Pos)
 }
