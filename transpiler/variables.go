@@ -39,7 +39,7 @@ func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
 	var values []goast.Expr
 	if !types.IsNullExpr(defaultValue) {
 		t, err := types.CastExpr(p, defaultValue, defaultValueType, a.Type)
-		if !p.AddMessage(ast.GenerateWarningMessage(err, a)) {
+		if !p.AddMessage(p.GenerateWarningMessage(err, a)) {
 			values = []goast.Expr{t}
 		}
 	}
@@ -59,7 +59,7 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 	arrayType, arraySize := types.GetArrayTypeAndSize(a.Type)
 	if arraySize != -1 && defaultValue == nil {
 		goArrayType, err := types.ResolveType(p, arrayType)
-		p.AddMessage(ast.GenerateWarningMessage(err, a))
+		p.AddMessage(p.GenerateWarningMessage(err, a))
 
 		defaultValue = []goast.Expr{
 			util.NewCallExpr(
@@ -74,7 +74,7 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 	}
 
 	t, err := types.ResolveType(p, a.Type)
-	p.AddMessage(ast.GenerateWarningMessage(err, a))
+	p.AddMessage(p.GenerateWarningMessage(err, a))
 
 	return &goast.DeclStmt{
 		Decl: &goast.GenDecl{
@@ -119,7 +119,7 @@ func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) (
 			decls = append(decls, e)
 
 		case *ast.TypedefDecl:
-			p.AddMessage(ast.GenerateWarningMessage(errors.New("cannot use TypedefDecl for DeclStmt"), c))
+			p.AddMessage(p.GenerateWarningMessage(errors.New("cannot use TypedefDecl for DeclStmt"), c))
 
 		default:
 			panic(a)
@@ -176,7 +176,7 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	lhsResolvedType, err := types.ResolveType(p, lhsType)
-	p.AddMessage(ast.GenerateWarningMessage(err, n))
+	p.AddMessage(p.GenerateWarningMessage(err, n))
 
 	// lhsType will be something like "struct foo"
 	structType := p.GetStruct(lhsType)
@@ -193,14 +193,14 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 		//      to be resolved before the real field type can be determined.
 		err = errors.New("cannot determine type for LHS '" + lhsType +
 			"', will use 'void *' for all fields")
-		p.AddMessage(ast.GenerateWarningMessage(err, n))
+		p.AddMessage(p.GenerateWarningMessage(err, n))
 	} else {
 		if s, ok := structType.Fields[rhs].(string); ok {
 			rhsType = s
 		} else {
 			err = errors.New("cannot determine type for RHS, will use" +
 				" 'void *' for all fields")
-			p.AddMessage(ast.GenerateWarningMessage(err, n))
+			p.AddMessage(p.GenerateWarningMessage(err, n))
 		}
 	}
 

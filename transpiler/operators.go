@@ -148,7 +148,7 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
 			if union != nil && union.IsUnion {
 				attrType, err := types.ResolveType(p, ref.Type)
 				if err != nil {
-					p.AddMessage(ast.GenerateWarningMessage(err, memberExpr))
+					p.AddMessage(p.GenerateWarningMessage(err, memberExpr))
 				}
 
 				// Method names
@@ -182,7 +182,7 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
 	// To handle this, cast the shift count to a uint64.
 	if operator == token.SHL_ASSIGN || operator == token.SHR_ASSIGN {
 		right, err = types.CastExpr(p, right, rightType, "unsigned long long")
-		p.AddMessage(ast.GenerateWarningOrErrorMessage(err, n, right == nil))
+		p.AddMessage(p.GenerateWarningOrErrorMessage(err, n, right == nil))
 		if right == nil {
 			right = util.NewNil()
 		}
@@ -190,7 +190,7 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
 
 	resolvedLeftType, err := types.ResolveType(p, leftType)
 	if err != nil {
-		p.AddMessage(ast.GenerateWarningMessage(err, n))
+		p.AddMessage(p.GenerateWarningMessage(err, n))
 	}
 
 	return util.NewBinaryExpr(left, operator, right, resolvedLeftType, exprIsStmt),

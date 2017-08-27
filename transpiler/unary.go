@@ -40,7 +40,7 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program,
 			if union != nil && union.IsUnion {
 				attrType, err := types.ResolveType(p, ref.Type)
 				if err != nil {
-					p.AddMessage(ast.GenerateWarningMessage(err, memberExpr))
+					p.AddMessage(p.GenerateWarningMessage(err, memberExpr))
 				}
 
 				// Method names
@@ -94,7 +94,7 @@ func transpileUnaryOperatorNot(n *ast.UnaryOperator, p *program.Program) (
 	}
 
 	t, err := types.ResolveType(p, eType)
-	p.AddMessage(ast.GenerateWarningMessage(err, n))
+	p.AddMessage(p.GenerateWarningMessage(err, n))
 
 	if t == "[]byte" {
 		return util.NewUnaryExpr(
@@ -175,7 +175,7 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 		// value.
 		resolvedType, err := types.ResolveType(p, eType)
 		if err != nil {
-			p.AddMessage(ast.GenerateWarningMessage(err, n))
+			p.AddMessage(p.GenerateWarningMessage(err, n))
 		}
 
 		p.AddImport("unsafe")
@@ -239,7 +239,7 @@ func transpileUnaryExprOrTypeTraitExpr(n *ast.UnaryExprOrTypeTraitExpr, p *progr
 	}
 
 	sizeInBytes, err := types.SizeOf(p, t)
-	p.AddMessage(ast.GenerateWarningMessage(err, n))
+	p.AddMessage(p.GenerateWarningMessage(err, n))
 
 	return util.NewIntLit(sizeInBytes), n.Type1, nil, nil, nil
 }

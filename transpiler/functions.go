@@ -116,7 +116,7 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 		}
 
 		t, err := types.ResolveType(p, f.ReturnType)
-		p.AddMessage(ast.GenerateWarningMessage(err, n))
+		p.AddMessage(p.GenerateWarningMessage(err, n))
 
 		if p.Function != nil && p.Function.Name == "main" {
 			// main() function does not have a return type.
@@ -202,7 +202,7 @@ func getFieldList(f *ast.FunctionDecl, p *program.Program) (*goast.FieldList, er
 	for _, n := range f.ChildNodes {
 		if v, ok := n.(*ast.ParmVarDecl); ok {
 			t, err := types.ResolveType(p, v.Type)
-			p.AddMessage(ast.GenerateWarningMessage(err, f))
+			p.AddMessage(p.GenerateWarningMessage(err, f))
 
 			r = append(r, &goast.Field{
 				Names: []*goast.Ident{util.NewIdent(v.Name)},
@@ -232,7 +232,7 @@ func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (
 	f := program.GetFunctionDefinition(p.Function.Name)
 
 	t, err := types.CastExpr(p, e, eType, f.ReturnType)
-	if p.AddMessage(ast.GenerateWarningMessage(err, n)) {
+	if p.AddMessage(p.GenerateWarningMessage(err, n)) {
 		t = util.NewNil()
 	}
 

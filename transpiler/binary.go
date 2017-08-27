@@ -161,20 +161,20 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 
 	if operator == token.LAND || operator == token.LOR {
 		left, err = types.CastExpr(p, left, leftType, "bool")
-		p.AddMessage(ast.GenerateWarningOrErrorMessage(err, n, left == nil))
+		p.AddMessage(p.GenerateWarningOrErrorMessage(err, n, left == nil))
 		if left == nil {
 			left = util.NewNil()
 		}
 
 		right, err = types.CastExpr(p, right, rightType, "bool")
-		p.AddMessage(ast.GenerateWarningOrErrorMessage(err, n, right == nil))
+		p.AddMessage(p.GenerateWarningOrErrorMessage(err, n, right == nil))
 		if right == nil {
 			right = util.NewNil()
 		}
 
 		resolvedLeftType, err := types.ResolveType(p, leftType)
 		if err != nil {
-			p.AddMessage(ast.GenerateWarningMessage(err, n))
+			p.AddMessage(p.GenerateWarningMessage(err, n))
 		}
 
 		expr := util.NewBinaryExpr(left, operator, right, resolvedLeftType, exprIsStmt)
@@ -188,7 +188,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 	// To handle this, cast the shift count to a uint64.
 	if operator == token.SHL || operator == token.SHR {
 		right, err = types.CastExpr(p, right, rightType, "unsigned long long")
-		p.AddMessage(ast.GenerateWarningOrErrorMessage(err, n, right == nil))
+		p.AddMessage(p.GenerateWarningOrErrorMessage(err, n, right == nil))
 		if right == nil {
 			right = util.NewNil()
 		}
@@ -207,7 +207,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 			// decision of which type to cast to instead of only using the type
 			// of the left side.
 			right, err = types.CastExpr(p, right, rightType, leftType)
-			p.AddMessage(ast.GenerateWarningOrErrorMessage(err, n, right == nil))
+			p.AddMessage(p.GenerateWarningOrErrorMessage(err, n, right == nil))
 		}
 	}
 
@@ -249,7 +249,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 			if _, ok := right.(*goast.UnaryExpr); ok {
 				deref, err := types.GetDereferenceType(rightType)
 
-				if !p.AddMessage(ast.GenerateWarningMessage(err, n)) {
+				if !p.AddMessage(p.GenerateWarningMessage(err, n)) {
 					resolvedDeref, err := types.ResolveType(p, deref)
 
 					// FIXME: I'm not sure how this situation arises.
@@ -257,14 +257,14 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 						resolvedDeref = "interface{}"
 					}
 
-					if !p.AddMessage(ast.GenerateWarningMessage(err, n)) {
+					if !p.AddMessage(p.GenerateWarningMessage(err, n)) {
 						p.AddImport("unsafe")
 						right = util.CreateSliceFromReference(resolvedDeref, right)
 					}
 				}
 			}
 
-			if p.AddMessage(ast.GenerateWarningMessage(err, n)) && right == nil {
+			if p.AddMessage(p.GenerateWarningMessage(err, n)) && right == nil {
 				right = util.NewNil()
 			}
 
@@ -277,7 +277,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 					if union != nil && union.IsUnion {
 						attrType, err := types.ResolveType(p, ref.Type)
 						if err != nil {
-							p.AddMessage(ast.GenerateWarningMessage(err, memberExpr))
+							p.AddMessage(p.GenerateWarningMessage(err, memberExpr))
 						}
 
 						funcName := getFunctionNameForUnionSetter(ref.Name, attrType, memberExpr.Name)
@@ -293,7 +293,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 
 	resolvedLeftType, err := types.ResolveType(p, leftType)
 	if err != nil {
-		p.AddMessage(ast.GenerateWarningMessage(err, n))
+		p.AddMessage(p.GenerateWarningMessage(err, n))
 	}
 
 	return util.NewBinaryExpr(left, operator, right, resolvedLeftType, exprIsStmt),
