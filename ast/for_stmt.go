@@ -1,7 +1,7 @@
 package ast
 
 type ForStmt struct {
-	Address  string
+	Addr     Address
 	Position string
 	Children []Node
 }
@@ -13,7 +13,7 @@ func parseForStmt(line string) *ForStmt {
 	)
 
 	return &ForStmt{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Children: []Node{},
 	}

@@ -5,7 +5,7 @@ import (
 )
 
 type FunctionDecl struct {
-	Address      string
+	Addr         Address
 	Position     string
 	Prev         string
 	Position2    string
@@ -38,7 +38,7 @@ func parseFunctionDecl(line string) *FunctionDecl {
 	}
 
 	return &FunctionDecl{
-		Address:      groups["address"],
+		Addr:         ParseAddress(groups["address"]),
 		Position:     groups["position1"],
 		Prev:         prev,
 		Position2:    strings.TrimSpace(groups["position2"]),

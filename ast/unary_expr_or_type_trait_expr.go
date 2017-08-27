@@ -1,7 +1,7 @@
 package ast
 
 type UnaryExprOrTypeTraitExpr struct {
-	Address  string
+	Addr     Address
 	Position string
 	Type1    string
 	Function string
@@ -19,7 +19,7 @@ func parseUnaryExprOrTypeTraitExpr(line string) *UnaryExprOrTypeTraitExpr {
 	)
 
 	return &UnaryExprOrTypeTraitExpr{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Type1:    groups["type1"],
 		Function: groups["function"],

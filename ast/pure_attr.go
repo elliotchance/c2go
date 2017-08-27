@@ -1,7 +1,7 @@
 package ast
 
 type PureAttr struct {
-	Address   string
+	Addr      Address
 	Position  string
 	Implicit  bool
 	Inherited bool
@@ -17,7 +17,7 @@ func parsePureAttr(line string) *PureAttr {
 	)
 
 	return &PureAttr{
-		Address:   groups["address"],
+		Addr:      ParseAddress(groups["address"]),
 		Position:  groups["position"],
 		Implicit:  len(groups["implicit"]) > 0,
 		Inherited: len(groups["inherited"]) > 0,

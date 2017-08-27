@@ -7,7 +7,7 @@ import (
 )
 
 type NonNullAttr struct {
-	Address  string
+	Addr     Address
 	Position string
 	A        int
 	B        int
@@ -26,7 +26,7 @@ func parseNonNullAttr(line string) *NonNullAttr {
 	}
 
 	return &NonNullAttr{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		A:        util.Atoi(strings.TrimSpace(groups["a"])),
 		B:        b,

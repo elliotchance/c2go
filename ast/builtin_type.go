@@ -1,7 +1,7 @@
 package ast
 
 type BuiltinType struct {
-	Address  string
+	Addr     Address
 	Type     string
 	Children []Node
 }
@@ -13,7 +13,7 @@ func parseBuiltinType(line string) *BuiltinType {
 	)
 
 	return &BuiltinType{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Type:     groups["type"],
 		Children: []Node{},
 	}

@@ -5,7 +5,7 @@ import (
 )
 
 type CharacterLiteral struct {
-	Address  string
+	Addr     Address
 	Position string
 	Type     string
 	Value    int
@@ -19,7 +19,7 @@ func parseCharacterLiteral(line string) *CharacterLiteral {
 	)
 
 	return &CharacterLiteral{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Type:     groups["type"],
 		Value:    util.Atoi(groups["value"]),

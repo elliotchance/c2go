@@ -2,7 +2,7 @@ package ast
 
 // WeakAttr for the WeakAttr node
 type WeakAttr struct {
-	Address  string
+	Addr     Address
 	Position string
 	Children []Node
 }
@@ -14,7 +14,7 @@ func parseWeakAttr(line string) *WeakAttr {
 	)
 
 	return &WeakAttr{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Children: []Node{},
 	}

@@ -1,7 +1,7 @@
 package ast
 
 type MemberExpr struct {
-	Address    string
+	Addr       Address
 	Position   string
 	Type       string
 	Type2      string
@@ -32,7 +32,7 @@ func parseMemberExpr(line string) *MemberExpr {
 	}
 
 	return &MemberExpr{
-		Address:    groups["address"],
+		Addr:       ParseAddress(groups["address"]),
 		Position:   groups["position"],
 		Type:       groups["type"],
 		Type2:      type2,

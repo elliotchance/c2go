@@ -1,7 +1,7 @@
 package ast
 
 type CallExpr struct {
-	Address  string
+	Addr     Address
 	Position string
 	Type     string
 	Children []Node
@@ -14,7 +14,7 @@ func parseCallExpr(line string) *CallExpr {
 	)
 
 	return &CallExpr{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Type:     groups["type"],
 		Children: []Node{},

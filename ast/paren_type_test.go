@@ -7,7 +7,7 @@ import (
 func TestParenType(t *testing.T) {
 	nodes := map[string]Node{
 		`0x7faf820a4c60 'void (int)' sugar`: &ParenType{
-			Address:  "0x7faf820a4c60",
+			Addr:     0x7faf820a4c60,
 			Type:     "void (int)",
 			Sugar:    true,
 			Children: []Node{},

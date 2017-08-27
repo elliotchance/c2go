@@ -1,7 +1,7 @@
 package ast
 
 type IfStmt struct {
-	Address  string
+	Addr     Address
 	Position string
 	Children []Node
 }
@@ -13,7 +13,7 @@ func parseIfStmt(line string) *IfStmt {
 	)
 
 	return &IfStmt{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Children: []Node{},
 	}

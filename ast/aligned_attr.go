@@ -3,7 +3,7 @@ package ast
 // AlignedAttr is a type of attribute that is optionally attached to a variable
 // or struct field definition.
 type AlignedAttr struct {
-	Address   string
+	Addr      Address
 	Position  string
 	IsAligned bool
 	Children  []Node
@@ -16,7 +16,7 @@ func parseAlignedAttr(line string) *AlignedAttr {
 	)
 
 	return &AlignedAttr{
-		Address:   groups["address"],
+		Addr:      ParseAddress(groups["address"]),
 		Position:  groups["position"],
 		IsAligned: len(groups["aligned"]) > 0,
 		Children:  []Node{},

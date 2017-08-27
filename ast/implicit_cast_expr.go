@@ -1,7 +1,7 @@
 package ast
 
 type ImplicitCastExpr struct {
-	Address  string
+	Addr     Address
 	Position string
 	Type     string
 	Kind     string
@@ -15,7 +15,7 @@ func parseImplicitCastExpr(line string) *ImplicitCastExpr {
 	)
 
 	return &ImplicitCastExpr{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Type:     groups["type"],
 		Kind:     groups["kind"],

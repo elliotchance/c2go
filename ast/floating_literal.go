@@ -1,7 +1,7 @@
 package ast
 
 type FloatingLiteral struct {
-	Address  string
+	Addr     Address
 	Position string
 	Type     string
 	Value    float64
@@ -15,7 +15,7 @@ func parseFloatingLiteral(line string) *FloatingLiteral {
 	)
 
 	return &FloatingLiteral{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Type:     groups["type"],
 		Value:    atof(groups["value"]),

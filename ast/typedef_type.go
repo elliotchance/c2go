@@ -1,7 +1,7 @@
 package ast
 
 type TypedefType struct {
-	Address  string
+	Addr     Address
 	Type     string
 	Tags     string
 	Children []Node
@@ -14,7 +14,7 @@ func parseTypedefType(line string) *TypedefType {
 	)
 
 	return &TypedefType{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Type:     groups["type"],
 		Tags:     groups["tags"],
 		Children: []Node{},

@@ -1,7 +1,7 @@
 package ast
 
 type ParenType struct {
-	Address  string
+	Addr     Address
 	Type     string
 	Sugar    bool
 	Children []Node
@@ -11,7 +11,7 @@ func parseParenType(line string) *ParenType {
 	groups := groupsFromRegex(`'(?P<type>.*?)' sugar`, line)
 
 	return &ParenType{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Type:     groups["type"],
 		Sugar:    true,
 		Children: []Node{},

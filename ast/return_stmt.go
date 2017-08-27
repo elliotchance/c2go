@@ -1,7 +1,7 @@
 package ast
 
 type ReturnStmt struct {
-	Address  string
+	Addr     Address
 	Position string
 	Children []Node
 }
@@ -13,7 +13,7 @@ func parseReturnStmt(line string) *ReturnStmt {
 	)
 
 	return &ReturnStmt{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Children: []Node{},
 	}

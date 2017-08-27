@@ -6,7 +6,7 @@ import (
 )
 
 type StringLiteral struct {
-	Address  string
+	Addr     Address
 	Position string
 	Type     string
 	Value    string
@@ -26,7 +26,7 @@ func parseStringLiteral(line string) *StringLiteral {
 	}
 
 	return &StringLiteral{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Type:     groups["type"],
 		Value:    s,

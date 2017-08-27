@@ -1,7 +1,7 @@
 package ast
 
 type LabelStmt struct {
-	Address  string
+	Addr     Address
 	Position string
 	Name     string
 	Children []Node
@@ -14,7 +14,7 @@ func parseLabelStmt(line string) *LabelStmt {
 	)
 
 	return &LabelStmt{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Name:     groups["name"],
 		Children: []Node{},

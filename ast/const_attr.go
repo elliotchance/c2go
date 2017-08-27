@@ -1,7 +1,7 @@
 package ast
 
 type ConstAttr struct {
-	Address  string
+	Addr     Address
 	Position string
 	Tags     string
 	Children []Node
@@ -14,7 +14,7 @@ func parseConstAttr(line string) *ConstAttr {
 	)
 
 	return &ConstAttr{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Tags:     groups["tags"],
 		Children: []Node{},

@@ -1,7 +1,7 @@
 package ast
 
 type IntegerLiteral struct {
-	Address  string
+	Addr     Address
 	Position string
 	Type     string
 	Value    string
@@ -15,7 +15,7 @@ func parseIntegerLiteral(line string) *IntegerLiteral {
 	)
 
 	return &IntegerLiteral{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Type:     groups["type"],
 		Value:    groups["value"],

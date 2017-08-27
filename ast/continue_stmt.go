@@ -1,7 +1,7 @@
 package ast
 
 type ContinueStmt struct {
-	Address  string
+	Addr     Address
 	Position string
 	Children []Node
 }
@@ -13,7 +13,7 @@ func parseContinueStmt(line string) *ContinueStmt {
 	)
 
 	return &ContinueStmt{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Children: []Node{},
 	}

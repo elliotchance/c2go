@@ -1,7 +1,7 @@
 package ast
 
 type CompoundAssignOperator struct {
-	Address               string
+	Addr                  Address
 	Position              string
 	Type                  string
 	Opcode                string
@@ -21,7 +21,7 @@ func parseCompoundAssignOperator(line string) *CompoundAssignOperator {
 	)
 
 	return &CompoundAssignOperator{
-		Address:               groups["address"],
+		Addr:                  ParseAddress(groups["address"]),
 		Position:              groups["position"],
 		Type:                  groups["type"],
 		Opcode:                groups["opcode"],

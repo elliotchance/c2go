@@ -1,7 +1,7 @@
 package ast
 
 type BinaryOperator struct {
-	Address  string
+	Addr     Address
 	Position string
 	Type     string
 	Operator string
@@ -15,7 +15,7 @@ func parseBinaryOperator(line string) *BinaryOperator {
 	)
 
 	return &BinaryOperator{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Type:     groups["type"],
 		Operator: groups["operator"],

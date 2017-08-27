@@ -1,7 +1,7 @@
 package ast
 
 type CaseStmt struct {
-	Address  string
+	Addr     Address
 	Position string
 	Children []Node
 }
@@ -10,7 +10,7 @@ func parseCaseStmt(line string) *CaseStmt {
 	groups := groupsFromRegex(`<(?P<position>.*)>`, line)
 
 	return &CaseStmt{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Children: []Node{},
 	}

@@ -1,7 +1,7 @@
 package ast
 
 type UnaryOperator struct {
-	Address  string
+	Addr     Address
 	Position string
 	Type     string
 	IsLvalue bool
@@ -22,7 +22,7 @@ func parseUnaryOperator(line string) *UnaryOperator {
 	)
 
 	return &UnaryOperator{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Type:     groups["type"],
 		IsLvalue: len(groups["lvalue"]) > 0,

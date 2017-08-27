@@ -1,7 +1,7 @@
 package ast
 
 type DeprecatedAttr struct {
-	Address  string
+	Addr     Address
 	Position string
 	Message1 string
 	Message2 string
@@ -15,7 +15,7 @@ func parseDeprecatedAttr(line string) *DeprecatedAttr {
 	)
 
 	return &DeprecatedAttr{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Message1: removeQuotes(groups["message1"]),
 		Message2: removeQuotes(groups["message2"]),

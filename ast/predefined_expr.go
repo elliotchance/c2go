@@ -1,7 +1,7 @@
 package ast
 
 type PredefinedExpr struct {
-	Address  string
+	Addr     Address
 	Position string
 	Type     string
 	Name     string
@@ -16,7 +16,7 @@ func parsePredefinedExpr(line string) *PredefinedExpr {
 	)
 
 	return &PredefinedExpr{
-		Address:  groups["address"],
+		Addr:     ParseAddress(groups["address"]),
 		Position: groups["position"],
 		Type:     groups["type"],
 		Name:     groups["name"],

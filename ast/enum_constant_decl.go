@@ -1,7 +1,7 @@
 package ast
 
 type EnumConstantDecl struct {
-	Address    string
+	Addr       Address
 	Position   string
 	Position2  string
 	Referenced bool
@@ -21,7 +21,7 @@ func parseEnumConstantDecl(line string) *EnumConstantDecl {
 	)
 
 	return &EnumConstantDecl{
-		Address:    groups["address"],
+		Addr:       ParseAddress(groups["address"]),
 		Position:   groups["position"],
 		Position2:  groups["position2"],
 		Referenced: len(groups["referenced"]) > 0,
