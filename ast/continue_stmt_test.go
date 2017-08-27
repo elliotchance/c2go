@@ -7,9 +7,9 @@ import (
 func TestContinueStmt(t *testing.T) {
 	nodes := map[string]Node{
 		`0x1e044e0 <col:20>`: &ContinueStmt{
-			Addr:     0x1e044e0,
-			Position: "col:20",
-			Children: []Node{},
+			Addr:       0x1e044e0,
+			Position:   "col:20",
+			ChildNodes: []Node{},
 		},
 	}
 

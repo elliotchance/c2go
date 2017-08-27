@@ -1,11 +1,11 @@
 package ast
 
 type ImplicitValueInitExpr struct {
-	Addr     Address
-	Position string
-	Type1    string
-	Type2    string
-	Children []Node
+	Addr       Address
+	Position   string
+	Type1      string
+	Type2      string
+	ChildNodes []Node
 }
 
 func parseImplicitValueInitExpr(line string) *ImplicitValueInitExpr {
@@ -15,22 +15,28 @@ func parseImplicitValueInitExpr(line string) *ImplicitValueInitExpr {
 	)
 
 	return &ImplicitValueInitExpr{
-		Addr:     ParseAddress(groups["address"]),
-		Position: groups["position"],
-		Type1:    groups["type1"],
-		Type2:    groups["type2"],
-		Children: []Node{},
+		Addr:       ParseAddress(groups["address"]),
+		Position:   groups["position"],
+		Type1:      groups["type1"],
+		Type2:      groups["type2"],
+		ChildNodes: []Node{},
 	}
 }
 
 // AddChild adds a new child node. Child nodes can then be accessed with the
 // Children attribute.
 func (n *ImplicitValueInitExpr) AddChild(node Node) {
-	n.Children = append(n.Children, node)
+	n.ChildNodes = append(n.ChildNodes, node)
 }
 
 // Address returns the numeric address of the node. See the documentation for
 // the Address type for more information.
 func (n *ImplicitValueInitExpr) Address() Address {
 	return n.Addr
+}
+
+// Children returns the child nodes. If this node does not have any children or
+// this node does not support children it will always return an empty slice.
+func (n *ImplicitValueInitExpr) Children() []Node {
+	return n.ChildNodes
 }

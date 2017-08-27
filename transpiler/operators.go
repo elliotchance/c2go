@@ -33,21 +33,21 @@ func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
-	a, aType, newPre, newPost, err := transpileToExpr(n.Children[0], p, false)
+	a, aType, newPre, newPost, err := transpileToExpr(n.ChildNodes[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	b, bType, newPre, newPost, err := transpileToExpr(n.Children[1], p, false)
+	b, bType, newPre, newPost, err := transpileToExpr(n.ChildNodes[1], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	c, cType, newPre, newPost, err := transpileToExpr(n.Children[2], p, false)
+	c, cType, newPre, newPost, err := transpileToExpr(n.ChildNodes[2], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
@@ -104,7 +104,7 @@ func transpileParenExpr(n *ast.ParenExpr, p *program.Program) (
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
-	e, eType, newPre, newPost, err := transpileToExpr(n.Children[0], p, false)
+	e, eType, newPre, newPost, err := transpileToExpr(n.ChildNodes[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
@@ -127,7 +127,7 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
-	right, rightType, newPre, newPost, err := transpileToExpr(n.Children[1], p, false)
+	right, rightType, newPre, newPost, err := transpileToExpr(n.ChildNodes[1], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
@@ -135,7 +135,7 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	// Construct code for computing compound assign operation to an union field
-	memberExpr, ok := n.Children[0].(*ast.MemberExpr)
+	memberExpr, ok := n.ChildNodes[0].(*ast.MemberExpr)
 	if ok {
 		ref := memberExpr.GetDeclRefExpr()
 		if ref != nil {
@@ -169,7 +169,7 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
 		}
 	}
 
-	left, leftType, newPre, newPost, err := transpileToExpr(n.Children[0], p, false)
+	left, leftType, newPre, newPost, err := transpileToExpr(n.ChildNodes[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}

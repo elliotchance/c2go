@@ -1,19 +1,19 @@
 package ast
 
 type ArrayFiller struct {
-	Children []Node
+	ChildNodes []Node
 }
 
 func parseArrayFiller(line string) *ArrayFiller {
 	return &ArrayFiller{
-		Children: []Node{},
+		ChildNodes: []Node{},
 	}
 }
 
 // AddChild adds a new child node. Child nodes can then be accessed with the
 // Children attribute.
 func (n *ArrayFiller) AddChild(node Node) {
-	n.Children = append(n.Children, node)
+	n.ChildNodes = append(n.ChildNodes, node)
 }
 
 // Address returns the numeric address of the node. For an ArrayFilter this will
@@ -21,4 +21,10 @@ func (n *ArrayFiller) AddChild(node Node) {
 // information.
 func (n *ArrayFiller) Address() Address {
 	return 0
+}
+
+// Children returns the child nodes. If this node does not have any children or
+// this node does not support children it will always return an empty slice.
+func (n *ArrayFiller) Children() []Node {
+	return n.ChildNodes
 }

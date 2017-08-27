@@ -11,14 +11,14 @@ func TestAsmLabelAttr(t *testing.T) {
 			Position:     "/usr/include/sys/cdefs.h:569:36",
 			Inherited:    false,
 			FunctionName: "_fopen",
-			Children:     []Node{},
+			ChildNodes:   []Node{},
 		},
 		`0x7fd55a169318 </usr/include/stdio.h:325:47> Inherited "_popen"`: &AsmLabelAttr{
 			Addr:         0x7fd55a169318,
 			Position:     "/usr/include/stdio.h:325:47",
 			Inherited:    true,
 			FunctionName: "_popen",
-			Children:     []Node{},
+			ChildNodes:   []Node{},
 		},
 	}
 

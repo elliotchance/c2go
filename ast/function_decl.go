@@ -15,7 +15,7 @@ type FunctionDecl struct {
 	IsImplicit   bool
 	IsUsed       bool
 	IsReferenced bool
-	Children     []Node
+	ChildNodes   []Node
 }
 
 func parseFunctionDecl(line string) *FunctionDecl {
@@ -48,18 +48,24 @@ func parseFunctionDecl(line string) *FunctionDecl {
 		IsImplicit:   len(groups["implicit"]) > 0,
 		IsUsed:       len(groups["used"]) > 0,
 		IsReferenced: len(groups["referenced"]) > 0,
-		Children:     []Node{},
+		ChildNodes:   []Node{},
 	}
 }
 
 // AddChild adds a new child node. Child nodes can then be accessed with the
 // Children attribute.
 func (n *FunctionDecl) AddChild(node Node) {
-	n.Children = append(n.Children, node)
+	n.ChildNodes = append(n.ChildNodes, node)
 }
 
 // Address returns the numeric address of the node. See the documentation for
 // the Address type for more information.
 func (n *FunctionDecl) Address() Address {
 	return n.Addr
+}
+
+// Children returns the child nodes. If this node does not have any children or
+// this node does not support children it will always return an empty slice.
+func (n *FunctionDecl) Children() []Node {
+	return n.ChildNodes
 }

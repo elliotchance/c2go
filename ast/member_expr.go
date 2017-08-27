@@ -10,7 +10,7 @@ type MemberExpr struct {
 	IsBitfield bool
 	Address2   string
 	IsPointer  bool
-	Children   []Node
+	ChildNodes []Node
 }
 
 func parseMemberExpr(line string) *MemberExpr {
@@ -41,20 +41,20 @@ func parseMemberExpr(line string) *MemberExpr {
 		IsLvalue:   true,
 		IsBitfield: len(groups["bitfield"]) > 0,
 		Address2:   groups["address2"],
-		Children:   []Node{},
+		ChildNodes: []Node{},
 	}
 }
 
 // AddChild adds a new child node. Child nodes can then be accessed with the
 // Children attribute.
 func (n *MemberExpr) AddChild(node Node) {
-	n.Children = append(n.Children, node)
+	n.ChildNodes = append(n.ChildNodes, node)
 }
 
 // GetDeclRefExpr gets DeclRefExpr from MemberExpr, or nil if there is no
 // DeclRefExpr
 func (n *MemberExpr) GetDeclRefExpr() *DeclRefExpr {
-	for _, child := range n.Children {
+	for _, child := range n.ChildNodes {
 		res, ok := child.(*DeclRefExpr)
 		if ok {
 			return res
@@ -62,7 +62,7 @@ func (n *MemberExpr) GetDeclRefExpr() *DeclRefExpr {
 
 		cast, ok := child.(*ImplicitCastExpr)
 		if ok {
-			res, ok = cast.Children[0].(*DeclRefExpr)
+			res, ok = cast.ChildNodes[0].(*DeclRefExpr)
 			if ok {
 				return res
 			}
@@ -78,4 +78,10 @@ func (n *MemberExpr) GetDeclRefExpr() *DeclRefExpr {
 // the Address type for more information.
 func (n *MemberExpr) Address() Address {
 	return n.Addr
+}
+
+// Children returns the child nodes. If this node does not have any children or
+// this node does not support children it will always return an empty slice.
+func (n *MemberExpr) Children() []Node {
+	return n.ChildNodes
 }

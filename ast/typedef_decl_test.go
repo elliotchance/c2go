@@ -15,7 +15,7 @@ func TestTypedefDecl(t *testing.T) {
 			Type2:        "",
 			IsImplicit:   false,
 			IsReferenced: false,
-			Children:     []Node{},
+			ChildNodes:   []Node{},
 		},
 		`0x7ffb9f824278 <<invalid sloc>> <invalid sloc> implicit __uint128_t 'unsigned __int128'`: &TypedefDecl{
 			Addr:         0x7ffb9f824278,
@@ -26,7 +26,7 @@ func TestTypedefDecl(t *testing.T) {
 			Type2:        "",
 			IsImplicit:   true,
 			IsReferenced: false,
-			Children:     []Node{},
+			ChildNodes:   []Node{},
 		},
 		`0x7ffb9f824898 <<invalid sloc>> <invalid sloc> implicit referenced __builtin_va_list 'struct __va_list_tag [1]'`: &TypedefDecl{
 			Addr:         0x7ffb9f824898,
@@ -37,7 +37,7 @@ func TestTypedefDecl(t *testing.T) {
 			Type2:        "",
 			IsImplicit:   true,
 			IsReferenced: true,
-			Children:     []Node{},
+			ChildNodes:   []Node{},
 		},
 		`0x7ffb9f8248f8 </usr/include/i386/_types.h:37:1, col:24> col:24 __int8_t 'signed char'`: &TypedefDecl{
 			Addr:         0x7ffb9f8248f8,
@@ -48,7 +48,7 @@ func TestTypedefDecl(t *testing.T) {
 			Type2:        "",
 			IsImplicit:   false,
 			IsReferenced: false,
-			Children:     []Node{},
+			ChildNodes:   []Node{},
 		},
 		`0x7ffb9f8dbf50 <line:98:1, col:27> col:27 referenced __darwin_va_list '__builtin_va_list':'struct __va_list_tag [1]'`: &TypedefDecl{
 			Addr:         0x7ffb9f8dbf50,
@@ -59,7 +59,7 @@ func TestTypedefDecl(t *testing.T) {
 			Type2:        "struct __va_list_tag [1]",
 			IsImplicit:   false,
 			IsReferenced: true,
-			Children:     []Node{},
+			ChildNodes:   []Node{},
 		},
 		`0x34461f0 <line:338:1, col:77> __io_read_fn '__ssize_t (void *, char *, size_t)'`: &TypedefDecl{
 			Addr:         0x34461f0,
@@ -70,7 +70,7 @@ func TestTypedefDecl(t *testing.T) {
 			Type2:        "",
 			IsImplicit:   false,
 			IsReferenced: false,
-			Children:     []Node{},
+			ChildNodes:   []Node{},
 		},
 		`0x55b9da8784b0 <line:341:1, line:342:16> line:341:19 __io_write_fn '__ssize_t (void *, const char *, size_t)'`: &TypedefDecl{
 			Addr:         0x55b9da8784b0,
@@ -81,7 +81,7 @@ func TestTypedefDecl(t *testing.T) {
 			Type2:        "",
 			IsImplicit:   false,
 			IsReferenced: false,
-			Children:     []Node{},
+			ChildNodes:   []Node{},
 		},
 	}
 

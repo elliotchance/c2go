@@ -7,9 +7,9 @@ import (
 func TestEnum(t *testing.T) {
 	nodes := map[string]Node{
 		`0x7f980b858308 'foo'`: &Enum{
-			Addr:     0x7f980b858308,
-			Name:     "foo",
-			Children: []Node{},
+			Addr:       0x7f980b858308,
+			Name:       "foo",
+			ChildNodes: []Node{},
 		},
 	}
 

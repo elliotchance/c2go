@@ -9,7 +9,7 @@ import (
 
 func TestArrayFiller(t *testing.T) {
 	expected := &ArrayFiller{
-		Children: []Node{},
+		ChildNodes: []Node{},
 	}
 	actual := Parse(`array filler`)
 

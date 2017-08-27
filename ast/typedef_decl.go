@@ -13,7 +13,7 @@ type TypedefDecl struct {
 	Type2        string
 	IsImplicit   bool
 	IsReferenced bool
-	Children     []Node
+	ChildNodes   []Node
 }
 
 func parseTypedefDecl(line string) *TypedefDecl {
@@ -42,18 +42,24 @@ func parseTypedefDecl(line string) *TypedefDecl {
 		Type2:        type2,
 		IsImplicit:   len(groups["implicit"]) > 0,
 		IsReferenced: len(groups["referenced"]) > 0,
-		Children:     []Node{},
+		ChildNodes:   []Node{},
 	}
 }
 
 // AddChild adds a new child node. Child nodes can then be accessed with the
 // Children attribute.
 func (n *TypedefDecl) AddChild(node Node) {
-	n.Children = append(n.Children, node)
+	n.ChildNodes = append(n.ChildNodes, node)
 }
 
 // Address returns the numeric address of the node. See the documentation for
 // the Address type for more information.
 func (n *TypedefDecl) Address() Address {
 	return n.Addr
+}
+
+// Children returns the child nodes. If this node does not have any children or
+// this node does not support children it will always return an empty slice.
+func (n *TypedefDecl) Children() []Node {
+	return n.ChildNodes
 }

@@ -13,7 +13,7 @@ func TestCompoundAssignOperator(t *testing.T) {
 			Opcode:                "+=",
 			ComputationLHSType:    "int",
 			ComputationResultType: "int",
-			Children:              []Node{},
+			ChildNodes:            []Node{},
 		},
 	}
 

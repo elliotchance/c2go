@@ -13,7 +13,7 @@ func TestEnumConstantDecl(t *testing.T) {
 			Referenced: false,
 			Name:       "__codecvt_noconv",
 			Type:       "int",
-			Children:   []Node{},
+			ChildNodes: []Node{},
 		},
 		`0x3c77ba8 <line:59:3, col:65> col:3 referenced _ISalnum 'int'`: &EnumConstantDecl{
 			Addr:       0x3c77ba8,
@@ -22,7 +22,7 @@ func TestEnumConstantDecl(t *testing.T) {
 			Referenced: true,
 			Name:       "_ISalnum",
 			Type:       "int",
-			Children:   []Node{},
+			ChildNodes: []Node{},
 		},
 	}
 

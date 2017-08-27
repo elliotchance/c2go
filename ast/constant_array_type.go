@@ -5,10 +5,10 @@ import (
 )
 
 type ConstantArrayType struct {
-	Addr     Address
-	Type     string
-	Size     int
-	Children []Node
+	Addr       Address
+	Type       string
+	Size       int
+	ChildNodes []Node
 }
 
 func parseConstantArrayType(line string) *ConstantArrayType {
@@ -18,21 +18,27 @@ func parseConstantArrayType(line string) *ConstantArrayType {
 	)
 
 	return &ConstantArrayType{
-		Addr:     ParseAddress(groups["address"]),
-		Type:     groups["type"],
-		Size:     util.Atoi(groups["size"]),
-		Children: []Node{},
+		Addr:       ParseAddress(groups["address"]),
+		Type:       groups["type"],
+		Size:       util.Atoi(groups["size"]),
+		ChildNodes: []Node{},
 	}
 }
 
 // AddChild adds a new child node. Child nodes can then be accessed with the
 // Children attribute.
 func (n *ConstantArrayType) AddChild(node Node) {
-	n.Children = append(n.Children, node)
+	n.ChildNodes = append(n.ChildNodes, node)
 }
 
 // Address returns the numeric address of the node. See the documentation for
 // the Address type for more information.
 func (n *ConstantArrayType) Address() Address {
 	return n.Addr
+}
+
+// Children returns the child nodes. If this node does not have any children or
+// this node does not support children it will always return an empty slice.
+func (n *ConstantArrayType) Children() []Node {
+	return n.ChildNodes
 }

@@ -14,7 +14,7 @@ func TestRecordDecl(t *testing.T) {
 			Kind:       "union",
 			Name:       "",
 			Definition: true,
-			Children:   []Node{},
+			ChildNodes: []Node{},
 		},
 		`0x7f85360285c8 </usr/include/sys/_pthread/_pthread_types.h:57:1, line:61:1> line:57:8 struct __darwin_pthread_handler_rec definition`: &RecordDecl{
 			Addr:       0x7f85360285c8,
@@ -24,7 +24,7 @@ func TestRecordDecl(t *testing.T) {
 			Kind:       "struct",
 			Name:       "__darwin_pthread_handler_rec",
 			Definition: true,
-			Children:   []Node{},
+			ChildNodes: []Node{},
 		},
 		`0x7f85370248a0 <line:94:1, col:8> col:8 struct __sFILEX`: &RecordDecl{
 			Addr:       0x7f85370248a0,
@@ -34,7 +34,7 @@ func TestRecordDecl(t *testing.T) {
 			Kind:       "struct",
 			Name:       "__sFILEX",
 			Definition: false,
-			Children:   []Node{},
+			ChildNodes: []Node{},
 		},
 	}
 

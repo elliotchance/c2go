@@ -1,27 +1,33 @@
 package ast
 
 type TranslationUnitDecl struct {
-	Addr     Address
-	Children []Node
+	Addr       Address
+	ChildNodes []Node
 }
 
 func parseTranslationUnitDecl(line string) *TranslationUnitDecl {
 	groups := groupsFromRegex("", line)
 
 	return &TranslationUnitDecl{
-		Addr:     ParseAddress(groups["address"]),
-		Children: []Node{},
+		Addr:       ParseAddress(groups["address"]),
+		ChildNodes: []Node{},
 	}
 }
 
 // AddChild adds a new child node. Child nodes can then be accessed with the
 // Children attribute.
 func (n *TranslationUnitDecl) AddChild(node Node) {
-	n.Children = append(n.Children, node)
+	n.ChildNodes = append(n.ChildNodes, node)
 }
 
 // Address returns the numeric address of the node. See the documentation for
 // the Address type for more information.
 func (n *TranslationUnitDecl) Address() Address {
 	return n.Addr
+}
+
+// Children returns the child nodes. If this node does not have any children or
+// this node does not support children it will always return an empty slice.
+func (n *TranslationUnitDecl) Children() []Node {
+	return n.ChildNodes
 }
