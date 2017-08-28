@@ -2,7 +2,7 @@ package ast
 
 type ImplicitCastExpr struct {
 	Addr       Address
-	Pos        string
+	Pos        Position
 	Type       string
 	Kind       string
 	ChildNodes []Node
@@ -16,7 +16,7 @@ func parseImplicitCastExpr(line string) *ImplicitCastExpr {
 
 	return &ImplicitCastExpr{
 		Addr:       ParseAddress(groups["address"]),
-		Pos:        groups["position"],
+		Pos:        NewPositionFromString(groups["position"]),
 		Type:       groups["type"],
 		Kind:       groups["kind"],
 		ChildNodes: []Node{},
@@ -43,5 +43,5 @@ func (n *ImplicitCastExpr) Children() []Node {
 
 // Position returns the position in the original source code.
 func (n *ImplicitCastExpr) Position() Position {
-	return NewPositionFromString(n.Pos)
+	return n.Pos
 }

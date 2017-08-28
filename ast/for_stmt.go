@@ -2,7 +2,7 @@ package ast
 
 type ForStmt struct {
 	Addr       Address
-	Pos        string
+	Pos        Position
 	ChildNodes []Node
 }
 
@@ -14,7 +14,7 @@ func parseForStmt(line string) *ForStmt {
 
 	return &ForStmt{
 		Addr:       ParseAddress(groups["address"]),
-		Pos:        groups["position"],
+		Pos:        NewPositionFromString(groups["position"]),
 		ChildNodes: []Node{},
 	}
 }
@@ -39,5 +39,5 @@ func (n *ForStmt) Children() []Node {
 
 // Position returns the position in the original source code.
 func (n *ForStmt) Position() Position {
-	return NewPositionFromString(n.Pos)
+	return n.Pos
 }

@@ -4,7 +4,7 @@ import "github.com/elliotchance/c2go/util"
 
 type MaxFieldAlignmentAttr struct {
 	Addr       Address
-	Pos        string
+	Pos        Position
 	Size       int
 	ChildNodes []Node
 }
@@ -17,7 +17,7 @@ func parseMaxFieldAlignmentAttr(line string) *MaxFieldAlignmentAttr {
 
 	return &MaxFieldAlignmentAttr{
 		Addr:       ParseAddress(groups["address"]),
-		Pos:        groups["position"],
+		Pos:        NewPositionFromString(groups["position"]),
 		Size:       util.Atoi(groups["size"]),
 		ChildNodes: []Node{},
 	}
@@ -43,5 +43,5 @@ func (n *MaxFieldAlignmentAttr) Children() []Node {
 
 // Position returns the position in the original source code.
 func (n *MaxFieldAlignmentAttr) Position() Position {
-	return NewPositionFromString(n.Pos)
+	return n.Pos
 }

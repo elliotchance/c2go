@@ -2,7 +2,7 @@ package ast
 
 type BreakStmt struct {
 	Addr       Address
-	Pos        string
+	Pos        Position
 	ChildNodes []Node
 }
 
@@ -14,7 +14,7 @@ func parseBreakStmt(line string) *BreakStmt {
 
 	return &BreakStmt{
 		Addr:       ParseAddress(groups["address"]),
-		Pos:        groups["position"],
+		Pos:        NewPositionFromString(groups["position"]),
 		ChildNodes: []Node{},
 	}
 }
@@ -39,5 +39,5 @@ func (n *BreakStmt) Children() []Node {
 
 // Position returns the position in the original source code.
 func (n *BreakStmt) Position() Position {
-	return NewPositionFromString(n.Pos)
+	return n.Pos
 }

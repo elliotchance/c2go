@@ -2,7 +2,7 @@ package ast
 
 type DeprecatedAttr struct {
 	Addr       Address
-	Pos        string
+	Pos        Position
 	Message1   string
 	Message2   string
 	ChildNodes []Node
@@ -16,7 +16,7 @@ func parseDeprecatedAttr(line string) *DeprecatedAttr {
 
 	return &DeprecatedAttr{
 		Addr:       ParseAddress(groups["address"]),
-		Pos:        groups["position"],
+		Pos:        NewPositionFromString(groups["position"]),
 		Message1:   removeQuotes(groups["message1"]),
 		Message2:   removeQuotes(groups["message2"]),
 		ChildNodes: []Node{},
@@ -43,5 +43,5 @@ func (n *DeprecatedAttr) Children() []Node {
 
 // Position returns the position in the original source code.
 func (n *DeprecatedAttr) Position() Position {
-	return NewPositionFromString(n.Pos)
+	return n.Pos
 }

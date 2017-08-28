@@ -2,7 +2,7 @@ package ast
 
 type MallocAttr struct {
 	Addr       Address
-	Pos        string
+	Pos        Position
 	ChildNodes []Node
 }
 
@@ -14,7 +14,7 @@ func parseMallocAttr(line string) *MallocAttr {
 
 	return &MallocAttr{
 		Addr:       ParseAddress(groups["address"]),
-		Pos:        groups["position"],
+		Pos:        NewPositionFromString(groups["position"]),
 		ChildNodes: []Node{},
 	}
 }
@@ -39,5 +39,5 @@ func (n *MallocAttr) Children() []Node {
 
 // Position returns the position in the original source code.
 func (n *MallocAttr) Position() Position {
-	return NewPositionFromString(n.Pos)
+	return n.Pos
 }

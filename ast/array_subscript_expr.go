@@ -2,7 +2,7 @@ package ast
 
 type ArraySubscriptExpr struct {
 	Addr       Address
-	Pos        string
+	Pos        Position
 	Type       string
 	Kind       string
 	ChildNodes []Node
@@ -16,7 +16,7 @@ func parseArraySubscriptExpr(line string) *ArraySubscriptExpr {
 
 	return &ArraySubscriptExpr{
 		Addr:       ParseAddress(groups["address"]),
-		Pos:        groups["position"],
+		Pos:        NewPositionFromString(groups["position"]),
 		Type:       groups["type"],
 		Kind:       groups["kind"],
 		ChildNodes: []Node{},
@@ -43,5 +43,5 @@ func (n *ArraySubscriptExpr) Children() []Node {
 
 // Position returns the position in the original source code.
 func (n *ArraySubscriptExpr) Position() Position {
-	return NewPositionFromString(n.Pos)
+	return n.Pos
 }

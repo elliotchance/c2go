@@ -4,7 +4,7 @@ package ast
 // or struct field definition.
 type AlignedAttr struct {
 	Addr       Address
-	Pos        string
+	Pos        Position
 	IsAligned  bool
 	ChildNodes []Node
 }
@@ -17,7 +17,7 @@ func parseAlignedAttr(line string) *AlignedAttr {
 
 	return &AlignedAttr{
 		Addr:       ParseAddress(groups["address"]),
-		Pos:        groups["position"],
+		Pos:        NewPositionFromString(groups["position"]),
 		IsAligned:  len(groups["aligned"]) > 0,
 		ChildNodes: []Node{},
 	}
@@ -43,5 +43,5 @@ func (n *AlignedAttr) Children() []Node {
 
 // Position returns the position in the original source code.
 func (n *AlignedAttr) Position() Position {
-	return NewPositionFromString(n.Pos)
+	return n.Pos
 }

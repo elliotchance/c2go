@@ -2,7 +2,7 @@ package ast
 
 type ConstAttr struct {
 	Addr       Address
-	Pos        string
+	Pos        Position
 	Tags       string
 	ChildNodes []Node
 }
@@ -15,7 +15,7 @@ func parseConstAttr(line string) *ConstAttr {
 
 	return &ConstAttr{
 		Addr:       ParseAddress(groups["address"]),
-		Pos:        groups["position"],
+		Pos:        NewPositionFromString(groups["position"]),
 		Tags:       groups["tags"],
 		ChildNodes: []Node{},
 	}
@@ -41,5 +41,5 @@ func (n *ConstAttr) Children() []Node {
 
 // Position returns the position in the original source code.
 func (n *ConstAttr) Position() Position {
-	return NewPositionFromString(n.Pos)
+	return n.Pos
 }

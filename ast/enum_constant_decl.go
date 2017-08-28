@@ -2,7 +2,7 @@ package ast
 
 type EnumConstantDecl struct {
 	Addr       Address
-	Pos        string
+	Pos        Position
 	Position2  string
 	Referenced bool
 	Name       string
@@ -22,7 +22,7 @@ func parseEnumConstantDecl(line string) *EnumConstantDecl {
 
 	return &EnumConstantDecl{
 		Addr:       ParseAddress(groups["address"]),
-		Pos:        groups["position"],
+		Pos:        NewPositionFromString(groups["position"]),
 		Position2:  groups["position2"],
 		Referenced: len(groups["referenced"]) > 0,
 		Name:       groups["name"],
@@ -51,5 +51,5 @@ func (n *EnumConstantDecl) Children() []Node {
 
 // Position returns the position in the original source code.
 func (n *EnumConstantDecl) Position() Position {
-	return NewPositionFromString(n.Pos)
+	return n.Pos
 }

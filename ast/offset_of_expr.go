@@ -2,7 +2,7 @@ package ast
 
 type OffsetOfExpr struct {
 	Addr       Address
-	Pos        string
+	Pos        Position
 	Type       string
 	ChildNodes []Node
 }
@@ -15,7 +15,7 @@ func parseOffsetOfExpr(line string) *OffsetOfExpr {
 
 	return &OffsetOfExpr{
 		Addr:       ParseAddress(groups["address"]),
-		Pos:        groups["position"],
+		Pos:        NewPositionFromString(groups["position"]),
 		Type:       groups["type"],
 		ChildNodes: []Node{},
 	}
@@ -41,5 +41,5 @@ func (n *OffsetOfExpr) Children() []Node {
 
 // Position returns the position in the original source code.
 func (n *OffsetOfExpr) Position() Position {
-	return NewPositionFromString(n.Pos)
+	return n.Pos
 }

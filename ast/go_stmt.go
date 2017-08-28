@@ -2,7 +2,7 @@ package ast
 
 type GotoStmt struct {
 	Addr       Address
-	Pos        string
+	Pos        Position
 	Name       string
 	Position2  string
 	ChildNodes []Node
@@ -16,7 +16,7 @@ func parseGotoStmt(line string) *GotoStmt {
 
 	return &GotoStmt{
 		Addr:       ParseAddress(groups["address"]),
-		Pos:        groups["position"],
+		Pos:        NewPositionFromString(groups["position"]),
 		Name:       groups["name"],
 		Position2:  groups["position2"],
 		ChildNodes: []Node{},
@@ -43,5 +43,5 @@ func (n *GotoStmt) Children() []Node {
 
 // Position returns the position in the original source code.
 func (n *GotoStmt) Position() Position {
-	return NewPositionFromString(n.Pos)
+	return n.Pos
 }

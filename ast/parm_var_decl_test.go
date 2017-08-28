@@ -8,7 +8,7 @@ func TestParmVarDecl(t *testing.T) {
 	nodes := map[string]Node{
 		`0x7f973380f000 <col:14> col:17 'int'`: &ParmVarDecl{
 			Addr:       0x7f973380f000,
-			Pos:        "col:14",
+			Pos:        NewPositionFromString("col:14"),
 			Position2:  "col:17",
 			Type:       "int",
 			Name:       "",
@@ -18,7 +18,7 @@ func TestParmVarDecl(t *testing.T) {
 		},
 		`0x7f973380f070 <col:19, col:30> col:31 'const char *'`: &ParmVarDecl{
 			Addr:       0x7f973380f070,
-			Pos:        "col:19, col:30",
+			Pos:        NewPositionFromString("col:19, col:30"),
 			Position2:  "col:31",
 			Type:       "const char *",
 			Name:       "",
@@ -28,7 +28,7 @@ func TestParmVarDecl(t *testing.T) {
 		},
 		`0x7f9733816e50 <col:13, col:37> col:37 __filename 'const char *__restrict'`: &ParmVarDecl{
 			Addr:       0x7f9733816e50,
-			Pos:        "col:13, col:37",
+			Pos:        NewPositionFromString("col:13, col:37"),
 			Position2:  "col:37",
 			Type:       "const char *__restrict",
 			Name:       "__filename",
@@ -38,7 +38,7 @@ func TestParmVarDecl(t *testing.T) {
 		},
 		`0x7f9733817418 <<invalid sloc>> <invalid sloc> 'FILE *'`: &ParmVarDecl{
 			Addr:       0x7f9733817418,
-			Pos:        "<invalid sloc>",
+			Pos:        NewPositionFromString("<invalid sloc>"),
 			Position2:  "<invalid sloc>",
 			Type:       "FILE *",
 			Name:       "",
@@ -48,7 +48,7 @@ func TestParmVarDecl(t *testing.T) {
 		},
 		`0x7f9733817c30 <col:40, col:47> col:47 __size 'size_t':'unsigned long'`: &ParmVarDecl{
 			Addr:       0x7f9733817c30,
-			Pos:        "col:40, col:47",
+			Pos:        NewPositionFromString("col:40, col:47"),
 			Position2:  "col:47",
 			Type:       "size_t",
 			Name:       "__size",
@@ -58,7 +58,7 @@ func TestParmVarDecl(t *testing.T) {
 		},
 		`0x7f973382fa10 <line:476:18, col:25> col:34 'int (* _Nullable)(void *, char *, int)':'int (*)(void *, char *, int)'`: &ParmVarDecl{
 			Addr:       0x7f973382fa10,
-			Pos:        "line:476:18, col:25",
+			Pos:        NewPositionFromString("line:476:18, col:25"),
 			Position2:  "col:34",
 			Type:       "int (* _Nullable)(void *, char *, int)",
 			Name:       "",
@@ -68,7 +68,7 @@ func TestParmVarDecl(t *testing.T) {
 		},
 		`0x7f97338355b8 <col:10, col:14> col:14 used argc 'int'`: &ParmVarDecl{
 			Addr:       0x7f97338355b8,
-			Pos:        "col:10, col:14",
+			Pos:        NewPositionFromString("col:10, col:14"),
 			Position2:  "col:14",
 			Type:       "int",
 			Name:       "argc",

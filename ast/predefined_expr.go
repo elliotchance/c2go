@@ -2,7 +2,7 @@ package ast
 
 type PredefinedExpr struct {
 	Addr       Address
-	Pos        string
+	Pos        Position
 	Type       string
 	Name       string
 	Lvalue     bool
@@ -17,7 +17,7 @@ func parsePredefinedExpr(line string) *PredefinedExpr {
 
 	return &PredefinedExpr{
 		Addr:       ParseAddress(groups["address"]),
-		Pos:        groups["position"],
+		Pos:        NewPositionFromString(groups["position"]),
 		Type:       groups["type"],
 		Name:       groups["name"],
 		Lvalue:     true,
@@ -45,5 +45,5 @@ func (n *PredefinedExpr) Children() []Node {
 
 // Position returns the position in the original source code.
 func (n *PredefinedExpr) Position() Position {
-	return NewPositionFromString(n.Pos)
+	return n.Pos
 }

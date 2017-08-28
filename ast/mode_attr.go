@@ -2,7 +2,7 @@ package ast
 
 type ModeAttr struct {
 	Addr       Address
-	Pos        string
+	Pos        Position
 	Name       string
 	ChildNodes []Node
 }
@@ -15,7 +15,7 @@ func parseModeAttr(line string) *ModeAttr {
 
 	return &ModeAttr{
 		Addr:       ParseAddress(groups["address"]),
-		Pos:        groups["position"],
+		Pos:        NewPositionFromString(groups["position"]),
 		Name:       groups["name"],
 		ChildNodes: []Node{},
 	}
@@ -41,5 +41,5 @@ func (n *ModeAttr) Children() []Node {
 
 // Position returns the position in the original source code.
 func (n *ModeAttr) Position() Position {
-	return NewPositionFromString(n.Pos)
+	return n.Pos
 }

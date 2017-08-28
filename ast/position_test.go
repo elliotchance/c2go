@@ -76,6 +76,20 @@ func TestNewPositionFromString(t *testing.T) {
 			LineEnd:   0,
 			ColumnEnd: 0,
 		},
+		`/usr/include/sys/stdio.h:39:1, /usr/include/AvailabilityInternal.h:21697:126`: Position{
+			File:      "/usr/include/sys/stdio.h",
+			Line:      39,
+			Column:    1,
+			LineEnd:   0,
+			ColumnEnd: 0,
+		},
+		`col:1, /usr/include/sys/cdefs.h:351:63`: Position{
+			File:      "",
+			Line:      0,
+			Column:    1,
+			LineEnd:   0,
+			ColumnEnd: 0,
+		},
 	}
 
 	for testName, expectedPos := range tests {

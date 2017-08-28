@@ -3,7 +3,7 @@ package ast
 // WeakAttr for the WeakAttr node
 type WeakAttr struct {
 	Addr       Address
-	Pos        string
+	Pos        Position
 	ChildNodes []Node
 }
 
@@ -15,7 +15,7 @@ func parseWeakAttr(line string) *WeakAttr {
 
 	return &WeakAttr{
 		Addr:       ParseAddress(groups["address"]),
-		Pos:        groups["position"],
+		Pos:        NewPositionFromString(groups["position"]),
 		ChildNodes: []Node{},
 	}
 }
@@ -39,5 +39,5 @@ func (n *WeakAttr) Children() []Node {
 
 // Position returns the position in the original source code.
 func (n *WeakAttr) Position() Position {
-	return NewPositionFromString(n.Pos)
+	return n.Pos
 }
