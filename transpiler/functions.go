@@ -24,7 +24,7 @@ func getFunctionBody(n *ast.FunctionDecl) *ast.CompoundStmt {
 	// It's possible that the last node is the CompoundStmt (after all the
 	// parameter declarations) - but I don't know this for certain so we will
 	// look at all the children for now.
-	for _, c := range n.ChildNodes {
+	for _, c := range n.Children() {
 		if b, ok := c.(*ast.CompoundStmt); ok {
 			return b
 		}
@@ -199,7 +199,7 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 // getFieldList returns the parameters of a C function as a Go AST FieldList.
 func getFieldList(f *ast.FunctionDecl, p *program.Program) (*goast.FieldList, error) {
 	r := []*goast.Field{}
-	for _, n := range f.ChildNodes {
+	for _, n := range f.Children() {
 		if v, ok := n.(*ast.ParmVarDecl); ok {
 			t, err := types.ResolveType(p, v.Type)
 			p.AddMessage(p.GenerateWarningMessage(err, f))
@@ -220,11 +220,11 @@ func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (
 	goast.Stmt, []goast.Stmt, []goast.Stmt, error) {
 	// There may not be a return value. Then we don't have to both ourselves
 	// with all the rest of the logic below.
-	if len(n.ChildNodes) == 0 {
+	if len(n.Children()) == 0 {
 		return &goast.ReturnStmt{}, nil, nil, nil
 	}
 
-	e, eType, preStmts, postStmts, err := transpileToExpr(n.ChildNodes[0], p, false)
+	e, eType, preStmts, postStmts, err := transpileToExpr(n.Children()[0], p, false)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -278,7 +278,7 @@ func getFunctionReturnType(f string) string {
 // getFunctionArgumentTypes returns the C types of the arguments in a function.
 func getFunctionArgumentTypes(f *ast.FunctionDecl) []string {
 	r := []string{}
-	for _, n := range f.ChildNodes {
+	for _, n := range f.Children() {
 		if v, ok := n.(*ast.ParmVarDecl); ok {
 			r = append(r, v.Type)
 		}

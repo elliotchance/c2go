@@ -22,12 +22,12 @@ import (
 func transpileBinaryOperatorComma(n *ast.BinaryOperator, p *program.Program) (
 	stmt goast.Stmt, preStmts []goast.Stmt, err error) {
 
-	left, err := transpileToStmts(n.ChildNodes[0], p)
+	left, err := transpileToStmts(n.Children()[0], p)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	right, err := transpileToStmts(n.ChildNodes[1], p)
+	right, err := transpileToStmts(n.Children()[1], p)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -75,19 +75,19 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 	// |   `-ImplicitCastExpr 0x368e898 <col:13> 'int' <LValueToRValue>
 	// |     `-DeclRefExpr 0x368e870 <col:13> 'int' lvalue Var 0x368e748 'y' 'int'
 	if getTokenForOperator(n.Operator) == token.ASSIGN {
-		switch c := n.ChildNodes[1].(type) {
+		switch c := n.Children()[1].(type) {
 		case *ast.BinaryOperator:
 			if getTokenForOperator(c.Operator) == token.ASSIGN {
 				bSecond := ast.BinaryOperator{
 					Type:     c.Type,
 					Operator: "=",
 				}
-				bSecond.AddChild(n.ChildNodes[0])
+				bSecond.AddChild(n.Children()[0])
 
 				var impl ast.ImplicitCastExpr
 				impl.Type = c.Type
 				impl.Kind = "LValueToRValue"
-				impl.AddChild(c.ChildNodes[0])
+				impl.AddChild(c.Children()[0])
 				bSecond.AddChild(&impl)
 
 				var bComma ast.BinaryOperator
@@ -127,14 +127,14 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 	// | `-ImplicitCastExpr 0x21a7898 <col:6> 'int' <LValueToRValue>
 	// |   `-DeclRefExpr 0x21a7870 <col:6> 'int' lvalue Var 0x21a7748 'y' 'int'
 	if getTokenForOperator(n.Operator) == token.COMMA {
-		stmts, st, newPre, newPost, err := transpileToExpr(n.ChildNodes[0], p, false)
+		stmts, st, newPre, newPost, err := transpileToExpr(n.Children()[0], p, false)
 		if err != nil {
 			return nil, "unknown50", nil, nil, err
 		}
 		preStmts = append(preStmts, newPre...)
 		preStmts = append(preStmts, util.NewExprStmt(stmts))
 		postStmts = append(postStmts, newPost...)
-		stmts, st, newPre, newPost, err = transpileToExpr(n.ChildNodes[1], p, false)
+		stmts, st, newPre, newPost, err = transpileToExpr(n.Children()[1], p, false)
 		if err != nil {
 			return nil, "unknown51", nil, nil, err
 		}
@@ -143,14 +143,14 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 		return stmts, st, preStmts, postStmts, nil
 	}
 
-	left, leftType, newPre, newPost, err := transpileToExpr(n.ChildNodes[0], p, false)
+	left, leftType, newPre, newPost, err := transpileToExpr(n.Children()[0], p, false)
 	if err != nil {
 		return nil, "unknown52", nil, nil, err
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	right, rightType, newPre, newPost, err := transpileToExpr(n.ChildNodes[1], p, false)
+	right, rightType, newPre, newPost, err := transpileToExpr(n.Children()[1], p, false)
 	if err != nil {
 		return nil, "unknown53", nil, nil, err
 	}
@@ -213,7 +213,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 
 	if operator == token.ASSIGN {
 		// Memory allocation is translated into the Go-style.
-		allocSize := GetAllocationSizeNode(n.ChildNodes[1])
+		allocSize := GetAllocationSizeNode(n.Children()[1])
 
 		if allocSize != nil {
 			allocSizeExpr, _, newPre, newPost, err := transpileToExpr(allocSize, p, false)
@@ -269,7 +269,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 			}
 
 			// Construct code for assigning value to an union field
-			memberExpr, ok := n.ChildNodes[0].(*ast.MemberExpr)
+			memberExpr, ok := n.Children()[0].(*ast.MemberExpr)
 			if ok {
 				ref := memberExpr.GetDeclRefExpr()
 				if ref != nil {
@@ -322,14 +322,14 @@ func GetAllocationSizeNode(node ast.Node) ast.Node {
 		if functionName == "malloc" {
 			// Is 1 always the body in this case? Might need to be more careful
 			// to find the correct node.
-			return expr.(*ast.CallExpr).ChildNodes[1]
+			return expr.(*ast.CallExpr).Children()[1]
 		}
 
 		if functionName == "calloc" {
 			return &ast.BinaryOperator{
 				Type:       "int",
 				Operator:   "*",
-				ChildNodes: expr.(*ast.CallExpr).ChildNodes[1:],
+				ChildNodes: expr.(*ast.CallExpr).Children()[1:],
 			}
 		}
 
@@ -339,7 +339,7 @@ func GetAllocationSizeNode(node ast.Node) ast.Node {
 		// Realloc will be treated as calloc which will almost certainly cause
 		// bugs in your code.
 		if functionName == "realloc" {
-			return expr.(*ast.CallExpr).ChildNodes[2]
+			return expr.(*ast.CallExpr).Children()[2]
 		}
 	}
 

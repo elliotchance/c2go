@@ -21,7 +21,7 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
 	*goast.IfStmt, []goast.Stmt, []goast.Stmt, error) {
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
-	children := n.ChildNodes
+	children := n.Children()
 
 	// There is always 4 or 5 children in an IfStmt. For example:
 	//
@@ -106,7 +106,7 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
-	children := n.ChildNodes
+	children := n.Children()
 
 	// There are always 5 children in a ForStmt, for example:
 	//
@@ -141,14 +141,14 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 			// a = 0;
 			// b = 0;
 			// for(c = 0 ; a < 5 ; a++)
-			before, newPre, newPost, err := transpileToStmt(c.ChildNodes[0], p)
+			before, newPre, newPost, err := transpileToStmt(c.Children()[0], p)
 			if err != nil {
 				return nil, nil, nil, err
 			}
 			preStmts = append(preStmts, newPre...)
 			preStmts = append(preStmts, before)
 			preStmts = append(preStmts, newPost...)
-			children[0] = c.ChildNodes[1]
+			children[0] = c.Children()[1]
 		}
 	}
 
@@ -183,7 +183,7 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 				// if body is not exist
 				compound = new(ast.CompoundStmt)
 			}
-			compound.ChildNodes = append(compound.ChildNodes, c.ChildNodes[0:len(c.ChildNodes)]...)
+			compound.ChildNodes = append(compound.Children(), c.Children()[0:len(c.Children())]...)
 			children[4] = compound
 			children[3] = nil
 		}
@@ -212,12 +212,12 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 			// 			break;
 			// 		body
 			// }
-			tempSlice := c.ChildNodes[0 : len(c.ChildNodes)-1]
+			tempSlice := c.Children()[0 : len(c.Children())-1]
 
 			var condition ast.IfStmt
 			condition.AddChild(nil)
 			var par ast.ParenExpr
-			par.AddChild(c.ChildNodes[len(c.ChildNodes)-1])
+			par.AddChild(c.Children()[len(c.Children())-1])
 			var unitary ast.UnaryOperator
 			unitary.AddChild(&par)
 			unitary.Operator = "!"
@@ -237,7 +237,7 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 				// if body is not exist
 				compound = new(ast.CompoundStmt)
 			}
-			compound.ChildNodes = append(tempSlice, compound.ChildNodes...)
+			compound.ChildNodes = append(tempSlice, compound.Children()...)
 			children[4] = compound
 			children[2] = nil
 		}
@@ -342,9 +342,9 @@ func transpileWhileStmt(n *ast.WhileStmt, p *program.Program) (
 	var forOperator ast.ForStmt
 	forOperator.AddChild(nil)
 	forOperator.AddChild(nil)
-	forOperator.AddChild(n.ChildNodes[1])
+	forOperator.AddChild(n.Children()[1])
 	forOperator.AddChild(nil)
-	forOperator.AddChild(n.ChildNodes[2])
+	forOperator.AddChild(n.Children()[2])
 
 	return transpileForStmt(&forOperator, p)
 }
@@ -421,8 +421,8 @@ func transpileDoStmt(n *ast.DoStmt, p *program.Program) (
 	forOperator.AddChild(nil)
 	forOperator.AddChild(nil)
 	forOperator.AddChild(nil)
-	c := n.ChildNodes[0].(*ast.CompoundStmt)
-	ifBreak := createIfWithNotConditionAndBreak(n.ChildNodes[1])
+	c := n.Children()[0].(*ast.CompoundStmt)
+	ifBreak := createIfWithNotConditionAndBreak(n.Children()[1])
 	c.AddChild(&ifBreak)
 	forOperator.AddChild(c)
 	return transpileForStmt(&forOperator, p)

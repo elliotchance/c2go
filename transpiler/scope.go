@@ -16,7 +16,7 @@ func transpileCompoundStmt(n *ast.CompoundStmt, p *program.Program) (
 	postStmts := []goast.Stmt{}
 	stmts := []goast.Stmt{}
 
-	for _, x := range n.ChildNodes {
+	for _, x := range n.Children() {
 		result, err := transpileToStmts(x, p)
 		if err != nil {
 			return nil, nil, nil, err

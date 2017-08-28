@@ -86,9 +86,9 @@ func transpileEnumConstantDecl(p *program.Program, n *ast.EnumConstantDecl) (
 		value = ctypeEnumValue(11, token.SHR) // "((1 << (11)) >> 8)"
 		valueType = "uint16"
 	default:
-		if len(n.ChildNodes) > 0 {
+		if len(n.Children()) > 0 {
 			var err error
-			value, _, preStmts, postStmts, err = transpileToExpr(n.ChildNodes[0], p, false)
+			value, _, preStmts, postStmts, err = transpileToExpr(n.Children()[0], p, false)
 			if err != nil {
 				panic(err)
 			}
@@ -106,7 +106,7 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
-	for _, c := range n.ChildNodes {
+	for _, c := range n.Children() {
 		e, newPre, newPost := transpileEnumConstantDecl(p, c.(*ast.EnumConstantDecl))
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 

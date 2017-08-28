@@ -22,14 +22,14 @@ func transpileSwitchStmt(n *ast.SwitchStmt, p *program.Program) (
 	// know that we need the last two which represent the condition and body
 	// respectively.
 
-	if len(n.ChildNodes) < 2 {
+	if len(n.Children()) < 2 {
 		// I don't know what causes this condition. Need to investigate.
 		panic(fmt.Sprintf("Less than two children for switch: %#v", n))
 	}
 
 	// The condition is the expression to be evaulated against each of the
 	// cases.
-	condition, _, newPre, newPost, err := transpileToExpr(n.ChildNodes[len(n.ChildNodes)-2], p, false)
+	condition, _, newPre, newPost, err := transpileToExpr(n.Children()[len(n.Children())-2], p, false)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -38,7 +38,7 @@ func transpileSwitchStmt(n *ast.SwitchStmt, p *program.Program) (
 
 	// The body will always be a CompoundStmt because a switch statement is not
 	// valid without curly brackets.
-	body := n.ChildNodes[len(n.ChildNodes)-1].(*ast.CompoundStmt)
+	body := n.Children()[len(n.Children())-1].(*ast.CompoundStmt)
 	cases, newPre, newPost, err := normalizeSwitchCases(body, p)
 	if err != nil {
 		return nil, nil, nil, err
@@ -119,7 +119,7 @@ func normalizeSwitchCases(body *ast.CompoundStmt, p *program.Program) (
 	var err error
 	var newPre, newPost []goast.Stmt
 
-	for _, x := range body.ChildNodes {
+	for _, x := range body.Children() {
 		switch c := x.(type) {
 		case *ast.CaseStmt, *ast.DefaultStmt:
 			cases, newPre, newPost, err = appendCaseOrDefaultToNormalizedCases(cases, c, caseEndedWithBreak, p)
@@ -193,14 +193,14 @@ func transpileCaseStmt(n *ast.CaseStmt, p *program.Program) (
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
-	c, _, newPre, newPost, err := transpileToExpr(n.ChildNodes[0], p, false)
+	c, _, newPre, newPost, err := transpileToExpr(n.Children()[0], p, false)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	stmts, err := transpileStmts(n.ChildNodes[1:], p)
+	stmts, err := transpileStmts(n.Children()[1:], p)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -212,7 +212,7 @@ func transpileCaseStmt(n *ast.CaseStmt, p *program.Program) (
 }
 
 func transpileDefaultStmt(n *ast.DefaultStmt, p *program.Program) (*goast.CaseClause, error) {
-	stmts, err := transpileStmts(n.ChildNodes[0:], p)
+	stmts, err := transpileStmts(n.Children()[0:], p)
 	if err != nil {
 		return nil, err
 	}

@@ -25,16 +25,16 @@ func getName(firstChild ast.Node) string {
 		return fc.Name
 
 	case *ast.ParenExpr:
-		return getName(fc.ChildNodes[0])
+		return getName(fc.Children()[0])
 
 	case *ast.UnaryOperator:
-		return getName(fc.ChildNodes[0])
+		return getName(fc.Children()[0])
 
 	case *ast.ImplicitCastExpr:
-		return getName(fc.ChildNodes[0])
+		return getName(fc.Children()[0])
 
 	case *ast.CStyleCastExpr:
-		return getName(fc.ChildNodes[0])
+		return getName(fc.Children()[0])
 
 	default:
 		panic(fmt.Sprintf("cannot CallExpr on: %#v", fc))
@@ -44,13 +44,13 @@ func getName(firstChild ast.Node) string {
 func getNameOfFunctionFromCallExpr(n *ast.CallExpr) (string, error) {
 	// The first child will always contain the name of the function being
 	// called.
-	firstChild, ok := n.ChildNodes[0].(*ast.ImplicitCastExpr)
+	firstChild, ok := n.Children()[0].(*ast.ImplicitCastExpr)
 	if !ok {
-		err := fmt.Errorf("unable to use CallExpr: %#v", n.ChildNodes[0])
+		err := fmt.Errorf("unable to use CallExpr: %#v", n.Children()[0])
 		return "", err
 	}
 
-	return getName(firstChild.ChildNodes[0]), nil
+	return getName(firstChild.Children()[0]), nil
 }
 
 // transpileCallExpr transpiles expressions that calls a function, for example:
@@ -103,7 +103,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 	args := []goast.Expr{}
 	argTypes := []string{}
 	i := 0
-	for _, arg := range n.ChildNodes[1:] {
+	for _, arg := range n.Children()[1:] {
 		e, eType, newPre, newPost, err := transpileToExpr(arg, p, false)
 		if err != nil {
 			return nil, "unknown2", nil, nil, err
