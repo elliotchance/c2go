@@ -26,7 +26,7 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program,
 	// BinaryExpr with the same functionality.
 
 	// Construct code for assigning value to an union field
-	memberExpr, ok := n.ChildNodes[0].(*ast.MemberExpr)
+	memberExpr, ok := n.Children()[0].(*ast.MemberExpr)
 	if ok {
 		ref := memberExpr.GetDeclRefExpr()
 		if ref != nil {
@@ -70,7 +70,7 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program,
 		Type:     n.Type,
 		Operator: binaryOperator,
 		ChildNodes: []ast.Node{
-			n.ChildNodes[0], &ast.IntegerLiteral{
+			n.Children()[0], &ast.IntegerLiteral{
 				Type:       "int",
 				Value:      "1",
 				ChildNodes: []ast.Node{},
@@ -81,7 +81,7 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program,
 
 func transpileUnaryOperatorNot(n *ast.UnaryOperator, p *program.Program) (
 	goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
-	e, eType, preStmts, postStmts, err := transpileToExpr(n.ChildNodes[0], p, false)
+	e, eType, preStmts, postStmts, err := transpileToExpr(n.Children()[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
@@ -114,7 +114,7 @@ func transpileUnaryOperatorNot(n *ast.UnaryOperator, p *program.Program) (
 // Dereferencing.
 func transpileUnaryOperatorMul(n *ast.UnaryOperator, p *program.Program) (
 	goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
-	e, eType, preStmts, postStmts, err := transpileToExpr(n.ChildNodes[0], p, false)
+	e, eType, preStmts, postStmts, err := transpileToExpr(n.Children()[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
@@ -163,7 +163,7 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 	}
 
 	// Otherwise handle like a unary operator.
-	e, eType, newPre, newPost, err := transpileToExpr(n.ChildNodes[0], p, false)
+	e, eType, newPre, newPost, err := transpileToExpr(n.Children()[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
@@ -199,17 +199,17 @@ func transpileUnaryExprOrTypeTraitExpr(n *ast.UnaryExprOrTypeTraitExpr, p *progr
 
 	// It will have children if the sizeof() is referencing a variable.
 	// Fortunately clang already has the type in the AST for us.
-	if len(n.ChildNodes) > 0 {
+	if len(n.Children()) > 0 {
 		var realFirstChild interface{}
 		t = ""
 
-		switch c := n.ChildNodes[0].(type) {
+		switch c := n.Children()[0].(type) {
 		case *ast.ParenExpr:
-			realFirstChild = c.ChildNodes[0]
+			realFirstChild = c.Children()[0]
 		case *ast.DeclRefExpr:
 			t = c.Type
 		default:
-			panic(fmt.Sprintf("cannot find first child from: %#v", n.ChildNodes[0]))
+			panic(fmt.Sprintf("cannot find first child from: %#v", n.Children()[0]))
 		}
 
 		if t == "" {

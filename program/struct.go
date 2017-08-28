@@ -25,7 +25,7 @@ type Struct struct {
 func NewStruct(n *ast.RecordDecl) *Struct {
 	fields := make(map[string]interface{})
 
-	for _, field := range n.ChildNodes {
+	for _, field := range n.Children() {
 		switch f := field.(type) {
 		case *ast.FieldDecl:
 			fields[f.Name] = f.Type

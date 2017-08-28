@@ -64,7 +64,7 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 
 	var fields []*goast.Field
 
-	for _, c := range n.ChildNodes {
+	for _, c := range n.Children() {
 		if field, ok := c.(*ast.FieldDecl); ok {
 			f, _ := transpileFieldDecl(p, field)
 
