@@ -74,8 +74,6 @@ type Program struct {
 	// internal integration testing to generate the output in the form of a
 	// Go-test rather than a standalone Go file.
 	OutputAsTest bool
-
-	RootNode ast.Node
 }
 
 // NewProgram creates a new blank program.

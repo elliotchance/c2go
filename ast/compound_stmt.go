@@ -2,7 +2,7 @@ package ast
 
 type CompoundStmt struct {
 	Addr       Address
-	Pos        string
+	Pos        Position
 	ChildNodes []Node
 
 	// TODO: remove this
@@ -17,7 +17,7 @@ func parseCompoundStmt(line string) *CompoundStmt {
 
 	return &CompoundStmt{
 		Addr:            ParseAddress(groups["address"]),
-		Pos:             groups["position"],
+		Pos:             NewPositionFromString(groups["position"]),
 		ChildNodes:      []Node{},
 		BelongsToSwitch: false,
 	}
@@ -43,5 +43,5 @@ func (n *CompoundStmt) Children() []Node {
 
 // Position returns the position in the original source code.
 func (n *CompoundStmt) Position() Position {
-	return NewPositionFromString(n.Pos)
+	return n.Pos
 }

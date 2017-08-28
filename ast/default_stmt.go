@@ -2,7 +2,7 @@ package ast
 
 type DefaultStmt struct {
 	Addr       Address
-	Pos        string
+	Pos        Position
 	ChildNodes []Node
 }
 
@@ -11,7 +11,7 @@ func parseDefaultStmt(line string) *DefaultStmt {
 
 	return &DefaultStmt{
 		Addr:       ParseAddress(groups["address"]),
-		Pos:        groups["position"],
+		Pos:        NewPositionFromString(groups["position"]),
 		ChildNodes: []Node{},
 	}
 }
@@ -36,5 +36,5 @@ func (n *DefaultStmt) Children() []Node {
 
 // Position returns the position in the original source code.
 func (n *DefaultStmt) Position() Position {
-	return NewPositionFromString(n.Pos)
+	return n.Pos
 }

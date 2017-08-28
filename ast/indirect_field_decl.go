@@ -4,7 +4,7 @@ import "strings"
 
 type IndirectFieldDecl struct {
 	Addr       Address
-	Pos        string
+	Pos        Position
 	Position2  string
 	Implicit   bool
 	Name       string
@@ -24,7 +24,7 @@ func parseIndirectFieldDecl(line string) *IndirectFieldDecl {
 
 	return &IndirectFieldDecl{
 		Addr:       ParseAddress(groups["address"]),
-		Pos:        groups["position"],
+		Pos:        NewPositionFromString(groups["position"]),
 		Position2:  strings.TrimSpace(groups["position2"]),
 		Implicit:   len(groups["implicit"]) > 0,
 		Name:       groups["name"],
@@ -53,5 +53,5 @@ func (n *IndirectFieldDecl) Children() []Node {
 
 // Position returns the position in the original source code.
 func (n *IndirectFieldDecl) Position() Position {
-	return NewPositionFromString(n.Pos)
+	return n.Pos
 }

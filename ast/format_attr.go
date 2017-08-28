@@ -6,7 +6,7 @@ import (
 
 type FormatAttr struct {
 	Addr         Address
-	Pos          string
+	Pos          Position
 	Implicit     bool
 	Inherited    bool
 	FunctionName string
@@ -28,7 +28,7 @@ func parseFormatAttr(line string) *FormatAttr {
 
 	return &FormatAttr{
 		Addr:         ParseAddress(groups["address"]),
-		Pos:          groups["position"],
+		Pos:          NewPositionFromString(groups["position"]),
 		Implicit:     len(groups["implicit"]) > 0,
 		Inherited:    len(groups["inherited"]) > 0,
 		FunctionName: groups["function"],
@@ -58,5 +58,5 @@ func (n *FormatAttr) Children() []Node {
 
 // Position returns the position in the original source code.
 func (n *FormatAttr) Position() Position {
-	return NewPositionFromString(n.Pos)
+	return n.Pos
 }

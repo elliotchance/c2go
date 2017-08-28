@@ -6,7 +6,7 @@ import (
 
 type TypedefDecl struct {
 	Addr         Address
-	Pos          string
+	Pos          Position
 	Position2    string
 	Name         string
 	Type         string
@@ -35,7 +35,7 @@ func parseTypedefDecl(line string) *TypedefDecl {
 
 	return &TypedefDecl{
 		Addr:         ParseAddress(groups["address"]),
-		Pos:          groups["position"],
+		Pos:          NewPositionFromString(groups["position"]),
 		Position2:    strings.TrimSpace(groups["position2"]),
 		Name:         strings.TrimSpace(groups["name"]),
 		Type:         removeQuotes(groups["type"]),
@@ -66,5 +66,5 @@ func (n *TypedefDecl) Children() []Node {
 
 // Position returns the position in the original source code.
 func (n *TypedefDecl) Position() Position {
-	return NewPositionFromString(n.Pos)
+	return n.Pos
 }

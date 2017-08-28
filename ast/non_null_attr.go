@@ -8,7 +8,7 @@ import (
 
 type NonNullAttr struct {
 	Addr       Address
-	Pos        string
+	Pos        Position
 	A          int
 	B          int
 	ChildNodes []Node
@@ -27,7 +27,7 @@ func parseNonNullAttr(line string) *NonNullAttr {
 
 	return &NonNullAttr{
 		Addr:       ParseAddress(groups["address"]),
-		Pos:        groups["position"],
+		Pos:        NewPositionFromString(groups["position"]),
 		A:          util.Atoi(strings.TrimSpace(groups["a"])),
 		B:          b,
 		ChildNodes: []Node{},
@@ -54,5 +54,5 @@ func (n *NonNullAttr) Children() []Node {
 
 // Position returns the position in the original source code.
 func (n *NonNullAttr) Position() Position {
-	return NewPositionFromString(n.Pos)
+	return n.Pos
 }

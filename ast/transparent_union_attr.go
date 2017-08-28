@@ -2,7 +2,7 @@ package ast
 
 type TransparentUnionAttr struct {
 	Addr       Address
-	Pos        string
+	Pos        Position
 	ChildNodes []Node
 }
 
@@ -11,7 +11,7 @@ func parseTransparentUnionAttr(line string) *TransparentUnionAttr {
 
 	return &TransparentUnionAttr{
 		Addr:       ParseAddress(groups["address"]),
-		Pos:        groups["position"],
+		Pos:        NewPositionFromString(groups["position"]),
 		ChildNodes: []Node{},
 	}
 }
@@ -36,5 +36,5 @@ func (n *TransparentUnionAttr) Children() []Node {
 
 // Position returns the position in the original source code.
 func (n *TransparentUnionAttr) Position() Position {
-	return NewPositionFromString(n.Pos)
+	return n.Pos
 }

@@ -2,7 +2,7 @@ package ast
 
 type PackedAttr struct {
 	Addr       Address
-	Pos        string
+	Pos        Position
 	ChildNodes []Node
 }
 
@@ -14,7 +14,7 @@ func parsePackedAttr(line string) *PackedAttr {
 
 	return &PackedAttr{
 		Addr:       ParseAddress(groups["address"]),
-		Pos:        groups["position"],
+		Pos:        NewPositionFromString(groups["position"]),
 		ChildNodes: []Node{},
 	}
 }
@@ -39,5 +39,5 @@ func (n *PackedAttr) Children() []Node {
 
 // Position returns the position in the original source code.
 func (n *PackedAttr) Position() Position {
-	return NewPositionFromString(n.Pos)
+	return n.Pos
 }

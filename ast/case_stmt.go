@@ -2,7 +2,7 @@ package ast
 
 type CaseStmt struct {
 	Addr       Address
-	Pos        string
+	Pos        Position
 	ChildNodes []Node
 }
 
@@ -11,7 +11,7 @@ func parseCaseStmt(line string) *CaseStmt {
 
 	return &CaseStmt{
 		Addr:       ParseAddress(groups["address"]),
-		Pos:        groups["position"],
+		Pos:        NewPositionFromString(groups["position"]),
 		ChildNodes: []Node{},
 	}
 }
@@ -36,5 +36,5 @@ func (n *CaseStmt) Children() []Node {
 
 // Position returns the position in the original source code.
 func (n *CaseStmt) Position() Position {
-	return NewPositionFromString(n.Pos)
+	return n.Pos
 }

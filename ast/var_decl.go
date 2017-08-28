@@ -6,7 +6,7 @@ import (
 
 type VarDecl struct {
 	Addr         Address
-	Pos          string
+	Pos          Position
 	Position2    string
 	Name         string
 	Type         string
@@ -38,7 +38,7 @@ func parseVarDecl(line string) *VarDecl {
 
 	return &VarDecl{
 		Addr:         ParseAddress(groups["address"]),
-		Pos:          groups["position"],
+		Pos:          NewPositionFromString(groups["position"]),
 		Position2:    strings.TrimSpace(groups["position2"]),
 		Name:         strings.TrimSpace(groups["name"]),
 		Type:         groups["type"],
@@ -71,5 +71,5 @@ func (n *VarDecl) Children() []Node {
 
 // Position returns the position in the original source code.
 func (n *VarDecl) Position() Position {
-	return NewPositionFromString(n.Pos)
+	return n.Pos
 }

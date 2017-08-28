@@ -8,7 +8,7 @@ func TestRecordDecl(t *testing.T) {
 	nodes := map[string]Node{
 		`0x7f913c0dbb50 <line:76:9, line:79:1> line:76:9 union definition`: &RecordDecl{
 			Addr:       0x7f913c0dbb50,
-			Pos:        "line:76:9, line:79:1",
+			Pos:        NewPositionFromString("line:76:9, line:79:1"),
 			Prev:       "",
 			Position2:  "line:76:9",
 			Kind:       "union",
@@ -18,7 +18,7 @@ func TestRecordDecl(t *testing.T) {
 		},
 		`0x7f85360285c8 </usr/include/sys/_pthread/_pthread_types.h:57:1, line:61:1> line:57:8 struct __darwin_pthread_handler_rec definition`: &RecordDecl{
 			Addr:       0x7f85360285c8,
-			Pos:        "/usr/include/sys/_pthread/_pthread_types.h:57:1, line:61:1",
+			Pos:        NewPositionFromString("/usr/include/sys/_pthread/_pthread_types.h:57:1, line:61:1"),
 			Prev:       "",
 			Position2:  "line:57:8",
 			Kind:       "struct",
@@ -28,7 +28,7 @@ func TestRecordDecl(t *testing.T) {
 		},
 		`0x7f85370248a0 <line:94:1, col:8> col:8 struct __sFILEX`: &RecordDecl{
 			Addr:       0x7f85370248a0,
-			Pos:        "line:94:1, col:8",
+			Pos:        NewPositionFromString("line:94:1, col:8"),
 			Prev:       "",
 			Position2:  "col:8",
 			Kind:       "struct",

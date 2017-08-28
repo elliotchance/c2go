@@ -6,7 +6,7 @@ import (
 
 type AvailabilityAttr struct {
 	Addr          Address
-	Pos           string
+	Pos           Position
 	OS            string
 	Version       string
 	Unknown1      float64
@@ -34,7 +34,7 @@ func parseAvailabilityAttr(line string) *AvailabilityAttr {
 
 	return &AvailabilityAttr{
 		Addr:          ParseAddress(groups["address"]),
-		Pos:           groups["position"],
+		Pos:           NewPositionFromString(groups["position"]),
 		OS:            groups["os"],
 		Version:       groups["version"],
 		Unknown1:      atof(groups["unknown1"]),
@@ -67,5 +67,5 @@ func (n *AvailabilityAttr) Children() []Node {
 
 // Position returns the position in the original source code.
 func (n *AvailabilityAttr) Position() Position {
-	return NewPositionFromString(n.Pos)
+	return n.Pos
 }

@@ -217,6 +217,7 @@ func Start(args ProgramArgs) error {
 
 	nodes := convertLinesToNodes(lines)
 	tree := buildTree(nodes, 0)
+	ast.FixPositions(tree)
 
 	err = transpiler.TranspileAST(args.inputFile, args.packageName, p, tree[0].(ast.Node))
 	if err != nil {

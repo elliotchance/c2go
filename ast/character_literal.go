@@ -6,7 +6,7 @@ import (
 
 type CharacterLiteral struct {
 	Addr       Address
-	Pos        string
+	Pos        Position
 	Type       string
 	Value      int
 	ChildNodes []Node
@@ -20,7 +20,7 @@ func parseCharacterLiteral(line string) *CharacterLiteral {
 
 	return &CharacterLiteral{
 		Addr:       ParseAddress(groups["address"]),
-		Pos:        groups["position"],
+		Pos:        NewPositionFromString(groups["position"]),
 		Type:       groups["type"],
 		Value:      util.Atoi(groups["value"]),
 		ChildNodes: []Node{},
@@ -47,5 +47,5 @@ func (n *CharacterLiteral) Children() []Node {
 
 // Position returns the position in the original source code.
 func (n *CharacterLiteral) Position() Position {
-	return NewPositionFromString(n.Pos)
+	return n.Pos
 }

@@ -336,6 +336,8 @@ func GetAllNodesOfType(root Node, t reflect.Type) []Node {
 		for _, c := range n.ChildNodes {
 			nodes = append(nodes, GetAllNodesOfType(c, t)...)
 		}
+	case nil:
+		// Do nothing
 	default:
 		panic(n)
 	}

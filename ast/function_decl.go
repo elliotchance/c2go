@@ -6,7 +6,7 @@ import (
 
 type FunctionDecl struct {
 	Addr         Address
-	Pos          string
+	Pos          Position
 	Prev         string
 	Position2    string
 	Name         string
@@ -39,7 +39,7 @@ func parseFunctionDecl(line string) *FunctionDecl {
 
 	return &FunctionDecl{
 		Addr:         ParseAddress(groups["address"]),
-		Pos:          groups["position1"],
+		Pos:          NewPositionFromString(groups["position1"]),
 		Prev:         prev,
 		Position2:    strings.TrimSpace(groups["position2"]),
 		Name:         groups["name"],
@@ -72,5 +72,5 @@ func (n *FunctionDecl) Children() []Node {
 
 // Position returns the position in the original source code.
 func (n *FunctionDecl) Position() Position {
-	return NewPositionFromString(n.Pos)
+	return n.Pos
 }

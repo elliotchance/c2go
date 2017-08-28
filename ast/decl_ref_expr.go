@@ -2,7 +2,7 @@ package ast
 
 type DeclRefExpr struct {
 	Addr       Address
-	Pos        string
+	Pos        Position
 	Type       string
 	Lvalue     bool
 	For        string
@@ -27,7 +27,7 @@ func parseDeclRefExpr(line string) *DeclRefExpr {
 
 	return &DeclRefExpr{
 		Addr:       ParseAddress(groups["address"]),
-		Pos:        groups["position"],
+		Pos:        NewPositionFromString(groups["position"]),
 		Type:       groups["type"],
 		Lvalue:     len(groups["lvalue"]) > 0,
 		For:        groups["for"],
@@ -58,5 +58,5 @@ func (n *DeclRefExpr) Children() []Node {
 
 // Position returns the position in the original source code.
 func (n *DeclRefExpr) Position() Position {
-	return NewPositionFromString(n.Pos)
+	return n.Pos
 }
