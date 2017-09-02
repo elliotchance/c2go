@@ -77,76 +77,9 @@ func Abs(n int) int {
 // because either str is empty or contains only whitespace characters, no
 // conversion is performed and the function returns 0.0.
 func Atof(str []byte) float64 {
-	// First start by removing any trailing whitespace.
-	s := strings.TrimSpace(CStringToString(str))
+	f, _ := atof(str)
 
-	// Before we get into the more complicated parser below lets just try and
-	// interpret the number.
-	f, err := strconv.ParseFloat(s, 64)
-	if err == nil {
-		return f
-	}
-
-	// Now convert to lowercase, this makes the regexp and comparisons easier
-	// and doesn't change the value.
-	s = strings.ToLower(s)
-
-	// 1. Hexadecimal integer? This must be checked before floating-point
-	// because it starts with a 0.
-	r := regexp.MustCompile(`^([+-])?0x([0-9a-f]+)(p[-+]?[0-9a-f]+)?`)
-	match := r.FindStringSubmatch(s)
-	if match != nil {
-		n, err := strconv.ParseUint(match[2], 16, 32)
-		if err == nil {
-			f := float64(n)
-
-			if match[1] == "-" {
-				f *= -1
-			}
-
-			if match[3] != "" {
-				p, err := strconv.Atoi(match[3][1:])
-				if err != nil {
-					return 0
-				}
-
-				f *= math.Pow(2, float64(p))
-			}
-
-			return f
-		}
-
-		return 0
-	}
-
-	// 2. Floating-point number?
-	r = regexp.MustCompile(`^[+-]?\d*(\.\d*)?(e[+-]\d+)?`)
-	match = r.FindStringSubmatch(s)
-	if match != nil {
-		f, err := strconv.ParseFloat(match[0], 64)
-		if err == nil {
-			return f
-		}
-	}
-
-	// 3. Infinity?
-	if s == "infinity" || s == "+infinity" ||
-		s == "inf" || s == "+inf" {
-		return math.Inf(1)
-	}
-	if s == "-infinity" || s == "-inf" {
-		return math.Inf(-1)
-	}
-
-	// 4. Not a number?
-	if len(s) > 2 && s[:3] == "nan" {
-		return math.NaN()
-	}
-	if len(s) > 3 && s[1:4] == "nan" {
-		return math.NaN()
-	}
-
-	return 0
+	return f
 }
 
 // Atoi parses the C-string str interpreting its content as an integral number,
@@ -285,6 +218,33 @@ func Lldiv(numer, denom int64) LldivT {
 	}
 }
 
+// Strtod parses the C-string str interpreting its content as a floating point
+// number (according to the current locale) and returns its value as a double.
+// If endptr is not a null pointer, the function also sets the value of endptr
+// to point to the first character after the number.
+//
+// The function first discards as many whitespace characters (as in isspace) as
+// necessary until the first non-whitespace character is found. Then, starting
+// from this character, takes as many characters as possible that are valid
+// following a syntax resembling that of floating point literals (see below),
+// and interprets them as a numerical value. A pointer to the rest of the string
+// after the last valid character is stored in the object pointed by endptr.
+func Strtod(str []byte, endptr [][]byte) float64 {
+	f, fLen := atof(str)
+
+	// FIXME: This is actually creating new data for the returned pointer,
+	// rather than returning the correct reference. This means that applications
+	// that modify the returned pointer will not be manipulating the original
+	// str.
+	if endptr != nil {
+		end := CPointerToGoPointer(endptr).(*[]byte)
+		*end = str[fLen:]
+		GoPointerToCPointer(end, endptr)
+	}
+
+	return f
+}
+
 // Strtol parses the C-string str interpreting its content as an integral number
 // of the specified base, which is returned as a long int value. If endptr is
 // not a null pointer, the function also sets the value of endptr to point to
@@ -328,4 +288,75 @@ func Strtol(a, b []byte, c int) int32 {
 // Free doesn't do anything since memory is managed by the Go garbage collector.
 // However, I will leave it here as a placeholder for now.
 func Free(anything interface{}) {
+}
+
+func atof(str []byte) (float64, int) {
+	// First start by removing any trailing whitespace. We have to record how
+	// much whitespace is trimmed off to correct for the final length.
+	cStr := CStringToString(str)
+	beforeLength := len(cStr)
+	s := strings.TrimSpace(cStr)
+
+	whitespaceLength := beforeLength - len(s)
+
+	// Now convert to lowercase, this makes the regexp and comparisons easier
+	// and doesn't change the value.
+	s = strings.ToLower(s)
+
+	// 1. Hexadecimal integer? This must be checked before floating-point
+	// because it starts with a 0.
+	r := regexp.MustCompile(`^([+-])?0x([0-9a-f]+)(p[-+]?[0-9a-f]+)?`)
+	match := r.FindStringSubmatch(s)
+	if match != nil {
+		n, err := strconv.ParseUint(match[2], 16, 32)
+		if err == nil {
+			f := float64(n)
+
+			if match[1] == "-" {
+				f *= -1
+			}
+
+			if match[3] != "" {
+				p, err := strconv.Atoi(match[3][1:])
+				if err != nil {
+					return 0, 0
+				}
+
+				f *= math.Pow(2, float64(p))
+			}
+
+			return f, whitespaceLength + len(match[0])
+		}
+
+		return 0, 0
+	}
+
+	// 2. Floating-point number?
+	r = regexp.MustCompile(`^[+-]?\d*(\.\d*)?(e[+-]?\d+)?`)
+	match = r.FindStringSubmatch(s)
+	if match != nil {
+		f, err := strconv.ParseFloat(match[0], 64)
+		if err == nil {
+			return f, whitespaceLength + len(match[0])
+		}
+	}
+
+	// 3. Infinity?
+	if s == "infinity" || s == "+infinity" ||
+		s == "inf" || s == "+inf" {
+		return math.Inf(1), len(s)
+	}
+	if s == "-infinity" || s == "-inf" {
+		return math.Inf(-1), len(s)
+	}
+
+	// 4. Not a number?
+	if len(s) > 2 && s[:3] == "nan" {
+		return math.NaN(), 3
+	}
+	if len(s) > 3 && s[1:4] == "nan" {
+		return math.NaN(), 4
+	}
+
+	return 0, 0
 }
