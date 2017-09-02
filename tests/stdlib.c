@@ -84,7 +84,7 @@ void test_calloc()
 
 int main()
 {
-    plan(137);
+    plan(150);
 
     diag("abs")
     is_eq(abs(-5), 5);
@@ -268,6 +268,28 @@ int main()
         nextRand = rand();
         is_not_eq(lastRand, nextRand)
     }
+
+    diag("srand")
+    srand(0);
+    lastRand = rand();
+    for (i = 0; i < 10; ++i) {
+        nextRand = rand();
+        is_not_eq(lastRand, nextRand)
+    }
+
+    srand(0);
+    int a1 = rand();
+    int a2 = rand();
+    int a3 = rand();
+
+    srand(0);
+    int b1 = rand();
+    int b2 = rand();
+    int b3 = rand();
+
+    is_eq(a1, b1)
+    is_eq(a2, b2)
+    is_eq(a3, b3)
 
     done_testing();
 }

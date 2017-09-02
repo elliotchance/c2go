@@ -185,6 +185,10 @@ var builtInFunctionDefinitions = []string{
 	"lldiv_t lldiv(long long int, long long int) -> noarch.Lldiv",
 	"long strtol(const char *, char **, int) -> noarch.Strtol",
 	"int rand() -> math/rand.Int",
+	// The real definition is srand(unsigned int) however the type would be
+	// different. It's easier to change the definition than create a proxy
+	// function in stdlib.go.
+	"void srand(long long) -> math/rand.Seed",
 
 	// I'm not sure which header file these comes from?
 	"uint32 __builtin_bswap32(uint32) -> darwin.BSwap32",
