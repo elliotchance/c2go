@@ -35,7 +35,7 @@ import (
 //     c2go -v
 //
 // See https://github.com/elliotchance/c2go/wiki/Release-Process
-const Version = "v0.15.0 Palladium 2017-08-28"
+const Version = "v0.15.1 Palladium 2017-09-02"
 
 var stderr io.Writer = os.Stderr
 
