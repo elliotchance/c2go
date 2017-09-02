@@ -23,6 +23,7 @@ import (
 	"regexp"
 	"strings"
 
+	"errors"
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/transpiler"
@@ -218,6 +219,16 @@ func Start(args ProgramArgs) error {
 	nodes := convertLinesToNodes(lines)
 	tree := buildTree(nodes, 0)
 	ast.FixPositions(tree)
+
+	// Repair the floating literals. See RepairFloatingLiteralsFromSource for
+	// more information.
+	floatingErrors := ast.RepairFloatingLiteralsFromSource(tree[0], ppFilePath)
+
+	for _, fErr := range floatingErrors {
+		message := fmt.Sprintf("could not read exact floating literal: %s",
+			fErr.Err.Error())
+		p.AddMessage(p.GenerateWarningMessage(errors.New(message), fErr.Node))
+	}
 
 	err = transpiler.TranspileAST(args.inputFile, args.packageName, p, tree[0].(ast.Node))
 	if err != nil {

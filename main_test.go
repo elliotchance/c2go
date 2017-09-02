@@ -15,6 +15,7 @@ import (
 
 	"regexp"
 
+	"github.com/elliotchance/c2go/cc"
 	"github.com/elliotchance/c2go/util"
 )
 
@@ -65,6 +66,8 @@ func TestIntegrationScripts(t *testing.T) {
 
 	for _, file := range files {
 		t.Run(file, func(t *testing.T) {
+			cc.ResetCache()
+
 			cProgram := programOut{}
 			goProgram := programOut{}
 

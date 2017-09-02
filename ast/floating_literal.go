@@ -1,5 +1,12 @@
 package ast
 
+import (
+	"errors"
+	"fmt"
+	"github.com/elliotchance/c2go/cc"
+	"reflect"
+)
+
 type FloatingLiteral struct {
 	Addr       Address
 	Pos        Position
@@ -44,4 +51,62 @@ func (n *FloatingLiteral) Children() []Node {
 // Position returns the position in the original source code.
 func (n *FloatingLiteral) Position() Position {
 	return n.Pos
+}
+
+// FloatingLiteralError represents one instance of an error where the exact
+// floating point value of a FloatingLiteral could not be determined from the
+// original source. See RepairFloatingLiteralsFromSource for a full explanation.
+type FloatingLiteralError struct {
+	Node *FloatingLiteral
+	Err  error
+}
+
+// RepairFloatingLiteralsFromSource finds the exact values of floating literals
+// by reading their values directly from the preprocessed source.
+//
+// The clang AST only serializes floating point values in scientific notation
+// with 7 significant digits. This is not enough when dealing with precise
+// numbers.
+//
+// The only solution is to read the original floating literal from the source
+// code. We can do this by using the positional information on the node.
+//
+// If the floating literal cannot be resolved for any reason the original value
+// will remain. This function will return all errors encountered.
+func RepairFloatingLiteralsFromSource(rootNode Node, preprocessedFile string) []FloatingLiteralError {
+	errs := []FloatingLiteralError{}
+	floatingLiteralNodes :=
+		GetAllNodesOfType(rootNode, reflect.TypeOf((*FloatingLiteral)(nil)))
+
+	for _, node := range floatingLiteralNodes {
+		fNode := node.(*FloatingLiteral)
+
+		// Use the node position to retrieve the original line from the
+		// preprocessed source.
+		pos := node.Position()
+		line, err :=
+			cc.GetLineFromPreprocessedFile(preprocessedFile, pos.File, pos.Line)
+
+		// If there was a problem reading the line we should raise a warning and
+		// use the value we have. Hopefully that will be an accurate enough
+		// representation.
+		if err != nil {
+			errs = append(errs, FloatingLiteralError{
+				Node: fNode,
+				Err:  err,
+			})
+		}
+
+		// Extract the exact value from the line.
+		if pos.Column-1 >= len(line) {
+			errs = append(errs, FloatingLiteralError{
+				Node: fNode,
+				Err:  errors.New("cannot get exact value exact value"),
+			})
+		} else {
+			fmt.Sscan(line[pos.Column-1:], &fNode.Value)
+		}
+	}
+
+	return errs
 }
