@@ -99,6 +99,8 @@ func Parse(line string) Node {
 		return parseEnumDecl(line)
 	case "EnumType":
 		return parseEnumType(line)
+	case "Field":
+		return parseField(line)
 	case "FieldDecl":
 		return parseFieldDecl(line)
 	case "FloatingLiteral":

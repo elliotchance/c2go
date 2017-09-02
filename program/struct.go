@@ -30,6 +30,9 @@ func NewStruct(n *ast.RecordDecl) *Struct {
 		case *ast.FieldDecl:
 			fields[f.Name] = f.Type
 
+		case *ast.IndirectFieldDecl:
+			fields[f.Name] = f.Type
+
 		case *ast.RecordDecl:
 			fields[f.Name] = NewStruct(f)
 
