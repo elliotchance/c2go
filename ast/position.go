@@ -123,7 +123,7 @@ func NewPositionFromString(s string) Position {
 		}
 	}
 
-	re = regexp.MustCompile(`^([^:]+):(\d+):(\d+), ([^:]+):(\d+):(\d+)$`)
+	re = regexp.MustCompile(`^([^:]+):(\d+):(\d+)$`)
 	if groups := re.FindStringSubmatch(s); len(groups) > 0 {
 		return Position{
 			StringValue: s,
@@ -148,6 +148,18 @@ func NewPositionFromString(s string) Position {
 		return Position{
 			StringValue: s,
 			Column:      util.Atoi(groups[1]),
+		}
+	}
+
+	re = regexp.MustCompile(`^([^:]+):(\d+):(\d+), ([^:]+):(\d+):(\d+)$`)
+	if groups := re.FindStringSubmatch(s); len(groups) > 0 {
+		return Position{
+			StringValue: s,
+			File:        groups[1],
+			Line:        util.Atoi(groups[2]),
+			Column:      util.Atoi(groups[3]),
+			LineEnd:     util.Atoi(groups[5]),
+			ColumnEnd:   util.Atoi(groups[6]),
 		}
 	}
 

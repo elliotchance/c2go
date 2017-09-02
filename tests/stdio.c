@@ -282,7 +282,7 @@ void test_ftell()
     size = ftell(pFile);
     fclose(pFile);
 
-    is_eq(size, 7974);
+    is_eq(size, 7971);
 }
 
 void test_fread()
@@ -391,7 +391,7 @@ void test_feof()
     if (feof(pFile))
     {
         pass("%s", "End-of-File reached.");
-        is_eq(n, 7977);
+        is_eq(n, 7971);
     }
     else
     {

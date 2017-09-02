@@ -3,18 +3,14 @@
 
 // TODO: This can be removed and replaced with strcmp() when string.h is
 // implemented.
-int streq(const char *a, const char *b)
-{
-    if (strlen(a) != strlen(b))
-    {
+int streq(const char *a, const char *b) {
+    if (strlen(a) != strlen(b)) {
         return 0;
     }
 
     int i = 0;
-    for (; i < strlen(a); ++i)
-    {
-        if (a[i] != b[i])
-        {
+    for (; i < strlen(a); ++i) {
+        if (a[i] != b[i]) {
             return 0;
         }
     }
@@ -22,60 +18,53 @@ int streq(const char *a, const char *b)
     return 1;
 }
 
-// approx is used to compare floating-point numbers. It will automatically
-// calculate a very small epsilon based on the expected value (within 6 decimal
-// places) and perform the comparisons.
+// When comparing floating-point numbers this is how many significant bits will
+// be used to calculate the epsilon.
+#define INT64 52 - 4
+#define INT32 23 - 4
+
+// approx() is used to compare floating-point numbers. It will automatically
+// calculate a very small epsilon (the difference between the two values that is
+// still considered equal) based on the expected value and number of bits.
 //
-// approx is used by the is_eq() macro for comparing numbers of any kind (they
-// are cast to double) which make it ideal for comparing different sized floats
-// or other math that might introduce rounding errors.
-//
-// approx will strictly not handle any input value that is infinite or NaN. It
-// will always return false, even if the values are exactly equal. This is to
-// force you to use the correct matcher (ie. is_inf) instead of relying on
+// approx() is used by the is_eq() macro for comparing numbers of any kind
+// which makes it ideal for comparing different sized floats or other math that
+// might introduce rounding errors.
+#define approx(actual, expected) approxf(actual, expected, \
+    sizeof(actual) != sizeof(expected) ? INT32 : INT64)
+
+// approxf() will strictly not handle any input value that is infinite or NaN.
+// It will always return false, even if the values are exactly equal. This is to
+// force you to use the correct matcher (ie. is_inf()) instead of relying on
 // comparisons which might not work.
-static int approx(double actual, double expected)
-{
+static int approxf(double actual, double expected, int bits) {
     // We do not handle infinities or NaN.
-    if (isinf(actual) || isinf(expected) || isnan(actual) || isnan(expected))
-    {
+    if (isinf(actual) || isinf(expected) || isnan(actual) || isnan(expected)) {
         return 0;
     }
 
-    // If we expect zero (a common case) we have a fixed epsilon for actual. If
-    // allowed to continue the epison caluclated would be zero and we would be
+    // If we expect zero (a common case) we have a fixed epsilon from actual. If
+    // allowed to continue the epsilon calculated would be zero and we would be
     // doing an exact match which is what we want to avoid.
-    if (expected == 0.0)
-    {
-        return fabs(actual) < 0.00005;
+    if (expected == 0.0) {
+        return fabs(actual) < (1 / pow(2, bits));
     }
 
-    // The epsilon is calculated as one 5 millionths of the actual value. This
-    // should be accurate enough, but also floating-points are usually rendered
-    // with 6 places.
-    double epsilon = fabs(expected * 0.00005);
+    // The epsilon is calculated based on significant bits of the actual value.
+    // The amount of bits used depends on the original size of the float (in
+    // terms of bits) subtracting a few to allow for very slight rounding
+    // errors.
+    double epsilon = fabs(expected / pow(2, bits));
 
-    // The below line should be:
-    //
-    //     return fabs(a - b) <=
-    //         ((fabs(a) < fabs(b) ? fabs(b) : fabs(a)) * epsilon);
-    //
-    // However, this is not yet supported. See:
-    // https://github.com/elliotchance/c2go/issues/129
-    double c = fabs(actual);
-    if (fabs(actual) < fabs(expected))
-    {
-        c = fabs(expected);
-    }
-
-    return fabs(actual - expected) <= (c * epsilon);
+    // The numbers are considered equal if the absolute difference between them
+    // is less than the relative epsilon.
+    return fabs(actual - expected) <= epsilon;
 }
 
 // isnegzero tests if a value is a negative zero. Negative zeros are a special
 // value of floating points that are equivalent in value, but not of bits to the
 // common 0.0 value.
-static int isnegzero(double x)
-{
+static int isnegzero(double x) {
     return (x * -0.0) == 0.0 && signbit(x);
 }
 
@@ -181,14 +170,25 @@ static int last_test_was_ok = 1;
 //
 // Floating-point values are notoriously hard to compare exactly so the values
 // are compared through the approx() function also defined in this file.
-#define is_eq(actual, expected)                                         \
+#define is_eq(actual, expected)                                            \
+    if (approx((actual), (expected)))                                      \
+    {                                                                      \
+        pass("%s == %s", #actual, #expected)                               \
+    }                                                                      \
+    else                                                                   \
+    {                                                                      \
+        fail("%s == %s # got %.25g", #actual, #expected, (double)(actual)) \
+    }
+
+// This works in the opposite way as is_eq().
+#define is_not_eq(actual, expected)                                     \
     if (approx((actual), (expected)))                                   \
     {                                                                   \
-        pass("%s == %s", #actual, #expected)                            \
+        fail("%s != %s # got %f", #actual, #expected, (double)(actual)) \
     }                                                                   \
     else                                                                \
     {                                                                   \
-        fail("%s == %s # got %f", #actual, #expected, (double)(actual)) \
+        pass("%s != %s", #actual, #expected)                            \
     }
 
 // Compare two C strings. The two strings are equal if they are the same length

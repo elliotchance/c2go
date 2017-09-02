@@ -12,6 +12,10 @@ import (
 func GetAllNodesOfType(root Node, t reflect.Type) []Node {
 	nodes := []Node{}
 
+	if root == nil {
+		return []Node{}
+	}
+
 	if reflect.TypeOf(root) == t {
 		nodes = append(nodes, root)
 	}
