@@ -130,7 +130,7 @@ func TestIntegrationScripts(t *testing.T) {
 				args = append(
 					args,
 					"-race",
-					"-covermode=count",
+					"-covermode=atomic",
 					"-coverprofile="+testName+".coverprofile",
 					"-coverpkg=./noarch,./linux,./darwin",
 				)
