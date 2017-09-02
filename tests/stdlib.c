@@ -84,7 +84,7 @@ void test_calloc()
 
 int main()
 {
-    plan(127);
+    plan(137);
 
     diag("abs")
     is_eq(abs(-5), 5);
@@ -121,11 +121,11 @@ int main()
     is_eq(atof("0X"), 0);
     is_eq(atof("0xfaz"), 250);
     is_eq(atof("0Xzaf"), 0);
-    is_eq(atof("0xabcp2"), 10922);
-    is_eq(atof("0xabcP3"), 10922);
-    is_eq(atof("0xabcP2z"), 10922);
+    is_eq(atof("0xabcp2"), 10992);
+    is_eq(atof("0xabcP3"), 21984);
+    is_eq(atof("0xabcP2z"), 10992);
     is_eq(atof("0xabcp-2"), 687);
-    is_eq(atof("0xabcp+2"), 10922);
+    is_eq(atof("0xabcp+2"), 10992);
     is_inf(atof("inf"), 1);
     is_inf(atof("INF"), 1);
     is_inf(atof("Inf"), 1);
@@ -261,6 +261,13 @@ int main()
     test_malloc1();
     test_malloc2();
     test_malloc3();
+
+    diag("rand")
+    int i, nextRand, lastRand = rand();
+    for (i = 0; i < 10; ++i) {
+        nextRand = rand();
+        is_not_eq(lastRand, nextRand)
+    }
 
     done_testing();
 }

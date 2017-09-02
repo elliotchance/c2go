@@ -184,6 +184,7 @@ var builtInFunctionDefinitions = []string{
 	"long long int llabs(long long int) -> noarch.Llabs",
 	"lldiv_t lldiv(long long int, long long int) -> noarch.Lldiv",
 	"long strtol(const char *, char **, int) -> noarch.Strtol",
+	"int rand() -> math/rand.Int",
 
 	// I'm not sure which header file these comes from?
 	"uint32 __builtin_bswap32(uint32) -> darwin.BSwap32",
