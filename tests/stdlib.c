@@ -9,6 +9,9 @@
     is_streq(endptr, end); \
     func(strtof(actual, &endptr)); \
     func(strtof(actual, NULL)); \
+    is_streq(endptr, end); \
+    func(strtold(actual, &endptr)); \
+    func(strtold(actual, NULL)); \
     is_streq(endptr, end);
 
 #define test_strto1(actual, func, expected, end) \
@@ -17,6 +20,9 @@
     is_streq(endptr, end); \
     func(strtof(actual, &endptr), expected); \
     func(strtof(actual, NULL), expected); \
+    is_streq(endptr, end); \
+    func(strtold(actual, &endptr), expected); \
+    func(strtold(actual, NULL), expected); \
     is_streq(endptr, end);
 
 #define test_ato(actual, expected, end) \
@@ -108,7 +114,7 @@ void test_calloc()
 
 int main()
 {
-    plan(498);
+    plan(657);
 
     char *endptr;
 
