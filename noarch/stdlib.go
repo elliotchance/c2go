@@ -129,19 +129,44 @@ func Atol(str []byte) int32 {
 // numbers of type long long int (see atol for details on the interpretation
 // process).
 func Atoll(str []byte) int64 {
-	// First start by removing any trailing whitespace.
-	s := strings.TrimSpace(CStringToString(str))
+	x, _ := atoll(str, 10)
 
-	r := regexp.MustCompile(`^([+-]?\d+)`)
+	return x
+}
+
+func atoll(str []byte, radix int) (int64, int) {
+	// First start by removing any trailing whitespace. We need to record how
+	// much whitespace is trimmed off for the correct offset later.
+	cStr := CStringToString(str)
+	beforeLength := len(cStr)
+	s := strings.TrimSpace(cStr)
+	whitespaceOffset := beforeLength - len(s)
+
+	// We must convert the input to lowercase so satisfy radix > 10.
+	if radix > 10 {
+		s = strings.ToLower(s)
+	}
+
+	// We must stop consuming characters when we get to a character that is
+	// invalid for the radix. Build a regex to satisfy this.
+	rx := ""
+	for i := 0; i < radix; i++ {
+		if i < 10 {
+			rx += string(48 + i)
+		} else {
+			rx += string(87 + i)
+		}
+	}
+	r := regexp.MustCompile(`^([+-]?[` + rx + `]+)`)
 	match := r.FindStringSubmatch(s)
 	if match == nil {
-		return 0
+		return 0, 0
 	}
 
 	// We do not care about the error here because it should be impossible.
-	v, _ := strconv.ParseInt(match[1], 10, 64)
+	v, _ := strconv.ParseInt(match[1], radix, 64)
 
-	return v
+	return v, whitespaceOffset + len(match[1])
 }
 
 // Div returns the integral quotient and remainder of the division of numer by
@@ -285,9 +310,20 @@ func Strtof(str []byte, endptr [][]byte) float32 {
 //
 // For locales other than the "C" locale, additional subject sequence forms may
 // be accepted.
-func Strtol(a, b []byte, c int) int32 {
-	// TODO: This is a bad implementation
-	return 65535
+func Strtol(str []byte, endptr [][]byte, radix int) int32 {
+	x, xLen := atoll(str, radix)
+
+	// FIXME: This is actually creating new data for the returned pointer,
+	// rather than returning the correct reference. This means that applications
+	// that modify the returned pointer will not be manipulating the original
+	// str.
+	if endptr != nil {
+		end := CPointerToGoPointer(endptr).(*[]byte)
+		*end = str[xLen:]
+		GoPointerToCPointer(end, endptr)
+	}
+
+	return int32(x)
 }
 
 // Free doesn't do anything since memory is managed by the Go garbage collector.

@@ -19,6 +19,14 @@
     func(strtof(actual, NULL), expected); \
     is_streq(endptr, end);
 
+#define test_ato(actual, expected, end) \
+    is_eq(atoi(actual), expected); \
+    is_eq(atol(actual), expected); \
+    is_eq(atoll(actual), expected); \
+    is_eq(strtol(actual, &endptr, 10), expected); \
+    is_streq(endptr, end); \
+    is_eq(strtol(actual, NULL, 10), expected);
+
 void test_malloc1()
 {
     diag("malloc1");
@@ -100,7 +108,9 @@ void test_calloc()
 
 int main()
 {
-    plan(468);
+    plan(498);
+
+    char *endptr;
 
     diag("abs")
     is_eq(abs(-5), 5);
@@ -164,35 +174,15 @@ int main()
     // This causes a segfault in C:
     // is_eq(atof(NULL), 0);
 
-    diag("atoi")
-    is_eq(atoi("123"), 123)
-    is_eq(atoi("+456"), 456)
-    is_eq(atoi("-52"), -52)
-    is_eq(atoi("foo"), 0)
-    is_eq(atoi(" \t123"), 123)
-    is_eq(atoi(""), 0)
-    is_eq(atoi(" \t"), 0)
-    is_eq(atoi("123abc"), 123)
-
-    diag("atol")
-    is_eq(atol("123"), 123)
-    is_eq(atol("+456"), 456)
-    is_eq(atol("-52"), -52)
-    is_eq(atol("foo"), 0)
-    is_eq(atol(" \t123"), 123)
-    is_eq(atol(""), 0)
-    is_eq(atol(" \t"), 0)
-    is_eq(atol("123abc"), 123)
-
-    diag("atoll")
-    is_eq(atoll("123"), 123)
-    is_eq(atoll("+456"), 456)
-    is_eq(atoll("-52"), -52)
-    is_eq(atoll("foo"), 0)
-    is_eq(atoll(" \t123"), 123)
-    is_eq(atoll(""), 0)
-    is_eq(atoll(" \t"), 0)
-    is_eq(atoll("123abc"), 123)
+    diag("atoi / atol / atoll / strtol")
+    test_ato("123", 123, "");
+    test_ato("+456", 456, "");
+    test_ato("-52", -52, "");
+    test_ato("foo", 0, "foo");
+    test_ato(" \t123", 123, "");
+    test_ato("", 0, "");
+    test_ato(" \t", 0, " \t");
+    test_ato("123abc", 123, "abc");
 
     diag("div")
     {
@@ -308,7 +298,6 @@ int main()
     is_eq(a3, b3)
 
     diag("strtod / strtof")
-    char *endptr;
     test_strto1("123", is_eq, 123, "");
     test_strto1("1.23", is_eq, 1.23, "");
     test_strto1("", is_eq, 0, "");
@@ -368,6 +357,14 @@ int main()
 
     // This causes a segfault in C:
     //     test_strtod1(NULL, is_eq, 0, "");
+
+    diag("strtol")
+    is_eq(strtol("123", &endptr, 8), 83);
+    is_streq(endptr, "");
+    is_eq(strtol("123abc", &endptr, 16), 1194684);
+    is_streq(endptr, "");
+    is_eq(strtol("123abc", &endptr, 8), 83);
+    is_streq(endptr, "abc");
 
     done_testing();
 }
