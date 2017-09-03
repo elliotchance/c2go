@@ -341,6 +341,11 @@ func Strtoul(str []byte, endptr [][]byte, radix int) uint32 {
 	return uint32(Strtoll(str, endptr, radix))
 }
 
+// Strtoull works the same way as Strtol but returns a long long unsigned int.
+func Strtoull(str []byte, endptr [][]byte, radix int) uint64 {
+	return uint64(Strtoll(str, endptr, radix))
+}
+
 // Free doesn't do anything since memory is managed by the Go garbage collector.
 // However, I will leave it here as a placeholder for now.
 func Free(anything interface{}) {
