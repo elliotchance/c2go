@@ -3,14 +3,20 @@
 #include <stdlib.h>
 #include "tests.h"
 
-#define test_strtod0(actual, func, end) \
+#define test_strto0(actual, func, end) \
     func(strtod(actual, &endptr)); \
     func(strtod(actual, NULL)); \
+    is_streq(endptr, end); \
+    func(strtof(actual, &endptr)); \
+    func(strtof(actual, NULL)); \
     is_streq(endptr, end);
 
-#define test_strtod1(actual, func, expected, end) \
+#define test_strto1(actual, func, expected, end) \
     func(strtod(actual, &endptr), expected); \
     func(strtod(actual, NULL), expected); \
+    is_streq(endptr, end); \
+    func(strtof(actual, &endptr), expected); \
+    func(strtof(actual, NULL), expected); \
     is_streq(endptr, end);
 
 void test_malloc1()
@@ -94,7 +100,7 @@ void test_calloc()
 
 int main()
 {
-    plan(309);
+    plan(468);
 
     diag("abs")
     is_eq(abs(-5), 5);
@@ -301,64 +307,64 @@ int main()
     is_eq(a2, b2)
     is_eq(a3, b3)
 
-    diag("strtod")
+    diag("strtod / strtof")
     char *endptr;
-    test_strtod1("123", is_eq, 123, "");
-    test_strtod1("1.23", is_eq, 1.23, "");
-    test_strtod1("", is_eq, 0, "");
-    test_strtod1("1.2e6", is_eq, 1.2e6, "");
-    test_strtod1(" \n123", is_eq, 123, "");
-    test_strtod1("\t123foo", is_eq, 123, "foo");
-    test_strtod1("+1.23", is_eq, 1.23, "");
-    test_strtod1("-1.23", is_eq, -1.23, "");
-    test_strtod1("1.2E-6", is_eq, 1.2e-6, "");
-    test_strtod1("1a2b", is_eq, 1, "a2b");
-    test_strtod1("1a.2b", is_eq, 1, "a.2b");
-    test_strtod1("a1.2b", is_eq, 0, "a1.2b");
-    test_strtod1("1.2Ee-6", is_eq, 1.2, "Ee-6");
-    test_strtod1("-1..23", is_eq, -1, ".23");
-    test_strtod1("-1.2.3", is_eq, -1.2, ".3");
-    test_strtod1("foo", is_eq, 0, "foo");
-    test_strtod1("+1.2+3", is_eq, 1.2, "+3");
-    test_strtod1("-1.-23", is_eq, -1, "-23");
-    test_strtod1("-.23", is_eq, -0.23, "");
-    test_strtod1(".4", is_eq, 0.4, "");
-    test_strtod1("0xabc", is_eq, 2748, "");
-    test_strtod1("0x1b9", is_eq, 441, "");
-    test_strtod1("0x", is_eq, 0, "x");
-    test_strtod1("0X1f9", is_eq, 505, "");
-    test_strtod1("-0X1f9", is_eq, -505, "");
-    test_strtod1("+0x1f9", is_eq, 505, "");
-    test_strtod1("0X", is_eq, 0, "X");
-    test_strtod1("0xfaz", is_eq, 250, "z");
-    test_strtod1("0Xzaf", is_eq, 0, "Xzaf");
-    test_strtod1("0xabcp2", is_eq, 10992, "");
-    test_strtod1("0xabcP3", is_eq, 21984, "");
-    test_strtod1("0xabcP2z", is_eq, 10992, "z");
-    test_strtod1("0xabcp-2", is_eq, 687, "");
-    test_strtod1("0xabcp+2", is_eq, 10992, "");
+    test_strto1("123", is_eq, 123, "");
+    test_strto1("1.23", is_eq, 1.23, "");
+    test_strto1("", is_eq, 0, "");
+    test_strto1("1.2e6", is_eq, 1.2e6, "");
+    test_strto1(" \n123", is_eq, 123, "");
+    test_strto1("\t123foo", is_eq, 123, "foo");
+    test_strto1("+1.23", is_eq, 1.23, "");
+    test_strto1("-1.23", is_eq, -1.23, "");
+    test_strto1("1.2E-6", is_eq, 1.2e-6, "");
+    test_strto1("1a2b", is_eq, 1, "a2b");
+    test_strto1("1a.2b", is_eq, 1, "a.2b");
+    test_strto1("a1.2b", is_eq, 0, "a1.2b");
+    test_strto1("1.2Ee-6", is_eq, 1.2, "Ee-6");
+    test_strto1("-1..23", is_eq, -1, ".23");
+    test_strto1("-1.2.3", is_eq, -1.2, ".3");
+    test_strto1("foo", is_eq, 0, "foo");
+    test_strto1("+1.2+3", is_eq, 1.2, "+3");
+    test_strto1("-1.-23", is_eq, -1, "-23");
+    test_strto1("-.23", is_eq, -0.23, "");
+    test_strto1(".4", is_eq, 0.4, "");
+    test_strto1("0xabc", is_eq, 2748, "");
+    test_strto1("0x1b9", is_eq, 441, "");
+    test_strto1("0x", is_eq, 0, "x");
+    test_strto1("0X1f9", is_eq, 505, "");
+    test_strto1("-0X1f9", is_eq, -505, "");
+    test_strto1("+0x1f9", is_eq, 505, "");
+    test_strto1("0X", is_eq, 0, "X");
+    test_strto1("0xfaz", is_eq, 250, "z");
+    test_strto1("0Xzaf", is_eq, 0, "Xzaf");
+    test_strto1("0xabcp2", is_eq, 10992, "");
+    test_strto1("0xabcP3", is_eq, 21984, "");
+    test_strto1("0xabcP2z", is_eq, 10992, "z");
+    test_strto1("0xabcp-2", is_eq, 687, "");
+    test_strto1("0xabcp+2", is_eq, 10992, "");
 
-    test_strtod1("inf", is_inf, 1, "");
-    test_strtod1("INF", is_inf, 1, "");
-    test_strtod1("Inf", is_inf, 1, "");
-    test_strtod1("-Inf", is_inf, -1, "");
-    test_strtod1("+INF", is_inf, 1, "");
-    test_strtod1("infinity", is_inf, 1, "");
-    test_strtod1("INFINITY", is_inf, 1, "");
-    test_strtod1("Infinity", is_inf, 1, "");
-    test_strtod1("+INFINITY", is_inf, 1, "");
-    test_strtod1("-InfINITY", is_inf, -1, "");
+    test_strto1("inf", is_inf, 1, "");
+    test_strto1("INF", is_inf, 1, "");
+    test_strto1("Inf", is_inf, 1, "");
+    test_strto1("-Inf", is_inf, -1, "");
+    test_strto1("+INF", is_inf, 1, "");
+    test_strto1("infinity", is_inf, 1, "");
+    test_strto1("INFINITY", is_inf, 1, "");
+    test_strto1("Infinity", is_inf, 1, "");
+    test_strto1("+INFINITY", is_inf, 1, "");
+    test_strto1("-InfINITY", is_inf, -1, "");
 
-    test_strtod0("nan", is_nan, "");
-    test_strtod0("NaN", is_nan, "");
-    test_strtod0("+NaN", is_nan, "");
-    test_strtod0("NAN", is_nan, "");
-    test_strtod0("-NAN", is_nan, "");
+    test_strto0("nan", is_nan, "");
+    test_strto0("NaN", is_nan, "");
+    test_strto0("+NaN", is_nan, "");
+    test_strto0("NAN", is_nan, "");
+    test_strto0("-NAN", is_nan, "");
 
-    test_strtod0("nanabc123", is_nan, "abc123");
-    test_strtod0("NANz123", is_nan, "z123");
-    test_strtod0("NaN123z", is_nan, "123z");
-    test_strtod0("-NANz123", is_nan, "z123");
+    test_strto0("nanabc123", is_nan, "abc123");
+    test_strto0("NANz123", is_nan, "z123");
+    test_strto0("NaN123z", is_nan, "123z");
+    test_strto0("-NANz123", is_nan, "z123");
 
     // This causes a segfault in C:
     //     test_strtod1(NULL, is_eq, 0, "");
