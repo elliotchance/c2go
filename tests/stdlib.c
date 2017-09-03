@@ -4,42 +4,64 @@
 #include "tests.h"
 
 #define test_strto0(actual, func, end) \
+    /* strtod */ \
     func(strtod(actual, &endptr)); \
     func(strtod(actual, NULL)); \
     is_streq(endptr, end); \
+    /* strtof */ \
     func(strtof(actual, &endptr)); \
     func(strtof(actual, NULL)); \
     is_streq(endptr, end); \
+    /* strtold */ \
     func(strtold(actual, &endptr)); \
     func(strtold(actual, NULL)); \
     is_streq(endptr, end);
 
 #define test_strto1(actual, func, expected, end) \
+    /* strtod */ \
     func(strtod(actual, &endptr), expected); \
     func(strtod(actual, NULL), expected); \
     is_streq(endptr, end); \
+    /* strtof */ \
     func(strtof(actual, &endptr), expected); \
     func(strtof(actual, NULL), expected); \
     is_streq(endptr, end); \
+    /* strtold */ \
     func(strtold(actual, &endptr), expected); \
     func(strtold(actual, NULL), expected); \
     is_streq(endptr, end);
 
 #define test_ato(actual, expected, end) \
+    /* atoi */ \
     is_eq(atoi(actual), expected); \
+    /* atol */ \
     is_eq(atol(actual), expected); \
+    /* atoll */ \
     is_eq(atoll(actual), expected); \
+    /* strtol */ \
     is_eq(strtol(actual, &endptr, 10), expected); \
     is_streq(endptr, end); \
     is_eq(strtol(actual, NULL, 10), expected); \
+    /* strtoll */ \
     is_eq(strtoll(actual, &endptr, 10), expected); \
     is_streq(endptr, end); \
-    is_eq(strtoll(actual, NULL, 10), expected);
+    is_eq(strtoll(actual, NULL, 10), expected); \
+    /* strtoul */ \
+    if (expected >= 0) { \
+        is_eq(strtoul(actual, &endptr, 10), expected); \
+        is_streq(endptr, end); \
+        is_eq(strtoul(actual, NULL, 10), expected); \
+    }
 
 #define test_strtol(actual, radix, expected, end) \
+    /* strtol */ \
     is_eq(strtol(actual, &endptr, radix), expected); \
     is_streq(endptr, end); \
+    /* strtoll */ \
     is_eq(strtoll(actual, &endptr, radix), expected); \
+    is_streq(endptr, end); \
+    /* strtoul */ \
+    is_eq(strtoul(actual, &endptr, radix), expected); \
     is_streq(endptr, end);
 
 void test_malloc1()
@@ -123,7 +145,7 @@ void test_calloc()
 
 int main()
 {
-    plan(687);
+    plan(714);
 
     char *endptr;
 
@@ -189,7 +211,7 @@ int main()
     // This causes a segfault in C:
     // is_eq(atof(NULL), 0);
 
-    diag("atoi / atol / atoll / strtol / strtoll")
+    diag("atoi / atol / atoll / strtol / strtoll / strtoul")
     test_ato("123", 123, "");
     test_ato("+456", 456, "");
     test_ato("-52", -52, "");
@@ -312,7 +334,7 @@ int main()
     is_eq(a2, b2)
     is_eq(a3, b3)
 
-    diag("strtod / strtof")
+    diag("strtod / strtof / strtold")
     test_strto1("123", is_eq, 123, "");
     test_strto1("1.23", is_eq, 1.23, "");
     test_strto1("", is_eq, 0, "");
@@ -373,7 +395,7 @@ int main()
     // This causes a segfault in C:
     //     test_strtod1(NULL, is_eq, 0, "");
 
-    diag("strtol / strtoll")
+    diag("strtol / strtoll / strtoul")
     test_strtol("123", 8, 83, "");
     test_strtol("123abc", 16, 1194684, "");
     test_strtol("123abc", 8, 83, "abc");
