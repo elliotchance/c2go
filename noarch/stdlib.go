@@ -245,6 +245,11 @@ func Strtod(str []byte, endptr [][]byte) float64 {
 	return f
 }
 
+// Strtof works the same way as Strtod but returns a float.
+func Strtof(str []byte, endptr [][]byte) float32 {
+	return float32(Strtod(str, endptr))
+}
+
 // Strtol parses the C-string str interpreting its content as an integral number
 // of the specified base, which is returned as a long int value. If endptr is
 // not a null pointer, the function also sets the value of endptr to point to

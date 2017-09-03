@@ -189,6 +189,7 @@ var builtInFunctionDefinitions = []string{
 	// function in stdlib.go.
 	"void srand(long long) -> math/rand.Seed",
 	"double strtod(const char *, char **) -> noarch.Strtod",
+	"float strtof(const char *, char **) -> noarch.Strtof",
 	"long strtol(const char *, char **, int) -> noarch.Strtol",
 
 	// I'm not sure which header file these comes from?
