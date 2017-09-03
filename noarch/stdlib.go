@@ -316,6 +316,11 @@ func Strtold(str []byte, endptr [][]byte) float64 {
 // For locales other than the "C" locale, additional subject sequence forms may
 // be accepted.
 func Strtol(str []byte, endptr [][]byte, radix int) int32 {
+	return int32(Strtoll(str, endptr, radix))
+}
+
+// Strtoll works the same way as Strtol but returns a long long.
+func Strtoll(str []byte, endptr [][]byte, radix int) int64 {
 	x, xLen := atoll(str, radix)
 
 	// FIXME: This is actually creating new data for the returned pointer,
@@ -328,7 +333,7 @@ func Strtol(str []byte, endptr [][]byte, radix int) int32 {
 		GoPointerToCPointer(end, endptr)
 	}
 
-	return int32(x)
+	return x
 }
 
 // Free doesn't do anything since memory is managed by the Go garbage collector.

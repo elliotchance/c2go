@@ -31,7 +31,16 @@
     is_eq(atoll(actual), expected); \
     is_eq(strtol(actual, &endptr, 10), expected); \
     is_streq(endptr, end); \
-    is_eq(strtol(actual, NULL, 10), expected);
+    is_eq(strtol(actual, NULL, 10), expected); \
+    is_eq(strtoll(actual, &endptr, 10), expected); \
+    is_streq(endptr, end); \
+    is_eq(strtoll(actual, NULL, 10), expected);
+
+#define test_strtol(actual, radix, expected, end) \
+    is_eq(strtol(actual, &endptr, radix), expected); \
+    is_streq(endptr, end); \
+    is_eq(strtoll(actual, &endptr, radix), expected); \
+    is_streq(endptr, end);
 
 void test_malloc1()
 {
@@ -114,7 +123,7 @@ void test_calloc()
 
 int main()
 {
-    plan(657);
+    plan(687);
 
     char *endptr;
 
@@ -180,7 +189,7 @@ int main()
     // This causes a segfault in C:
     // is_eq(atof(NULL), 0);
 
-    diag("atoi / atol / atoll / strtol")
+    diag("atoi / atol / atoll / strtol / strtoll")
     test_ato("123", 123, "");
     test_ato("+456", 456, "");
     test_ato("-52", -52, "");
@@ -364,13 +373,10 @@ int main()
     // This causes a segfault in C:
     //     test_strtod1(NULL, is_eq, 0, "");
 
-    diag("strtol")
-    is_eq(strtol("123", &endptr, 8), 83);
-    is_streq(endptr, "");
-    is_eq(strtol("123abc", &endptr, 16), 1194684);
-    is_streq(endptr, "");
-    is_eq(strtol("123abc", &endptr, 8), 83);
-    is_streq(endptr, "abc");
+    diag("strtol / strtoll")
+    test_strtol("123", 8, 83, "");
+    test_strtol("123abc", 16, 1194684, "");
+    test_strtol("123abc", 8, 83, "abc");
 
     done_testing();
 }
