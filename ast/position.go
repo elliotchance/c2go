@@ -271,6 +271,8 @@ func setPosition(node Node, position Position) {
 		n.Pos = position
 	case *ForStmt:
 		n.Pos = position
+	case *GCCAsmStmt:
+		n.Pos = position
 	case *GotoStmt:
 		n.Pos = position
 	case *IfStmt:

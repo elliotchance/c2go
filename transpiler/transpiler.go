@@ -249,6 +249,15 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 			stmt, preStmts, err = transpileBinaryOperatorComma(n, p)
 			return
 		}
+
+	case *ast.GCCAsmStmt:
+		// Go does not support inline assembly. See:
+		// https://github.com/elliotchance/c2go/issues/228
+		p.AddMessage(p.GenerateWarningMessage(
+			errors.New("cannot transpile asm, will be ignored"), n))
+
+		stmt = &goast.EmptyStmt{}
+		return
 	}
 
 	// We do not care about the return type.
