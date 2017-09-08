@@ -113,6 +113,8 @@ func Parse(line string) Node {
 		return parseFunctionProtoType(line)
 	case "ForStmt":
 		return parseForStmt(line)
+	case "GCCAsmStmt":
+		return parseGCCAsmStmt(line)
 	case "GotoStmt":
 		return parseGotoStmt(line)
 	case "IfStmt":
