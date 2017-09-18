@@ -22,8 +22,6 @@ func transpileCompoundStmt(n *ast.CompoundStmt, p *program.Program) (
 			return nil, nil, nil, err
 		}
 
-		// preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
-
 		if result != nil {
 			stmts = append(stmts, result...)
 		}

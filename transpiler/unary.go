@@ -243,3 +243,25 @@ func transpileUnaryExprOrTypeTraitExpr(n *ast.UnaryExprOrTypeTraitExpr, p *progr
 
 	return util.NewIntLit(sizeInBytes), n.Type1, nil, nil, nil
 }
+
+func transpileStmtExpr(n *ast.StmtExpr, p *program.Program) (
+	*goast.CallExpr, string, []goast.Stmt, []goast.Stmt, error) {
+	returnType, err := types.ResolveType(p, n.Type)
+	if err != nil {
+		return nil, "", nil, nil, err
+	}
+
+	body, pre, post, err := transpileCompoundStmt(n.Children()[0].(*ast.CompoundStmt), p)
+	if err != nil {
+		return nil, "", pre, post, err
+	}
+
+	// The body of the StmtExpr is always a CompoundStmt. However, the last
+	// statement needs to be transformed into an explicit return statement.
+	lastStmt := body.List[len(body.List)-1]
+	body.List[len(body.List)-1] = &goast.ReturnStmt{
+		Results: []goast.Expr{lastStmt.(*goast.ExprStmt).X},
+	}
+
+	return util.NewFuncClosure(returnType, body.List...), n.Type, pre, post, nil
+}
