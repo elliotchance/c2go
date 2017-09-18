@@ -177,6 +177,8 @@ func Parse(line string) Node {
 		return parseReturnStmt(line)
 	case "ReturnsTwiceAttr":
 		return parseReturnsTwiceAttr(line)
+	case "StmtExpr":
+		return parseStmtExpr(line)
 	case "StringLiteral":
 		return parseStringLiteral(line)
 	case "SwitchStmt":

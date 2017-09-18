@@ -6,7 +6,7 @@
 
 int main()
 {
-	plan(33);
+	plan(35);
 
     int i = 10;
     signed char j = 1;
@@ -114,6 +114,11 @@ int main()
 		is_eq(qF, expectedQ); 
 		is_eq(wF, expectedW);
 		is_eq(eF, expectedE);
+
+	diag("Statement expressions")
+	int s1 = ({ 2; });
+	is_eq(s1, 2);
+	is_eq(({ int foo = s1 * 3; foo + 1; }), 7);
 
 	done_testing();
 }
