@@ -260,7 +260,7 @@ func TestStartPreprocess(t *testing.T) {
 	// temp dir
 	tempDir := os.TempDir()
 
-	// create temp file with garantee
+	// create temp file with guarantee
 	// wrong file body
 	tempFile, err := newTempFile(tempDir, "c2go", "preprocess.c")
 	if err != nil {

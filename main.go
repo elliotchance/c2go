@@ -14,6 +14,10 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	goast "go/ast"
+	"go/format"
+	"go/parser"
+	"go/token"
 	"io"
 	"io/ioutil"
 	"os"
@@ -24,10 +28,13 @@ import (
 	"strings"
 
 	"errors"
+	"reflect"
+
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/transpiler"
-	"reflect"
+	"honnef.co/go/tools/lint/lintutil"
+	"honnef.co/go/tools/unused"
 )
 
 // Version can be requested through the command line with:
@@ -183,7 +190,7 @@ func Start(args ProgramArgs) error {
 		if err != nil {
 			return fmt.Errorf("preprocess failed: %v\nStdErr = %v", err, stderr.String())
 		}
-		pp = []byte(out.String())
+		pp = out.Bytes()
 	}
 
 	ppFilePath := path.Join("/tmp", "pp.c")
@@ -248,6 +255,86 @@ func Start(args ProgramArgs) error {
 		return fmt.Errorf("writing C output file failed: %v", err)
 	}
 
+	if !*keepUnused {
+		err := removeUnused(outputFilePath)
+		if err != nil {
+			return fmt.Errorf("Cannot remove unused: %v", err)
+		}
+	}
+
+	return nil
+}
+
+const (
+	unusedConstantans = "const"
+	unusedFunction    = "func"
+	unusedType        = "type"
+	unusedVariable    = "var"
+	suffix            = " is unused (U1000)"
+)
+
+func removeUnused(filename string) error {
+	var mode unused.CheckMode
+	//mode |= unused.CheckConstants
+	//mode |= unused.CheckFields
+	//mode |= unused.CheckFunctions
+	mode |= unused.CheckTypes
+	//mode |= unused.CheckVariables
+	checker := unused.NewChecker(mode)
+	l := unused.NewLintChecker(checker)
+
+	fs := lintutil.FlagSet("unused")
+	err := fs.Parse([]string{filename})
+	if err != nil {
+		return err
+	}
+
+	ps, _, err := lintutil.Lint(l, fs.Args(), &lintutil.Options{})
+	if err != nil {
+		return err
+	}
+
+	// create ast tree
+	fset := token.NewFileSet()
+	tree, err := parser.ParseFile(fset, filename, nil, 0)
+	if err != nil {
+		return err
+	}
+
+Back:
+	for _, p := range ps {
+		if strings.Contains(p.Text, unusedType) {
+			name := strings.TrimSpace(p.Text[len(unusedType) : len(p.Text)-len(suffix)])
+			for i := range tree.Decls {
+				decl := tree.Decls[i]
+				if gen, ok := decl.(*goast.GenDecl); ok && gen.Tok != token.CONST {
+					if s, ok := gen.Specs[0].(*goast.TypeSpec); ok {
+						if strings.Contains(s.Name.String(), name) {
+							var rr []goast.Decl
+							if i != 0 {
+								rr = append(rr, tree.Decls[0:i]...)
+							}
+							if i != len(tree.Decls)-1 {
+								rr = append(rr, tree.Decls[i+1:len(tree.Decls)]...)
+							}
+							tree.Decls = rr
+							goto Back
+						}
+					}
+				}
+			}
+		}
+	}
+
+	var buf bytes.Buffer
+	err = format.Node(&buf, fset, tree)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(filename, buf.Bytes(), 0755)
+	if err != nil {
+		return fmt.Errorf("writing C output file failed: %v", err)
+	}
 	return nil
 }
 
@@ -271,6 +358,7 @@ var (
 	transpileHelpFlag = transpileCommand.Bool("h", false, "print help information")
 	astCommand        = flag.NewFlagSet("ast", flag.ContinueOnError)
 	astHelpFlag       = astCommand.Bool("h", false, "print help information")
+	keepUnused        = transpileCommand.Bool("keep-unused", false, "Keep unused constants, functions, ...")
 )
 
 func main() {
@@ -334,7 +422,7 @@ func runCommand() int {
 		}
 
 		if *transpileHelpFlag || transpileCommand.NArg() == 0 {
-			fmt.Fprintf(stderr, "Usage: %s transpile [-V] [-o file.go] [-p package] file.c\n", os.Args[0])
+			fmt.Fprintf(stderr, "Usage: %s transpile [-V] [-o file.go] [-p package] [-keep-unused] file.c\n", os.Args[0])
 			transpileCommand.PrintDefaults()
 			return 1
 		}
