@@ -14,6 +14,10 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	goast "go/ast"
+	"go/parser"
+	"go/printer"
+	"go/token"
 	"io"
 	"io/ioutil"
 	"os"
@@ -24,10 +28,13 @@ import (
 	"strings"
 
 	"errors"
+	"reflect"
+
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/transpiler"
-	"reflect"
+	"honnef.co/go/tools/lint/lintutil"
+	"honnef.co/go/tools/unused"
 )
 
 // Version can be requested through the command line with:
@@ -352,5 +359,151 @@ func runCommand() int {
 		return 1
 	}
 
+	var mode unused.CheckMode
+	mode |= unused.CheckConstants
+	//mode |= unused.CheckFields
+	mode |= unused.CheckFunctions
+	mode |= unused.CheckTypes
+	mode |= unused.CheckVariables
+	checker := unused.NewChecker(mode)
+	l := unused.NewLintChecker(checker)
+
+	fs := lintutil.FlagSet("unused")
+
+	//TODO wrong
+	_ = fs.Parse([]string{"hello.go"})
+
+	//TODO more elegant
+	ps, _ /* lprog*/, err := lintutil.Lint(l, fs.Args(), &lintutil.Options{})
+	if err != nil {
+		return 0
+	}
+
+	// create ast tree
+	fset := token.NewFileSet()
+	tree, err := parser.ParseFile(fset, "hello.go", nil, 0)
+	//fmt.Println("tree = ", tree)
+	//fmt.Println("err  = ", err)
+	_ = tree
+	_ = err
+
+Back:
+	for _, p := range ps {
+		/*
+			pos := lprog.Fset.Position(p.Position)
+				if strings.Contains(p.Text, unusedConstantans) {
+					continue
+				}
+				if strings.Contains(p.Text, unusedFunction) {
+					continue
+				}
+				if strings.Contains(p.Text, unusedType) {
+					continue
+				}
+				if strings.Contains(p.Text, unusedVariable) {
+					continue
+				}
+				fmt.Printf("%v|||| %s\n", pos, p.Text)
+		*/
+		if strings.Contains(p.Text, unusedType) {
+			name := strings.TrimSpace(p.Text[len(unusedType) : len(p.Text)-len(postfix)])
+			// fmt.Printf("%s\n", name)
+
+			// Print the AST.
+
+			// var b bytes.Buffer
+			// _ = goast.Fprint(&b, fset, tree, nil)
+			// fmt.Printf("%s\n", b.String())
+			// find const
+			for i := range tree.Decls {
+				decl := tree.Decls[i]
+				if gen, ok := decl.(*goast.GenDecl); ok && gen.Tok != token.CONST {
+					/*
+						for ff := range gen.Specs {
+							if s, ok := gen.Specs[ff].(*goast.ValueSpec); ok {
+								for j := range s.Names {
+									fmt.Println("Value Spec", j)
+								}
+								fmt.Printf("Value type = %#v\n", s.Type)
+								for j := range s.Values {
+									fmt.Println("Valu val ", s.Values[j])
+								}
+								fmt.Println("")
+							}
+						}
+					*/
+					if s, ok := gen.Specs[0].(*goast.TypeSpec); ok {
+						if strings.Contains(s.Name.String(), name) {
+							var rr []goast.Decl
+							if i != 0 {
+								rr = append(rr, tree.Decls[0:i]...)
+							}
+							if i != len(tree.Decls)-1 {
+								rr = append(rr, tree.Decls[i+1:len(tree.Decls)-1]...)
+							}
+							fmt.Println("Len = ", len(rr), "|", len(tree.Decls))
+							tree.Decls = rr
+							fmt.Println("name = ", name)
+							goto Back
+
+							//					tree.Decls = append(tree.Decls[i], tree.Decls[i+1]...)
+							// copy(tree.Decls[i:], tree.Decls[i+1:])
+							// tree.Decls = tree.Decls[:len(tree.Decls)-1]
+						}
+					}
+					/*
+						// if dd, ok := gen.Specs[0].(*goast.ValueSpec); ok {
+						fmt.Println("FIND =>", tree.Decls[i].Pos())
+						fmt.Println("1: ", gen.Tok)
+						fmt.Printf("2: %#v\n", gen.Specs)
+						for h := range gen.Specs {
+							fmt.Printf("2.%v = %v\n", h, gen.Specs[h])
+							fmt.Printf("2.%v = %+v\n", h, gen.Specs[h])
+							fmt.Printf("2.%v = %#v\n", h, gen.Specs[h])
+						}
+						fmt.Println("3: ", gen.Lparen)
+						fmt.Println("4: ", gen.Rparen)
+					*/
+					// fmt.Println(" DD= ", dd)
+					// }
+					// copy(f.Decls[i:], f.Decls[i+1:])
+					// f.Decls = f.Decls[:len(f.Decls)-1]
+					// for j := i; j < len(tree.Decls); j++ {
+					// 	decl2 := tree.Decls[j]
+					// 	if gen, ok := decl2.(*goast.ValueSpec); ok {
+					// 		fmt.Println(">==", gen.Names)
+					// 		break
+					// 	}
+					// }
+				}
+			}
+			// remove from ast tree
+			//
+
+			//break
+			//continue
+		}
+	}
+
+	// var b bytes.Buffer
+	// _ = goast.Fprint(&b, fset, tree, nil)
+	// _, _ = fmt.Printf("%s\n", b.String())
+
+	//_ = goast.Fprint(fset, tree)
+
+	var buf bytes.Buffer
+	_ = printer.Fprint(&buf, fset, tree) // funcAST.Body)
+	_, _ = fmt.Printf("%s\n", buf.String())
+
+	_, _ = fmt.Printf("%+v\n", tree)
+
 	return 0
 }
+
+const (
+	unusedConstantans = "const"
+	unusedFunction    = "func"
+	unusedType        = "type"
+	unusedVariable    = "var"
+	postfix           = " is unused (U1000)"
+)
