@@ -265,21 +265,15 @@ func Start(args ProgramArgs) error {
 	return nil
 }
 
-const (
-	unusedConstantans = "const"
-	unusedFunction    = "func"
-	unusedType        = "type"
-	unusedVariable    = "var"
-	suffix            = " is unused (U1000)"
-)
-
 func removeUnused(filename string) error {
+
+	// prepare linter
 	var mode unused.CheckMode
-	//mode |= unused.CheckConstants
+	mode |= unused.CheckConstants
 	//mode |= unused.CheckFields
-	//mode |= unused.CheckFunctions
+	mode |= unused.CheckFunctions
 	mode |= unused.CheckTypes
-	//mode |= unused.CheckVariables
+	mode |= unused.CheckVariables
 	checker := unused.NewChecker(mode)
 	l := unused.NewLintChecker(checker)
 
@@ -289,9 +283,35 @@ func removeUnused(filename string) error {
 		return err
 	}
 
+	// take result of linter work
 	ps, _, err := lintutil.Lint(l, fs.Args(), &lintutil.Options{})
 	if err != nil {
 		return err
+	}
+
+	// linter is not found any unused elements
+	if len(ps) == 0 {
+		return nil
+	}
+
+	// prepare structures for analyzing
+	type un int
+
+	const (
+		unusedConstantans un = iota
+		unusedFunction
+		unusedType
+		unusedVariable
+	)
+	const (
+		suffix = " is unused (U1000)"
+	)
+
+	var unusedMap = map[string]un{
+		"const": unusedConstantans,
+		"func":  unusedFunction,
+		"type":  unusedType,
+		"var":   unusedVariable,
 	}
 
 	// create ast tree
@@ -301,15 +321,68 @@ func removeUnused(filename string) error {
 		return err
 	}
 
-Back:
+	// parse unused strings
+	type unusedParameter struct {
+		u    un
+		name string
+	}
+	var unusedParameters []unusedParameter
 	for _, p := range ps {
-		if strings.Contains(p.Text, unusedType) {
-			name := strings.TrimSpace(p.Text[len(unusedType) : len(p.Text)-len(suffix)])
-			for i := range tree.Decls {
-				decl := tree.Decls[i]
-				if gen, ok := decl.(*goast.GenDecl); ok && gen.Tok != token.CONST {
+		p.Text = p.Text[0 : len(p.Text)-len(suffix)]
+		for k, v := range unusedMap {
+			if strings.Contains(p.Text, k) {
+				unusedParameters = append(unusedParameters, unusedParameter{
+					u:    v,
+					name: strings.TrimSpace(p.Text[len(k):len(p.Text)]),
+				})
+			}
+		}
+	}
+
+	// remove unused parts of AST tree
+	for _, param := range unusedParameters {
+		switch param.u {
+
+		// remove unused constants
+		case unusedConstantans:
+			{
+				for i := 0; i < len(tree.Decls); i++ {
+					gen, ok := tree.Decls[i].(*goast.GenDecl)
+					if !ok || gen == (*goast.GenDecl)(nil) || gen.Tok != token.CONST {
+						goto nextConstDecl
+					}
+					if s, ok := gen.Specs[0].(*goast.ValueSpec); ok {
+						for _, n := range s.Names {
+							if strings.Contains(n.String(), param.name) {
+								var rr []goast.Decl
+								if i != 0 {
+									rr = append(rr, tree.Decls[0:i]...)
+								}
+								if i != len(tree.Decls)-1 {
+									rr = append(rr, tree.Decls[i+1:len(tree.Decls)]...)
+								}
+								tree.Decls = rr
+								continue
+							}
+						}
+					}
+				nextConstDecl:
+				}
+			}
+
+		// remove unused functions
+		case unusedFunction:
+
+		// remove unused types
+		case unusedType:
+			{
+				for i := 0; i < len(tree.Decls); i++ {
+					gen, ok := tree.Decls[i].(*goast.GenDecl)
+					if !ok || gen == (*goast.GenDecl)(nil) || gen.Tok != token.TYPE {
+						goto nextTypeDecl
+					}
 					if s, ok := gen.Specs[0].(*goast.TypeSpec); ok {
-						if strings.Contains(s.Name.String(), name) {
+						if strings.Contains(s.Name.String(), param.name) {
 							var rr []goast.Decl
 							if i != 0 {
 								rr = append(rr, tree.Decls[0:i]...)
@@ -318,19 +391,51 @@ Back:
 								rr = append(rr, tree.Decls[i+1:len(tree.Decls)]...)
 							}
 							tree.Decls = rr
-							goto Back
+							continue
 						}
 					}
+				nextTypeDecl:
 				}
 			}
+
+		// remove unused variables
+		case unusedVariable:
+			{
+				for i := 0; i < len(tree.Decls); i++ {
+					gen, ok := tree.Decls[i].(*goast.GenDecl)
+					if !ok || gen == (*goast.GenDecl)(nil) || gen.Tok != token.VAR {
+						goto nextVarDecl
+					}
+					if s, ok := gen.Specs[0].(*goast.ValueSpec); ok {
+						for _, n := range s.Names {
+							if strings.Contains(n.String(), param.name) {
+								var rr []goast.Decl
+								if i != 0 {
+									rr = append(rr, tree.Decls[0:i]...)
+								}
+								if i != len(tree.Decls)-1 {
+									rr = append(rr, tree.Decls[i+1:len(tree.Decls)]...)
+								}
+								tree.Decls = rr
+								continue
+							}
+						}
+					}
+				nextVarDecl:
+				}
+			}
+
 		}
 	}
 
+	// convert AST tree to Go code
 	var buf bytes.Buffer
 	err = format.Node(&buf, fset, tree)
 	if err != nil {
 		return err
 	}
+
+	// write buffer with Go code to file
 	err = ioutil.WriteFile(filename, buf.Bytes(), 0755)
 	if err != nil {
 		return fmt.Errorf("writing C output file failed: %v", err)
