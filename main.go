@@ -435,6 +435,13 @@ func removeUnused(filename string) error {
 
 		}
 	}
+	//TODO removing methods of types
+	// example of type:
+	// 		type pthread_attr_t [56]byte
+	// example of unused result:
+	// 		exit.go:135:6: type pthread_attr_t is unused (U1000)
+	// example of that type method:
+	// 		func (self *pthread_attr_t) cast(t reflect.Type) reflect.Value {
 
 	sort.Ints(removeItems)
 
