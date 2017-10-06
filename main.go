@@ -25,6 +25,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 
 	"errors"
@@ -35,6 +36,8 @@ import (
 	"github.com/elliotchance/c2go/transpiler"
 	"honnef.co/go/tools/lint/lintutil"
 	"honnef.co/go/tools/unused"
+
+	"golang.org/x/tools/imports"
 )
 
 // Version can be requested through the command line with:
@@ -323,8 +326,9 @@ func removeUnused(filename string) error {
 
 	// parse unused strings
 	type unusedParameter struct {
-		u    un
-		name string
+		u        un
+		name     string
+		position token.Pos
 	}
 	var unusedParameters []unusedParameter
 	for _, p := range ps {
@@ -332,24 +336,15 @@ func removeUnused(filename string) error {
 		for k, v := range unusedMap {
 			if strings.Contains(p.Text, k) {
 				unusedParameters = append(unusedParameters, unusedParameter{
-					u:    v,
-					name: strings.TrimSpace(p.Text[len(k):len(p.Text)]),
+					u:        v,
+					name:     strings.TrimSpace(p.Text[len(k):len(p.Text)]),
+					position: p.Position,
 				})
 			}
 		}
 	}
 
-	// typical function for remove Decl element from tree
-	removeDeclFromTree := func(i int, tree *goast.File) {
-		var rr []goast.Decl
-		if i != 0 {
-			rr = append(rr, tree.Decls[0:i]...)
-		}
-		if i != len(tree.Decls)-1 {
-			rr = append(rr, tree.Decls[i+1:len(tree.Decls)]...)
-		}
-		tree.Decls = rr
-	}
+	var removeItems []int
 
 	// remove unused parts of AST tree
 	for _, param := range unusedParameters {
@@ -365,8 +360,10 @@ func removeUnused(filename string) error {
 					}
 					if s, ok := gen.Specs[0].(*goast.ValueSpec); ok {
 						for _, n := range s.Names {
-							if strings.Contains(n.String(), param.name) {
-								removeDeclFromTree(i, tree)
+							//fmt.Println("C{", param.position, ",", s.Pos(), "}")
+							if strings.Contains(n.String(), param.name) && param.position == s.Pos() {
+								//fmt.Println("*")
+								removeItems = append(removeItems, i)
 								continue
 							}
 						}
@@ -383,9 +380,10 @@ func removeUnused(filename string) error {
 					if !ok || gen == (*goast.FuncDecl)(nil) {
 						goto nextFuncDecl
 					}
-
-					if strings.Contains(gen.Name.String(), param.name) {
-						removeDeclFromTree(i, tree)
+					//fmt.Println("F{", param.position, ",", gen.Pos(), ",", gen.End(), "}")
+					if strings.Contains(gen.Name.String(), param.name) && gen.Pos() <= param.position && param.position <= gen.End() {
+						//fmt.Println("*")
+						removeItems = append(removeItems, i)
 						continue
 					}
 
@@ -402,8 +400,10 @@ func removeUnused(filename string) error {
 						goto nextTypeDecl
 					}
 					if s, ok := gen.Specs[0].(*goast.TypeSpec); ok {
-						if strings.Contains(s.Name.String(), param.name) {
-							removeDeclFromTree(i, tree)
+						//fmt.Println("T{", param.position, ",", s.Pos(), "}")
+						if strings.Contains(s.Name.String(), param.name) && param.position == s.Pos() {
+							//fmt.Println("*")
+							removeItems = append(removeItems, i)
 							continue
 						}
 					}
@@ -421,8 +421,10 @@ func removeUnused(filename string) error {
 					}
 					if s, ok := gen.Specs[0].(*goast.ValueSpec); ok {
 						for _, n := range s.Names {
-							if strings.Contains(n.String(), param.name) {
-								removeDeclFromTree(i, tree)
+							//fmt.Println("V{", param.position, ",", s.Pos(), "}")
+							if strings.Contains(n.String(), param.name) && param.position == s.Pos() {
+								//fmt.Println("*")
+								removeItems = append(removeItems, i)
 								continue
 							}
 						}
@@ -434,7 +436,21 @@ func removeUnused(filename string) error {
 		}
 	}
 
-	// TODO Remove imports
+	sort.Ints(removeItems)
+
+	// TODO optimize
+	// remove Decl element from tree
+	for j := len(removeItems) - 1; j >= 0; j-- {
+		i := removeItems[j]
+		var rr []goast.Decl
+		if i != 0 {
+			rr = append(rr, tree.Decls[0:i]...)
+		}
+		if i != len(tree.Decls)-1 {
+			rr = append(rr, tree.Decls[i+1:len(tree.Decls)]...)
+		}
+		tree.Decls = rr
+	}
 
 	// convert AST tree to Go code
 	var buf bytes.Buffer
@@ -442,6 +458,13 @@ func removeUnused(filename string) error {
 	if err != nil {
 		return fmt.Errorf("Error: convert AST tree to Go code : %v", err)
 	}
+
+	// Remove imports
+	b, err := imports.Process(filename, buf.Bytes(), nil)
+	if err != nil {
+		return fmt.Errorf("Error: Cannot modify imports : %v", err)
+	}
+	buf = *bytes.NewBuffer(b)
 
 	// write buffer with Go code to file
 	err = ioutil.WriteFile(filename, buf.Bytes(), 0755)
