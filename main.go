@@ -434,7 +434,7 @@ func removeUnused(filename string) error {
 		}
 	}
 
-	// Remove imports
+	// TODO Remove imports
 
 	// convert AST tree to Go code
 	var buf bytes.Buffer
