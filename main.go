@@ -280,13 +280,13 @@ func removeUnused(filename string) error {
 	fs := lintutil.FlagSet("unused")
 	err := fs.Parse([]string{filename})
 	if err != nil {
-		return err
+		return fmt.Errorf("Error in flag parsing : %v", err)
 	}
 
 	// take result of linter work
 	ps, _, err := lintutil.Lint(l, fs.Args(), &lintutil.Options{})
 	if err != nil {
-		return err
+		return fmt.Errorf("Error in linter : %v", err)
 	}
 
 	// linter is not found any unused elements
@@ -318,7 +318,7 @@ func removeUnused(filename string) error {
 	fset := token.NewFileSet()
 	tree, err := parser.ParseFile(fset, filename, nil, 0)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error: Cannot parse : %v", err)
 	}
 
 	// parse unused strings
@@ -339,6 +339,18 @@ func removeUnused(filename string) error {
 		}
 	}
 
+	// typical function for remove Decl element from tree
+	removeDeclFromTree := func(i int, tree *goast.File) {
+		var rr []goast.Decl
+		if i != 0 {
+			rr = append(rr, tree.Decls[0:i]...)
+		}
+		if i != len(tree.Decls)-1 {
+			rr = append(rr, tree.Decls[i+1:len(tree.Decls)]...)
+		}
+		tree.Decls = rr
+	}
+
 	// remove unused parts of AST tree
 	for _, param := range unusedParameters {
 		switch param.u {
@@ -354,14 +366,7 @@ func removeUnused(filename string) error {
 					if s, ok := gen.Specs[0].(*goast.ValueSpec); ok {
 						for _, n := range s.Names {
 							if strings.Contains(n.String(), param.name) {
-								var rr []goast.Decl
-								if i != 0 {
-									rr = append(rr, tree.Decls[0:i]...)
-								}
-								if i != len(tree.Decls)-1 {
-									rr = append(rr, tree.Decls[i+1:len(tree.Decls)]...)
-								}
-								tree.Decls = rr
+								removeDeclFromTree(i, tree)
 								continue
 							}
 						}
@@ -372,6 +377,21 @@ func removeUnused(filename string) error {
 
 		// remove unused functions
 		case unusedFunction:
+			{
+				for i := 0; i < len(tree.Decls); i++ {
+					gen, ok := tree.Decls[i].(*goast.FuncDecl)
+					if !ok || gen == (*goast.FuncDecl)(nil) {
+						goto nextFuncDecl
+					}
+
+					if strings.Contains(gen.Name.String(), param.name) {
+						removeDeclFromTree(i, tree)
+						continue
+					}
+
+				nextFuncDecl:
+				}
+			}
 
 		// remove unused types
 		case unusedType:
@@ -383,14 +403,7 @@ func removeUnused(filename string) error {
 					}
 					if s, ok := gen.Specs[0].(*goast.TypeSpec); ok {
 						if strings.Contains(s.Name.String(), param.name) {
-							var rr []goast.Decl
-							if i != 0 {
-								rr = append(rr, tree.Decls[0:i]...)
-							}
-							if i != len(tree.Decls)-1 {
-								rr = append(rr, tree.Decls[i+1:len(tree.Decls)]...)
-							}
-							tree.Decls = rr
+							removeDeclFromTree(i, tree)
 							continue
 						}
 					}
@@ -409,14 +422,7 @@ func removeUnused(filename string) error {
 					if s, ok := gen.Specs[0].(*goast.ValueSpec); ok {
 						for _, n := range s.Names {
 							if strings.Contains(n.String(), param.name) {
-								var rr []goast.Decl
-								if i != 0 {
-									rr = append(rr, tree.Decls[0:i]...)
-								}
-								if i != len(tree.Decls)-1 {
-									rr = append(rr, tree.Decls[i+1:len(tree.Decls)]...)
-								}
-								tree.Decls = rr
+								removeDeclFromTree(i, tree)
 								continue
 							}
 						}
@@ -428,11 +434,13 @@ func removeUnused(filename string) error {
 		}
 	}
 
+	// Remove imports
+
 	// convert AST tree to Go code
 	var buf bytes.Buffer
 	err = format.Node(&buf, fset, tree)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error: convert AST tree to Go code : %v", err)
 	}
 
 	// write buffer with Go code to file
@@ -440,6 +448,12 @@ func removeUnused(filename string) error {
 	if err != nil {
 		return fmt.Errorf("writing C output file failed: %v", err)
 	}
+
+	// recursive checking
+	if len(ps) != 0 {
+		return removeUnused(filename)
+	}
+
 	return nil
 }
 
