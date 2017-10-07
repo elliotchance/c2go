@@ -20,9 +20,6 @@ matrix:
     - env: SCRIPT=lint CLANG=3.9
       os: linux
 
-# see https://docs.travis-ci.com/user/common-build-problems/#Build-times-out-because-no-output-was-received
-install: travis_wait mvn install
-
 before_install:
   - |
       if [ "$TRAVIS_OS_NAME" = "linux" ]; then
