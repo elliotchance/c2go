@@ -24,7 +24,6 @@ import (
 	"strings"
 
 	"errors"
-	"reflect"
 
 	cleaner "github.com/Konstantin8105/Cleaner"
 	"github.com/elliotchance/c2go/ast"
@@ -122,41 +121,6 @@ func buildTree(nodes []treeNode, depth int) []ast.Node {
 	}
 
 	return results
-}
-
-func toJSON(tree []interface{}) []map[string]interface{} {
-	r := make([]map[string]interface{}, len(tree))
-
-	for j, n := range tree {
-		rn := reflect.ValueOf(n).Elem()
-		r[j] = make(map[string]interface{})
-		r[j]["node"] = rn.Type().Name()
-
-		for i := 0; i < rn.NumField(); i++ {
-			name := strings.ToLower(rn.Type().Field(i).Name)
-			value := rn.Field(i).Interface()
-
-			if name == "children" {
-				v := value.([]interface{})
-
-				if len(v) == 0 {
-					continue
-				}
-
-				value = toJSON(v)
-			}
-
-			r[j][name] = value
-		}
-	}
-
-	return r
-}
-
-func check(prefix string, e error) {
-	if e != nil {
-		panic(prefix + e.Error())
-	}
 }
 
 // Start begins transpiling an input file.
@@ -259,17 +223,6 @@ func Start(args ProgramArgs) error {
 	}
 
 	return nil
-}
-
-// newTempFile - returns temp file
-func newTempFile(dir, prefix, suffix string) (*os.File, error) {
-	for index := 1; index < 10000; index++ {
-		path := filepath.Join(dir, fmt.Sprintf("%s%03d%s", prefix, index, suffix))
-		if _, err := os.Stat(path); err != nil {
-			return os.Create(path)
-		}
-	}
-	return nil, fmt.Errorf("could not create file: %s%03d%s", prefix, 1, suffix)
 }
 
 var (
