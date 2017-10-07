@@ -312,3 +312,14 @@ func TestGoPath(t *testing.T) {
 		t.Errorf(err.Error())
 	}
 }
+
+// newTempFile - returns temp file
+func newTempFile(dir, prefix, suffix string) (*os.File, error) {
+	for index := 1; index < 10000; index++ {
+		path := filepath.Join(dir, fmt.Sprintf("%s%03d%s", prefix, index, suffix))
+		if _, err := os.Stat(path); err != nil {
+			return os.Create(path)
+		}
+	}
+	return nil, fmt.Errorf("could not create file: %s%03d%s", prefix, 1, suffix)
+}

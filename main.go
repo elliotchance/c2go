@@ -217,8 +217,8 @@ func Start(args ProgramArgs) error {
 	if !*keepUnused {
 		err := cleaner.Go(outputFilePath, outputFilePath)
 		if err != nil {
-			fmt.Println("Warning: Cannot removing unused variable, types, ....")
-			fmt.Println("Please use flag '-keep-unused'")
+			fmt.Errorf("Warning: Cannot removing unused variable, types, ....")
+			fmt.Errorf("Please use flag '-keep-unused'")
 		}
 	}
 
