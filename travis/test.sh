@@ -44,7 +44,7 @@ while read -r line
 do 
 	echo "Starting : $line"
 	xargs -I{} bash -c "{} >> $OUTFILE" "$line" 
-done < "$GOLIST"
+done <<< "$GOLIST"
 rm $GOLIST
 
 # Merge coverage profiles.
