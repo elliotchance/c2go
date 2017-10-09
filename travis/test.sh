@@ -46,7 +46,7 @@ cat $GOLIST
 #	echo "Next : $i"
 #	xargs -I{} bash -c "{} >> $OUTFILE" < "$i"
 #done
-while read -r line
+while IFS= read -r line
 do 
 	echo "$line\n"
 	xargs -I{} bash -c "{} >> $OUTFILE" < "$line" 
