@@ -42,13 +42,10 @@ GOLIST=/tmp/golist.txt
 go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS > $GOLIST
 echo "Show go list fully:"
 cat $GOLIST
-while read -r line
+while IFS=read -r line
 do 
 	echo "Starting : $line"
-	#__x='eval -I{} bash -c "{} >> $OUTFILE" "$line"'
-	__x='eval $line >> $OUTFILE'
-	echo $__x
-	eval $__x
+	eval $line >> $OUTFILE
 done < "$GOLIST"
 rm $GOLIST
 
