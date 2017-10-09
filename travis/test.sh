@@ -40,11 +40,16 @@ GOLIST=/tmp/golist.txt
 go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS > $GOLIST
 echo "Show go list fully:"
 cat $GOLIST
-while read -r line
-do 
+for line in $(cat "$GOLIST")
+do
 	echo "Starting : $line"
 	xargs -I{} bash -c "{} >> $OUTFILE" "$line" 
-done <<< "$GOLIST"
+done
+#while read -r line
+#do 
+#	echo "Starting : $line"
+#	xargs -I{} bash -c "{} >> $OUTFILE" "$line" 
+#done < "$GOLIST"
 rm $GOLIST
 
 # Merge coverage profiles.
