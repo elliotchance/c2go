@@ -40,7 +40,17 @@ GOLIST=/tmp/golist.txt
 go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS > $GOLIST
 echo "Show go list fully:"
 cat $GOLIST
-while read line; do echo -e "$line\n"; xargs -I{} bash -c "{} >> $OUTFILE" < "$line" ; done < $GOLIST
+#declare -a GoList=(`cat "$GOLIST"`)
+#for i in "${GoList[@]}"
+#do
+#	echo "Next : $i"
+#	xargs -I{} bash -c "{} >> $OUTFILE" < "$i"
+#done
+while read -r line
+do 
+	echo "$line\n"
+	xargs -I{} bash -c "{} >> $OUTFILE" < "$line" 
+done < "$GOLIST"
 
 
 # go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS | xargs -I{} bash -c "{} >> $OUTFILE"
