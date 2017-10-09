@@ -36,13 +36,14 @@ export PKGS_DELIM=$(echo "$PKGS" | paste -sd "," -)
 echo "Run: go test"
 rm -f $OUTFILE
 
-go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS > golist.tmp
-cat ./golist.tmp
-GoList=(`cat "golist.tmp"`)
+GOLIST=/tmp/golist.txt
+go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS > $GOLIST
+cat $GOLIST
+declare -a GoList=(`cat "$GOLIST"`)
 for i in "${GoList[@]}"
 do
 	echo $i
-	xargs -I{} bash -c "{} >> $OUTFILE" < $i
+	xargs $i -I{} bash -c "{} >> $OUTFILE"
 done
 
 # go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS | xargs -I{} bash -c "{} >> $OUTFILE"
