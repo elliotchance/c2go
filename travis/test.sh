@@ -51,6 +51,10 @@ done < "$GOLIST"
 
 # Merge coverage profiles.
 echo "Run: cover profile"
+COVERLIST=/tmp/coverlist.txt
+ls -la *.coverprofile > $COVERLIST
+echo "Show coverprofile files:"
+cat $COVERLIST
 COVERAGE_FILES=`ls -1 *.coverprofile 2>/dev/null | wc -l`
 if [ $COVERAGE_FILES != 0 ]; then
     gocovmerge `ls *.coverprofile` > coverage.txt
