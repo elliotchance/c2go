@@ -7,7 +7,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -261,17 +260,22 @@ func TestIntegrationScripts(t *testing.T) {
 func TestStartPreprocess(t *testing.T) {
 	// create temp file with guarantee
 	// wrong file body
-	tempFile, err := ioutil.TempFile("", fmt.Sprintf("preprocess%d.c", rand.Int()))
+	tempFile, err := ioutil.TempFile("./", "preprocess.c")
 	if err != nil {
-		t.Errorf("Cannot create temp file for execute test")
+		t.Fatalf("Cannot create temp file for execute test\nerr = %v", err)
 	}
-	defer os.Remove(tempFile.Name())
+	defer func() {
+		err = os.Remove(tempFile.Name())
+		if err != nil {
+			t.Fatalf("Cannot remove file: %v\nerr = %v", tempFile.Name(), err)
+		}
+	}()
 
 	fmt.Fprintf(tempFile, "#include <AbsoluteWrongInclude.h>\nint main(void){\nwrong();\n}")
 
 	err = tempFile.Close()
 	if err != nil {
-		t.Errorf("Cannot close the temp file")
+		t.Fatalf("Cannot close the temp file. Err = %v", err)
 	}
 
 	var args ProgramArgs
@@ -279,7 +283,7 @@ func TestStartPreprocess(t *testing.T) {
 
 	err = Start(args)
 	if err == nil {
-		t.Errorf("Cannot test preprocess of application")
+		t.Fatalf("Cannot test preprocess of application")
 	}
 }
 

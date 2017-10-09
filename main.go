@@ -124,13 +124,24 @@ func buildTree(nodes []treeNode, depth int) []ast.Node {
 }
 
 // Start begins transpiling an input file.
-func Start(args ProgramArgs) error {
+func Start(args ProgramArgs) (err error) {
+	// recover of inside `c2go` panics
+	defer func() {
+		if r := recover(); r != nil {
+			var ok bool
+			err, ok = r.(error)
+			if ok {
+				err = fmt.Errorf("Error : %v", r)
+			}
+		}
+	}()
+
 	if os.Getenv("GOPATH") == "" {
 		return fmt.Errorf("The $GOPATH must be set")
 	}
 
 	// 1. Compile it first (checking for errors)
-	_, err := os.Stat(args.inputFile)
+	_, err = os.Stat(args.inputFile)
 	if err != nil {
 		return fmt.Errorf("Input file is not found")
 	}
@@ -198,7 +209,7 @@ func Start(args ProgramArgs) error {
 
 	err = transpiler.TranspileAST(args.inputFile, args.packageName, p, tree[0].(ast.Node))
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("cannot transpile AST : %v", err)
 	}
 
 	outputFilePath := args.outputFile

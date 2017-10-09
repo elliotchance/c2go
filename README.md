@@ -2,7 +2,7 @@
 [![GitHub version](https://badge.fury.io/gh/elliotchance%2Fc2go.svg)](https://badge.fury.io/gh/elliotchance%2Fc2go)
 [![codecov](https://codecov.io/gh/elliotchance/c2go/branch/master/graph/badge.svg)](https://codecov.io/gh/elliotchance/c2go)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/elliotchance/c2go/master/LICENSE)
-[![Join the chat at https://gitter.im/c2goproject](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/c2goproject?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the chat at gitter.im](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/c2goproject?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Twitter](https://img.shields.io/twitter/url/https/github.com/elliotchance/c2go.svg?style=social)](https://twitter.com/intent/tweet?text=Wow:&url=%5Bobject%20Object%5D)
 
 A tool for converting C to Go.
@@ -76,35 +76,47 @@ Prime number.
 
 `prime.go` looks like:
 
-```go
+```golang
 package main
 
-import (
-    "fmt"
-)
+import "unsafe"
 
-// ... lots of system types in Go removed for brevity.
+import "github.com/elliotchance/c2go/noarch"
+
+var stdin *noarch.File
+var stdout *noarch.File
+var stderr *noarch.File
 
 func main() {
-    var n int
-    var c int
-    fmt.Printf("Enter a number\n")
-    fmt.Scanf("%d", &n)
-    if n == 2 {
-        fmt.Printf("Prime number.\n")
-    } else {
-        for c = 2; c <= n - 1; c += 1 {
-            if n % c == 0 {
-                break
-            }
-        }
-        if c != n {
-            fmt.Printf("Not prime.\n")
-        } else {
-            fmt.Printf("Prime number.\n")
-        }
-    }
-    return
+	__init()
+	var n int
+	var c int
+	noarch.Printf([]byte("Enter a number\n\x00"))
+	noarch.Scanf([]byte("%d\x00"), (*[1]int)(unsafe.Pointer(&n))[:])
+	if n == 2 {
+		noarch.Printf([]byte("Prime number.\n\x00"))
+	} else {
+		for c = 2; c <= n-1; func() int {
+			c += 1
+			return c
+		}() {
+			if n%c == 0 {
+				break
+			}
+		}
+		if c != n {
+			noarch.Printf([]byte("Not prime.\n\x00"))
+		} else {
+			noarch.Printf([]byte("Prime number.\n\x00"))
+		}
+	}
+	return
+}
+
+func __init() {
+	stdin = noarch.Stdin
+	stdout = noarch.Stdout
+	stderr = noarch.Stderr
 }
 ```
 
