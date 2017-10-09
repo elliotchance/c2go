@@ -217,7 +217,7 @@ func Start(args ProgramArgs) error {
 	if !*keepUnused {
 		err := cleaner.Go(outputFilePath, outputFilePath)
 		if err != nil {
-			fmt.Fprint(os.Stderr, "warning: Cannot removing unused variable, types, ....\nplease use flag '-keep-unused'")
+			fmt.Fprintf(os.Stderr, "warning: cannot removing unused entities: %s\nPlease use flag '-keep-unused'", err.Error())
 		}
 	}
 
@@ -230,7 +230,7 @@ var (
 	verboseFlag       = transpileCommand.Bool("V", false, "print progress as comments")
 	outputFlag        = transpileCommand.String("o", "", "output Go generated code to the specified file")
 	packageFlag       = transpileCommand.String("p", "main", "set the name of the generated package")
-	keepUnused        = transpileCommand.Bool("keep-unused", false, "Keep unused constants, functions, ...")
+	keepUnused        = transpileCommand.Bool("keep-unused", false, "Keep unused constants, functions, variables, types and methods of unused types")
 	transpileHelpFlag = transpileCommand.Bool("h", false, "print help information")
 	astCommand        = flag.NewFlagSet("ast", flag.ContinueOnError)
 	astHelpFlag       = astCommand.Bool("h", false, "print help information")

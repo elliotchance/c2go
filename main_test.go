@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -257,12 +258,9 @@ func TestIntegrationScripts(t *testing.T) {
 }
 
 func TestStartPreprocess(t *testing.T) {
-	// temp dir
-	tempDir := os.TempDir()
-
 	// create temp file with guarantee
 	// wrong file body
-	tempFile, err := newTempFile(tempDir, "c2go", "preprocess.c")
+	tempFile, err := ioutil.TempFile("", "preprocess.c")
 	if err != nil {
 		t.Errorf("Cannot create temp file for execute test")
 	}
@@ -311,15 +309,4 @@ func TestGoPath(t *testing.T) {
 	if err == nil {
 		t.Errorf(err.Error())
 	}
-}
-
-// newTempFile - returns temp file
-func newTempFile(dir, prefix, suffix string) (*os.File, error) {
-	for index := 1; index < 10000; index++ {
-		path := filepath.Join(dir, fmt.Sprintf("%s%03d%s", prefix, index, suffix))
-		if _, err := os.Stat(path); err != nil {
-			return os.Create(path)
-		}
-	}
-	return nil, fmt.Errorf("could not create file: %s%03d%s", prefix, 1, suffix)
 }
