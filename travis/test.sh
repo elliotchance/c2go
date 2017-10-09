@@ -45,9 +45,7 @@ do
 	echo "Starting : $line"
 	xargs -I{} bash -c "{} >> $OUTFILE" "$line" 
 done < "$GOLIST"
-
-
-# go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS | xargs -I{} bash -c "{} >> $OUTFILE"
+rm $GOLIST
 
 # Merge coverage profiles.
 echo "Run: cover profile"
@@ -60,6 +58,7 @@ if [ $COVERAGE_FILES != 0 ]; then
     gocovmerge `ls *.coverprofile` > coverage.txt
     rm *.coverprofile
 fi
+rm $COVERLIST
 
 # Print stats
 echo "Run: print stats"
