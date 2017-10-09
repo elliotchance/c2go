@@ -40,7 +40,7 @@ GOLIST=/tmp/golist.txt
 go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS > $GOLIST
 echo "Show go list fully:"
 cat $GOLIST
-while IFS= read -r line
+while read -r line
 do 
 	echo "Starting : $line"
 	xargs -I{} bash -c "{} >> $OUTFILE" "$line" 
@@ -56,6 +56,8 @@ cat $COVERLIST
 COVERAGE_FILES=`ls -1 *.coverprofile 2>/dev/null | wc -l`
 if [ $COVERAGE_FILES != 0 ]; then
     gocovmerge `ls *.coverprofile` > coverage.txt
+	echo "Show summary coverage doc:"
+	cat coverage.txt
     rm *.coverprofile
 fi
 rm $COVERLIST
