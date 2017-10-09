@@ -76,7 +76,7 @@ Prime number.
 
 `prime.go` looks like:
 
-```golang
+```go
 package main
 
 import "unsafe"
