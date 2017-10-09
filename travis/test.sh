@@ -23,9 +23,11 @@ echo "" > coverage.txt
 # As in @rodrigocorsi2 comment above (using full path to grep due to 'grep -n'
 # alias).
 export PKGS=$(go list ./... | grep -v c2go/build | grep -v /vendor/)
+echo "PKGS : $PKGS"
 
 # Make comma-separated.
 export PKGS_DELIM=$(echo "$PKGS" | paste -sd "," -)
+echo "PKGS_DELIM : $PKGS_DELIM"
 
 # Run tests and append all output to out.txt. It's important we have "-v" so
 # that all the test names are printed. It's also important that the covermode be
@@ -36,21 +38,21 @@ export PKGS_DELIM=$(echo "$PKGS" | paste -sd "," -)
 echo "Run: go test"
 rm -f $OUTFILE
 
-GOLIST=/tmp/golist.txt
-go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS > $GOLIST
-echo "Show go list fully:"
-cat $GOLIST
-for line in $(cat "$GOLIST")
+while read -r line
 do
 	echo "Starting : $line"
-	xargs -I{} bash -c "{} >> $OUTFILE" "$line" 
-done
+	xargs -I{} bash -c "{} >> $OUTFILE"
+done < "go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS" 
+#GOLIST=/tmp/golist.txt
+#go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS > $GOLIST
+#echo "Show go list fully:"
+#cat $GOLIST
 #while read -r line
 #do 
 #	echo "Starting : $line"
 #	xargs -I{} bash -c "{} >> $OUTFILE" "$line" 
 #done < "$GOLIST"
-rm $GOLIST
+#rm $GOLIST
 
 # Merge coverage profiles.
 echo "Run: cover profile"
@@ -59,6 +61,7 @@ ls -la *.coverprofile > $COVERLIST
 echo "Show coverprofile files:"
 cat $COVERLIST
 COVERAGE_FILES=`ls -1 *.coverprofile 2>/dev/null | wc -l`
+echo "Cover files : $COVERAGE_FILES"
 if [ $COVERAGE_FILES != 0 ]; then
     gocovmerge `ls *.coverprofile` > coverage.txt
 	echo "Show summary coverage doc:"
