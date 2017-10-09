@@ -37,17 +37,7 @@ echo "PKGS_DELIM : $PKGS_DELIM"
 # Exit code 123 will be returned if any of the tests fail.
 echo "Run: go test"
 rm -f $OUTFILE
-
-GOLIST=/tmp/golist.txt
-go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS > $GOLIST
-echo "Show go list fully:"
-cat $GOLIST
-while read line
-do 
-	echo "Starting : $line"
-	eval "$line >> $OUTFILE"
-done < "$GOLIST"
-rm $GOLIST
+travis 20 go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS | xargs -I{} bash -c "{} >> $OUTFILE"
 
 # Merge coverage profiles.
 echo "Run: cover profile"

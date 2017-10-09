@@ -41,7 +41,7 @@ before_install:
   - go get -u github.com/wadey/gocovmerge
 
 script:
-  - travis_wait 30 ./travis/$SCRIPT.sh
+  - . ./travis/$SCRIPT.sh
 
 after_success:
   - include_cov=coverage.txt bash <(curl -s https://codecov.io/bash)
