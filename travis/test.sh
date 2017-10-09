@@ -38,16 +38,33 @@ echo "PKGS_DELIM : $PKGS_DELIM"
 echo "Run: go test"
 rm -f $OUTFILE
 
-GOLIST=/tmp/golist.txt
-go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS > $GOLIST
-echo "Show go list fully:"
-cat $GOLIST
-while read line
-do 
-	echo "Starting : $line"
-	eval "$line >> $OUTFILE"
-done < "$GOLIST"
-rm $GOLIST
+GOLIST_PKGS=/tmp/pkgs.list
+go list ./... | grep -v c2go/build | grep -v /vendor/ > $GOLIST_PKGS
+cat $GOLIST_PKGS
+let a=0
+while read pkgs
+do
+	let a=a+1
+	let b=0
+	while read pkgs2
+	do while
+		let b=b+1
+		echo "$a:$b"
+		eval go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile $pkgs$a$b.coverprofile -coverpkg $pkgs {{.ImportPath}}' $pkgs2
+	done < $GOLIST_PKGS
+done < $GOLIST_PKGS
+
+
+#GOLIST=/tmp/golist.txt
+#go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS > $GOLIST
+#echo "Show go list fully:"
+#cat $GOLIST
+#while read line
+#do 
+#	echo "Starting : $line"
+#	eval "$line >> $OUTFILE"
+#done < "$GOLIST"
+#rm $GOLIST
 
 # Merge coverage profiles.
 echo "Run: cover profile"
