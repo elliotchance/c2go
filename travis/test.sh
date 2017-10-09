@@ -42,10 +42,10 @@ GOLIST=/tmp/golist.txt
 go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS > $GOLIST
 echo "Show go list fully:"
 cat $GOLIST
-while IFS=read -r line
+while read line
 do 
 	echo "Starting : $line"
-	eval $line >> $OUTFILE
+	eval "$line >> $OUTFILE"
 done < "$GOLIST"
 rm $GOLIST
 
@@ -62,6 +62,9 @@ if [ $COVERAGE_FILES != 0 ]; then
 	echo "Show summary coverage doc:"
 	cat coverage.txt
     rm *.coverprofile
+else
+	# if don`t found coverage files - then exit
+	exit 1
 fi
 rm $COVERLIST
 
