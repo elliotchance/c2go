@@ -35,7 +35,18 @@ export PKGS_DELIM=$(echo "$PKGS" | paste -sd "," -)
 # Exit code 123 will be returned if any of the tests fail.
 echo "Run: go test"
 rm -f $OUTFILE
-go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS | echo | xargs -I{} bash -c "{} >> $OUTFILE"
+
+declare -a GoList = (go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS)
+# get length of an array
+arraylength=${#array[@]}
+# use for loop to read all values and indexes
+for (( i=1; i<${arraylength}+1; i++ ));
+do
+	echo $i " / " ${arraylength} " : " ${array[$i-1]}
+	xargs -I{} bash -c "{} >> $OUTFILE" < ${array[$i-1]}
+done
+
+# go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS | xargs -I{} bash -c "{} >> $OUTFILE"
 
 # Merge coverage profiles.
 echo "Run: cover profile"
