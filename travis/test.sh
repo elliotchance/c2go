@@ -36,7 +36,7 @@ export PKGS_DELIM=$(echo "$PKGS" | paste -sd "," -)
 echo "Run: go test"
 rm -f $OUTFILE
 
-GoList = (go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS)
+GoList=go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS
 for i in "${GoList[@]}"
 do
 	echo $i " : " ${GoList[$i]}
