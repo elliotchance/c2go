@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -260,7 +261,7 @@ func TestIntegrationScripts(t *testing.T) {
 func TestStartPreprocess(t *testing.T) {
 	// create temp file with guarantee
 	// wrong file body
-	tempFile, err := ioutil.TempFile("", "preprocess.c")
+	tempFile, err := ioutil.TempFile("", fmt.Sprintf("preprocess%d.c", rand.Int()))
 	if err != nil {
 		t.Errorf("Cannot create temp file for execute test")
 	}

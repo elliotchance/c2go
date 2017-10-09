@@ -3,7 +3,7 @@
   (string) (len=31) "  -V\tprint progress as comments",
   (string) (len=27) "  -h\tprint help information",
   (string) (len=14) "  -keep-unused",
-  (string) (len=42) "    \tKeep unused constants, functions, ...",
+  (string) (len=83) "    \tKeep unused constants, functions, variables, types and methods of unused types",
   (string) (len=11) "  -o string",
   (string) (len=51) "    \toutput Go generated code to the specified file",
   (string) (len=11) "  -p string",
