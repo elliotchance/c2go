@@ -48,7 +48,7 @@ do
 	#__x='eval -I{} bash -c "{} >> $OUTFILE" "$line"'
 	__x='eval $line >> $OUTFILE'
 	echo $__x
-	eval __x
+	eval $__x
 done < "$GOLIST"
 rm $GOLIST
 
