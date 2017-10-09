@@ -36,14 +36,11 @@ export PKGS_DELIM=$(echo "$PKGS" | paste -sd "," -)
 echo "Run: go test"
 rm -f $OUTFILE
 
-declare -a GoList = (go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS)
-# get length of an array
-arraylength=${#array[@]}
-# use for loop to read all values and indexes
-for (( i=1; i<${arraylength}+1; i++ ));
+GoList = (go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS)
+for i in "${GoList[@]}"
 do
-	echo $i " / " ${arraylength} " : " ${array[$i-1]}
-	xargs -I{} bash -c "{} >> $OUTFILE" < ${array[$i-1]}
+	echo $i " : " ${GoList[$i]}
+	xargs -I{} bash -c "{} >> $OUTFILE" < ${GoList[$i]}
 done
 
 # go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS | xargs -I{} bash -c "{} >> $OUTFILE"
