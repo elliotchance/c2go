@@ -33,10 +33,12 @@ export PKGS_DELIM=$(echo "$PKGS" | paste -sd "," -)
 # with gocovmerge.
 #
 # Exit code 123 will be returned if any of the tests fail.
+echo "Run: go test"
 rm -f $OUTFILE
 go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS | xargs -I{} bash -c "{} >> $OUTFILE"
 
 # Merge coverage profiles.
+echo "Run: cover profile"
 COVERAGE_FILES=`ls -1 *.coverprofile 2>/dev/null | wc -l`
 if [ $COVERAGE_FILES != 0 ]; then
     gocovmerge `ls *.coverprofile` > coverage.txt
@@ -44,6 +46,7 @@ if [ $COVERAGE_FILES != 0 ]; then
 fi
 
 # Print stats
+echo "Run: print stats"
 echo "Unit tests: " $(grep "=== RUN" $OUTFILE | wc -l)
 echo "Integration tests: " $(grep "# Total tests" $OUTFILE | cut -c21-)
 
@@ -53,12 +56,14 @@ rm $OUTFILE
 
 # These steps are from the README to verify it can be installed and run as
 # documented.
+echo "Run: go build"
 go build
 
 export C2GO_DIR=$GOPATH/src/github.com/elliotchance/c2go
 export C2GO=$C2GO_DIR/c2go
 
-$C2GO transpile $C2GO_DIR/examples/prime.c
+echo "Run: transpile prime.c"
+$C2GO transpile -V $C2GO_DIR/examples/prime.c
 echo "47" | go run prime.go
 if [ $($C2GO -v | wc -l) -ne 1 ]; then exit 1; fi
 if [ $(cat prime.go | wc -l) -eq 0 ]; then exit 1; fi
@@ -75,5 +80,5 @@ unzip /tmp/$SQLITE3_FILE.zip -d /tmp
 # Transpile the SQLite3 files.
 # Add flag `-keep-unused` because linter have too many warning and
 # removing unused elements is not provided.
-./c2go transpile -keep-unused /tmp/sqlite-amalgamation-3190300/shell.c
-./c2go transpile -keep-unused /tmp/sqlite-amalgamation-3190300/sqlite3.c
+./c2go transpile -V -keep-unused /tmp/sqlite-amalgamation-3190300/shell.c
+./c2go transpile -V -keep-unused /tmp/sqlite-amalgamation-3190300/sqlite3.c

@@ -110,6 +110,8 @@ func TestIntegrationScripts(t *testing.T) {
 				inputFile:   file,
 				outputFile:  subFolder + mainFileName,
 				packageName: "main",
+				// add verbose for avoid travis timeout
+				verbose: true,
 
 				// This appends a TestApp function to the output source so we
 				// can run "go test" against the produced binary.

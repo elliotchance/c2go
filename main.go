@@ -125,6 +125,9 @@ func buildTree(nodes []treeNode, depth int) []ast.Node {
 
 // Start begins transpiling an input file.
 func Start(args ProgramArgs) (err error) {
+	if args.verbose {
+		fmt.Println("Start tanspiling ...")
+	}
 	// recover of inside `c2go` panics
 	defer func() {
 		if r := recover(); r != nil {
@@ -136,17 +139,26 @@ func Start(args ProgramArgs) (err error) {
 		}
 	}()
 
+	if args.verbose {
+		fmt.Println("Check environment variables GOPATH...")
+	}
 	if os.Getenv("GOPATH") == "" {
 		return fmt.Errorf("The $GOPATH must be set")
 	}
 
 	// 1. Compile it first (checking for errors)
+	if args.verbose {
+		fmt.Println("Check input file is exist...")
+	}
 	_, err = os.Stat(args.inputFile)
 	if err != nil {
 		return fmt.Errorf("Input file is not found")
 	}
 
 	// 2. Preprocess
+	if args.verbose {
+		fmt.Println("Running clang preprocessor...")
+	}
 	var pp []byte
 	{
 		// See : https://clang.llvm.org/docs/CommandGuide/clang.html
@@ -163,6 +175,9 @@ func Start(args ProgramArgs) (err error) {
 		pp = out.Bytes()
 	}
 
+	if args.verbose {
+		fmt.Println("Writing preprocessor ...")
+	}
 	ppFilePath := path.Join("/tmp", "pp.c")
 	err = ioutil.WriteFile(ppFilePath, pp, 0644)
 	if err != nil {
@@ -170,6 +185,9 @@ func Start(args ProgramArgs) (err error) {
 	}
 
 	// 3. Generate JSON from AST
+	if args.verbose {
+		fmt.Println("Running clang for AST tree...")
+	}
 	astPP, err := exec.Command("clang", "-Xclang", "-ast-dump", "-fsyntax-only", ppFilePath).Output()
 	if err != nil {
 		// If clang fails it still prints out the AST, so we have to run it
@@ -179,6 +197,9 @@ func Start(args ProgramArgs) (err error) {
 		panic("clang failed: " + err.Error() + ":\n\n" + string(errBody))
 	}
 
+	if args.verbose {
+		fmt.Println("Reading clang AST tree...")
+	}
 	lines := readAST(astPP)
 	if args.ast {
 		for _, l := range lines {
@@ -193,7 +214,16 @@ func Start(args ProgramArgs) (err error) {
 	p.Verbose = args.verbose
 	p.OutputAsTest = true // args.outputAsTest
 
+	// Converting to nodes
+	if args.verbose {
+		fmt.Println("Converting to nodes...")
+	}
 	nodes := convertLinesToNodes(lines)
+
+	// build tree
+	if args.verbose {
+		fmt.Println("Build a tree...")
+	}
 	tree := buildTree(nodes, 0)
 	ast.FixPositions(tree)
 
@@ -207,6 +237,10 @@ func Start(args ProgramArgs) (err error) {
 		p.AddMessage(p.GenerateWarningMessage(errors.New(message), fErr.Node))
 	}
 
+	// transpile ast tree
+	if args.verbose {
+		fmt.Println("Transpile AST tree...")
+	}
 	err = transpiler.TranspileAST(args.inputFile, args.packageName, p, tree[0].(ast.Node))
 	if err != nil {
 		return fmt.Errorf("cannot transpile AST : %v", err)
@@ -220,12 +254,20 @@ func Start(args ProgramArgs) (err error) {
 		outputFilePath = cleanFileName[0:len(cleanFileName)-len(extension)] + ".go"
 	}
 
+	// write the output Go code
+	if args.verbose {
+		fmt.Println("Writing the output Go code...")
+	}
 	err = ioutil.WriteFile(outputFilePath, []byte(p.String()), 0755)
 	if err != nil {
 		return fmt.Errorf("writing Go output file failed: %v", err)
 	}
 
 	if !*keepUnused {
+		// remove unused
+		if args.verbose {
+			fmt.Println("Remove unused constants, functions, variables, types and methods of unused types...")
+		}
 		err := cleaner.Go(outputFilePath, outputFilePath)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "warning: cannot removing unused entities: %s\nPlease use flag '-keep-unused'", err.Error())
@@ -282,7 +324,7 @@ func runCommand() int {
 		return 1
 	}
 
-	args := ProgramArgs{verbose: *verboseFlag, ast: false}
+	args := ProgramArgs{ast: false}
 
 	switch os.Args[1] {
 	case "ast":
@@ -316,13 +358,14 @@ func runCommand() int {
 		args.inputFile = transpileCommand.Arg(0)
 		args.outputFile = *outputFlag
 		args.packageName = *packageFlag
+		args.verbose = *verboseFlag
 	default:
 		flag.Usage()
 		return 1
 	}
 
 	if err := Start(args); err != nil {
-		fmt.Printf("Error: %v", err)
+		fmt.Printf("Error: %v\n", err)
 		return 1
 	}
 
