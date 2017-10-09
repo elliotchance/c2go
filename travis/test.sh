@@ -37,6 +37,7 @@ echo "Run: go test"
 rm -f $OUTFILE
 
 go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS > golist.tmp
+cat ./golist.tmp
 GoList=(`cat "golist.tmp"`)
 for i in "${GoList[@]}"
 do
