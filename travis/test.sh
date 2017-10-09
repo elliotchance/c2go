@@ -42,7 +42,7 @@ while read -r line
 do
     name="$line"
     echo "Name read from file - $name"
-	xargs -I{} bash -c "{} >> $OUTFILE" < "$name"
+	xargs -I{} bash -c "{} >> $OUTFILE" < name
 done < "$filename"
 
 # go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS | xargs -I{} bash -c "{} >> $OUTFILE"
