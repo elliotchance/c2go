@@ -37,7 +37,7 @@ echo "PKGS_DELIM : $PKGS_DELIM"
 # Exit code 123 will be returned if any of the tests fail.
 echo "Run: go test"
 rm -f $OUTFILE
-travis 20 go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS | xargs -I{} bash -c "{} >> $OUTFILE"
+travis_wait go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS | xargs -I{} bash -c "{} >> $OUTFILE"
 
 # Merge coverage profiles.
 echo "Run: cover profile"
