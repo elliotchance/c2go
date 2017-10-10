@@ -139,17 +139,11 @@ func Start(args ProgramArgs) (err error) {
 		}
 	}()
 
-	if args.verbose {
-		fmt.Println("Check environment variables GOPATH...")
-	}
 	if os.Getenv("GOPATH") == "" {
 		return fmt.Errorf("The $GOPATH must be set")
 	}
 
 	// 1. Compile it first (checking for errors)
-	if args.verbose {
-		fmt.Println("Check input file is exist...")
-	}
 	_, err = os.Stat(args.inputFile)
 	if err != nil {
 		return fmt.Errorf("Input file is not found")
@@ -266,7 +260,7 @@ func Start(args ProgramArgs) (err error) {
 	if !*keepUnused {
 		// remove unused
 		if args.verbose {
-			fmt.Println("Remove unused constants, functions, variables, types and methods of unused types...")
+			fmt.Println("Removing unused constants, functions, variables, types and methods of unused types...")
 		}
 		err := cleaner.Go(outputFilePath, outputFilePath)
 		if err != nil {
