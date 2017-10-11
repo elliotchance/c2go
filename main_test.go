@@ -121,6 +121,7 @@ func TestIntegrationScripts(t *testing.T) {
 			// testing `keepUnused` just for ont test C code
 			if file == "tests/stdlib.c" {
 				programArgs.keepUnused = false
+				programArgs.verbose = true
 			}
 
 			// Compile Go
