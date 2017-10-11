@@ -25,6 +25,7 @@ import (
 
 	"errors"
 
+	cleaner "github.com/Konstantin8105/Cleaner"
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/transpiler"
@@ -54,6 +55,9 @@ type ProgramArgs struct {
 
 	// A private option to output the Go as a *_test.go file.
 	outputAsTest bool
+
+	// Keep unused entities
+	keepUnused bool
 }
 
 func readAST(data []byte) []string {
@@ -256,15 +260,15 @@ func Start(args ProgramArgs) (err error) {
 		return fmt.Errorf("writing Go output file failed: %v", err)
 	}
 
-	if !*keepUnused {
+	if !args.keepUnused {
 		// remove unused
 		if args.verbose {
 			fmt.Println("Removing unused constants, functions, variables, types and methods of unused types...")
 		}
-		//err := cleaner.Go(outputFilePath, outputFilePath)
-		//if err != nil {
-		//	fmt.Fprintf(os.Stderr, "warning: cannot removing unused entities: %s\nPlease use flag '-keep-unused'", err.Error())
-		//}
+		err := cleaner.Go(outputFilePath, outputFilePath, args.verbose)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "warning: cannot removing unused entities: %s\nPlease use flag '-keep-unused'", err.Error())
+		}
 	}
 
 	return nil
@@ -352,6 +356,7 @@ func runCommand() int {
 		args.outputFile = *outputFlag
 		args.packageName = *packageFlag
 		args.verbose = *verboseFlag
+		args.keepUnused = *keepUnused
 	default:
 		flag.Usage()
 		return 1

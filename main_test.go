@@ -110,12 +110,17 @@ func TestIntegrationScripts(t *testing.T) {
 				inputFile:   file,
 				outputFile:  subFolder + mainFileName,
 				packageName: "main",
-				// add verbose for avoid travis timeout
-				verbose: true,
+				// added for avoid travis timeout
+				keepUnused: true,
 
 				// This appends a TestApp function to the output source so we
 				// can run "go test" against the produced binary.
 				outputAsTest: true,
+			}
+
+			// testing `keepUnused` just for ont test C code
+			if file == "stdlib.c" {
+				programArgs.keepUnused = false
 			}
 
 			// Compile Go
