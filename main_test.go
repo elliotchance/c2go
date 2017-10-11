@@ -119,7 +119,7 @@ func TestIntegrationScripts(t *testing.T) {
 			}
 
 			// testing `keepUnused` just for ont test C code
-			if file == "stdlib.c" {
+			if file == "tests/stdlib.c" {
 				programArgs.keepUnused = false
 			}
 
