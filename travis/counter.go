@@ -1,4 +1,4 @@
-// build:ignore
+// +build ignore
 
 package main
 
@@ -23,8 +23,8 @@ func main() {
 
 	// run ticker
 	tick := make(chan bool)
-	go func() {
-		ticker := time.NewTicker(time.Millisecond * 500)
+	go func() { // infinite time ticker
+		ticker := time.NewTicker(time.Second * 2)
 		for range ticker.C {
 			tick <- true
 		}
@@ -32,17 +32,22 @@ func main() {
 
 	// run script without argguments
 	go func() {
+		// send `done` is else...
 		defer func() {
 			done <- true
 		}()
 		cmd := exec.Command(os.Args[1])
+		// all output of script work send to system output
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stdout
+		// execution
 		if err := cmd.Start(); err != nil {
 			log.Fatal(err)
+			os.Exit(1)
 		}
 		if err := cmd.Wait(); err != nil {
 			log.Fatal(err)
+			os.Exit(1)
 		}
 	}()
 
