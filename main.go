@@ -262,10 +262,10 @@ func Start(args ProgramArgs) (err error) {
 		if args.verbose {
 			fmt.Println("Removing unused constants, functions, variables, types and methods of unused types...")
 		}
-		err := cleaner.Go(outputFilePath, outputFilePath)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "warning: cannot removing unused entities: %s\nPlease use flag '-keep-unused'", err.Error())
-		}
+		//err := cleaner.Go(outputFilePath, outputFilePath)
+		//if err != nil {
+		//	fmt.Fprintf(os.Stderr, "warning: cannot removing unused entities: %s\nPlease use flag '-keep-unused'", err.Error())
+		//}
 	}
 
 	return nil
