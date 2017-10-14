@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"regexp"
 	"strings"
 )
 
@@ -16,15 +17,24 @@ type TypedefDecl struct {
 	ChildNodes   []Node
 }
 
-func parseTypedefDecl(line string) *TypedefDecl {
-	groups := groupsFromRegex(
-		`<(?P<position><invalid sloc>|.*?)>
+var regexTypedefDecl *regexp.Regexp
+
+func init() {
+	rx := `<(?P<position><invalid sloc>|.*?)>
 		(?P<position2> <invalid sloc>| col:\d+| line:\d+:\d+)?
 		(?P<implicit> implicit)?
 		(?P<referenced> referenced)?
 		(?P<name> \w+)?
 		(?P<type> '.*?')?
-		(?P<type2>:'.*?')?`,
+		(?P<type2>:'.*?')?`
+	fullRegexp := "(?P<address>[0-9a-fx]+) " +
+		strings.Replace(strings.Replace(rx, "\n", "", -1), "\t", "", -1)
+	regexTypedefDecl = regexp.MustCompile(fullRegexp)
+}
+
+func parseTypedefDecl(line string) *TypedefDecl {
+	groups := groupsFromRegex2(
+		regexTypedefDecl,
 		line,
 	)
 

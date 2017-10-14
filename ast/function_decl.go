@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"regexp"
 	"strings"
 )
 
@@ -18,9 +19,10 @@ type FunctionDecl struct {
 	ChildNodes   []Node
 }
 
-func parseFunctionDecl(line string) *FunctionDecl {
-	groups := groupsFromRegex(
-		`(?P<prev>prev [0-9a-fx]+ )?
+var regexFunctionDecl *regexp.Regexp
+
+func init() {
+	rx := `(?P<prev>prev [0-9a-fx]+ )?
 		<(?P<position1>.*?)>
 		(?P<position2> <scratch space>[^ ]+| [^ ]+)?
 		(?P<implicit> implicit)?
@@ -28,7 +30,15 @@ func parseFunctionDecl(line string) *FunctionDecl {
 		(?P<referenced> referenced)?
 		 (?P<name>[_\w]+)
 		 '(?P<type>.*)
-		'(?P<extern> extern)?`,
+		'(?P<extern> extern)?`
+	fullRegexp := "(?P<address>[0-9a-fx]+) " +
+		strings.Replace(strings.Replace(rx, "\n", "", -1), "\t", "", -1)
+	regexFunctionDecl = regexp.MustCompile(fullRegexp)
+}
+
+func parseFunctionDecl(line string) *FunctionDecl {
+	groups := groupsFromRegex2(
+		regexFunctionDecl,
 		line,
 	)
 

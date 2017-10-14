@@ -24,10 +24,11 @@ import (
 	"strings"
 
 	"errors"
+	"reflect"
+
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/transpiler"
-	"reflect"
 )
 
 // Version can be requested through the command line with:
@@ -67,7 +68,8 @@ type treeNode struct {
 }
 
 func convertLinesToNodes(lines []string) []treeNode {
-	nodes := []treeNode{}
+	nodes := make([]treeNode, len(lines))
+	var counter int
 	for _, line := range lines {
 		if strings.TrimSpace(line) == "" {
 			continue
@@ -80,8 +82,10 @@ func convertLinesToNodes(lines []string) []treeNode {
 		trimmed := strings.TrimLeft(line, "|\\- `")
 		node := ast.Parse(trimmed)
 		indentLevel := (len(line) - len(trimmed)) / 2
-		nodes = append(nodes, treeNode{indentLevel, node})
+		nodes[counter] = treeNode{indentLevel, node}
+		counter++
 	}
+	nodes = nodes[0:counter]
 
 	return nodes
 }

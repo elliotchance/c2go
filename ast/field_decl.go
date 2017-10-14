@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"regexp"
 	"strings"
 )
 
@@ -14,13 +15,22 @@ type FieldDecl struct {
 	ChildNodes []Node
 }
 
-func parseFieldDecl(line string) *FieldDecl {
-	groups := groupsFromRegex(
-		`<(?P<position>.*)>
+var regexFieldDecl *regexp.Regexp
+
+func init() {
+	rx := `<(?P<position>.*)>
 		(?P<position2> col:\d+| line:\d+:\d+)?
 		(?P<referenced> referenced)?
 		(?P<name> \w+?)?
-		 '(?P<type>.+?)'`,
+		 '(?P<type>.+?)'`
+	fullRegexp := "(?P<address>[0-9a-fx]+) " +
+		strings.Replace(strings.Replace(rx, "\n", "", -1), "\t", "", -1)
+	regexFieldDecl = regexp.MustCompile(fullRegexp)
+}
+
+func parseFieldDecl(line string) *FieldDecl {
+	groups := groupsFromRegex2(
+		regexFieldDecl,
 		line,
 	)
 

@@ -1,14 +1,28 @@
 package ast
 
+import (
+	"regexp"
+	"strings"
+)
+
 type BuiltinType struct {
 	Addr       Address
 	Type       string
 	ChildNodes []Node
 }
 
+var regexBuiltinType *regexp.Regexp
+
+func init() {
+	rx := "'(?P<type>.*?)'"
+	fullRegexp := "(?P<address>[0-9a-fx]+) " +
+		strings.Replace(strings.Replace(rx, "\n", "", -1), "\t", "", -1)
+	regexBuiltinType = regexp.MustCompile(fullRegexp)
+}
+
 func parseBuiltinType(line string) *BuiltinType {
-	groups := groupsFromRegex(
-		"'(?P<type>.*?)'",
+	groups := groupsFromRegex2(
+		regexBuiltinType,
 		line,
 	)
 
