@@ -1,10 +1,5 @@
 package ast
 
-import (
-	"regexp"
-	"strings"
-)
-
 type ImplicitCastExpr struct {
 	Addr       Address
 	Pos        Position
@@ -13,18 +8,9 @@ type ImplicitCastExpr struct {
 	ChildNodes []Node
 }
 
-var regexImplicitCastExpr *regexp.Regexp
-
-func init() {
-	rx := "<(?P<position>.*)> '(?P<type>.*)' <(?P<kind>.*)>"
-	fullRegexp := "(?P<address>[0-9a-fx]+) " +
-		strings.Replace(strings.Replace(rx, "\n", "", -1), "\t", "", -1)
-	regexImplicitCastExpr = regexp.MustCompile(fullRegexp)
-}
-
 func parseImplicitCastExpr(line string) *ImplicitCastExpr {
-	groups := groupsFromRegex2(
-		regexImplicitCastExpr,
+	groups := groupsFromRegex(
+		"<(?P<position>.*)> '(?P<type>.*)' <(?P<kind>.*)>",
 		line,
 	)
 
