@@ -131,17 +131,17 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 		panic("non-nil child 1 in ForStmt")
 	}
 
-	// If we have 2 and more initializations like
-	// in operator for
-	// for( a = 0, b = 0, c = 0; a < 5; a ++)
 	switch c := children[0].(type) {
 	case *ast.BinaryOperator:
 		if c.Operator == "," {
+			// If we have 2 and more initializations like
+			// in operator for
+			// for( a = 0, b = 0, c = 0; a < 5; a ++)
 			// recursive action to code like that:
 			// a = 0;
 			// b = 0;
 			// for(c = 0 ; a < 5 ; a++)
-			before, newPre, newPost, err := transpileToStmt(c.Children()[0], p)
+			before, newPre, newPost, err := transpileToStmt(children[0], p)
 			if err != nil {
 				return nil, nil, nil, err
 			}
@@ -149,6 +149,18 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 			preStmts = append(preStmts, before)
 			preStmts = append(preStmts, newPost...)
 			children[0] = c.Children()[1]
+		}
+	case *ast.DeclStmt:
+		{
+			// If we have 2 and more initializations like
+			// in operator for
+			// for(int a = 0, b = 0, c = 0; a < 5; a ++)
+			newPre, err := transpileToStmts(children[0], p)
+			if err != nil {
+				return nil, nil, nil, err
+			}
+			children[0] = nil
+			preStmts = append(preStmts, newPre...)
 		}
 	}
 
