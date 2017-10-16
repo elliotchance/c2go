@@ -3,13 +3,14 @@
 package transpiler
 
 import (
+	goast "go/ast"
+	"go/token"
+	"reflect"
+
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/types"
 	"github.com/elliotchance/c2go/util"
-	goast "go/ast"
-	"go/token"
-	"reflect"
 )
 
 // Comma problem. Example:

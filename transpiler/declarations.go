@@ -203,6 +203,11 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 		},
 	})
 
+	// added for support "struct typedef"
+	if v, ok := p.Structs["struct "+resolvedType]; ok {
+		fmt.Printf("%#v\n", v)
+	}
+
 	return nil
 }
 
