@@ -12,6 +12,15 @@ import (
 	"strings"
 )
 
+var cachedRegex = map[string]*regexp.Regexp{}
+
+func getRegex(rx string) *regexp.Regexp {
+	if _, ok := cachedRegex[rx]; !ok {
+		cachedRegex[rx] = regexp.MustCompile(rx)
+	}
+	return cachedRegex[rx]
+}
+
 // NewExprStmt returns a new ExprStmt from an expression. It is used when
 // converting a single expression into a statement for another receiver.
 //
@@ -30,7 +39,7 @@ func NewExprStmt(expr goast.Expr) *goast.ExprStmt {
 // IsAValidFunctionName performs a check to see if a string would make a
 // valid function name in Go. Go allows unicode characters, but C doesn't.
 func IsAValidFunctionName(s string) bool {
-	return regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`).
+	return getRegex(`^[a-zA-Z_][a-zA-Z0-9_]*$`).
 		Match([]byte(s))
 }
 
@@ -92,7 +101,7 @@ func internalTypeToExpr(t string) goast.Expr {
 	}
 
 	// Array access
-	match := regexp.MustCompile(`(.+)\[(\d+)\]$`).FindStringSubmatch(t)
+	match := getRegex(`(.+)\[(\d+)\]$`).FindStringSubmatch(t)
 	if match != nil {
 		return &goast.IndexExpr{
 			X: typeToExpr(match[1]),
@@ -107,7 +116,7 @@ func internalTypeToExpr(t string) goast.Expr {
 	}
 
 	// Fixed Length Array
-	match = regexp.MustCompile(`^\[(\d+)\](.+)$`).FindStringSubmatch(t)
+	match = getRegex(`^\[(\d+)\](.+)$`).FindStringSubmatch(t)
 	if match != nil {
 		return &goast.ArrayType{
 			Elt: typeToExpr(match[2]),
