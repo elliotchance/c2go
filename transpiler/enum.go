@@ -102,6 +102,12 @@ func transpileEnumConstantDecl(p *program.Program, n *ast.EnumConstantDecl) (
 	}, preStmts, postStmts
 }
 
+/*
+Example of AST tree:
+|-EnumDecl 0x32fb5a0 <enum.c:3:1, col:45> col:6 week
+| |-EnumConstantDecl 0x32fb650 <col:11> col:11 Mon 'int'
+| |-EnumConstantDecl 0x32fb6a0 <col:16> col:16 Tue 'int'
+*/
 func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}

@@ -14,7 +14,7 @@ type EnumDecl struct {
 
 func parseEnumDecl(line string) *EnumDecl {
 	groups := groupsFromRegex(
-		"<(?P<position>.*)>(?P<position2> 0x[^ ]+)?(?P<name>.*)",
+		`<(?P<position>.*)>(?P<position2> .+:\d+)?(?P<name>.*)`,
 		line,
 	)
 
