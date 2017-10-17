@@ -131,16 +131,6 @@ func Start(args ProgramArgs) (err error) {
 	if args.verbose {
 		fmt.Println("Start tanspiling ...")
 	}
-	// recover of inside `c2go` panics
-	defer func() {
-		if r := recover(); r != nil {
-			var ok bool
-			err, ok = r.(error)
-			if ok {
-				err = fmt.Errorf("Error : %v", r)
-			}
-		}
-	}()
 
 	if os.Getenv("GOPATH") == "" {
 		return fmt.Errorf("The $GOPATH must be set")
