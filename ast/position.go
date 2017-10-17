@@ -2,8 +2,9 @@ package ast
 
 import (
 	"fmt"
-	"github.com/elliotchance/c2go/util"
 	"regexp"
+
+	"github.com/elliotchance/c2go/util"
 )
 
 type Position struct {
@@ -19,12 +20,21 @@ type Position struct {
 	StringValue string
 }
 
+var cachedRegexPosition = map[string]*regexp.Regexp{}
+
+func getRegexPosition(rx string) *regexp.Regexp {
+	if _, ok := cachedRegexPosition[rx]; !ok {
+		cachedRegexPosition[rx] = regexp.MustCompile(rx)
+	}
+	return cachedRegexPosition[rx]
+}
+
 func NewPositionFromString(s string) Position {
 	if s == "<invalid sloc>" || s == "" {
 		return Position{}
 	}
 
-	re := regexp.MustCompile(`^col:(\d+)$`)
+	re := getRegexPosition(`^col:(\d+)$`)
 	if groups := re.FindStringSubmatch(s); len(groups) > 0 {
 		return Position{
 			StringValue: s,
@@ -32,7 +42,7 @@ func NewPositionFromString(s string) Position {
 		}
 	}
 
-	re = regexp.MustCompile(`^col:(\d+), col:(\d+)$`)
+	re = getRegexPosition(`^col:(\d+), col:(\d+)$`)
 	if groups := re.FindStringSubmatch(s); len(groups) > 0 {
 		return Position{
 			StringValue: s,
@@ -41,7 +51,7 @@ func NewPositionFromString(s string) Position {
 		}
 	}
 
-	re = regexp.MustCompile(`^line:(\d+), line:(\d+)$`)
+	re = getRegexPosition(`^line:(\d+), line:(\d+)$`)
 	if groups := re.FindStringSubmatch(s); len(groups) > 0 {
 		return Position{
 			StringValue: s,
@@ -50,7 +60,7 @@ func NewPositionFromString(s string) Position {
 		}
 	}
 
-	re = regexp.MustCompile(`^col:(\d+), line:(\d+)$`)
+	re = getRegexPosition(`^col:(\d+), line:(\d+)$`)
 	if groups := re.FindStringSubmatch(s); len(groups) > 0 {
 		return Position{
 			StringValue: s,
@@ -59,7 +69,7 @@ func NewPositionFromString(s string) Position {
 		}
 	}
 
-	re = regexp.MustCompile(`^line:(\d+):(\d+), line:(\d+):(\d+)$`)
+	re = getRegexPosition(`^line:(\d+):(\d+), line:(\d+):(\d+)$`)
 	if groups := re.FindStringSubmatch(s); len(groups) > 0 {
 		return Position{
 			StringValue: s,
@@ -70,7 +80,7 @@ func NewPositionFromString(s string) Position {
 		}
 	}
 
-	re = regexp.MustCompile(`^col:(\d+), line:(\d+):(\d+)$`)
+	re = getRegexPosition(`^col:(\d+), line:(\d+):(\d+)$`)
 	if groups := re.FindStringSubmatch(s); len(groups) > 0 {
 		return Position{
 			StringValue: s,
@@ -80,7 +90,7 @@ func NewPositionFromString(s string) Position {
 		}
 	}
 
-	re = regexp.MustCompile(`^line:(\d+):(\d+), col:(\d+)$`)
+	re = getRegexPosition(`^line:(\d+):(\d+), col:(\d+)$`)
 	if groups := re.FindStringSubmatch(s); len(groups) > 0 {
 		return Position{
 			StringValue: s,
@@ -90,7 +100,7 @@ func NewPositionFromString(s string) Position {
 		}
 	}
 
-	re = regexp.MustCompile(`^line:(\d+):(\d+)$`)
+	re = getRegexPosition(`^line:(\d+):(\d+)$`)
 	if groups := re.FindStringSubmatch(s); len(groups) > 0 {
 		return Position{
 			StringValue: s,
@@ -100,7 +110,7 @@ func NewPositionFromString(s string) Position {
 	}
 
 	// This must be below all of the others.
-	re = regexp.MustCompile(`^([^:]+):(\d+):(\d+), col:(\d+)$`)
+	re = getRegexPosition(`^([^:]+):(\d+):(\d+), col:(\d+)$`)
 	if groups := re.FindStringSubmatch(s); len(groups) > 0 {
 		return Position{
 			StringValue: s,
@@ -111,7 +121,7 @@ func NewPositionFromString(s string) Position {
 		}
 	}
 
-	re = regexp.MustCompile(`^([^:]+):(\d+):(\d+), line:(\d+):(\d+)$`)
+	re = getRegexPosition(`^([^:]+):(\d+):(\d+), line:(\d+):(\d+)$`)
 	if groups := re.FindStringSubmatch(s); len(groups) > 0 {
 		return Position{
 			StringValue: s,
@@ -123,7 +133,7 @@ func NewPositionFromString(s string) Position {
 		}
 	}
 
-	re = regexp.MustCompile(`^([^:]+):(\d+):(\d+)$`)
+	re = getRegexPosition(`^([^:]+):(\d+):(\d+)$`)
 	if groups := re.FindStringSubmatch(s); len(groups) > 0 {
 		return Position{
 			StringValue: s,
@@ -133,7 +143,7 @@ func NewPositionFromString(s string) Position {
 		}
 	}
 
-	re = regexp.MustCompile(`^([^:]+):(\d+):(\d+)$`)
+	re = getRegexPosition(`^([^:]+):(\d+):(\d+)$`)
 	if groups := re.FindStringSubmatch(s); len(groups) > 0 {
 		return Position{
 			StringValue: s,
@@ -143,7 +153,7 @@ func NewPositionFromString(s string) Position {
 		}
 	}
 
-	re = regexp.MustCompile(`^col:(\d+), ([^:]+):(\d+):(\d+)$`)
+	re = getRegexPosition(`^col:(\d+), ([^:]+):(\d+):(\d+)$`)
 	if groups := re.FindStringSubmatch(s); len(groups) > 0 {
 		return Position{
 			StringValue: s,
@@ -151,7 +161,7 @@ func NewPositionFromString(s string) Position {
 		}
 	}
 
-	re = regexp.MustCompile(`^([^:]+):(\d+):(\d+), ([^:]+):(\d+):(\d+)$`)
+	re = getRegexPosition(`^([^:]+):(\d+):(\d+), ([^:]+):(\d+):(\d+)$`)
 	if groups := re.FindStringSubmatch(s); len(groups) > 0 {
 		return Position{
 			StringValue: s,
