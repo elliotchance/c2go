@@ -9,6 +9,7 @@ import (
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/types"
 	"github.com/elliotchance/c2go/util"
 )
 
@@ -108,21 +109,121 @@ Example of AST tree:
 | |-EnumConstantDecl 0x32fb650 <col:11> col:11 Mon 'int'
 | |-EnumConstantDecl 0x32fb6a0 <col:16> col:16 Tue 'int'
 */
+/*
+type w int
+
+const (
+ A w = iota
+ B
+)
+   23  .  .  1: *ast.GenDecl {
+   24  .  .  .  TokPos: 7:1
+   25  .  .  .  Tok: type
+   26  .  .  .  Lparen: -
+   27  .  .  .  Specs: []ast.Spec (len = 1) {
+   28  .  .  .  .  0: *ast.TypeSpec {
+   29  .  .  .  .  .  Name: *ast.Ident {
+   30  .  .  .  .  .  .  NamePos: 7:6
+   31  .  .  .  .  .  .  Name: "w"
+   32  .  .  .  .  .  .  Obj: *ast.Object {
+   33  .  .  .  .  .  .  .  Kind: type
+   34  .  .  .  .  .  .  .  Name: "w"
+   35  .  .  .  .  .  .  .  Decl: *(obj @ 28)
+   36  .  .  .  .  .  .  }
+   37  .  .  .  .  .  }
+   38  .  .  .  .  .  Type: *ast.Ident {
+   39  .  .  .  .  .  .  NamePos: 7:8
+   40  .  .  .  .  .  .  Name: "int"
+   41  .  .  .  .  .  }
+   42  .  .  .  .  }
+   43  .  .  .  }
+   44  .  .  .  Rparen: -
+   45  .  .  }
+
+   46  .  .  2: *ast.GenDecl {
+   47  .  .  .  TokPos: 9:1
+   48  .  .  .  Tok: const
+   49  .  .  .  Lparen: 9:7
+   50  .  .  .  Specs: []ast.Spec (len = 2) {
+   51  .  .  .  .  0: *ast.ValueSpec {
+   52  .  .  .  .  .  Names: []*ast.Ident (len = 1) {
+   53  .  .  .  .  .  .  0: *ast.Ident {
+   54  .  .  .  .  .  .  .  NamePos: 10:2
+   55  .  .  .  .  .  .  .  Name: "A"
+   56  .  .  .  .  .  .  .  Obj: *ast.Object {
+   57  .  .  .  .  .  .  .  .  Kind: const
+   58  .  .  .  .  .  .  .  .  Name: "A"
+   59  .  .  .  .  .  .  .  .  Decl: *(obj @ 51)
+   60  .  .  .  .  .  .  .  .  Data: 0
+   61  .  .  .  .  .  .  .  }
+   62  .  .  .  .  .  .  }
+   63  .  .  .  .  .  }
+   64  .  .  .  .  .  Type: *ast.Ident {
+   65  .  .  .  .  .  .  NamePos: 10:4
+   66  .  .  .  .  .  .  Name: "w"
+   67  .  .  .  .  .  .  Obj: *(obj @ 32)
+   68  .  .  .  .  .  }
+   69  .  .  .  .  .  Values: []ast.Expr (len = 1) {
+   70  .  .  .  .  .  .  0: *ast.Ident {
+   71  .  .  .  .  .  .  .  NamePos: 10:8
+   72  .  .  .  .  .  .  .  Name: "iota"
+   73  .  .  .  .  .  .  }
+   74  .  .  .  .  .  }
+   75  .  .  .  .  }
+   76  .  .  .  .  1: *ast.ValueSpec {
+   77  .  .  .  .  .  Names: []*ast.Ident (len = 1) {
+   78  .  .  .  .  .  .  0: *ast.Ident {
+   79  .  .  .  .  .  .  .  NamePos: 11:2
+   80  .  .  .  .  .  .  .  Name: "B"
+   81  .  .  .  .  .  .  .  Obj: *ast.Object {
+   82  .  .  .  .  .  .  .  .  Kind: const
+   83  .  .  .  .  .  .  .  .  Name: "B"
+   84  .  .  .  .  .  .  .  .  Decl: *(obj @ 76)
+   85  .  .  .  .  .  .  .  .  Data: 1
+   86  .  .  .  .  .  .  .  }
+   87  .  .  .  .  .  .  }
+   88  .  .  .  .  .  }
+   89  .  .  .  .  }
+   90  .  .  .  }
+   91  .  .  .  Rparen: 12:1
+   92  .  .  }
+*/
 func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
+	theType, err := types.ResolveType(p, "int")
+	p.AddMessage(p.GenerateWarningMessage(err, n))
+	baseType := util.NewTypeIdent(theType)
+
+	theType2, err := types.ResolveType(p, n.Name)
+	p.AddMessage(p.GenerateWarningMessage(err, n))
+
+	baseType2 := util.NewTypeIdent(theType2)
+
+	p.File.Decls = append(p.File.Decls, &goast.GenDecl{
+		Tok: token.TYPE,
+		Specs: []goast.Spec{
+			&goast.ValueSpec{
+				Names: []*goast.Ident{
+					util.NewIdent(n.Name),
+				},
+				Type: baseType,
+			},
+		},
+	})
+
+	decl := &goast.GenDecl{
+		Tok: token.CONST,
+	}
 	for _, c := range n.Children() {
 		e, newPre, newPost := transpileEnumConstantDecl(p, c.(*ast.EnumConstantDecl))
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-		p.File.Decls = append(p.File.Decls, &goast.GenDecl{
-			Tok: token.CONST,
-			Specs: []goast.Spec{
-				e,
-			},
-		})
+		e.Type = baseType2
+		decl.Specs = append(decl.Specs, e)
 	}
+	p.File.Decls = append(p.File.Decls, decl)
 
 	return nil
 }
