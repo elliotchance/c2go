@@ -216,17 +216,23 @@ func Parse(line string) Node {
 	}
 }
 
+// Global cache of regexp
+var cachedRegex = map[string]*regexp.Regexp{}
+
 func groupsFromRegex(rx, line string) map[string]string {
 	// We remove tabs and newlines from the regex. This is purely cosmetic,
 	// as the regex input can be quite long and it's nice for the caller to
 	// be able to format it in a more readable way.
-	fullRegexp := "(?P<address>[0-9a-fx]+) " +
-		strings.Replace(strings.Replace(rx, "\n", "", -1), "\t", "", -1)
-	re := regexp.MustCompile(fullRegexp)
+	if _, ok := cachedRegex[rx]; !ok {
+		fullRegexp := "(?P<address>[0-9a-fx]+) " +
+			strings.Replace(strings.Replace(rx, "\n", "", -1), "\t", "", -1)
+		cachedRegex[rx] = regexp.MustCompile(fullRegexp)
+	}
+	re := cachedRegex[rx]
 
 	match := re.FindStringSubmatch(line)
 	if len(match) == 0 {
-		panic("could not match regexp '" + fullRegexp +
+		panic("could not match regexp '" + rx +
 			"' with string '" + line + "'")
 	}
 

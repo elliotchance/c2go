@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"errors"
+	"reflect"
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/cleaner"
@@ -36,7 +37,7 @@ import (
 //     c2go -v
 //
 // See https://github.com/elliotchance/c2go/wiki/Release-Process
-const Version = "v0.16.2 Radium 2017-09-18"
+const Version = "v0.16.3 Radium 2017-10-17"
 
 var stderr io.Writer = os.Stderr
 
@@ -71,7 +72,8 @@ type treeNode struct {
 }
 
 func convertLinesToNodes(lines []string) []treeNode {
-	nodes := []treeNode{}
+	nodes := make([]treeNode, len(lines))
+	var counter int
 	for _, line := range lines {
 		if strings.TrimSpace(line) == "" {
 			continue
@@ -84,8 +86,10 @@ func convertLinesToNodes(lines []string) []treeNode {
 		trimmed := strings.TrimLeft(line, "|\\- `")
 		node := ast.Parse(trimmed)
 		indentLevel := (len(line) - len(trimmed)) / 2
-		nodes = append(nodes, treeNode{indentLevel, node})
+		nodes[counter] = treeNode{indentLevel, node}
+		counter++
 	}
+	nodes = nodes[0:counter]
 
 	return nodes
 }
@@ -245,7 +249,7 @@ func Start(args ProgramArgs) (err error) {
 	if args.verbose {
 		fmt.Println("Writing the output Go code...")
 	}
-	err = ioutil.WriteFile(outputFilePath, []byte(p.String()), 0755)
+	err = ioutil.WriteFile(outputFilePath, []byte(p.String()), 0644)
 	if err != nil {
 		return fmt.Errorf("writing Go output file failed: %v", err)
 	}

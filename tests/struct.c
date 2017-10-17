@@ -29,9 +29,13 @@ void pass_by_val(struct programming value)
     is_streq(value.pointer, "Programming in Software Development.");
 }
 
+typedef struct mainStruct{
+	double constant;
+} secondStruct;
+
 int main()
 {
-    plan(6);
+    plan(8);
 
     struct programming variable;
     char *s = "Programming in Software Development.";
@@ -44,6 +48,14 @@ int main()
 
     pass_by_val(variable);
     pass_by_ref(&variable);
+    
+	struct mainStruct s1;
+    s1.constant = 42.;
+    is_eq(s1.constant, 42.);
+	
+	secondStruct s2;
+	s2.constant = 42.;
+	is_eq(s2.constant, 42.);
 
     done_testing();
 }
