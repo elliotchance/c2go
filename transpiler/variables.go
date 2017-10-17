@@ -196,6 +196,10 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 
 	// lhsType will be something like "struct foo"
 	structType := p.GetStruct(lhsType)
+	// added for support "struct typedef"
+	if structType == nil {
+		structType = p.GetStruct("struct " + lhsType)
+	}
 	rhs := n.Name
 	rhsType := "void *"
 	if structType == nil {
