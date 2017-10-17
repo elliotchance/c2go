@@ -24,7 +24,6 @@ import (
 	"strings"
 
 	"errors"
-	"reflect"
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/cleaner"
