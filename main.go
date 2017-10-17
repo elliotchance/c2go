@@ -247,7 +247,7 @@ func Start(args ProgramArgs) error {
 		outputFilePath = cleanFileName[0:len(cleanFileName)-len(extension)] + ".go"
 	}
 
-	err = ioutil.WriteFile(outputFilePath, []byte(p.String()), 0755)
+	err = ioutil.WriteFile(outputFilePath, []byte(p.String()), 0644)
 	if err != nil {
 		return fmt.Errorf("writing C output file failed: %v", err)
 	}
