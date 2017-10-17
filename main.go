@@ -25,8 +25,8 @@ import (
 
 	"errors"
 
-	cleaner "github.com/Konstantin8105/Cleaner"
 	"github.com/elliotchance/c2go/ast"
+	"github.com/elliotchance/c2go/cleaner"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/transpiler"
 )
