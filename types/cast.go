@@ -15,11 +15,20 @@ import (
 	"github.com/elliotchance/c2go/util"
 )
 
+var cachedRegexTypes = map[string]*regexp.Regexp{}
+
+func getRegexTypes(rx string) *regexp.Regexp {
+	if _, ok := cachedRegexTypes[rx]; !ok {
+		cachedRegexTypes[rx] = regexp.MustCompile(rx)
+	}
+	return cachedRegexTypes[rx]
+}
+
 // GetArrayTypeAndSize returns the size and type of a fixed array. If the type
 // is not an array with a fixed size then the type return will be an empty
 // string, and the size will be -1.
 func GetArrayTypeAndSize(s string) (string, int) {
-	match := regexp.MustCompile(`(.*) \[(\d+)\]`).FindStringSubmatch(s)
+	match := getRegexTypes(`(.*) \[(\d+)\]`).FindStringSubmatch(s)
 	if len(match) > 0 {
 		return match[1], util.Atoi(match[2])
 	}
@@ -140,8 +149,8 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 	// In the forms of:
 	// - `string` -> `[]byte`
 	// - `string` -> `char *[13]`
-	match1 := regexp.MustCompile(`\[\]byte`).FindStringSubmatch(toType)
-	match2 := regexp.MustCompile(`char \*\[(\d+)\]`).FindStringSubmatch(toType)
+	match1 := getRegexTypes(`\[\]byte`).FindStringSubmatch(toType)
+	match2 := getRegexTypes(`char \*\[(\d+)\]`).FindStringSubmatch(toType)
 	if fromType == "string" && (len(match1) > 0 || len(match2) > 0) {
 		// Construct a byte array from "first":
 		//
@@ -174,8 +183,8 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 	// In the forms of:
 	// - `[7]byte` -> `string`
 	// - `char *[12]` -> `string`
-	match1 = regexp.MustCompile(`\[(\d+)\]byte`).FindStringSubmatch(fromType)
-	match2 = regexp.MustCompile(`char \*\[(\d+)\]`).FindStringSubmatch(fromType)
+	match1 = getRegexTypes(`\[(\d+)\]byte`).FindStringSubmatch(fromType)
+	match2 = getRegexTypes(`char \*\[(\d+)\]`).FindStringSubmatch(fromType)
 	if (len(match1) > 0 || len(match2) > 0) && toType == "string" {
 		size := 0
 		if len(match1) > 0 {
