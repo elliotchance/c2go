@@ -192,38 +192,84 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
+	//fmt.Printf("\n\n\n\nn = %#v\n", n)
 	theType, err := types.ResolveType(p, "int")
+	//fmt.Printf("theType = %#v\n", theType)
 	p.AddMessage(p.GenerateWarningMessage(err, n))
 	baseType := util.NewTypeIdent(theType)
-
-	theType2, err := types.ResolveType(p, n.Name)
-	p.AddMessage(p.GenerateWarningMessage(err, n))
-
-	baseType2 := util.NewTypeIdent(theType2)
-
+	//fmt.Printf("baseType = %#v\n", baseType)
 	p.File.Decls = append(p.File.Decls, &goast.GenDecl{
 		Tok: token.TYPE,
 		Specs: []goast.Spec{
-			&goast.ValueSpec{
-				Names: []*goast.Ident{
-					util.NewIdent(n.Name),
+			&goast.TypeSpec{
+				Name: &goast.Ident{
+					Name: n.Name,
+					Obj:  goast.NewObj(goast.Typ, n.Name),
 				},
 				Type: baseType,
 			},
 		},
 	})
 
+	//theType2, err := types.ResolveType(p, n.Name)
+	//fmt.Printf("theType2 = %#v\n", theType2)
+	//p.AddMessage(p.GenerateWarningMessage(err, n))
+	baseType2 := util.NewTypeIdent(n.Name) //theType2)
+	//fmt.Printf("baseType2 = %#v\n", baseType2)
+
 	decl := &goast.GenDecl{
 		Tok: token.CONST,
 	}
-	for _, c := range n.Children() {
+
+	//var last interface{}
+
+	for i, c := range n.Children() {
 		e, newPre, newPost := transpileEnumConstantDecl(p, c.(*ast.EnumConstantDecl))
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
+		//	fmt.Println("i - ", i)
 		e.Type = baseType2
+		e.Names[0].Obj = goast.NewObj(goast.Con, e.Names[0].Name)
+		//if i == 0 {
+		//	last = e.Names[0].Obj
+		//}
+		if i > 0 {
+			//e.Type = nil
+			//e.Values = nil
+			//e.Names[0].Obj.Decl = last
+			//	last = e.Names[0].Obj
+		}
+		e.Names[0].Obj.Data = i
 		decl.Specs = append(decl.Specs, e)
-	}
-	p.File.Decls = append(p.File.Decls, decl)
 
+		//	fmt.Printf("\te=%#v\n", e)
+	}
+	//fmt.Printf("decl = %#v\n", decl)
+	//fmt.Println("\n\nsize = ", len(decl.Specs))
+	p.File.Decls = append(p.File.Decls, decl)
+	/*
+		var buf bytes.Buffer
+		err = format.Node(&buf, p.FileSet, decl)
+		fmt.Println("buffer = ", buf.String())
+	*/
+	//goast.Print(p.FileSet, decl)
+	//	goast.Fprint(os.Stdout, p.FileSet, decl, func(name string, value reflect.Value) bool {
+	//		return true
+	//	})
+	/*
+	   	src := `
+	   	package p
+	   type w int
+	   const(
+	   	a w = iota
+	   	b
+	   	c
+	   )
+	   `
+	   	fset := token.NewFileSet()
+	   	ff, err := parser.ParseExpr(src)
+	   	fmt.Println("err=", err)
+	   	goast.Print(fset, ff)
+	*/
 	return nil
 }
