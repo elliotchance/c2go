@@ -190,7 +190,13 @@ func Start(args ProgramArgs) error {
 		pp = []byte(out.String())
 	}
 
-	ppFilePath := path.Join("/tmp", "pp.c")
+	dir, err := ioutil.TempDir("", "c2go")
+	if err != nil {
+		return fmt.Errorf("Cannot create temp folder: %v", err)
+	}
+	defer os.RemoveAll(dir) // clean up
+
+	ppFilePath := path.Join(dir, "pp.c")
 	err = ioutil.WriteFile(ppFilePath, pp, 0644)
 	if err != nil {
 		return fmt.Errorf("writing to %s failed: %v", ppFilePath, err)
