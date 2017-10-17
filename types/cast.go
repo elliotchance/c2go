@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
+	"regexp"
 	"strings"
 
 	goast "go/ast"
@@ -13,6 +14,15 @@ import (
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/util"
 )
+
+var cachedRegexTypes = map[string]*regexp.Regexp{}
+
+func getRegexTypes(rx string) *regexp.Regexp {
+	if _, ok := cachedRegexTypes[rx]; !ok {
+		cachedRegexTypes[rx] = regexp.MustCompile(rx)
+	}
+	return cachedRegexTypes[rx]
+}
 
 // GetArrayTypeAndSize returns the size and type of a fixed array. If the type
 // is not an array with a fixed size then the type return will be an empty
