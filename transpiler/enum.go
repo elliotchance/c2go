@@ -3,7 +3,11 @@
 package transpiler
 
 import (
+	"fmt"
+	"go/parser"
 	"go/token"
+	"os"
+	"reflect"
 
 	goast "go/ast"
 
@@ -195,7 +199,8 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 	theType, err := types.ResolveType(p, "int")
 	//p.AddMessage(p.GenerateWarningMessage(err, n))
 	baseType := util.NewTypeIdent(theType)
-	p.File.Decls = append(p.File.Decls, &goast.GenDecl{
+
+	bt := goast.GenDecl{
 		Tok: token.TYPE,
 		Specs: []goast.Spec{
 			&goast.TypeSpec{
@@ -206,7 +211,13 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 				Type: baseType,
 			},
 		},
-	})
+	}
+	/*
+		goast.Fprint(os.Stdout, token.NewFileSet(), bt, func(name string, value reflect.Value) bool {
+			return true
+		})
+	*/
+	p.File.Decls = append(p.File.Decls, &bt)
 
 	baseType2 := util.NewTypeIdent(n.Name)
 
@@ -218,17 +229,136 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 		e, newPre, newPost := transpileEnumConstantDecl(p, c.(*ast.EnumConstantDecl))
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-		e.Type = baseType2
 		e.Names[0].Obj = goast.NewObj(goast.Con, e.Names[0].Name)
 
 		if i > 0 {
 			e.Type = nil
 			e.Values = nil
 		}
+
+		if i == 0 {
+			e.Type = baseType2
+			(e.Type.(*goast.Ident)).Obj = &goast.Object{
+				Name: n.Name,
+				Kind: goast.Typ,
+				Decl: &goast.TypeSpec{
+					Name: &goast.Ident{
+						Name: n.Name,
+					},
+					Type: &goast.Ident{
+						Name: "int",
+					},
+				},
+			}
+		}
+
 		e.Names[0].Obj.Data = i
 		decl.Specs = append(decl.Specs, e)
 	}
+	/*
+	   54  .  .  1: *ast.ValueSpec {
+	   55  .  .  .  Doc: nil
+	   56  .  .  .  Names: []*ast.Ident (len = 1) {
+	   57  .  .  .  .  0: *ast.Ident {
+	   58  .  .  .  .  .  NamePos: -
+	   59  .  .  .  .  .  Name: "wwwb"
+	   60  .  .  .  .  .  Obj: *ast.Object {
+	   61  .  .  .  .  .  .  Kind: const
+	   62  .  .  .  .  .  .  Name: "wwwb"
+	   63  .  .  .  .  .  .  Decl: nil
+	   64  .  .  .  .  .  .  Data: 1
+	   65  .  .  .  .  .  .  Type: nil
+	   66  .  .  .  .  .  }
+	   67  .  .  .  .  }
+	   68  .  .  .  }
+	   69  .  .  .  Type: nil
+	   70  .  .  .  Values: nil
+	   71  .  .  .  Comment: nil
+	   72  .  .  }
+	*/
+	decl.Specs = append(decl.Specs, &goast.ValueSpec{
+		Names: []*goast.Ident{
+			&goast.Ident{
+				Name: "asdasdasd",
+				Obj: &goast.Object{
+					Kind: goast.Con,
+					Name: "asdasdasd",
+				},
+			},
+		},
+	})
+	// fmt.Println("ABDSD")
+
+	/*
+		goast.Fprint(os.Stdout, token.NewFileSet(), decl, func(name string, value reflect.Value) bool {
+			return true
+		})
+	*/
+	fmt.Println("\n\n\n\n=================")
+
+	src := `package main
+
+type WWW2 int
+
+const (
+	wwwa2 WWW2 = iota
+	wwwb2
+	wwwc2
+)
+`
+
+	// Create the AST by parsing src.
+	fset2 := token.NewFileSet() // positions are relative to fset
+	f3, err := parser.ParseFile(fset2, "", src, 0)
+	if err != nil {
+		panic(err)
+	}
+
+	f3.Decls = []goast.Decl{f3.Decls[1]}
+	f3.Scope = nil
+	f3.Unresolved = nil
+	f3.Name = nil
+	fset2 = token.NewFileSet()
+
+	decl2 := f3.Decls[0].(*goast.GenDecl)
+
+	decl2.Specs[0].(*goast.ValueSpec).Names[0].Obj.Decl = nil
+	decl2.Specs[0].(*goast.ValueSpec).Type.(*goast.Ident).Obj = nil
+	decl2.Specs[1].(*goast.ValueSpec).Names[0].Obj = nil
+	decl2.Specs[2].(*goast.ValueSpec).Names[0].Obj = nil
+
+	decl.Specs[0].(*goast.ValueSpec).Names[0].Obj.Decl = nil
+	decl.Specs[0].(*goast.ValueSpec).Type.(*goast.Ident).Obj = nil
+	decl.Specs[1].(*goast.ValueSpec).Names[0].Obj = nil
+	decl.Specs[2].(*goast.ValueSpec).Names[0].Obj = nil
+
+	//decl.Specs = append(decl.Specs, decl2.Specs...)
+	//decl2.Specs = append(decl2.Specs, decl.Specs...)
+
+	//decl2.Specs[2].(*goast.ValueSpec).Names[0] = nil
+
+	p.File.Decls = append(p.File.Decls, []goast.Decl{decl}...)
+	p.File.Decls = append(p.File.Decls, decl2)
 	p.File.Decls = append(p.File.Decls, decl)
+	p.File.Decls = append(p.File.Decls, decl2)
+
+	// Print the AST.
+	/*
+		fmt.Printf("fset2 = %#v\n", fset2)
+
+		fmt.Printf("decl  =%#v\n", decl)
+		fmt.Printf("decl2 = %#v\n", decl2)
+
+		fmt.Printf("f3-decl = %#v\n", f3.Decls)
+	*/
+
+	goast.Fprint(os.Stdout, token.NewFileSet(), decl, func(name string, value reflect.Value) bool {
+		return true
+	})
+
+	goast.Fprint(os.Stdout, token.NewFileSet(), decl2, func(name string, value reflect.Value) bool {
+		return true
+	})
 
 	return nil
 }
