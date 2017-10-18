@@ -8,7 +8,7 @@ int main()
 	plan(1);
     
 	enum week day;
-    day = Wed;
+	day = Wed;
 	is_eq(day ,2)
 
 	done_testing();
