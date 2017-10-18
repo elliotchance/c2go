@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"go/parser"
 	"go/token"
-	"os"
-	"reflect"
 
 	goast "go/ast"
 
@@ -336,10 +334,14 @@ const (
 	//decl2.Specs = append(decl2.Specs, decl.Specs...)
 
 	//decl2.Specs[2].(*goast.ValueSpec).Names[0] = nil
+	//decl2.Rparen = 0
+	//decl2.Lparen = 0
+	decl.Lparen = 1
 
 	p.File.Decls = append(p.File.Decls, []goast.Decl{decl}...)
 	p.File.Decls = append(p.File.Decls, decl2)
 	p.File.Decls = append(p.File.Decls, decl)
+	p.File.Decls = append(p.File.Decls, decl2)
 	p.File.Decls = append(p.File.Decls, decl2)
 
 	// Print the AST.
@@ -351,14 +353,19 @@ const (
 
 		fmt.Printf("f3-decl = %#v\n", f3.Decls)
 	*/
+	/*
+		goast.Fprint(os.Stdout, token.NewFileSet(), decl, func(name string, value reflect.Value) bool {
+			return true
+		})
+	*/
+	/*
+		goast.Fprint(os.Stdout, token.NewFileSet(), decl2, func(name string, value reflect.Value) bool {
+			return true
+		})
+	*/
 
-	goast.Fprint(os.Stdout, token.NewFileSet(), decl, func(name string, value reflect.Value) bool {
-		return true
-	})
-
-	goast.Fprint(os.Stdout, token.NewFileSet(), decl2, func(name string, value reflect.Value) bool {
-		return true
-	})
+	fmt.Printf("%+v\n", decl)
+	fmt.Printf("%+v\n", decl2)
 
 	return nil
 }
