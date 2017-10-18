@@ -3,6 +3,7 @@
 package transpiler
 
 import (
+	"fmt"
 	"go/token"
 
 	goast "go/ast"
@@ -107,6 +108,11 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
+	if n.Name == "" {
+		p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("enum with empty name"), n))
+		return nil
+	}
+
 	theType, err := types.ResolveType(p, "int")
 	if err != nil {
 		p.AddMessage(p.GenerateWarningMessage(err, n))
@@ -124,6 +130,10 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 				Type: baseType,
 			},
 		},
+	}
+	// Registration new type in program.Program
+	if !p.IsTypeAlreadyDefined(n.Name) {
+		p.DefineType(n.Name)
 	}
 
 	p.File.Decls = append(p.File.Decls, &bt)
@@ -147,17 +157,19 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 
 		if i == 0 {
 			e.Type = baseType2
-			(e.Type.(*goast.Ident)).Obj = &goast.Object{
-				Name: n.Name,
-				Kind: goast.Typ,
-				Decl: &goast.TypeSpec{
-					Name: &goast.Ident{
-						Name: n.Name,
+			if t, ok := e.Type.(*goast.Ident); ok {
+				t.Obj = &goast.Object{
+					Name: n.Name,
+					Kind: goast.Typ,
+					Decl: &goast.TypeSpec{
+						Name: &goast.Ident{
+							Name: n.Name,
+						},
+						Type: &goast.Ident{
+							Name: "int",
+						},
 					},
-					Type: &goast.Ident{
-						Name: "int",
-					},
-				},
+				}
 			}
 		}
 
@@ -166,7 +178,6 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 	}
 
 	decl.Specs[0].(*goast.ValueSpec).Names[0].Obj.Decl = nil
-	decl.Specs[0].(*goast.ValueSpec).Type.(*goast.Ident).Obj = nil
 	decl.Specs[1].(*goast.ValueSpec).Names[0].Obj = nil
 	decl.Specs[2].(*goast.ValueSpec).Names[0].Obj = nil
 

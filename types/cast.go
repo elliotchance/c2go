@@ -225,6 +225,7 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 		return util.NewCallExpr(toType, expr), nil
 	}
 
+	// Next only if types are not found
 	p.AddImport("github.com/elliotchance/c2go/noarch")
 
 	leftName := fromType
