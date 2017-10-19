@@ -3,7 +3,6 @@
 package transpiler
 
 import (
-	"fmt"
 	"go/token"
 
 	goast "go/ast"
@@ -109,7 +108,17 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 	postStmts := []goast.Stmt{}
 
 	if n.Name == "" {
-		p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("enum with empty name"), n))
+		for _, c := range n.Children() {
+			e, newPre, newPost := transpileEnumConstantDecl(p, c.(*ast.EnumConstantDecl))
+			preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
+			p.File.Decls = append(p.File.Decls, &goast.GenDecl{
+				Tok: token.CONST,
+				Specs: []goast.Spec{
+					e,
+				},
+			})
+		}
 		return nil
 	}
 
