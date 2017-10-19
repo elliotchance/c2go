@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	"go/ast"
 	"go/token"
 	"regexp"
 	"strings"
@@ -61,7 +60,41 @@ func GetArrayTypeAndSize(s string) (string, int) {
 //    a bug. It is most useful to do this when dealing with compound types like
 //    FILE where those function probably exist (or should exist) in the noarch
 //    package.
-func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.Expr, error) {
+func CastExpr(p *program.Program, expr goast.Expr, fromType, toType string) (goast.Expr, error) {
+
+	if strings.Contains(fromType, "enum") && !strings.Contains(toType, "enum") {
+		// convert enum to int and recursive
+		/*
+		   0: *ast.CallExpr {
+		   .  Fun: *ast.Ident {
+		   .  .  NamePos: 9:9
+		   .  .  Name: "float64"
+		   .  }
+		   .  Lparen: 9:16
+		   .  Args: []ast.Expr (len = 1) {
+		   .  .  0: *ast.Ident {
+		   .  .  .  NamePos: 9:17
+		   .  .  .  Name: "i"
+		   .  .  .  Obj: *(obj @ 38)
+		   .  .  }
+		   .  }
+		   .  Ellipsis: -
+		   .  Rparen: 9:18
+		   }
+		*/
+		in := goast.CallExpr{
+			Fun: &goast.Ident{
+				Name: "int",
+			},
+			Lparen: 1,
+			Args: []goast.Expr{
+				expr,
+			},
+			Rparen: 2,
+		}
+		return CastExpr(p, &in, "int", toType)
+	}
+
 	// Let's assume that anything can be converted to a void pointer.
 	if toType == "void *" {
 		return expr, nil
@@ -225,7 +258,6 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 		return util.NewCallExpr(toType, expr), nil
 	}
 
-	// Next only if types are not found
 	p.AddImport("github.com/elliotchance/c2go/noarch")
 
 	leftName := fromType

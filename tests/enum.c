@@ -9,7 +9,7 @@ int main()
     
 	enum week day;
 	day = Wed;
-	is_eq(day ,2)
+	is_eq(day ,2);
 
 	done_testing();
 }
