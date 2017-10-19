@@ -108,7 +108,7 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
-	// Enum with out name is `const`
+	// Enum without name is `const`
 	if n.Name == "" {
 		for _, c := range n.Children() {
 			e, newPre, newPost := transpileEnumConstantDecl(p, c.(*ast.EnumConstantDecl))
@@ -180,7 +180,7 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 							Name: n.Name,
 						},
 						Type: &goast.Ident{
-							Name: "int",
+							Name: "int", // enum in C is "INT" by default
 						},
 					},
 				}
