@@ -125,14 +125,14 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 	}
 
 	// Enums with names
-
 	theType, err := types.ResolveType(p, "int")
 	if err != nil {
+		// by defaults enum in C is INT
 		p.AddMessage(p.GenerateWarningMessage(err, n))
 	}
-	baseType := util.NewTypeIdent(theType)
 
-	bt := goast.GenDecl{
+	// Create alias of enum for int
+	p.File.Decls = append(p.File.Decls, &goast.GenDecl{
 		Tok: token.TYPE,
 		Specs: []goast.Spec{
 			&goast.TypeSpec{
@@ -140,18 +140,17 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 					Name: n.Name,
 					Obj:  goast.NewObj(goast.Typ, n.Name),
 				},
-				Type: baseType,
+				Type: util.NewTypeIdent(theType),
 			},
 		},
-	}
+	})
+
 	// Registration new type in program.Program
 	if !p.IsTypeAlreadyDefined(n.Name) {
 		p.DefineType(n.Name)
 	}
 
-	p.File.Decls = append(p.File.Decls, &bt)
-
-	baseType2 := util.NewTypeIdent(n.Name)
+	baseType := util.NewTypeIdent(n.Name)
 
 	decl := &goast.GenDecl{
 		Tok: token.CONST,
@@ -171,7 +170,7 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 		}
 
 		if i == 0 {
-			e.Type = baseType2
+			e.Type = baseType
 			if t, ok := e.Type.(*goast.Ident); ok {
 				t.Obj = &goast.Object{
 					Name: n.Name,
@@ -197,6 +196,8 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 				counter = int(is)
 			}
 		}
+
+		// Insert value of constants
 		e.Values = []goast.Expr{
 			&goast.BasicLit{
 				Kind:  token.INT,
@@ -204,6 +205,8 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 			},
 		}
 
+		// Position inside (....), it is
+		// not value of constants
 		e.Names[0].Obj.Data = i
 		counter++
 
@@ -212,11 +215,9 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 		// registration of enum constants
 		p.EnumConstantToEnum[e.Names[0].Name] = "enum " + n.Name
 	}
-	/*
-		decl.Specs[0].(*goast.ValueSpec).Names[0].Obj.Decl = nil
-		decl.Specs[1].(*goast.ValueSpec).Names[0].Obj = nil
-		decl.Specs[2].(*goast.ValueSpec).Names[0].Obj = nil
-	*/
+
+	// important value for creating (.....)
+	// with constants inside
 	decl.Lparen = 1
 
 	p.File.Decls = append(p.File.Decls, decl)
