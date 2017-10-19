@@ -106,23 +106,12 @@ func TestIntegrationScripts(t *testing.T) {
 
 			mainFileName = "main_test.go"
 
-			programArgs := ProgramArgs{
-				inputFile:   file,
-				outputFile:  subFolder + mainFileName,
-				packageName: "main",
-				// added for avoid travis timeout
-				keepUnused: true,
-
-				// This appends a TestApp function to the output source so we
-				// can run "go test" against the produced binary.
-				outputAsTest: true,
-			}
-
-			// testing `keepUnused` just for ont test C code
-			if file == "tests/stdlib.c" {
-				programArgs.keepUnused = false
-				programArgs.verbose = true
-			}
+			programArgs := DefaultProgramArgs()
+			programArgs.inputFile = file
+			programArgs.outputFile = subFolder + mainFileName
+			// This appends a TestApp function to the output source so we
+			// can run "go test" against the produced binary.
+			programArgs.outputAsTest = true
 
 			// Compile Go
 			err = Start(programArgs)
@@ -286,7 +275,7 @@ func TestStartPreprocess(t *testing.T) {
 		t.Fatalf("Cannot close the temp file. Err = %v", err)
 	}
 
-	var args ProgramArgs
+	args := DefaultProgramArgs()
 	args.inputFile = tempFile.Name()
 
 	err = Start(args)
@@ -318,7 +307,7 @@ func TestGoPath(t *testing.T) {
 	}
 
 	// testing
-	err = Start(ProgramArgs{})
+	err = Start(DefaultProgramArgs())
 	if err == nil {
 		t.Errorf(err.Error())
 	}

@@ -46,6 +46,9 @@ var stderr io.Writer = os.Stderr
 //
 // TODO: Better separation on CLI modes
 // https://github.com/elliotchance/c2go/issues/134
+//
+// Do not instantiate this directly. Instead use DefaultProgramArgs(); then
+// modify any specific attributes.
 type ProgramArgs struct {
 	verbose     bool
 	ast         bool
@@ -58,6 +61,17 @@ type ProgramArgs struct {
 
 	// Keep unused entities
 	keepUnused bool
+}
+
+// DefaultProgramArgs default value of ProgramArgs
+func DefaultProgramArgs() ProgramArgs {
+	return ProgramArgs{
+		verbose:      false,
+		ast:          false,
+		packageName:  "main",
+		outputAsTest: false,
+		keepUnused:   false,
+	}
 }
 
 func readAST(data []byte) []string {
@@ -164,7 +178,7 @@ func Start(args ProgramArgs) (err error) {
 		}
 		pp = out.Bytes()
 	}
-  
+
 	if args.verbose {
 		fmt.Println("Writing preprocessor ...")
 	}
@@ -218,7 +232,7 @@ func Start(args ProgramArgs) (err error) {
 
 	// build tree
 	if args.verbose {
-		fmt.Println("Build a tree...")
+		fmt.Println("Building tree...")
 	}
 	tree := buildTree(nodes, 0)
 	ast.FixPositions(tree)
@@ -235,7 +249,7 @@ func Start(args ProgramArgs) (err error) {
 
 	// transpile ast tree
 	if args.verbose {
-		fmt.Println("Transpile AST tree...")
+		fmt.Println("Transpiling tree...")
 	}
 	err = transpiler.TranspileAST(args.inputFile, args.packageName, p, tree[0].(ast.Node))
 	if err != nil {
@@ -320,7 +334,7 @@ func runCommand() int {
 		return 1
 	}
 
-	args := ProgramArgs{ast: false}
+	args := DefaultProgramArgs()
 
 	switch os.Args[1] {
 	case "ast":

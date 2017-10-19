@@ -20,7 +20,7 @@ import (
 type un int
 
 const (
-	unusedConstantans un = iota
+	unusedConstans un = iota
 	unusedFunction
 	unusedType
 	unusedVariable
@@ -31,7 +31,7 @@ const (
 )
 
 var unusedMap = map[string]un{
-	"const": unusedConstantans,
+	"const": unusedConstans,
 	"func":  unusedFunction,
 	"type":  unusedType,
 	"var":   unusedVariable,
@@ -54,7 +54,7 @@ func Go(inFile, outFile string, verbose bool) (err error) {
 	}()
 
 	stderr := os.Stderr
-	os.Stderr, err = newTempFile("", "temp")
+	os.Stderr, err = ioutil.TempFile("", "temp")
 	if err != nil {
 		return err
 	}
@@ -98,7 +98,7 @@ func Go(inFile, outFile string, verbose bool) (err error) {
 		return fmt.Errorf("Error in linter : %v", err)
 	}
 
-	// checking stdErr is not empty
+	// checking stdErr from linter is not empty
 	{
 		var buf []byte
 		_, err := os.Stderr.Read(buf)
@@ -157,7 +157,7 @@ func Go(inFile, outFile string, verbose bool) (err error) {
 	for _, param := range unusedParameters {
 		switch param.u {
 		// remove unused constants
-		case unusedConstantans:
+		case unusedConstans:
 			{
 				for i := 0; i < len(tree.Decls); i++ {
 					gen, ok := tree.Decls[i].(*ast.GenDecl)
@@ -182,14 +182,12 @@ func Go(inFile, outFile string, verbose bool) (err error) {
 				for i := 0; i < len(tree.Decls); i++ {
 					gen, ok := tree.Decls[i].(*ast.FuncDecl)
 					if !ok || gen == (*ast.FuncDecl)(nil) {
-						goto nextFuncDecl
+						continue
 					}
 					if gen.Name.String() == param.name && gen.Pos() <= param.position && param.position <= gen.End() {
 						removeItems = append(removeItems, i)
 						continue
 					}
-
-				nextFuncDecl:
 				}
 			}
 
@@ -199,7 +197,7 @@ func Go(inFile, outFile string, verbose bool) (err error) {
 				for i := 0; i < len(tree.Decls); i++ {
 					gen, ok := tree.Decls[i].(*ast.GenDecl)
 					if !ok || gen == (*ast.GenDecl)(nil) || gen.Tok != token.TYPE {
-						goto nextTypeDecl
+						continue
 					}
 					if s, ok := gen.Specs[0].(*ast.TypeSpec); ok {
 						if s.Name.String() == param.name && param.position == s.Pos() {
@@ -207,7 +205,6 @@ func Go(inFile, outFile string, verbose bool) (err error) {
 							continue
 						}
 					}
-				nextTypeDecl:
 				}
 			}
 
@@ -217,7 +214,7 @@ func Go(inFile, outFile string, verbose bool) (err error) {
 				for i := 0; i < len(tree.Decls); i++ {
 					gen, ok := tree.Decls[i].(*ast.GenDecl)
 					if !ok || gen == (*ast.GenDecl)(nil) || gen.Tok != token.VAR {
-						goto nextVarDecl
+						continue
 					}
 					if s, ok := gen.Specs[0].(*ast.ValueSpec); ok {
 						for _, n := range s.Names {
@@ -227,7 +224,6 @@ func Go(inFile, outFile string, verbose bool) (err error) {
 							}
 						}
 					}
-				nextVarDecl:
 				}
 			}
 
@@ -247,10 +243,10 @@ func Go(inFile, outFile string, verbose bool) (err error) {
 		for i := 0; i < len(tree.Decls); i++ {
 			gen, ok := tree.Decls[i].(*ast.FuncDecl)
 			if !ok || gen == (*ast.FuncDecl)(nil) {
-				goto nextDecl
+				continue
 			}
 			if gen.Recv == (*ast.FieldList)(nil) {
-				goto nextDecl
+				continue
 			}
 			if s, ok := gen.Recv.List[0].Type.(*ast.StarExpr); ok {
 				if t, ok := s.X.(*ast.Ident); ok {
@@ -259,10 +255,10 @@ func Go(inFile, outFile string, verbose bool) (err error) {
 					}
 				}
 			}
-		nextDecl:
 		}
 	}
 
+	// Sorting slice with remove index elements
 	sort.Ints(removeItems)
 
 	// remove Decl element from tree
@@ -312,18 +308,4 @@ func Go(inFile, outFile string, verbose bool) (err error) {
 	}
 
 	return nil
-}
-
-// newTempFile - returns temp file
-func newTempFile(dir, prefix string) (tmpFile *os.File, err error) {
-	for index := 1; index < 10000; index++ {
-		tmpFile, err = ioutil.TempFile(dir, fmt.Sprintf("%s%03d", prefix, index))
-		if err == nil {
-			break
-		}
-	}
-	if tmpFile == (*os.File)(nil) {
-		return nil, fmt.Errorf("cannot create temp file")
-	}
-	return tmpFile, os.Remove(tmpFile.Name())
 }

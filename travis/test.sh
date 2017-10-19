@@ -74,5 +74,5 @@ curl https://sqlite.org/2017/$SQLITE3_FILE.zip > /tmp/$SQLITE3_FILE.zip
 unzip /tmp/$SQLITE3_FILE.zip -d /tmp
 
 # Transpile the SQLite3 files.
-./c2go transpile -keep-unused /tmp/sqlite-amalgamation-3190300/shell.c
-./c2go transpile -keep-unused /tmp/sqlite-amalgamation-3190300/sqlite3.c
+./c2go transpile /tmp/sqlite-amalgamation-3190300/shell.c
+./c2go transpile /tmp/sqlite-amalgamation-3190300/sqlite3.c
