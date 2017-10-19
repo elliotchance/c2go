@@ -4,6 +4,7 @@ package transpiler
 
 import (
 	"go/token"
+	"strconv"
 
 	goast "go/ast"
 
@@ -107,6 +108,7 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
+	// Enum with out name is `const`
 	if n.Name == "" {
 		for _, c := range n.Children() {
 			e, newPre, newPost := transpileEnumConstantDecl(p, c.(*ast.EnumConstantDecl))
@@ -121,6 +123,8 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 		}
 		return nil
 	}
+
+	// Enums with names
 
 	theType, err := types.ResolveType(p, "int")
 	if err != nil {
@@ -153,6 +157,8 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 		Tok: token.CONST,
 	}
 
+	// counter for replace iota
+	var counter int
 	for i, c := range n.Children() {
 		e, newPre, newPost := transpileEnumConstantDecl(p, c.(*ast.EnumConstantDecl))
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
@@ -182,8 +188,29 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 			}
 		}
 
+		if len(c.(*ast.EnumConstantDecl).ChildNodes) > 0 {
+			if integr, ok := c.(*ast.EnumConstantDecl).ChildNodes[0].(*ast.IntegerLiteral); ok {
+				is, err := strconv.ParseInt(integr.Value, 10, 64)
+				if err != nil {
+					p.AddMessage(p.GenerateWarningMessage(err, n))
+				}
+				counter = int(is)
+			}
+		}
+		e.Values = []goast.Expr{
+			&goast.BasicLit{
+				Kind:  token.INT,
+				Value: strconv.Itoa(counter),
+			},
+		}
+
 		e.Names[0].Obj.Data = i
+		counter++
+
 		decl.Specs = append(decl.Specs, e)
+
+		// registration of enum constants
+		p.EnumConstantToEnum[e.Names[0].Name] = "enum " + n.Name
 	}
 
 	decl.Specs[0].(*goast.ValueSpec).Names[0].Obj.Decl = nil

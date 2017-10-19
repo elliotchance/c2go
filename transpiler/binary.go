@@ -6,6 +6,7 @@ import (
 	goast "go/ast"
 	"go/token"
 	"reflect"
+	"strings"
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
@@ -295,6 +296,22 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 	resolvedLeftType, err := types.ResolveType(p, leftType)
 	if err != nil {
 		p.AddMessage(p.GenerateWarningMessage(err, n))
+	}
+
+	// Enum casting
+	if operator != token.ASSIGN && strings.Contains(leftType, "enum") {
+		left, err = types.CastExpr(p, left, leftType, "int")
+		if err != nil {
+			p.AddMessage(p.GenerateWarningMessage(err, n))
+		}
+	}
+
+	// Enum casting
+	if operator != token.ASSIGN && strings.Contains(rightType, "enum") {
+		right, err = types.CastExpr(p, right, rightType, "int")
+		if err != nil {
+			p.AddMessage(p.GenerateWarningMessage(err, n))
+		}
 	}
 
 	return util.NewBinaryExpr(left, operator, right, resolvedLeftType, exprIsStmt),
