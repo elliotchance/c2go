@@ -257,7 +257,7 @@ func TestIntegrationScripts(t *testing.T) {
 func TestStartPreprocess(t *testing.T) {
 	// create temp file with guarantee
 	// wrong file body
-	tempFile, err := ioutil.TempFile("./", "preprocess.c")
+	tempFile, err := ioutil.TempFile("", "preprocess.c")
 	if err != nil {
 		t.Fatalf("Cannot create temp file for execute test\nerr = %v", err)
 	}
