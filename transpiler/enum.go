@@ -212,11 +212,11 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 		// registration of enum constants
 		p.EnumConstantToEnum[e.Names[0].Name] = "enum " + n.Name
 	}
-
-	decl.Specs[0].(*goast.ValueSpec).Names[0].Obj.Decl = nil
-	decl.Specs[1].(*goast.ValueSpec).Names[0].Obj = nil
-	decl.Specs[2].(*goast.ValueSpec).Names[0].Obj = nil
-
+	/*
+		decl.Specs[0].(*goast.ValueSpec).Names[0].Obj.Decl = nil
+		decl.Specs[1].(*goast.ValueSpec).Names[0].Obj = nil
+		decl.Specs[2].(*goast.ValueSpec).Names[0].Obj = nil
+	*/
 	decl.Lparen = 1
 
 	p.File.Decls = append(p.File.Decls, decl)
