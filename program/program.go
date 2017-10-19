@@ -74,6 +74,11 @@ type Program struct {
 	// internal integration testing to generate the output in the form of a
 	// Go-test rather than a standalone Go file.
 	OutputAsTest bool
+
+	// EnumConstantToEnum - a map with key="EnumConstant" and value="enum type"
+	// clang don`t show enum constant with enum type,
+	// so we have to use hack for repair the type
+	EnumConstantToEnum map[string]string
 }
 
 // NewProgram creates a new blank program.
@@ -87,6 +92,7 @@ func NewProgram() *Program {
 		Verbose:             false,
 		messages:            []string{},
 		GlobalVariables:     map[string]string{},
+		EnumConstantToEnum:  map[string]string{},
 	}
 }
 

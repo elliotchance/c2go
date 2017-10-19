@@ -4,11 +4,13 @@ package transpiler
 
 import (
 	"go/token"
+	"strconv"
 
 	goast "go/ast"
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/types"
 	"github.com/elliotchance/c2go/util"
 )
 
@@ -106,17 +108,118 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
-	for _, c := range n.Children() {
+	// Enum with out name is `const`
+	if n.Name == "" {
+		for _, c := range n.Children() {
+			e, newPre, newPost := transpileEnumConstantDecl(p, c.(*ast.EnumConstantDecl))
+			preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
+			p.File.Decls = append(p.File.Decls, &goast.GenDecl{
+				Tok: token.CONST,
+				Specs: []goast.Spec{
+					e,
+				},
+			})
+		}
+		return nil
+	}
+
+	// Enums with names
+
+	theType, err := types.ResolveType(p, "int")
+	if err != nil {
+		p.AddMessage(p.GenerateWarningMessage(err, n))
+	}
+	baseType := util.NewTypeIdent(theType)
+
+	bt := goast.GenDecl{
+		Tok: token.TYPE,
+		Specs: []goast.Spec{
+			&goast.TypeSpec{
+				Name: &goast.Ident{
+					Name: n.Name,
+					Obj:  goast.NewObj(goast.Typ, n.Name),
+				},
+				Type: baseType,
+			},
+		},
+	}
+	// Registration new type in program.Program
+	if !p.IsTypeAlreadyDefined(n.Name) {
+		p.DefineType(n.Name)
+	}
+
+	p.File.Decls = append(p.File.Decls, &bt)
+
+	baseType2 := util.NewTypeIdent(n.Name)
+
+	decl := &goast.GenDecl{
+		Tok: token.CONST,
+	}
+
+	// counter for replace iota
+	var counter int
+	for i, c := range n.Children() {
 		e, newPre, newPost := transpileEnumConstantDecl(p, c.(*ast.EnumConstantDecl))
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-		p.File.Decls = append(p.File.Decls, &goast.GenDecl{
-			Tok: token.CONST,
-			Specs: []goast.Spec{
-				e,
+		e.Names[0].Obj = goast.NewObj(goast.Con, e.Names[0].Name)
+
+		if i > 0 {
+			e.Type = nil
+			e.Values = nil
+		}
+
+		if i == 0 {
+			e.Type = baseType2
+			if t, ok := e.Type.(*goast.Ident); ok {
+				t.Obj = &goast.Object{
+					Name: n.Name,
+					Kind: goast.Typ,
+					Decl: &goast.TypeSpec{
+						Name: &goast.Ident{
+							Name: n.Name,
+						},
+						Type: &goast.Ident{
+							Name: "int",
+						},
+					},
+				}
+			}
+		}
+
+		if len(c.(*ast.EnumConstantDecl).ChildNodes) > 0 {
+			if integr, ok := c.(*ast.EnumConstantDecl).ChildNodes[0].(*ast.IntegerLiteral); ok {
+				is, err := strconv.ParseInt(integr.Value, 10, 64)
+				if err != nil {
+					p.AddMessage(p.GenerateWarningMessage(err, n))
+				}
+				counter = int(is)
+			}
+		}
+		e.Values = []goast.Expr{
+			&goast.BasicLit{
+				Kind:  token.INT,
+				Value: strconv.Itoa(counter),
 			},
-		})
+		}
+
+		e.Names[0].Obj.Data = i
+		counter++
+
+		decl.Specs = append(decl.Specs, e)
+
+		// registration of enum constants
+		p.EnumConstantToEnum[e.Names[0].Name] = "enum " + n.Name
 	}
+
+	decl.Specs[0].(*goast.ValueSpec).Names[0].Obj.Decl = nil
+	decl.Specs[1].(*goast.ValueSpec).Names[0].Obj = nil
+	decl.Specs[2].(*goast.ValueSpec).Names[0].Obj = nil
+
+	decl.Lparen = 1
+
+	p.File.Decls = append(p.File.Decls, decl)
 
 	return nil
 }

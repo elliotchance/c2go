@@ -8,6 +8,7 @@ import (
 	goast "go/ast"
 	"go/parser"
 	"go/token"
+	"strings"
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
@@ -140,9 +141,23 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 		expr, exprType, preStmts, postStmts, err = transpileMemberExpr(n, p)
 
 	case *ast.ImplicitCastExpr:
+		if strings.Contains(n.Type, "enum") {
+			if d, ok := n.Children()[0].(*ast.DeclRefExpr); ok {
+				expr, exprType, err = util.NewIdent(d.Name), n.Type, nil
+				return
+			}
+		}
 		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children()[0], p, exprIsStmt)
 
 	case *ast.DeclRefExpr:
+		if n.For == "EnumConstant" {
+			// clang don`t show enum constant with enum type,
+			// so we have to use hack for repair the type
+			if v, ok := p.EnumConstantToEnum[n.Name]; ok {
+				expr, exprType, err = util.NewIdent(n.Name), v, nil
+				return
+			}
+		}
 		expr, exprType, err = transpileDeclRefExpr(n, p)
 
 	case *ast.IntegerLiteral:

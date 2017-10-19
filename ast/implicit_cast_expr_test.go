@@ -20,6 +20,14 @@ func TestImplicitCastExpr(t *testing.T) {
 			Kind:       "FunctionToPointerDecay",
 			ChildNodes: []Node{},
 		},
+		`ImplicitCastExpr 0x21267c8 <col:8> 'enum week1':'enum week2' <IntegralCast>`: &ImplicitCastExpr{
+			Addr:       0x21267c8,
+			Pos:        NewPositionFromString("col:8"),
+			Type:       "enum week1",
+			Type2:      ":'enum week2'",
+			Kind:       "IntegralCast",
+			ChildNodes: []Node{},
+		},
 	}
 
 	runNodeTests(t, nodes)
