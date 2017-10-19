@@ -36,7 +36,7 @@ import (
 //     c2go -v
 //
 // See https://github.com/elliotchance/c2go/wiki/Release-Process
-const Version = "v0.16.3 Radium 2017-10-17"
+const Version = "v0.16.5 Radium 2017-10-19"
 
 var stderr io.Writer = os.Stderr
 
@@ -164,11 +164,17 @@ func Start(args ProgramArgs) (err error) {
 		}
 		pp = out.Bytes()
 	}
-
+  
 	if args.verbose {
 		fmt.Println("Writing preprocessor ...")
 	}
-	ppFilePath := path.Join("/tmp", "pp.c")
+	dir, err := ioutil.TempDir("", "c2go")
+	if err != nil {
+		return fmt.Errorf("Cannot create temp folder: %v", err)
+	}
+	defer os.RemoveAll(dir) // clean up
+
+	ppFilePath := path.Join(dir, "pp.c")
 	err = ioutil.WriteFile(ppFilePath, pp, 0644)
 	if err != nil {
 		return fmt.Errorf("writing to %s failed: %v", ppFilePath, err)
