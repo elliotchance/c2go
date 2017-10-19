@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"strings"
 	"syscall"
@@ -257,26 +258,18 @@ func TestIntegrationScripts(t *testing.T) {
 func TestStartPreprocess(t *testing.T) {
 	// create temp file with guarantee
 	// wrong file body
-	tempFile, err := ioutil.TempFile("", "preprocess.c")
+	dir, err := ioutil.TempDir("", "c2go-preprocess")
 	if err != nil {
-		t.Fatalf("Cannot create temp file for execute test\nerr = %v", err)
+		t.Fatalf("Cannot create temp folder: %v", err)
 	}
-	defer func() {
-		err = os.Remove(tempFile.Name())
-		if err != nil {
-			t.Fatalf("Cannot remove file: %v\nerr = %v", tempFile.Name(), err)
-		}
-	}()
+	defer os.RemoveAll(dir) // clean up
 
-	fmt.Fprintf(tempFile, "#include <AbsoluteWrongInclude.h>\nint main(void){\nwrong();\n}")
-
-	err = tempFile.Close()
-	if err != nil {
-		t.Fatalf("Cannot close the temp file. Err = %v", err)
-	}
+	filename := path.Join(dir, "preprocess.c")
+	body := ([]byte)("#include <AbsoluteWrongInclude.h>\nint main(void){\nwrong();\n}")
+	err = ioutil.WriteFile(filename, body, 0644)
 
 	args := DefaultProgramArgs()
-	args.inputFile = tempFile.Name()
+	args.inputFile = filename
 
 	err = Start(args)
 	if err == nil {
