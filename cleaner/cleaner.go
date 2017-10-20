@@ -20,7 +20,7 @@ import (
 type un int
 
 const (
-	unusedConstans un = iota
+	unusedConstants un = iota
 	unusedFunction
 	unusedType
 	unusedVariable
@@ -31,7 +31,7 @@ const (
 )
 
 var unusedMap = map[string]un{
-	"const": unusedConstans,
+	"const": unusedConstants,
 	"func":  unusedFunction,
 	"type":  unusedType,
 	"var":   unusedVariable,
@@ -79,7 +79,6 @@ func Go(inFile, outFile string, verbose bool) (err error) {
 	// prepare linter
 	var mode unused.CheckMode
 	mode |= unused.CheckConstants
-	//mode |= unused.CheckFields
 	mode |= unused.CheckFunctions
 	mode |= unused.CheckTypes
 	mode |= unused.CheckVariables
@@ -157,12 +156,12 @@ func Go(inFile, outFile string, verbose bool) (err error) {
 	for _, param := range unusedParameters {
 		switch param.u {
 		// remove unused constants
-		case unusedConstans:
+		case unusedConstants:
 			{
 				for i := 0; i < len(tree.Decls); i++ {
 					gen, ok := tree.Decls[i].(*ast.GenDecl)
 					if !ok || gen == (*ast.GenDecl)(nil) || gen.Tok != token.CONST {
-						goto nextConstDecl
+						continue
 					}
 					if s, ok := gen.Specs[0].(*ast.ValueSpec); ok {
 						for _, n := range s.Names {
@@ -172,7 +171,6 @@ func Go(inFile, outFile string, verbose bool) (err error) {
 							}
 						}
 					}
-				nextConstDecl:
 				}
 			}
 

@@ -280,7 +280,7 @@ func Start(args ProgramArgs) (err error) {
 		}
 		err := cleaner.Go(outputFilePath, outputFilePath, args.verbose)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "warning: cannot removing unused entities: %s\nPlease use flag '-keep-unused'", err.Error())
+			fmt.Fprintf(os.Stderr, "warning: cannot removing unused entities: %s\nPlease use flag '-keep-unused'\n", err.Error())
 		}
 	}
 
