@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	"go/ast"
 	"go/token"
 	"strings"
 
@@ -60,7 +59,45 @@ func GetArrayTypeAndSize(s string) (string, int) {
 //    a bug. It is most useful to do this when dealing with compound types like
 //    FILE where those function probably exist (or should exist) in the noarch
 //    package.
-func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.Expr, error) {
+func CastExpr(p *program.Program, expr goast.Expr, fromType, toType string) (goast.Expr, error) {
+
+	// convert enum to int and recursive
+	if strings.Contains(fromType, "enum") && !strings.Contains(toType, "enum") {
+		in := goast.CallExpr{
+			Fun: &goast.Ident{
+				Name: "int",
+			},
+			Lparen: 1,
+			Args: []goast.Expr{
+				&goast.ParenExpr{
+					Lparen: 1,
+					X:      expr,
+					Rparen: 2,
+				},
+			},
+			Rparen: 2,
+		}
+		return CastExpr(p, &in, "int", toType)
+	}
+	// convert int to enum and recursive
+	if !strings.Contains(fromType, "enum") && strings.Contains(toType, "enum") {
+		in := goast.CallExpr{
+			Fun: &goast.Ident{
+				Name: strings.TrimSpace(strings.Replace(toType, "enum", "", -1)),
+			},
+			Lparen: 1,
+			Args: []goast.Expr{
+				&goast.ParenExpr{
+					Lparen: 1,
+					X:      expr,
+					Rparen: 2,
+				},
+			},
+			Rparen: 2,
+		}
+		return CastExpr(p, &in, toType, toType)
+	}
+
 	// Let's assume that anything can be converted to a void pointer.
 	if toType == "void *" {
 		return expr, nil
