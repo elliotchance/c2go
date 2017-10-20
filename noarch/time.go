@@ -35,3 +35,8 @@ func Ctime(tloc []TimeT) []byte {
 
 	return nil
 }
+
+// TimeTToFloat64 converts TimeT to a float64. It is used by the tests.
+func TimeTToFloat64(t TimeT) float64 {
+	return float64(t)
+}

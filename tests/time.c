@@ -13,11 +13,11 @@ void test_time()
     time_t tloc;
 
     now = time(NULL);
+    is_not_eq(now, 0);
 
     now = time(&tloc);
-    is_true(now == tloc);
-
-    pass("%s", "time");
+    is_not_eq(now, 0);
+    is_eq(now, tloc);
 }
 
 void test_ctime()
@@ -25,16 +25,22 @@ void test_ctime()
     char* s = ctime(NULL);
     is_null(s);
 
-    time_t now = 946684798;
+    // 1999-12-31 11:59:58
+    time_t now = 946670398;
     s = ctime(&now);
-    printf("%s", s);
+    is_not_null(s);
 
-    pass("%s", "ctime");
+    // Hours/minutes will vary based on local time. Ignore them.
+    s[11] = 'H';
+    s[12] = 'H';
+    s[14] = 'm';
+    s[15] = 'm';
+    is_streq(s, "Fri Dec 31 HH:mm:58 1999\n");
 }
 
 int main()
 {
-    plan(4);
+    plan(6);
 
     START_TEST(time)
     START_TEST(ctime)
