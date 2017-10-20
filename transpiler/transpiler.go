@@ -173,6 +173,8 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 		expr, exprType, err = transpileCharacterLiteral(n), "char", nil
 
 	case *ast.CallExpr:
+		// for implementation function `free` see transpileToStmt,
+		// for all another case:
 		expr, exprType, preStmts, postStmts, err = transpileCallExpr(n, p)
 
 	case *ast.CompoundAssignOperator:
@@ -276,6 +278,72 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 
 		stmt = &goast.EmptyStmt{}
 		return
+	}
+
+	// Injection for specific implementation of function `free`
+	if n, ok := node.(*ast.CallExpr); ok {
+		if len(n.Children()) == 2 {
+			if imp1, ok := n.Children()[0].(*ast.ImplicitCastExpr); ok {
+				if decl1, ok := imp1.Children()[0].(*ast.DeclRefExpr); ok {
+					functionName := decl1.Name
+					// For function `free` from lib `stdlib.h`
+					if functionName == "free" {
+						if imp2, ok := n.Children()[1].(*ast.ImplicitCastExpr); ok {
+							if imp3, ok := imp2.Children()[0].(*ast.ImplicitCastExpr); ok {
+								if decl, ok := imp3.Children()[0].(*ast.DeclRefExpr); ok {
+									/* Example of input:
+									   |-CallExpr 0x36cc830 <line:8:9, col:18> 'void'
+									   | |-ImplicitCastExpr 0x36cc818 <col:9> 'void (*)(void *)' <FunctionToPointerDecay>
+									   | | `-DeclRefExpr 0x36cc7a0 <col:9> 'void (void *)' Function 0x36e0570 'free' 'void (void *)'
+									   | `-ImplicitCastExpr 0x36cc878 <col:14> 'void *' <BitCast>
+									   |   `-ImplicitCastExpr 0x36cc860 <col:14> 'int *' <LValueToRValue>
+									   |     `-DeclRefExpr 0x36cc7c8 <col:14> 'int *' lvalue Var 0x36cc088 'buf1' 'int *'
+									*/
+									/*
+										Example of output:
+										_ = buf1
+										Example of AST tree:
+										2: *ast.AssignStmt {
+										.  Lhs: []ast.Expr (len = 1) {
+										.  .  0: *ast.Ident {
+										.  .  .  NamePos: 10:1
+										.  .  .  Name: "_"
+										.  .  }
+										.  }
+										.  TokPos: 10:3
+										.  Tok: =
+										.  Rhs: []ast.Expr (len = 1) {
+										.  .  0: *ast.Ident {
+										.  .  .  NamePos: 10:5
+										.  .  .  Name: "d"
+										.  .  .  Obj: *(obj @ 78)
+										.  .  }
+										.  }
+										}
+									*/
+									devNull := &goast.AssignStmt{
+										Lhs: []goast.Expr{
+											&goast.Ident{
+												Name: "_",
+											},
+										},
+										Tok: token.ASSIGN,
+										Rhs: []goast.Expr{
+											&goast.Ident{
+												Name: decl.Name,
+											},
+										},
+									}
+									stmt = devNull
+									err = nil
+									return
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 
 	// We do not care about the return type.
