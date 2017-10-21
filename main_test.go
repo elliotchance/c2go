@@ -6,8 +6,10 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"strings"
 	"syscall"
@@ -310,5 +312,40 @@ func TestGoPath(t *testing.T) {
 	err = Start(ProgramArgs{})
 	if err == nil {
 		t.Errorf(err.Error())
+	}
+}
+
+func TestMultifileTranspilation(t *testing.T) {
+	testFiles, err := filepath.Glob("./tests/multi/*.c")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var args = ProgramArgs{}
+	args.inputFiles = testFiles
+	dir, err := ioutil.TempDir("", "c2go_multi")
+	if err != nil {
+		t.Fatal(err)
+	}
+	args.outputFile = path.Join(dir, "multi.go")
+	args.packageName = "main"
+	args.outputAsTest = true
+
+	// testing
+	err = Start(args)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	// Run Go program
+	var buf bytes.Buffer
+	cmd := exec.Command("go", "run", args.outputFile)
+	cmd.Stdout = &buf
+	cmd.Stderr = &buf
+	err = cmd.Run()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if buf.String() != "42" {
+		t.Errorf("Wrong result: %v", buf.String())
 	}
 }
