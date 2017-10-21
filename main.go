@@ -49,7 +49,7 @@ var stderr io.Writer = os.Stderr
 type ProgramArgs struct {
 	verbose     bool
 	ast         bool
-	inputFile   string
+	inputFiles  []string
 	outputFile  string
 	packageName string
 
@@ -168,9 +168,11 @@ func Start(args ProgramArgs) error {
 	}
 
 	// 1. Compile it first (checking for errors)
-	_, err := os.Stat(args.inputFile)
-	if err != nil {
-		return fmt.Errorf("Input file is not found")
+	for _, in := range args.inputFiles {
+		_, err := os.Stat(in)
+		if err != nil {
+			return fmt.Errorf("Input file %s is not found", in)
+		}
 	}
 
 	// 2. Preprocess
@@ -178,12 +180,14 @@ func Start(args ProgramArgs) error {
 	{
 		// See : https://clang.llvm.org/docs/CommandGuide/clang.html
 		// clang -E <file>    Run the preprocessor stage.
-		cmd := exec.Command("clang", "-E", args.inputFile)
+		argList := []string{"-E"}
+		argList = append(argList, args.inputFiles...)
+		cmd := exec.Command("clang", argList...)
 		var out bytes.Buffer
 		var stderr bytes.Buffer
 		cmd.Stdout = &out
 		cmd.Stderr = &stderr
-		err = cmd.Run()
+		err := cmd.Run()
 		if err != nil {
 			return fmt.Errorf("preprocess failed: %v\nStdErr = %v", err, stderr.String())
 		}
@@ -240,17 +244,19 @@ func Start(args ProgramArgs) error {
 		p.AddMessage(p.GenerateWarningMessage(errors.New(message), fErr.Node))
 	}
 
-	err = transpiler.TranspileAST(args.inputFile, args.packageName, p, tree[0].(ast.Node))
-	if err != nil {
-		panic(err)
-	}
-
 	outputFilePath := args.outputFile
 
 	if outputFilePath == "" {
-		cleanFileName := filepath.Clean(filepath.Base(args.inputFile))
-		extension := filepath.Ext(args.inputFile)
+		// We choose name for output Go code at the base
+		// on filename for first input file
+		cleanFileName := filepath.Clean(filepath.Base(args.inputFiles[0]))
+		extension := filepath.Ext(args.inputFiles[0])
 		outputFilePath = cleanFileName[0:len(cleanFileName)-len(extension)] + ".go"
+	}
+
+	err = transpiler.TranspileAST(args.outputFile, args.packageName, p, tree[0].(ast.Node))
+	if err != nil {
+		panic(err)
 	}
 
 	err = ioutil.WriteFile(outputFilePath, []byte(p.String()), 0644)
@@ -335,7 +341,7 @@ func runCommand() int {
 		}
 
 		args.ast = true
-		args.inputFile = astCommand.Arg(0)
+		args.inputFiles = astCommand.Args()
 	case "transpile":
 		err := transpileCommand.Parse(os.Args[2:])
 		if err != nil {
@@ -349,7 +355,7 @@ func runCommand() int {
 			return 1
 		}
 
-		args.inputFile = transpileCommand.Arg(0)
+		args.inputFiles = transpileCommand.Args()
 		args.outputFile = *outputFlag
 		args.packageName = *packageFlag
 	default:

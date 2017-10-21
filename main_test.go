@@ -106,7 +106,7 @@ func TestIntegrationScripts(t *testing.T) {
 			mainFileName = "main_test.go"
 
 			programArgs := ProgramArgs{
-				inputFile:   file,
+				inputFiles:  []string{file},
 				outputFile:  subFolder + mainFileName,
 				packageName: "main",
 
@@ -276,7 +276,7 @@ func TestStartPreprocess(t *testing.T) {
 	}
 
 	var args ProgramArgs
-	args.inputFile = tempFile.Name()
+	args.inputFiles = []string{tempFile.Name()}
 
 	err = Start(args)
 	if err == nil {
