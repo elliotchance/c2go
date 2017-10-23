@@ -22,8 +22,7 @@ void test_time()
 
 void test_ctime()
 {
-    char* s = ctime(NULL);
-    is_null(s);
+    char* s;
 
     // 1999-12-31 11:59:58
     time_t now = 946670398;
@@ -40,7 +39,7 @@ void test_ctime()
 
 int main()
 {
-    plan(6);
+    plan(5);
 
     START_TEST(time)
     START_TEST(ctime)
