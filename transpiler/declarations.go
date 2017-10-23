@@ -41,6 +41,18 @@ func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, str
 
 func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 	name := n.Name
+
+	// for case on C code:
+	// typedef struct {
+	// ...
+	// } name;
+	// Name of RecordDecl is empty
+	// So, we have to save all n.Children at the base of Address
+	if name == "" {
+		p.StructsEmptyName[n.Addr] = n.ChildNodes
+		return nil
+	}
+
 	if name == "" || p.IsTypeAlreadyDefined(name) {
 		return nil
 	}
@@ -118,6 +130,37 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 
 	if p.IsTypeAlreadyDefined(name) {
 		return nil
+	}
+
+	// added for support "struct typedef" with empty name of struct
+	// Example :
+	/*
+	   |-TypedefDecl 0x24d7910 <line:8:1, line:12:3> col:3 referenced s_t 'struct s_t':'s_t'
+	   | `-ElaboratedType 0x24d78c0 'struct s_t' sugar
+	   |   `-RecordType 0x24d7790 's_t'
+	   |     `-Record 0x24d7710 ''  <-- Adress of struct without name
+	*/
+	if len(n.ChildNodes) == 1 {
+		if el, ok := n.ChildNodes[0].(*ast.ElaboratedType); ok {
+			if len(el.ChildNodes) == 1 {
+				if rt, ok := el.ChildNodes[0].(*ast.RecordType); ok {
+					if len(rt.ChildNodes) == 1 {
+						if r, ok := rt.ChildNodes[0].(*ast.Record); ok {
+							if v, ok := p.StructsEmptyName[r.Addr]; ok {
+								// create like typical struct
+								var recordDecl ast.RecordDecl
+								recordDecl.Name = n.Name
+								recordDecl.ChildNodes = v
+								_ = transpileRecordDecl(p, &recordDecl) //??
+								// removing ??
+								delete(p.StructsEmptyName, n.Addr)
+								return nil
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 
 	p.DefineType(name)
@@ -203,9 +246,10 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 		},
 	})
 
-	// added for support "struct typedef"
+	// added for support "struct typedef" with non-empty name of struct
 	if v, ok := p.Structs["struct "+resolvedType]; ok {
 		p.Structs["struct "+name] = v
+		return nil
 	}
 
 	return nil

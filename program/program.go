@@ -79,6 +79,14 @@ type Program struct {
 	// clang don`t show enum constant with enum type,
 	// so we have to use hack for repair the type
 	EnumConstantToEnum map[string]string
+
+	// for case on C code:
+	// typedef struct {
+	// ...
+	// } name;
+	// Name of RecordDecl is empty
+	// So, we have to save all n.Children at the base of Address
+	StructsEmptyName map[ast.Address][]ast.Node
 }
 
 // NewProgram creates a new blank program.
@@ -93,6 +101,7 @@ func NewProgram() *Program {
 		messages:            []string{},
 		GlobalVariables:     map[string]string{},
 		EnumConstantToEnum:  map[string]string{},
+		StructsEmptyName:    map[ast.Address][]ast.Node{},
 	}
 }
 
