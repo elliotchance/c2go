@@ -151,8 +151,11 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 								var recordDecl ast.RecordDecl
 								recordDecl.Name = n.Name
 								recordDecl.ChildNodes = v
-								_ = transpileRecordDecl(p, &recordDecl) //??
-								// removing ??
+								err := transpileRecordDecl(p, &recordDecl)
+								if err != nil {
+									return err
+								}
+								// removing from map, because now defined
 								delete(p.StructsEmptyName, n.Addr)
 								return nil
 							}
