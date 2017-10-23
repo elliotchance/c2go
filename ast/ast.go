@@ -90,6 +90,8 @@ func Parse(line string) Node {
 		return parseDeclStmt(line)
 	case "DefaultStmt":
 		return parseDefaultStmt(line)
+	case "DisableTailCallsAttr":
+		return parseDisableTailCallsAttr(line)
 	case "DeprecatedAttr":
 		return parseDeprecatedAttr(line)
 	case "DisableTailCallsAttr":
