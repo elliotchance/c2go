@@ -298,7 +298,7 @@ func main() {
 
 func runCommand() int {
 	flag.Usage = func() {
-		usage := "Usage: %s [-v] [<command>] [<flags>] file.c\n\n"
+		usage := "Usage: %s [-v] [<command>] [<flags>] file1.c ...\n\n"
 		usage += "Commands:\n"
 		usage += "  transpile\ttranspile an input C source file or files to Go\n"
 		usage += "  ast\t\tprint AST before translated Go code\n\n"
@@ -350,7 +350,7 @@ func runCommand() int {
 		}
 
 		if *transpileHelpFlag || transpileCommand.NArg() == 0 {
-			fmt.Fprintf(stderr, "Usage: %s transpile [-V] [-o file.go] [-p package] file.c\n", os.Args[0])
+			fmt.Fprintf(stderr, "Usage: %s transpile [-V] [-o file.go] [-p package] file1.c ...\n", os.Args[0])
 			transpileCommand.PrintDefaults()
 			return 1
 		}
