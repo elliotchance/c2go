@@ -37,9 +37,13 @@ typedef struct {
 	double t;
 } ts_c;
 
+typedef struct ff {
+	int v1,v2;
+} tt1;
+
 int main()
 {
-	plan(9);
+	plan(11);
 	
 	struct programming variable;
 	char *s = "Programming in Software Development.";
@@ -64,6 +68,14 @@ int main()
 	ts_c c;
 	c.t = 42.;
 	is_eq(c.t , 42.);
-	
+
+	tt1 t1;
+	t1.v1 = 42.;
+	is_eq(t1.v1,42.)
+
+	struct ff tf2;
+	tf2.v2 = t1.v1;
+	is_eq(tf2.v2,t1.v1);
+
 	done_testing();
 }
