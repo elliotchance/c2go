@@ -26,7 +26,6 @@ import (
 	"errors"
 
 	"github.com/elliotchance/c2go/ast"
-	"github.com/elliotchance/c2go/cleaner"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/transpiler"
 )
@@ -58,9 +57,6 @@ type ProgramArgs struct {
 
 	// A private option to output the Go as a *_test.go file.
 	outputAsTest bool
-
-	// Keep unused entities
-	keepUnused bool
 }
 
 // DefaultProgramArgs default value of ProgramArgs
@@ -70,7 +66,6 @@ func DefaultProgramArgs() ProgramArgs {
 		ast:          false,
 		packageName:  "main",
 		outputAsTest: false,
-		keepUnused:   false,
 	}
 }
 
@@ -273,17 +268,6 @@ func Start(args ProgramArgs) (err error) {
 		return fmt.Errorf("writing Go output file failed: %v", err)
 	}
 
-	if !args.keepUnused {
-		// remove unused
-		if args.verbose {
-			fmt.Println("Removing unused constants, functions, variables, types and methods of unused types...")
-		}
-		err := cleaner.Go(outputFilePath, outputFilePath, args.verbose)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "warning: cannot removing unused entities: %s\nPlease use flag '-keep-unused'\n", err.Error())
-		}
-	}
-
 	return nil
 }
 
@@ -293,7 +277,6 @@ var (
 	verboseFlag       = transpileCommand.Bool("V", false, "print progress as comments")
 	outputFlag        = transpileCommand.String("o", "", "output Go generated code to the specified file")
 	packageFlag       = transpileCommand.String("p", "main", "set the name of the generated package")
-	keepUnused        = transpileCommand.Bool("keep-unused", false, "Keep unused constants, functions, variables, types and methods of unused types")
 	transpileHelpFlag = transpileCommand.Bool("h", false, "print help information")
 	astCommand        = flag.NewFlagSet("ast", flag.ContinueOnError)
 	astHelpFlag       = astCommand.Bool("h", false, "print help information")
@@ -360,7 +343,7 @@ func runCommand() int {
 		}
 
 		if *transpileHelpFlag || transpileCommand.NArg() == 0 {
-			fmt.Fprintf(stderr, "Usage: %s transpile [-V] [-o file.go] [-p package] [-keep-unused] file.c\n", os.Args[0])
+			fmt.Fprintf(stderr, "Usage: %s transpile [-V] [-o file.go] [-p package] file.c\n", os.Args[0])
 			transpileCommand.PrintDefaults()
 			return 1
 		}
@@ -369,7 +352,6 @@ func runCommand() int {
 		args.outputFile = *outputFlag
 		args.packageName = *packageFlag
 		args.verbose = *verboseFlag
-		args.keepUnused = *keepUnused
 	default:
 		flag.Usage()
 		return 1
