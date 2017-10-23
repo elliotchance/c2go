@@ -23,6 +23,13 @@ func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, str
 		return nil, ""
 	}
 
+	// Add for fix bug in "stdlib.h"
+	// build/tests/exit/main_test.go:90:11: undefined: wait
+	// it is "union" with some anonymous struct
+	if n.Type == "union wait *" {
+		return nil, ""
+	}
+
 	fieldType, err := types.ResolveType(p, n.Type)
 	p.AddMessage(p.GenerateWarningMessage(err, n))
 
@@ -48,7 +55,7 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 	// } name;
 	// Name of RecordDecl is empty
 	// So, we have to save all n.Children at the base of Address
-	if name == "" {
+	if name == "" && !p.IsTypeAlreadyDefined(name) {
 		p.StructsEmptyName[n.Addr] = n.ChildNodes
 		return nil
 	}
