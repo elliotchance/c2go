@@ -33,29 +33,37 @@ typedef struct mainStruct{
 	double constant;
 } secondStruct;
 
+typedef struct {
+	double t;
+} ts_c;
+
 int main()
 {
-    plan(8);
-
-    struct programming variable;
-    char *s = "Programming in Software Development.";
-
-    variable.constant = 1.23;
-    variable.pointer = s;
-
-    is_eq(variable.constant, 1.23);
-    is_streq(variable.pointer, "Programming in Software Development.");
-
-    pass_by_val(variable);
-    pass_by_ref(&variable);
-    
+	plan(9);
+	
+	struct programming variable;
+	char *s = "Programming in Software Development.";
+	
+	variable.constant = 1.23;
+	variable.pointer = s;
+	
+	is_eq(variable.constant, 1.23);
+	is_streq(variable.pointer, "Programming in Software Development.");
+	
+	pass_by_val(variable);
+	pass_by_ref(&variable);
+	
 	struct mainStruct s1;
-    s1.constant = 42.;
-    is_eq(s1.constant, 42.);
+	s1.constant = 42.;
+	is_eq(s1.constant, 42.);
 	
 	secondStruct s2;
 	s2.constant = 42.;
 	is_eq(s2.constant, 42.);
-
-    done_testing();
+	
+	ts_c c;
+	c.t = 42.;
+	is_eq(c.t , 42.);
+	
+	done_testing();
 }
