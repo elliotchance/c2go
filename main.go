@@ -11,7 +11,6 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
 	"io"
@@ -175,33 +174,9 @@ func Start(args ProgramArgs) error {
 	}
 
 	// 2. Preprocess
-	var pp []byte
-	var out bytes.Buffer
-	{
-		// See : https://clang.llvm.org/docs/CommandGuide/clang.html
-		// clang -E <file>    Run the preprocessor stage.
-		cmd := exec.Command("clang", "-E", args.inputFile)
-		var stderr bytes.Buffer
-		cmd.Stdout = &out
-		cmd.Stderr = &stderr
-		err = cmd.Run()
-		if err != nil {
-			return fmt.Errorf("preprocess failed: %v\nStdErr = %v", err, stderr.String())
-		}
-		pp = []byte(out.String())
-	}
-
-	// Preprocess analyze
-	ppItems := preprocessor.Analyze(out)
-	if ppItems != nil {
-		for i, p := range ppItems {
-			fmt.Println("|-----------------------")
-			fmt.Println("Part    : ", i)
-			fmt.Println("Include : ", p.Include)
-			if len(p.Lines) > 0 {
-				fmt.Println("First   : ", p.Lines[0])
-			}
-		}
+	pp, err := preprocessor.Analyze(args.inputFile)
+	if err != nil {
+		return err
 	}
 
 	ppFilePath := path.Join("/tmp", "pp.c")
