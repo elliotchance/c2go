@@ -37,11 +37,11 @@ func TestParseInclude(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if len(actual) == 0 {
+			if len(actual.include) == 0 {
 				t.Fatal("Cannot parse, because result is empty")
 			}
-			if actual != tc.include {
-				t.Fatalf("Cannot parse line: \"%s\". Result: \"%s\". Expected: \"%s\"", tc.inputLine, actual, tc.include)
+			if actual.include != tc.include {
+				t.Fatalf("Cannot parse line: \"%s\". Result: \"%s\". Expected: \"%s\"", tc.inputLine, actual.include, tc.include)
 			}
 		})
 	}

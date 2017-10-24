@@ -5,137 +5,158 @@ import (
 	"bytes"
 	"fmt"
 	"os/exec"
+	"strconv"
 	"strings"
 )
 
-// Item - part of preprocessor code
-type Item struct {
-	Include string
-	Lines   []string
+// item - part of preprocessor code
+type entity struct {
+	positionInSource int
+	include          string
+	other            string
+
+	// Zero index line is look like that:
+	// # 11 "/usr/include/x86_64-linux-gnu/gnu/stubs.h" 2 3 4
+	// After that 0 or more lines of codes
+	lines []string
 }
 
 // Analyze - separation preprocessor code to part
-func Analyze(inputFile string) (pp []byte, err error) {
+func Analyze(inputFile string) (pp []byte, userPosition int, err error) {
 	// See : https://clang.llvm.org/docs/CommandGuide/clang.html
 	// clang -E <file>    Run the preprocessor stage.
-	var out bytes.Buffer
-	{
-		var stderr bytes.Buffer
-		cmd := exec.Command("clang", "-E", inputFile)
-		cmd.Stdout = &out
-		cmd.Stderr = &stderr
-		err = cmd.Run()
-		if err != nil {
-			err = fmt.Errorf("preprocess failed: %v\nStdErr = %v", err, stderr.String())
-			return
-		}
-	}
-
-	// Get list of include files
-	includeList, err := getIncludeList(inputFile)
+	out, err := preprocessSource(inputFile)
 	if err != nil {
 		return
 	}
-	_ = includeList
 
 	// Parsing preprocessor file
 	r := bytes.NewReader(out.Bytes())
 	scanner := bufio.NewScanner(r)
 	scanner.Split(bufio.ScanLines)
-	var positions []int
-	var lines []string
+	// counter - get position of line
 	var counter int
+	// item, items - entity of preprocess file
+	var item *entity
+	var items []entity
 	for scanner.Scan() {
 		line := scanner.Text()
-		if len(line) == 0 {
-			continue
-		}
-		if line[0] == '#' {
-			positions = append(positions, counter)
+		if len(line) > 0 && line[0] == '#' {
+			if item != (*entity)(nil) {
+				items = append(items, *item)
+			}
+			item, err = parseInclude(line)
+			if err != nil {
+				err = fmt.Errorf("Cannot parse line : %s with error: %s", line, err)
+				return
+			}
+			if item.positionInSource == 0 {
+				item.positionInSource = 1 // Hack : cannot by less 1
+			}
+			item.lines = make([]string, 0)
 		}
 		counter++
-		lines = append(lines, line)
+		item.lines = append(item.lines, line)
 	}
-	var item Item
-	var items []Item
-	for i := range positions {
-		item.Include, err = parseInclude(lines[positions[i]])
-		if err != nil {
-			err = fmt.Errorf("Cannot parse line : %s", lines[positions[i]])
-			return
-		}
+	if item != (*entity)(nil) {
+		items = append(items, *item)
+	}
 
-		// Filter of includes
+	// Get list of include files
+	includeList, err := includesList(inputFile)
+	if err != nil {
+		return
+	}
+
+	// Renumbering positionInSource in source for user code to unique
+	// Let`s call that positionInSource - userPosition
+	// for example: if some entity(GenDecl,...) have positionInSource
+	// less userPosition, then that is from system library, but not
+	// from user source.
+	for _, item := range items {
+		if userPosition < item.positionInSource {
+			userPosition = item.positionInSource
+		}
+	}
+	for _, item := range items {
+		userPosition += len(item.lines)
+	}
+	for i := range items {
 		var found bool
-		for _, in := range includeList {
-			if in == item.Include {
+		for _, inc := range includeList {
+			if inc == items[i].include {
 				found = true
 			}
 		}
 		if !found {
 			continue
 		}
-
-		var s int
-		if i != len(positions)-1 {
-			s = positions[i] + 1
-		} else {
-			if positions[i]+1 < len(lines)-1 {
-				s = positions[i] + 1
-			} else {
-				continue
-			}
-		}
-
-		var f int
-		if i != len(positions)-1 {
-			f = positions[i+1]
-		} else {
-			f = len(lines)
-		}
-		item.Lines = lines[s:f]
-
-		items = append(items, item)
+		items[i].positionInSource = userPosition + 1
 	}
-	_ = items
+	// Now, userPosition is unique and more then other
 
 	// Merge the items
-	lines = make([]string, 0)
-	for i := range items {
-		//	lines = append(lines, "# 1 "+items[i].Include)
-		lines = append(lines, items[i].Lines...)
+	lines := make([]string, 0, counter)
+	for _, item := range items {
+		lines = append(lines, fmt.Sprintf("# %d \"%s\" %s", item.positionInSource, item.include, item.other))
+		if len(item.lines) > 0 {
+			lines = append(lines, item.lines[1:]...)
+		}
 	}
 	pp = ([]byte)(strings.Join(lines, "\n"))
 
-	///fmt.Println("pp = ", string(pp))
 	return
 }
 
-func parseInclude(line string) (inc string, err error) {
+// typically parse that line:
+// # 11 "/usr/include/x86_64-linux-gnu/gnu/stubs.h" 2 3 4
+func parseInclude(line string) (item *entity, err error) {
+	if line[0] != '#' {
+		err = fmt.Errorf("Cannot parse: first symbol is not # in line %s", line)
+		return
+	}
 	i := strings.Index(line, "\"")
 	if i < 0 {
 		err = fmt.Errorf("First index is not correct on line %s", line)
+		return
 	}
 	l := strings.LastIndex(line, "\"")
 	if l < 0 {
 		err = fmt.Errorf("Last index is not correct on line %s", line)
+		return
+	}
+	if i >= l {
+		err = fmt.Errorf("Not allowable positions of symbol \" (%d and %d) in line : %s", i, l, line)
+		return
 	}
 
-	inc = line[i+1 : l]
-	if inc == "" {
-		err = fmt.Errorf("Cannot found include in line: %s", line)
+	pos, err := strconv.ParseInt(strings.TrimSpace(line[1:i]), 10, 64)
+	if err != nil {
+		err = fmt.Errorf("Cannot parse position in source : %v", err)
 		return
+	}
+
+	if l+1 < len(line) {
+		item = &entity{
+			positionInSource: int(pos),
+			include:          line[i+1 : l],
+			other:            line[l+1:],
+		}
+	} else {
+		item = &entity{
+			positionInSource: int(pos),
+			include:          line[i+1 : l],
+		}
 	}
 
 	return
 }
 
-// getIncludeList - Get list of include files
-func getIncludeList(inputFile string) (lines []string, err error) {
-	/* Example:
-	$ clang  -MM -c exit.c
-	exit.o: exit.c tests.h
-	*/
+// includesList - Get list of include files
+// Example:
+// $ clang  -MM -c exit.c
+// exit.o: exit.c tests.h
+func includesList(inputFile string) (lines []string, err error) {
 	var out bytes.Buffer
 	var stderr bytes.Buffer
 	cmd := exec.Command("clang", "-MM", "-c", inputFile)
@@ -159,5 +180,20 @@ func getIncludeList(inputFile string) (lines []string, err error) {
 	lines = strings.Split(line, " ")
 
 	//fmt.Printf("INCLUDE : %#v", lines)
+	return
+}
+
+// See : https://clang.llvm.org/docs/CommandGuide/clang.html
+// clang -E <file>    Run the preprocessor stage.
+func preprocessSource(inputFile string) (out bytes.Buffer, err error) {
+	var stderr bytes.Buffer
+	cmd := exec.Command("clang", "-E", inputFile)
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+	err = cmd.Run()
+	if err != nil {
+		err = fmt.Errorf("preprocess failed: %v\nStdErr = %v", err, stderr.String())
+		return
+	}
 	return
 }

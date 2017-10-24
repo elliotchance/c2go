@@ -174,7 +174,7 @@ func Start(args ProgramArgs) error {
 	}
 
 	// 2. Preprocess
-	pp, err := preprocessor.Analyze(args.inputFile)
+	pp, userPosition, err := preprocessor.Analyze(args.inputFile)
 	if err != nil {
 		return err
 	}
@@ -208,6 +208,7 @@ func Start(args ProgramArgs) error {
 	p := program.NewProgram()
 	p.Verbose = args.verbose
 	p.OutputAsTest = true // args.outputAsTest
+	p.UserPosition = userPosition
 
 	nodes := convertLinesToNodes(lines)
 	tree := buildTree(nodes, 0)

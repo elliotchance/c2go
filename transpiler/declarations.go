@@ -40,6 +40,13 @@ func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, str
 }
 
 func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
+
+	// If that `ast` element from system headers, then
+	// not include in source
+	if n.Position().Line > 0 && n.Position().Line < p.UserPosition {
+		return nil
+	}
+
 	name := n.Name
 	if name == "" || p.IsTypeAlreadyDefined(name) {
 		return nil
@@ -114,6 +121,13 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 }
 
 func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
+
+	// If that `ast` element from system headers, then
+	// not include in source
+	if n.Position().Line > 0 && n.Position().Line < p.UserPosition {
+		return nil
+	}
+
 	name := n.Name
 
 	if p.IsTypeAlreadyDefined(name) {
@@ -213,6 +227,13 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 
 func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 	[]goast.Stmt, []goast.Stmt, string) {
+
+	// If that `ast` element from system headers, then
+	// not include in source
+	if n.Position().Line > 0 && n.Position().Line < p.UserPosition {
+		return nil, nil, ""
+	}
+
 	// There are cases where the same variable is defined more than once. I
 	// assume this is becuase they are extern or static definitions. For now, we
 	// will ignore any redefinitions.

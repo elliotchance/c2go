@@ -74,6 +74,13 @@ type Program struct {
 	// internal integration testing to generate the output in the form of a
 	// Go-test rather than a standalone Go file.
 	OutputAsTest bool
+
+	// Renumbering positionInSource inside preprocessor package in source
+	// for user code to unique
+	// for example: if some entity(GenDecl,...) have line position
+	// less UserPosition, then that is from system library, but not
+	// from user source.
+	UserPosition int
 }
 
 // NewProgram creates a new blank program.
