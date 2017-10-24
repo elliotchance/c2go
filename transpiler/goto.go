@@ -1,5 +1,5 @@
 // This file contains functions for transpiling goto/label statements.
-//
+
 package transpiler
 
 import (
