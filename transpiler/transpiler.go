@@ -268,6 +268,14 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 			return
 		}
 
+	case *ast.LabelStmt:
+		stmt, err = transpileLabelStmt(n, p)
+		return
+
+	case *ast.GotoStmt:
+		stmt, err = transpileGotoStmt(n, p)
+		return
+
 	case *ast.GCCAsmStmt:
 		// Go does not support inline assembly. See:
 		// https://github.com/elliotchance/c2go/issues/228
@@ -342,4 +350,27 @@ func transpileStmts(nodes []ast.Node, p *program.Program) ([]goast.Stmt, error) 
 	}
 
 	return stmts, nil
+}
+
+func transpileLabelStmt(n *ast.LabelStmt, p *program.Program) (*goast.LabeledStmt, error) {
+	var stmt goast.Stmt
+	if len(n.Children()) > 0 {
+		var err error
+		stmt, _, _, err = transpileToStmt(n.Children()[0], p)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &goast.LabeledStmt{
+		Label: util.NewIdent(n.Name),
+		Stmt:  stmt,
+	}, nil
+}
+
+func transpileGotoStmt(n *ast.GotoStmt, p *program.Program) (*goast.BranchStmt, error) {
+	return &goast.BranchStmt{
+		Label: util.NewIdent(n.Name),
+		Tok:   token.GOTO,
+	}, nil
 }
