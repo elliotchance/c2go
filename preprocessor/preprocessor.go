@@ -5,11 +5,13 @@ import (
 	"bytes"
 )
 
+// Item - part of preprocessor code
 type Item struct {
 	Include string
 	Lines   []string
 }
 
+// Analyze - separation preprocessor code to part
 func Analyze(pp bytes.Buffer) (items []Item) {
 	r := bytes.NewReader(pp.Bytes())
 	scanner := bufio.NewScanner(r)
@@ -35,6 +37,6 @@ func Analyze(pp bytes.Buffer) (items []Item) {
 	return
 }
 
-func parseInclude(line string) (inc string) {
+func parseInclude(line string) (inc string, err error) {
 	return line
 }
