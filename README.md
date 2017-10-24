@@ -83,6 +83,8 @@ import "unsafe"
 
 import "github.com/elliotchance/c2go/noarch"
 
+// ... lots of system types in Go removed for brevity.
+
 var stdin *noarch.File
 var stdout *noarch.File
 var stderr *noarch.File
