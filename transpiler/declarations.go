@@ -55,7 +55,7 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 	// } name;
 	// Name of RecordDecl is empty
 	// So, we have to save all n.Children at the base of Address
-	if name == "" && !p.IsTypeAlreadyDefined(name) {
+	if name == "" {
 		p.StructsEmptyName[n.Addr] = n.ChildNodes
 		return nil
 	}
