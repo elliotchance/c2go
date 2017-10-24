@@ -24,7 +24,6 @@ import (
 	"strings"
 
 	"errors"
-	"reflect"
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
@@ -46,6 +45,9 @@ var stderr io.Writer = os.Stderr
 //
 // TODO: Better separation on CLI modes
 // https://github.com/elliotchance/c2go/issues/134
+//
+// Do not instantiate this directly. Instead use DefaultProgramArgs(); then
+// modify any specific attributes.
 type ProgramArgs struct {
 	verbose     bool
 	ast         bool
@@ -55,6 +57,16 @@ type ProgramArgs struct {
 
 	// A private option to output the Go as a *_test.go file.
 	outputAsTest bool
+}
+
+// DefaultProgramArgs default value of ProgramArgs
+func DefaultProgramArgs() ProgramArgs {
+	return ProgramArgs{
+		verbose:      false,
+		ast:          false,
+		packageName:  "main",
+		outputAsTest: false,
+	}
 }
 
 func readAST(data []byte) []string {
@@ -126,54 +138,26 @@ func buildTree(nodes []treeNode, depth int) []ast.Node {
 	return results
 }
 
-func toJSON(tree []interface{}) []map[string]interface{} {
-	r := make([]map[string]interface{}, len(tree))
-
-	for j, n := range tree {
-		rn := reflect.ValueOf(n).Elem()
-		r[j] = make(map[string]interface{})
-		r[j]["node"] = rn.Type().Name()
-
-		for i := 0; i < rn.NumField(); i++ {
-			name := strings.ToLower(rn.Type().Field(i).Name)
-			value := rn.Field(i).Interface()
-
-			if name == "children" {
-				v := value.([]interface{})
-
-				if len(v) == 0 {
-					continue
-				}
-
-				value = toJSON(v)
-			}
-
-			r[j][name] = value
-		}
-	}
-
-	return r
-}
-
-func check(prefix string, e error) {
-	if e != nil {
-		panic(prefix + e.Error())
-	}
-}
-
 // Start begins transpiling an input file.
-func Start(args ProgramArgs) error {
+func Start(args ProgramArgs) (err error) {
+	if args.verbose {
+		fmt.Println("Start tanspiling ...")
+	}
+
 	if os.Getenv("GOPATH") == "" {
 		return fmt.Errorf("The $GOPATH must be set")
 	}
 
 	// 1. Compile it first (checking for errors)
-	_, err := os.Stat(args.inputFile)
+	_, err = os.Stat(args.inputFile)
 	if err != nil {
 		return fmt.Errorf("Input file is not found")
 	}
 
 	// 2. Preprocess
+	if args.verbose {
+		fmt.Println("Running clang preprocessor...")
+	}
 	var pp []byte
 	{
 		// See : https://clang.llvm.org/docs/CommandGuide/clang.html
@@ -187,9 +171,12 @@ func Start(args ProgramArgs) error {
 		if err != nil {
 			return fmt.Errorf("preprocess failed: %v\nStdErr = %v", err, stderr.String())
 		}
-		pp = []byte(out.String())
+		pp = out.Bytes()
 	}
 
+	if args.verbose {
+		fmt.Println("Writing preprocessor ...")
+	}
 	dir, err := ioutil.TempDir("", "c2go")
 	if err != nil {
 		return fmt.Errorf("Cannot create temp folder: %v", err)
@@ -203,6 +190,9 @@ func Start(args ProgramArgs) error {
 	}
 
 	// 3. Generate JSON from AST
+	if args.verbose {
+		fmt.Println("Running clang for AST tree...")
+	}
 	astPP, err := exec.Command("clang", "-Xclang", "-ast-dump", "-fsyntax-only", ppFilePath).Output()
 	if err != nil {
 		// If clang fails it still prints out the AST, so we have to run it
@@ -212,6 +202,9 @@ func Start(args ProgramArgs) error {
 		panic("clang failed: " + err.Error() + ":\n\n" + string(errBody))
 	}
 
+	if args.verbose {
+		fmt.Println("Reading clang AST tree...")
+	}
 	lines := readAST(astPP)
 	if args.ast {
 		for _, l := range lines {
@@ -226,7 +219,16 @@ func Start(args ProgramArgs) error {
 	p.Verbose = args.verbose
 	p.OutputAsTest = true // args.outputAsTest
 
+	// Converting to nodes
+	if args.verbose {
+		fmt.Println("Converting to nodes...")
+	}
 	nodes := convertLinesToNodes(lines)
+
+	// build tree
+	if args.verbose {
+		fmt.Println("Building tree...")
+	}
 	tree := buildTree(nodes, 0)
 	ast.FixPositions(tree)
 
@@ -240,9 +242,13 @@ func Start(args ProgramArgs) error {
 		p.AddMessage(p.GenerateWarningMessage(errors.New(message), fErr.Node))
 	}
 
+	// transpile ast tree
+	if args.verbose {
+		fmt.Println("Transpiling tree...")
+	}
 	err = transpiler.TranspileAST(args.inputFile, args.packageName, p, tree[0].(ast.Node))
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("cannot transpile AST : %v", err)
 	}
 
 	outputFilePath := args.outputFile
@@ -253,23 +259,16 @@ func Start(args ProgramArgs) error {
 		outputFilePath = cleanFileName[0:len(cleanFileName)-len(extension)] + ".go"
 	}
 
+	// write the output Go code
+	if args.verbose {
+		fmt.Println("Writing the output Go code...")
+	}
 	err = ioutil.WriteFile(outputFilePath, []byte(p.String()), 0644)
 	if err != nil {
-		return fmt.Errorf("writing C output file failed: %v", err)
+		return fmt.Errorf("writing Go output file failed: %v", err)
 	}
 
 	return nil
-}
-
-// newTempFile - returns temp file
-func newTempFile(dir, prefix, suffix string) (*os.File, error) {
-	for index := 1; index < 10000; index++ {
-		path := filepath.Join(dir, fmt.Sprintf("%s%03d%s", prefix, index, suffix))
-		if _, err := os.Stat(path); err != nil {
-			return os.Create(path)
-		}
-	}
-	return nil, fmt.Errorf("could not create file: %s%03d%s", prefix, 1, suffix)
 }
 
 var (
@@ -318,7 +317,7 @@ func runCommand() int {
 		return 1
 	}
 
-	args := ProgramArgs{verbose: *verboseFlag, ast: false}
+	args := DefaultProgramArgs()
 
 	switch os.Args[1] {
 	case "ast":
@@ -352,13 +351,14 @@ func runCommand() int {
 		args.inputFile = transpileCommand.Arg(0)
 		args.outputFile = *outputFlag
 		args.packageName = *packageFlag
+		args.verbose = *verboseFlag
 	default:
 		flag.Usage()
 		return 1
 	}
 
 	if err := Start(args); err != nil {
-		fmt.Printf("Error: %v", err)
+		fmt.Printf("Error: %v\n", err)
 		return 1
 	}
 

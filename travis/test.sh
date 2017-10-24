@@ -58,6 +58,7 @@ go build
 export C2GO_DIR=$GOPATH/src/github.com/elliotchance/c2go
 export C2GO=$C2GO_DIR/c2go
 
+echo "Run: c2go transpile prime.c"
 $C2GO transpile $C2GO_DIR/examples/prime.c
 echo "47" | go run prime.go
 if [ $($C2GO -v | wc -l) -ne 1 ]; then exit 1; fi
