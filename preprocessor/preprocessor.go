@@ -3,6 +3,8 @@ package preprocessor
 import (
 	"bufio"
 	"bytes"
+	"fmt"
+	"strings"
 )
 
 // Item - part of preprocessor code
@@ -12,31 +14,56 @@ type Item struct {
 }
 
 // Analyze - separation preprocessor code to part
-func Analyze(pp bytes.Buffer) (items []Item) {
+func Analyze(pp bytes.Buffer) (items []Item, err error) {
 	r := bytes.NewReader(pp.Bytes())
 	scanner := bufio.NewScanner(r)
 	scanner.Split(bufio.ScanLines)
-	var item Item
+	var positions []int
+	var lines []string
+	var counter int
 	for scanner.Scan() {
-		str := scanner.Text()
-		if len(str) == 0 {
+		line := scanner.Text()
+		if len(line) == 0 {
 			continue
 		}
-		if str[0] == '#' {
-			if item.Include != "" && len(item.Lines) > 0 {
-				items = append(items, item)
-			}
-			item.Include = parseInclude(str)
-			continue
+		if line[0] == '#' {
+			positions = append(positions, counter)
+			counter++
 		}
-		item.Lines = append(item.Lines, str)
+		lines = append(lines, line)
 	}
-	if item.Include != "" {
+	var item Item
+	for i := range positions {
+		item.Include, err = parseInclude(lines[positions[i]])
+		if err != nil {
+			err = fmt.Errorf("Cannot parse line : %s", lines[positions[i]])
+			return
+		}
+		if i != len(positions)-1 {
+			item.Lines = lines[positions[i]:positions[i+1]]
+		} else {
+			item.Lines = lines[positions[i]:]
+		}
 		items = append(items, item)
 	}
 	return
 }
 
 func parseInclude(line string) (inc string, err error) {
-	return line
+	i := strings.Index(line, "\"")
+	if i < 0 {
+		err = fmt.Errorf("First index is not correct on line %s", line)
+	}
+	l := strings.LastIndex(line, "\"")
+	if l < 0 {
+		err = fmt.Errorf("Last index is not correct on line %s", line)
+	}
+
+	inc = line[i+1 : l]
+	if inc == "" {
+		err = fmt.Errorf("Cannot found include in line: %s", line)
+		return
+	}
+
+	return
 }

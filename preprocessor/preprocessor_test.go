@@ -33,7 +33,10 @@ func TestParseInclude(t *testing.T) {
 	}
 	for i, tc := range testCases {
 		t.Run(fmt.Sprintf("Test:%d", i), func(t *testing.T) {
-			actual := parseInclude(tc.inputLine)
+			actual, err := parseInclude(tc.inputLine)
+			if err != nil {
+				t.Fatal(err)
+			}
 			if len(actual) == 0 {
 				t.Fatal("Cannot parse, because result is empty")
 			}
