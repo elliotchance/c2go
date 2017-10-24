@@ -362,6 +362,10 @@ func transpileLabelStmt(n *ast.LabelStmt, p *program.Program) (*goast.LabeledStm
 		}
 	}
 
+	if stmt == nil {
+		stmt = &goast.EmptyStmt{}
+	}
+
 	return &goast.LabeledStmt{
 		Label: util.NewIdent(n.Name),
 		Stmt:  stmt,
