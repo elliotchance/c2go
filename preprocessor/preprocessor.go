@@ -157,6 +157,10 @@ func parseInclude(line string) (item *entity, err error) {
 // $ clang  -MM -c exit.c
 // exit.o: exit.c tests.h
 func includesList(inputFile string) (lines []string, err error) {
+
+Add test with multilines
+
+
 	var out bytes.Buffer
 	var stderr bytes.Buffer
 	cmd := exec.Command("clang", "-MM", "-c", inputFile)
