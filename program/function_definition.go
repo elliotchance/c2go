@@ -167,7 +167,8 @@ var builtInFunctionDefinitions = []string{
 	"int fsetpos(FILE*, int*) -> noarch.Fsetpos",
 
 	// string.h
-	"size_t strlen(const char*) -> noarch.Strlen",
+	// OLD version : "size_t strlen(const char*) -> noarch.Strlen",
+	"unsigned long strlen(const char*) -> noarch.Strlen",
 
 	// stdlib.h
 	"int abs(int) -> noarch.Abs",
