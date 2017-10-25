@@ -246,7 +246,7 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 		structType = p.GetStruct("struct " + lhsType)
 	}
 	rhs := n.Name
-	rhsType := "void *"
+	rhsType := n.Type
 	if structType == nil {
 		// This case should not happen in the future. Any structs should be
 		// either parsed correctly from the source or be manually setup when the
