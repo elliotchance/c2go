@@ -268,6 +268,14 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 			return
 		}
 
+	case *ast.LabelStmt:
+		stmt, err = transpileLabelStmt(n, p)
+		return
+
+	case *ast.GotoStmt:
+		stmt, err = transpileGotoStmt(n, p)
+		return
+
 	case *ast.GCCAsmStmt:
 		// Go does not support inline assembly. See:
 		// https://github.com/elliotchance/c2go/issues/228
