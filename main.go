@@ -206,7 +206,7 @@ func Start(args ProgramArgs) (err error) {
 
 	p := program.NewProgram()
 	p.Verbose = args.verbose
-	p.OutputAsTest = true // args.outputAsTest
+	p.OutputAsTest = args.outputAsTest
 	p.UserPosition = userPosition
 
 	// Converting to nodes

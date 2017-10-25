@@ -298,6 +298,12 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 }
 
 func transpileToNode(node ast.Node, p *program.Program) error {
+	// If that `ast` element from system headers, then
+	// not include in source
+	if node.Position().Line != 0 && node.Position().Line < p.UserPosition {
+		return nil
+	}
+
 	switch n := node.(type) {
 	case *ast.TranslationUnitDecl:
 		for _, c := range n.Children() {

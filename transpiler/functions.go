@@ -45,12 +45,6 @@ func getFunctionBody(n *ast.FunctionDecl) *ast.CompoundStmt {
 func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 	var body *goast.BlockStmt
 
-	// If that `ast` element from system headers, then
-	// not include in source
-	if n.Position().Line > 0 && n.Position().Line < p.UserPosition {
-		return nil
-	}
-
 	// This is set at the start of the function declaration so when the
 	// ReturnStmt comes alone it will know what the current function is, and
 	// therefore be able to lookup what the real return type should be. I'm sure

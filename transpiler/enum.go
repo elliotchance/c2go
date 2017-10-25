@@ -105,6 +105,12 @@ func transpileEnumConstantDecl(p *program.Program, n *ast.EnumConstantDecl) (
 }
 
 func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
+	// If that `ast` element from system headers, then
+	// not include in source
+	if n.Position().Line > 0 && n.Position().Line < p.UserPosition {
+		return nil
+	}
+
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
