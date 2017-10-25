@@ -38,6 +38,17 @@ func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (
 		theType = "FILE *"
 	}
 
+	// FIXME : because we don't check - that value from 'ctype.h' or not
+	// for constants from `ctype.h`
+	ctypeConstants := []string{"_ISupper", "_ISlower", "_ISalpha", "_ISdigit", "_ISxdigit",
+		"_ISspace", "_ISprint", "_ISgraph", "_ISblank", "_IScntrl",
+		"_ISpunct", "_ISalnum"}
+	for _, c := range ctypeConstants {
+		if n.Name == c {
+			return &goast.Ident{Name: fmt.Sprintf("noarch.%s", n.Name[1:])}, "uint16", nil
+		}
+	}
+
 	return util.NewIdent(n.Name), theType, nil
 }
 
