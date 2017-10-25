@@ -36,6 +36,7 @@ func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (
 	// FIXME: This is for linux to make sure the globals have the right type.
 	if n.Name == "stdout" || n.Name == "stdin" || n.Name == "stderr" {
 		theType = "FILE *"
+		return &goast.Ident{Name: fmt.Sprintf("noarch.%s", util.Ucfirst(n.Name))}, theType, nil
 	}
 
 	// FIXME : because we don't check - that value from 'ctype.h' or not
