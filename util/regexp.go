@@ -13,7 +13,7 @@ func GroupsFromRegex(rx, line string) map[string]string {
 	rx = strings.Replace(rx, "\r", "", -1)
 	rx = strings.Replace(rx, "\n", "", -1)
 	rx = strings.Replace(rx, "\t", "", -1)
-	re := regexp.MustCompile(rx)
+	re := GetRegex(rx)
 
 	match := re.FindStringSubmatch(line)
 	if len(match) == 0 {
@@ -28,4 +28,16 @@ func GroupsFromRegex(rx, line string) map[string]string {
 	}
 
 	return result
+}
+
+// cachedRegex - global map variable for saving regexp`s
+var cachedRegex = map[string]*regexp.Regexp{}
+
+// GetRegex return regexp
+// added for minimaze regexp compilation
+func GetRegex(rx string) *regexp.Regexp {
+	if _, ok := cachedRegex[rx]; !ok {
+		cachedRegex[rx] = regexp.MustCompile(rx)
+	}
+	return cachedRegex[rx]
 }

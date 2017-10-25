@@ -7,7 +7,6 @@ import (
 	"fmt"
 	goast "go/ast"
 	"go/token"
-	"regexp"
 	"strconv"
 	"strings"
 )
@@ -18,7 +17,7 @@ import (
 // It is recommended you use this method of instantiating the ExprStmt yourself
 // because NewExprStmt will check that the expr is not nil (or panic). This is
 // much more helpful when trying to debug why the Go source build crashes
-// becuase of a nil pointer - which eventually leads back to a nil expr.
+// because of a nil pointer - which eventually leads back to a nil expr.
 func NewExprStmt(expr goast.Expr) *goast.ExprStmt {
 	PanicIfNil(expr, "expr is nil")
 
@@ -30,7 +29,7 @@ func NewExprStmt(expr goast.Expr) *goast.ExprStmt {
 // IsAValidFunctionName performs a check to see if a string would make a
 // valid function name in Go. Go allows unicode characters, but C doesn't.
 func IsAValidFunctionName(s string) bool {
-	return regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`).
+	return GetRegex(`^[a-zA-Z_][a-zA-Z0-9_]*$`).
 		Match([]byte(s))
 }
 
@@ -92,7 +91,7 @@ func internalTypeToExpr(t string) goast.Expr {
 	}
 
 	// Array access
-	match := regexp.MustCompile(`(.+)\[(\d+)\]$`).FindStringSubmatch(t)
+	match := GetRegex(`(.+)\[(\d+)\]$`).FindStringSubmatch(t)
 	if match != nil {
 		return &goast.IndexExpr{
 			X: typeToExpr(match[1]),
@@ -107,7 +106,7 @@ func internalTypeToExpr(t string) goast.Expr {
 	}
 
 	// Fixed Length Array
-	match = regexp.MustCompile(`^\[(\d+)\](.+)$`).FindStringSubmatch(t)
+	match = GetRegex(`^\[(\d+)\](.+)$`).FindStringSubmatch(t)
 	if match != nil {
 		return &goast.ArrayType{
 			Elt: typeToExpr(match[2]),
@@ -278,7 +277,7 @@ func NewNil() *goast.Ident {
 }
 
 // NewUnaryExpr creates a new Go unary expression. You should use this function
-// instead of instantiating the UnaryExpr directly because this funtion has
+// instead of instantiating the UnaryExpr directly because this function has
 // extra error checking.
 func NewUnaryExpr(operator token.Token, right goast.Expr) *goast.UnaryExpr {
 	if right == nil {

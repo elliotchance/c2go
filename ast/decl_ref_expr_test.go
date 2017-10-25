@@ -39,6 +39,17 @@ func TestDeclRefExpr(t *testing.T) {
 			Type2:      "struct programming",
 			ChildNodes: []Node{},
 		},
+		`0x35cb438 <col:13> 'int' EnumConstant 0x35ca300 'Jan' 'int'`: &DeclRefExpr{
+			Addr:       0x35cb438,
+			Pos:        NewPositionFromString("col:13"),
+			Type:       "int",
+			Lvalue:     false,
+			For:        "EnumConstant",
+			Address2:   "0x35ca300",
+			Name:       "Jan",
+			Type2:      "int",
+			ChildNodes: []Node{},
+		},
 	}
 
 	runNodeTests(t, nodes)

@@ -158,8 +158,7 @@ func parseInclude(line string) (item *entity, err error) {
 // exit.o: exit.c tests.h
 func includesList(inputFile string) (lines []string, err error) {
 
-Add test with multilines
-
+	// TODO Add test with multilines
 
 	var out bytes.Buffer
 	var stderr bytes.Buffer

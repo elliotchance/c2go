@@ -27,6 +27,7 @@ var simpleResolveTypes = map[string]string{
 	"long int":               "int32",
 	"long long":              "int64",
 	"long long int":          "int64",
+	"long long unsigned int": "uint64",
 	"long unsigned int":      "uint32",
 	"long":                   "int32",
 	"short":                  "int16",
@@ -39,7 +40,6 @@ var simpleResolveTypes = map[string]string{
 	"unsigned short int":     "uint16",
 	"void":                   "",
 	"_Bool":                  "bool",
-	"long long unsigned int": "uint64",
 
 	// void* is treated like char*
 	"void*":  "[]byte",
@@ -58,6 +58,7 @@ var simpleResolveTypes = map[string]string{
 	"div_t":      "github.com/elliotchance/c2go/noarch.DivT",
 	"ldiv_t":     "github.com/elliotchance/c2go/noarch.LdivT",
 	"lldiv_t":    "github.com/elliotchance/c2go/noarch.LldivT",
+	"time_t":     "github.com/elliotchance/c2go/noarch.TimeT",
 
 	// Darwin specific
 	"__darwin_ct_rune_t": "github.com/elliotchance/c2go/darwin.CtRuneT",

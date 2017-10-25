@@ -81,6 +81,11 @@ type Program struct {
 	// less UserPosition, then that is from system library, but not
 	// from user source.
 	UserPosition int
+
+	// EnumConstantToEnum - a map with key="EnumConstant" and value="enum type"
+	// clang don`t show enum constant with enum type,
+	// so we have to use hack for repair the type
+	EnumConstantToEnum map[string]string
 }
 
 // NewProgram creates a new blank program.
@@ -94,6 +99,7 @@ func NewProgram() *Program {
 		Verbose:             false,
 		messages:            []string{},
 		GlobalVariables:     map[string]string{},
+		EnumConstantToEnum:  map[string]string{},
 	}
 }
 

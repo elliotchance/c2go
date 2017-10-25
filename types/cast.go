@@ -2,9 +2,7 @@ package types
 
 import (
 	"fmt"
-	"go/ast"
 	"go/token"
-	"regexp"
 	"strings"
 
 	goast "go/ast"
@@ -19,7 +17,7 @@ import (
 // is not an array with a fixed size then the type return will be an empty
 // string, and the size will be -1.
 func GetArrayTypeAndSize(s string) (string, int) {
-	match := regexp.MustCompile(`(.*) \[(\d+)\]`).FindStringSubmatch(s)
+	match := util.GetRegex(`(.*) \[(\d+)\]`).FindStringSubmatch(s)
 	if len(match) > 0 {
 		return match[1], util.Atoi(match[2])
 	}
@@ -61,7 +59,45 @@ func GetArrayTypeAndSize(s string) (string, int) {
 //    a bug. It is most useful to do this when dealing with compound types like
 //    FILE where those function probably exist (or should exist) in the noarch
 //    package.
-func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.Expr, error) {
+func CastExpr(p *program.Program, expr goast.Expr, fromType, toType string) (goast.Expr, error) {
+
+	// convert enum to int and recursive
+	if strings.Contains(fromType, "enum") && !strings.Contains(toType, "enum") {
+		in := goast.CallExpr{
+			Fun: &goast.Ident{
+				Name: "int",
+			},
+			Lparen: 1,
+			Args: []goast.Expr{
+				&goast.ParenExpr{
+					Lparen: 1,
+					X:      expr,
+					Rparen: 2,
+				},
+			},
+			Rparen: 2,
+		}
+		return CastExpr(p, &in, "int", toType)
+	}
+	// convert int to enum and recursive
+	if !strings.Contains(fromType, "enum") && strings.Contains(toType, "enum") {
+		in := goast.CallExpr{
+			Fun: &goast.Ident{
+				Name: strings.TrimSpace(strings.Replace(toType, "enum", "", -1)),
+			},
+			Lparen: 1,
+			Args: []goast.Expr{
+				&goast.ParenExpr{
+					Lparen: 1,
+					X:      expr,
+					Rparen: 2,
+				},
+			},
+			Rparen: 2,
+		}
+		return CastExpr(p, &in, toType, toType)
+	}
+
 	// Let's assume that anything can be converted to a void pointer.
 	if toType == "void *" {
 		return expr, nil
@@ -140,8 +176,8 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 	// In the forms of:
 	// - `string` -> `[]byte`
 	// - `string` -> `char *[13]`
-	match1 := regexp.MustCompile(`\[\]byte`).FindStringSubmatch(toType)
-	match2 := regexp.MustCompile(`char \*\[(\d+)\]`).FindStringSubmatch(toType)
+	match1 := util.GetRegex(`\[\]byte`).FindStringSubmatch(toType)
+	match2 := util.GetRegex(`char \*\[(\d+)\]`).FindStringSubmatch(toType)
 	if fromType == "string" && (len(match1) > 0 || len(match2) > 0) {
 		// Construct a byte array from "first":
 		//
@@ -174,8 +210,8 @@ func CastExpr(p *program.Program, expr ast.Expr, fromType, toType string) (ast.E
 	// In the forms of:
 	// - `[7]byte` -> `string`
 	// - `char *[12]` -> `string`
-	match1 = regexp.MustCompile(`\[(\d+)\]byte`).FindStringSubmatch(fromType)
-	match2 = regexp.MustCompile(`char \*\[(\d+)\]`).FindStringSubmatch(fromType)
+	match1 = util.GetRegex(`\[(\d+)\]byte`).FindStringSubmatch(fromType)
+	match2 = util.GetRegex(`char \*\[(\d+)\]`).FindStringSubmatch(fromType)
 	if (len(match1) > 0 || len(match2) > 0) && toType == "string" {
 		size := 0
 		if len(match1) > 0 {

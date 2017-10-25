@@ -4,13 +4,17 @@ type ImplicitCastExpr struct {
 	Addr       Address
 	Pos        Position
 	Type       string
+	Type2      string
 	Kind       string
 	ChildNodes []Node
 }
 
 func parseImplicitCastExpr(line string) *ImplicitCastExpr {
 	groups := groupsFromRegex(
-		"<(?P<position>.*)> '(?P<type>.*)' <(?P<kind>.*)>",
+		`<(?P<position>.*)>
+		 '(?P<type>.*?)'
+		(?P<type2>:'.*?')?
+		 <(?P<kind>.*)>`,
 		line,
 	)
 
@@ -18,6 +22,7 @@ func parseImplicitCastExpr(line string) *ImplicitCastExpr {
 		Addr:       ParseAddress(groups["address"]),
 		Pos:        NewPositionFromString(groups["position"]),
 		Type:       groups["type"],
+		Type2:      groups["type2"],
 		Kind:       groups["kind"],
 		ChildNodes: []Node{},
 	}
