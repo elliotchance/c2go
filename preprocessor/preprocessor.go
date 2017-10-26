@@ -130,6 +130,7 @@ func getIncludeList(inputFile string) (lines []string, err error) {
 		err = fmt.Errorf("preprocess failed: %v\nStdErr = %v", err, stderr.String())
 		return
 	}
+	fmt.Println("includeList : ", out.String())
 	return parseIncludeList(out.String())
 }
 
