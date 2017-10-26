@@ -83,9 +83,9 @@ func Analyze(inputFile string) (pp []byte, userPosition int, err error) {
 		userPosition += len(item.lines)
 	}
 	for i := range items {
-		for _, inc := range includeList {
+		for index, inc := range includeList {
 			if inc == items[i].include {
-				items[i].positionInSource = userPosition + 1
+				items[i].positionInSource = (userPosition + 1) * (index + 1)
 			}
 		}
 	}
@@ -94,7 +94,7 @@ func Analyze(inputFile string) (pp []byte, userPosition int, err error) {
 	// Merge the entities
 	lines := make([]string, 0, counter)
 	for _, item := range items {
-		header := fmt.Sprintf("# %d \"%s\" %s", item.positionInSource, item.include, item.other)
+		header := fmt.Sprintf("# %d \"%s\"%s", item.positionInSource, item.include, item.other)
 		lines = append(lines, header)
 		if len(item.lines) > 0 {
 			for i, l := range item.lines {
