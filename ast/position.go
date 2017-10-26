@@ -217,6 +217,8 @@ func setPosition(node Node, position Position) {
 	switch n := node.(type) {
 	case *AlignedAttr:
 		n.Pos = position
+	case *AllocSizeAttr:
+		n.Pos = position
 	case *AlwaysInlineAttr:
 		n.Pos = position
 	case *ArraySubscriptExpr:
