@@ -55,6 +55,8 @@ func Analyze(inputFile string) (pp []byte, userPosition int, err error) {
 				item.positionInSource = 1
 			}
 			item.lines = make([]*string, 0)
+			fmt.Println("Line  : ", line)
+			fmt.Printf("Parse : %#v\n", item)
 		}
 		counter++
 		item.lines = append(item.lines, &line)
@@ -131,6 +133,10 @@ func getIncludeList(inputFile string) (lines []string, err error) {
 		return
 	}
 	fmt.Println("includeList : ", out.String())
+	ls, _ := parseIncludeList(out.String())
+	for i, f := range ls {
+		fmt.Println("Pos : ", i, " : ", f)
+	}
 	return parseIncludeList(out.String())
 }
 
