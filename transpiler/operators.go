@@ -65,6 +65,7 @@ func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program
 
 	fmt.Println("WRONG HERE")
 	fmt.Printf("NODE = %#v\n", n)
+	fmt.Println(ast.Atos(n))
 	fmt.Printf("CH[1] = %#v\n", n.Children()[1])
 	fmt.Printf("CH[2] = %#v\n", n.Children()[2])
 	b, err = types.CastExpr(p, b, bType, cType)

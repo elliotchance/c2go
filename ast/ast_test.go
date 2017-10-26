@@ -36,3 +36,13 @@ func runNodeTests(t *testing.T, tests map[string]Node) {
 		})
 	}
 }
+
+func TestPrint(t *testing.T) {
+	cond := &ConditionalOperator{}
+	cond.AddChild(&ImplicitCastExpr{})
+	cond.AddChild(&ImplicitCastExpr{})
+	s := Atos(cond)
+	if len(s) == 0 {
+		t.Errorf("Cannot convert AST tree : %#v", cond)
+	}
+}

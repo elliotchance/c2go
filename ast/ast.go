@@ -2,6 +2,8 @@
 package ast
 
 import (
+	"bytes"
+	"encoding/json"
 	"regexp"
 	"strconv"
 	"strings"
@@ -248,4 +250,19 @@ func groupsFromRegex(rx, line string) map[string]string {
 	}
 
 	return result
+}
+
+// Atos - ASTree to string
+// Typically using for debug
+func Atos(node Node) string {
+	j, err := json.Marshal(node)
+	if err != nil {
+		panic(err)
+	}
+	var out bytes.Buffer
+	err = json.Indent(&out, j, "", "\t")
+	if err != nil {
+		panic(err)
+	}
+	return out.String()
 }
