@@ -85,10 +85,7 @@ func Analyze(inputFile string) (pp []byte, userPosition int, err error) {
 	for i := range items {
 		for _, inc := range includeList {
 			if inc == items[i].include {
-				fmt.Println("userPosition ", userPosition)
-				fmt.Println("Found : ", items[i].include)
 				items[i].positionInSource = userPosition + 1
-				fmt.Println("New line : ", items[i].positionInSource, " ", items[i].include)
 			}
 		}
 	}
@@ -98,7 +95,6 @@ func Analyze(inputFile string) (pp []byte, userPosition int, err error) {
 	lines := make([]string, 0, counter)
 	for _, item := range items {
 		header := fmt.Sprintf("# %d \"%s\" %s", item.positionInSource, item.include, item.other)
-		fmt.Println("Header : ", header)
 		lines = append(lines, header)
 		if len(item.lines) > 0 {
 			for i, l := range item.lines {
@@ -128,11 +124,6 @@ func getIncludeList(inputFile string) (lines []string, err error) {
 	if err != nil {
 		err = fmt.Errorf("preprocess failed: %v\nStdErr = %v", err, stderr.String())
 		return
-	}
-	fmt.Println("includeList : ", out.String())
-	ls, _ := parseIncludeList(out.String())
-	for i, f := range ls {
-		fmt.Println("Pos : ", i, " : ", f)
 	}
 	return parseIncludeList(out.String())
 }
