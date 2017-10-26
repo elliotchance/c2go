@@ -55,8 +55,6 @@ func Analyze(inputFile string) (pp []byte, userPosition int, err error) {
 				item.positionInSource = 1
 			}
 			item.lines = make([]*string, 0)
-			fmt.Println("Line  : ", line)
-			fmt.Printf("Parse : %#v\n", item)
 		}
 		counter++
 		item.lines = append(item.lines, &line)
@@ -85,23 +83,23 @@ func Analyze(inputFile string) (pp []byte, userPosition int, err error) {
 		userPosition += len(item.lines)
 	}
 	for i := range items {
-		var found bool
 		for _, inc := range includeList {
 			if inc == items[i].include {
-				found = true
+				fmt.Println("userPosition ", userPosition)
+				fmt.Println("Found : ", items[i].include)
+				items[i].positionInSource = userPosition + 1
+				fmt.Println("New line : ", items[i].positionInSource, " ", items[i].include)
 			}
 		}
-		if !found {
-			continue
-		}
-		items[i].positionInSource = userPosition + 1
 	}
 	// Now, userPosition is unique and more then other
 
 	// Merge the entities
 	lines := make([]string, 0, counter)
 	for _, item := range items {
-		lines = append(lines, fmt.Sprintf("# %d \"%s\" %s", item.positionInSource, item.include, item.other))
+		header := fmt.Sprintf("# %d \"%s\" %s", item.positionInSource, item.include, item.other)
+		fmt.Println("Header : ", header)
+		lines = append(lines, header)
 		if len(item.lines) > 0 {
 			for i, l := range item.lines {
 				if i == 0 {
@@ -113,7 +111,6 @@ func Analyze(inputFile string) (pp []byte, userPosition int, err error) {
 	}
 	pp = ([]byte)(strings.Join(lines, "\n"))
 
-	// TODO return list of system `includes`
 	return
 }
 
