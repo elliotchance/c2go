@@ -6,6 +6,8 @@ import (
 	"github.com/elliotchance/c2go/util"
 )
 
+// AllocSizeAttr is a type of attribute that is optionally attached to a variable
+// or struct field definition.
 type AllocSizeAttr struct {
 	Addr       Address
 	Pos        Position

@@ -88,6 +88,7 @@ const (
 	cTrue  int = 1
 )
 
+// IsAlpha handles isalpha().
 func IsAlpha(_c int) int {
 	if _c < 'A' || _c > 'z' {
 		return cFalse
@@ -97,6 +98,7 @@ func IsAlpha(_c int) int {
 	return cTrue
 }
 
+// IsAlnum handles isalnum().
 func IsAlnum(_c int) int {
 	if IsDigit(_c) == cTrue {
 		return cTrue
@@ -107,6 +109,7 @@ func IsAlnum(_c int) int {
 	return cFalse
 }
 
+// IsCntrl handles iscnrl().
 func IsCntrl(_c int) int {
 	if unicode.IsControl(rune(_c)) {
 		return cTrue
@@ -114,6 +117,7 @@ func IsCntrl(_c int) int {
 	return cFalse
 }
 
+// IsDigit handles isdigit().
 func IsDigit(_c int) int {
 	if _c >= '0' && _c <= '9' {
 		return cTrue
@@ -121,9 +125,10 @@ func IsDigit(_c int) int {
 	return cFalse
 }
 
+// IsGraph handles isgraph().
 func IsGraph(_c int) int {
 	if _c == ' ' {
-		return cFalse // TODO : Check - some different between C and Go
+		return cFalse // Different implementation between C and Go
 	}
 	if unicode.IsGraphic(rune(_c)) {
 		return cTrue
@@ -131,6 +136,7 @@ func IsGraph(_c int) int {
 	return cFalse
 }
 
+// IsLower handles islower().
 func IsLower(_c int) int {
 	if unicode.IsLower(rune(_c)) {
 		return cTrue
@@ -138,6 +144,7 @@ func IsLower(_c int) int {
 	return cFalse
 }
 
+// IsPrint handles isprint().
 func IsPrint(_c int) int {
 	if unicode.IsPrint(rune(_c)) {
 		return cTrue
@@ -145,6 +152,7 @@ func IsPrint(_c int) int {
 	return cFalse
 }
 
+// IsPunct handles isprunct().
 func IsPunct(_c int) int {
 	if unicode.IsPunct(rune(_c)) {
 		return cTrue
@@ -152,6 +160,7 @@ func IsPunct(_c int) int {
 	return cFalse
 }
 
+// IsSpace handles isspace().
 func IsSpace(_c int) int {
 	if unicode.IsSpace(rune(_c)) {
 		return cTrue
@@ -159,6 +168,7 @@ func IsSpace(_c int) int {
 	return cFalse
 }
 
+// IsUpper handles isupper().
 func IsUpper(_c int) int {
 	if unicode.IsUpper(rune(_c)) {
 		return cTrue
@@ -166,6 +176,7 @@ func IsUpper(_c int) int {
 	return cFalse
 }
 
+// IsXDigit handles isxdigit().
 func IsXDigit(_c int) int {
 	if _c >= '0' && _c <= '9' {
 		return cTrue
@@ -189,11 +200,13 @@ func ToLower(_c int) int {
 	return int(unicode.ToLower(rune(_c)))
 }
 
+// IsAscii handles isascii().
 func IsAscii(_c int) int {
 	// TODO
 	return cFalse
 }
 
+// ToAscii handles toascii().
 func ToAscii(_c int) int {
 	// TODO
 	return cFalse

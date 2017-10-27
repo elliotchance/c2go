@@ -3,6 +3,12 @@
 
 enum number{zero, one, two, three};
 
+enum
+{
+	supper = ((0) < 8 ? ((1 << (0)) << 8) : ((1 << (0)) >> 8)),
+	salnum = ((11) < 8 ? ((1 << (11)) << 8) : ((1 << (11)) >> 8))
+};
+
 enum year{Jan, Feb, Mar, Apr, May, Jun, Jul, 
           Aug, Sep, Oct, Nov, Dec};
 
@@ -26,6 +32,10 @@ int main()
 	n = two;
 	is_eq(two ,2);
 	is_eq(n   ,2);
+
+	// step
+	is_eq(supper ,256);
+	is_eq(salnum ,8  );
 
 	// step 
 	for (int i=Jan; i < Feb; i++){   
