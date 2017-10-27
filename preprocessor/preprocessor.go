@@ -40,7 +40,8 @@ func Analyze(inputFile string) (pp []byte, userPosition int, err error) {
 	var items []entity
 	for scanner.Scan() {
 		line := scanner.Text()
-		if len(line) > 0 && line[0] == '#' {
+		if len(line) > 0 && line[0] == '#' &&
+			(len(line) >= 7 && line[0:7] != "#pragma") {
 			if item != (*entity)(nil) {
 				items = append(items, *item)
 			}

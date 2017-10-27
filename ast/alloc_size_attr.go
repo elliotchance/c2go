@@ -9,6 +9,7 @@ import (
 type AllocSizeAttr struct {
 	Addr       Address
 	Pos        Position
+	Inherited  bool
 	A          int
 	B          int
 	ChildNodes []Node
@@ -16,13 +17,14 @@ type AllocSizeAttr struct {
 
 func parseAllocSizeAttr(line string) *AllocSizeAttr {
 	groups := groupsFromRegex(
-		`<(?P<position>.*)>(?P<a> \d+)(?P<b> \d+)?`,
+		`<(?P<position>.*)>(?P<inherited> Inherited)?(?P<a> \d+)(?P<b> \d+)?`,
 		line,
 	)
 
 	return &AllocSizeAttr{
 		Addr:       ParseAddress(groups["address"]),
 		Pos:        NewPositionFromString(groups["position"]),
+		Inherited:  len(groups["inherited"]) > 0,
 		A:          util.Atoi(strings.TrimSpace(groups["a"])),
 		B:          util.Atoi(strings.TrimSpace(groups["b"])),
 		ChildNodes: []Node{},
