@@ -39,6 +39,9 @@ const Version = "v0.16.8 Radium 2017-10-25"
 
 var stderr io.Writer = os.Stderr
 
+// Generation of code, tests, ...
+//go:generate go run ./tests/operators_gen.go
+
 // ProgramArgs defines the options available when processing the program. There
 // is no constructor since the zeroed out values are the appropriate defaults -
 // you need only set the options you need.
