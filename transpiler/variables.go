@@ -38,6 +38,10 @@ func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (
 		theType = "FILE *"
 		return &goast.Ident{Name: fmt.Sprintf("noarch.%s", util.Ucfirst(n.Name))}, theType, nil
 	}
+	if n.Name == "__stdoutp" || n.Name == "__stdinp" || n.Name == "__stderrp" {
+		theType = "FILE *"
+		return &goast.Ident{Name: fmt.Sprintf("noarch.%s", util.Ucfirst(n.Name[2:len(n.Name)-1]))}, theType, nil
+	}
 
 	// For future : we don't check - that value from 'ctype.h' or not ?
 	// That is for constants from `ctype.h`
