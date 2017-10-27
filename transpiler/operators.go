@@ -62,6 +62,7 @@ func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program
 	// TODO: Here it is being assumed that the return type of the
 	// conditional operator is the type of the 'false' result. Things
 	// are a bit more complicated then that in C.
+
 	b, err = types.CastExpr(p, b, bType, cType)
 	if err != nil {
 		return nil, "", nil, nil, err

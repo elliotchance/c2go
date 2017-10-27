@@ -59,7 +59,7 @@ func GetArrayTypeAndSize(s string) (string, int) {
 //    a bug. It is most useful to do this when dealing with compound types like
 //    FILE where those function probably exist (or should exist) in the noarch
 //    package.
-func CastExpr(p *program.Program, expr goast.Expr, fromType, toType string) (g goast.Expr, err error) {
+func CastExpr(p *program.Program, expr goast.Expr, fromType, toType string) (goast.Expr, error) {
 	// Replace for specific case of fromType for darwin:
 	// Fo : union (anonymous union at sqlite3.c:619241696:3)
 	if strings.Contains(fromType, "anonymous union") {
@@ -110,7 +110,7 @@ func CastExpr(p *program.Program, expr goast.Expr, fromType, toType string) (g g
 		return expr, nil
 	}
 
-	fromType, err = ResolveType(p, fromType)
+	fromType, err := ResolveType(p, fromType)
 	if err != nil {
 		return expr, err
 	}

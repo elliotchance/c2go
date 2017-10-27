@@ -118,9 +118,6 @@ func (p *Program) AddMessage(message string) bool {
 		return false
 	}
 
-	// Snipper only for debugging
-	// fmt.Fprintf(os.Stderr, "%v\n", message)
-
 	p.messages = append(p.messages, message)
 	return true
 }

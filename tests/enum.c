@@ -25,7 +25,7 @@ enum state FindState() {return currState;}
 
 int main()
 {
-	plan(15);
+	plan(17);
 
 	// step 
 	enum number n;

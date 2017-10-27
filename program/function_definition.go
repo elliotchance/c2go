@@ -72,6 +72,7 @@ var builtInFunctionDefinitions = []string{
 	"uint32 __maskrune(__darwin_ct_rune_t, uint32) -> darwin.MaskRune",
 
 	// linux/ctype.h
+	"const unsigned short int** __ctype_b_loc() -> linux.CtypeLoc",
 	/*
 	   See https://opensource.apple.com/source/xnu/xnu-344.49/osfmk/libsa/ctype.h.auto.html
 	*/
@@ -90,8 +91,6 @@ var builtInFunctionDefinitions = []string{
 	"int tolower(int) -> linux.ToLower",
 	"int isascii(int) -> linux.IsAscii",
 	"int toascii(int) -> linux.ToAscii",
-
-	"const unsigned short int** __ctype_b_loc() -> linux.CtypeLoc",
 
 	// linux/math.h
 	"int __signbitf(float) -> noarch.Signbitf",
