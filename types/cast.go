@@ -60,15 +60,6 @@ func GetArrayTypeAndSize(s string) (string, int) {
 //    FILE where those function probably exist (or should exist) in the noarch
 //    package.
 func CastExpr(p *program.Program, expr goast.Expr, fromType, toType string) (g goast.Expr, err error) {
-	defer func() {
-		if err != nil {
-			fmt.Println("casting -->", fromType, ":", toType)
-			fmt.Printf("expr = %#v\n", expr)
-			fmt.Println("cast err = ", err)
-		}
-	}()
-
-	fmt.Println("casting -->", fromType, ":", toType)
 
 	// convert enum to int and recursive
 	if strings.Contains(fromType, "enum") && !strings.Contains(toType, "enum") {
@@ -86,7 +77,6 @@ func CastExpr(p *program.Program, expr goast.Expr, fromType, toType string) (g g
 			},
 			Rparen: 2,
 		}
-		fmt.Println("CASSS T")
 		return CastExpr(p, &in, "int", toType)
 	}
 	// convert int to enum and recursive
@@ -105,7 +95,6 @@ func CastExpr(p *program.Program, expr goast.Expr, fromType, toType string) (g g
 			},
 			Rparen: 2,
 		}
-		fmt.Println("CASS e")
 		return CastExpr(p, &in, toType, toType)
 	}
 

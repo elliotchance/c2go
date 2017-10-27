@@ -4,6 +4,7 @@ package ast
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -264,5 +265,23 @@ func Atos(node Node) string {
 	if err != nil {
 		panic(err)
 	}
-	return out.String()
+	var str string
+	str += fmt.Sprint("==== START OF AST tree ====\n")
+	str += out.String()
+	str += fmt.Sprintf("\nTypes tree:\n")
+	str += typesTree(node, 0)
+	str += fmt.Sprint("==== END OF AST tree ====\n")
+	return str
+}
+
+func typesTree(node Node, depth int) (str string) {
+	for i := 0; i < depth; i++ {
+		str += "\t"
+	}
+	str += fmt.Sprintf("%T\n", node)
+	depth++
+	for _, n := range node.Children() {
+		str += typesTree(n, depth)
+	}
+	return str
 }

@@ -83,12 +83,118 @@ func CtypeLoc() [][]uint16 {
 	return [][]uint16{characterTable}
 }
 
-// ToLower handles tolower().
-func ToLower(_c int) int {
-	return int(unicode.ToLower(rune(_c)))
+const (
+	cFalse int = 0
+	cTrue  int = 1
+)
+
+func IsAlpha(_c int) int {
+	if _c < 'A' || _c > 'z' {
+		return cFalse
+	} else if _c > 'Z' && _c < 'a' {
+		return cFalse
+	}
+	return cTrue
+}
+
+func IsAlnum(_c int) int {
+	if IsDigit(_c) == cTrue {
+		return cTrue
+	}
+	if IsAlpha(_c) == cTrue {
+		return cTrue
+	}
+	return cFalse
+}
+
+func IsCntrl(_c int) int {
+	if unicode.IsControl(rune(_c)) {
+		return cTrue
+	}
+	return cFalse
+}
+
+func IsDigit(_c int) int {
+	if _c >= '0' && _c <= '9' {
+		return cTrue
+	}
+	return cFalse
+}
+
+func IsGraph(_c int) int {
+	if _c == ' ' {
+		return cFalse // TODO : Check - some different between C and Go
+	}
+	if unicode.IsGraphic(rune(_c)) {
+		return cTrue
+	}
+	return cFalse
+}
+
+func IsLower(_c int) int {
+	if unicode.IsLower(rune(_c)) {
+		return cTrue
+	}
+	return cFalse
+}
+
+func IsPrint(_c int) int {
+	if unicode.IsPrint(rune(_c)) {
+		return cTrue
+	}
+	return cFalse
+}
+
+func IsPunct(_c int) int {
+	if unicode.IsPunct(rune(_c)) {
+		return cTrue
+	}
+	return cFalse
+}
+
+func IsSpace(_c int) int {
+	if unicode.IsSpace(rune(_c)) {
+		return cTrue
+	}
+	return cFalse
+}
+
+func IsUpper(_c int) int {
+	if unicode.IsUpper(rune(_c)) {
+		return cTrue
+	}
+	return cFalse
+}
+
+func IsXDigit(_c int) int {
+	if _c >= '0' && _c <= '9' {
+		return cTrue
+	}
+	if _c >= 'A' && _c <= 'F' {
+		return cTrue
+	}
+	if _c >= 'a' && _c <= 'f' {
+		return cTrue
+	}
+	return cFalse
 }
 
 // ToUpper handles toupper().
 func ToUpper(_c int) int {
 	return int(unicode.ToUpper(rune(_c)))
+}
+
+// ToLower handles tolower().
+func ToLower(_c int) int {
+	return int(unicode.ToLower(rune(_c)))
+}
+
+func IsAscii(_c int) int {
+	// TODO
+	return cFalse
+}
+
+func ToAscii(_c int) int {
+	// TODO
+	return cFalse
 }

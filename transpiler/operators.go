@@ -62,15 +62,8 @@ func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program
 	// TODO: Here it is being assumed that the return type of the
 	// conditional operator is the type of the 'false' result. Things
 	// are a bit more complicated then that in C.
-
-	fmt.Println("WRONG HERE")
-	fmt.Printf("NODE = %#v\n", n)
-	fmt.Println(ast.Atos(n))
-	fmt.Printf("CH[1] = %#v\n", n.Children()[1])
-	fmt.Printf("CH[2] = %#v\n", n.Children()[2])
 	b, err = types.CastExpr(p, b, bType, cType)
 	if err != nil {
-		fmt.Println("err = ", err)
 		return nil, "", nil, nil, err
 	}
 
