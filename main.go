@@ -158,6 +158,7 @@ func Start(args ProgramArgs) (err error) {
 	if args.verbose {
 		fmt.Println("Running clang preprocessor...")
 	}
+
 	pp, userPosition, err := preprocessor.Analyze(args.inputFile)
 	if err != nil {
 		return err

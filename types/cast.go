@@ -60,6 +60,15 @@ func GetArrayTypeAndSize(s string) (string, int) {
 //    FILE where those function probably exist (or should exist) in the noarch
 //    package.
 func CastExpr(p *program.Program, expr goast.Expr, fromType, toType string) (g goast.Expr, err error) {
+	// Convert for specific case in fromType:
+	// Example:
+	// From : union (anonymous union at sqlite3.c:619241696:3) *
+	// To   : union *
+	if strings.Contains(fromType, "anonymous union") {
+		s := strings.Index(fromType, "(")
+		f := strings.Index(fromType, ")")
+		fromType = fromType[s+1 : f]
+	}
 
 	// convert enum to int and recursive
 	if strings.Contains(fromType, "enum") && !strings.Contains(toType, "enum") {
