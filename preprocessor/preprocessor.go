@@ -83,9 +83,9 @@ func Analyze(inputFile string) (pp []byte, userPosition int, err error) {
 		userPosition += len(item.lines)
 	}
 	for i := range items {
-		for index, inc := range includeList {
+		for _, inc := range includeList {
 			if inc == items[i].include {
-				items[i].positionInSource = (userPosition + 1) * (index + 1)
+				items[i].positionInSource = (userPosition + 1) * (i + 1)
 			}
 		}
 	}
