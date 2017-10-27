@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"go/format"
 	"go/token"
-	"os"
 
 	goast "go/ast"
 
@@ -120,7 +119,7 @@ func (p *Program) AddMessage(message string) bool {
 	}
 
 	// Snipper only for debugging
-	fmt.Fprintf(os.Stderr, "%v\n", message)
+	// fmt.Fprintf(os.Stderr, "%v\n", message)
 
 	p.messages = append(p.messages, message)
 	return true
