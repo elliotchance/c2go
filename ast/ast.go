@@ -275,13 +275,18 @@ func Atos(node Node) string {
 }
 
 func typesTree(node Node, depth int) (str string) {
+	if node == (Node)(nil) {
+		return ""
+	}
 	for i := 0; i < depth; i++ {
 		str += "\t"
 	}
 	str += fmt.Sprintf("%T\n", node)
 	depth++
-	for _, n := range node.Children() {
-		str += typesTree(n, depth)
+	if len(node.Children()) > 0 {
+		for _, n := range node.Children() {
+			str += typesTree(n, depth)
+		}
 	}
 	return str
 }

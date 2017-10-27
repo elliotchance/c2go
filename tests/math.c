@@ -11,7 +11,7 @@ unsigned long long ullmax = 18446744073709551615ull;
 
 int main()
 {
-  plan(354);//9);
+  plan(359);
 
   // Note: There are some tests that must be disabled because they return
   // different values under different compilers. See the comment surrounding the
@@ -19,19 +19,19 @@ int main()
 
   // Test constants
   diag("constants");
-  //is_eq(M_E, 2.71828182845904509080);
-  //is_eq(M_LOG2E, 1.44269504088896338700);
+  is_eq(M_E, 2.71828182845904509080);
+  is_eq(M_LOG2E, 1.44269504088896338700);
   is_eq(M_LOG10E, 0.43429448190325181667);
   is_eq(M_LN2, 0.69314718055994528623);
-  //is_eq(M_LN10, 2.30258509299404590109);
+  is_eq(M_LN10, 2.30258509299404590109);
   is_eq(M_PI, 3.14159265358979311600);
   is_eq(M_PI_2, 1.57079632679489655800);
   is_eq(M_PI_4, 0.78539816339744827900);
-  //is_eq(M_1_PI, 0.31830988618379069122);
+  is_eq(M_1_PI, 0.31830988618379069122);
   is_eq(M_2_PI, 0.63661977236758138243);
   is_eq(M_2_SQRTPI, 1.12837916709551255856);
   is_eq(M_SQRT2, 1.41421356237309514547);
-  //is_eq(M_SQRT1_2, 0.70710678118654757274);
+  is_eq(M_SQRT1_2, 0.70710678118654757274);
 
   // Each of the tests are against these values:
   //
