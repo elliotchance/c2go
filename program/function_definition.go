@@ -195,6 +195,7 @@ var builtInFunctionDefinitions = []string{
 	"long long strtoll(const char *, char **, int) -> noarch.Strtoll",
 	"long unsigned int strtoul(const char *, char **, int) -> noarch.Strtoul",
 	"long long unsigned int strtoull(const char *, char **, int) -> noarch.Strtoull",
+	"void free(void*) -> _",
 
 	// I'm not sure which header file these comes from?
 	"uint32 __builtin_bswap32(uint32) -> darwin.BSwap32",
