@@ -70,9 +70,20 @@ void test_exprarr()
     is_eq(a[3], 3);
 }
 
+long dummy(char foo[42])
+{
+    return sizeof(foo);
+}
+
+void test_argarr()
+{
+    char abc[1];
+    is_eq(8, dummy(abc));
+}
+
 int main()
 {
-    plan(21);
+    plan(22);
 
     START_TEST(intarr);
     START_TEST(doublearr);
@@ -81,6 +92,7 @@ int main()
     START_TEST(chararr_init);
     START_TEST(chararr_init2);
     START_TEST(exprarr);
+    START_TEST(argarr);
 
     done_testing();
 }
