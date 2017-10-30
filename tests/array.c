@@ -1,6 +1,5 @@
 // Array examples
 
-#include <stdio.h>
 #include "tests.h"
 
 #define START_TEST(t) \
@@ -70,6 +69,20 @@ void test_exprarr()
     is_eq(a[3], 3);
 }
 
+struct s {
+    int i;
+    char c;
+};
+
+void test_structarr()
+{
+    struct s a[] = {{1, 'a'}, {2, 'b'}};
+    is_eq(a[0].i, 1);
+    is_eq(a[0].c, 'a');
+    is_eq(a[1].i, 2);
+    is_eq(a[1].c, 'b');
+}
+
 long dummy(char foo[42])
 {
     return sizeof(foo);
@@ -83,7 +96,7 @@ void test_argarr()
 
 int main()
 {
-    plan(22);
+    plan(26);
 
     START_TEST(intarr);
     START_TEST(doublearr);
@@ -92,6 +105,7 @@ int main()
     START_TEST(chararr_init);
     START_TEST(chararr_init2);
     START_TEST(exprarr);
+    START_TEST(structarr);
     START_TEST(argarr);
 
     done_testing();

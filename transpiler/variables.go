@@ -74,26 +74,7 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 	// Allocate slice so that it operates like a fixed size array.
 	arrayType, arraySize := types.GetArrayTypeAndSize(a.Type)
 
-	isInitList := false
-	if arraySize != -1 && len(a.Children()) == 1 {
-		_, isInitList = a.Children()[0].(*ast.InitListExpr)
-	}
-
-	if isInitList {
-		goArrayType, err := types.ResolveType(p, arrayType)
-		p.AddMessage(p.GenerateWarningMessage(err, a))
-
-		defaultValue = []goast.Expr{
-			&goast.CompositeLit{
-				Type: &goast.ArrayType{
-					Elt: &goast.Ident{
-						Name: goArrayType,
-					},
-				},
-				Elts: convertInitListExpr(a.Children()[0].(*ast.InitListExpr), p),
-			},
-		}
-	} else if arraySize != -1 && defaultValue == nil {
+	if arraySize != -1 && defaultValue == nil {
 		goArrayType, err := types.ResolveType(p, arrayType)
 		p.AddMessage(p.GenerateWarningMessage(err, a))
 
@@ -126,18 +107,51 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 	}, preStmts, postStmts, nil
 }
 
-func convertInitListExpr(e *ast.InitListExpr, p *program.Program) []goast.Expr {
+func transpileInitListExpr(e *ast.InitListExpr, p *program.Program) (goast.Expr, string, error) {
 	resp := []goast.Expr{}
 	for _, node := range e.Children() {
-		expr, _, _, _, err := transpileToExpr(node, p, true)
+		var expr goast.Expr
+		var err error
+		expr, _, _, _, err = transpileToExpr(node, p, true)
 		if err != nil {
-			return resp
+			return nil, "", err
 		}
 
 		resp = append(resp, expr)
 	}
 
-	return resp
+	var t goast.Expr
+	var cTypeString string
+
+	arrayType, arraySize := types.GetArrayTypeAndSize(e.Type1)
+	if arrayType != "" {
+		goArrayType, err := types.ResolveType(p, arrayType)
+		p.AddMessage(p.GenerateWarningMessage(err, e))
+
+		t = &goast.ArrayType{
+			Elt: &goast.Ident{
+				Name: goArrayType,
+			},
+		}
+
+		cTypeString = fmt.Sprintf("%s[%d]", arrayType, arraySize)
+	} else {
+		goType, err := types.ResolveType(p, e.Type1)
+		if err != nil {
+			return nil, "", err
+		}
+
+		t = &goast.Ident{
+			Name: goType,
+		}
+
+		cTypeString = e.Type1
+	}
+
+	return &goast.CompositeLit{
+		Type: t,
+		Elts: resp,
+	}, cTypeString, nil
 }
 
 func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) (
