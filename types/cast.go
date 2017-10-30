@@ -68,14 +68,6 @@ func CastExpr(p *program.Program, expr goast.Expr, fromType, toType string) (goa
 		fromType = ""
 	}
 
-	// implementation type `size_t` from `stdio.h`:
-	if fromType == "size_t" {
-		fromType = "unsigned int"
-	}
-	if toType == "size_t" {
-		toType = "unsigned int"
-	}
-
 	// convert enum to int and recursive
 	if strings.Contains(fromType, "enum") && !strings.Contains(toType, "enum") {
 		in := goast.CallExpr{

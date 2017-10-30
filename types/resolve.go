@@ -80,6 +80,9 @@ var simpleResolveTypes = map[string]string{
 	"__sFILEX":                     "interface{}",
 	"__va_list_tag":                "interface{}",
 	"FILE":                         "github.com/elliotchance/c2go/noarch.File",
+
+	// from <stdio.h>
+	"size_t": "uint64",
 }
 
 // ResolveType determines the Go type from a C type.
