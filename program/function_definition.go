@@ -73,9 +73,7 @@ var builtInFunctionDefinitions = []string{
 
 	// linux/ctype.h
 	"const unsigned short int** __ctype_b_loc() -> linux.CtypeLoc",
-	/*
-	   See https://opensource.apple.com/source/xnu/xnu-344.49/osfmk/libsa/ctype.h.auto.html
-	*/
+	// See https://opensource.apple.com/source/xnu/xnu-344.49/osfmk/libsa/ctype.h.auto.html
 	"int isalpha(int) -> linux.IsAlpha",
 	"int isalnum(int) -> linux.IsAlnum",
 	"int iscntrl(int) -> linux.IsCntrl",
@@ -89,8 +87,8 @@ var builtInFunctionDefinitions = []string{
 	"int isxdigit(int) -> linux.IsXDigit",
 	"int toupper(int) -> linux.ToUpper",
 	"int tolower(int) -> linux.ToLower",
-	"int isascii(int) -> linux.IsAscii",
-	"int toascii(int) -> linux.ToAscii",
+	"int isascii(int) -> linux.IsASCII",
+	"int toascii(int) -> linux.ToASCII",
 
 	// linux/math.h
 	"int __signbitf(float) -> noarch.Signbitf",

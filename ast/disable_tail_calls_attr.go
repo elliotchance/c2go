@@ -1,6 +1,6 @@
 package ast
 
-// DisableTailCallAttr is a type of attribute that is optionally attached to a variable
+// DisableTailCallsAttr is a type of attribute that is optionally attached to a variable
 // or struct field definition.
 type DisableTailCallsAttr struct {
 	Addr       Address

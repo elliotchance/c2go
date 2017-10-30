@@ -45,7 +45,7 @@ func generateCharacterTable() {
 			c |= ((1 << (6)) << 8)
 		}
 
-		// The IsSpace check is required becuase Go treats spaces as graphic
+		// The IsSpace check is required, because Go treats spaces as graphic
 		// characters, which C does not.
 		if unicode.IsGraphic(rune(i)) && !unicode.IsSpace(rune(i)) {
 			c |= ((1 << (7)) << 8)
@@ -200,14 +200,15 @@ func ToLower(_c int) int {
 	return int(unicode.ToLower(rune(_c)))
 }
 
-// IsAscii handles isascii().
-func IsAscii(_c int) int {
-	// TODO
-	return cFalse
+// IsASCII handles isascii().
+func IsASCII(_c int) int {
+	if _c >= 0x80 {
+		return cFalse
+	}
+	return cTrue
 }
 
-// ToAscii handles toascii().
-func ToAscii(_c int) int {
-	// TODO
-	return cFalse
+// ToASCII handles toascii().
+func ToASCII(_c int) int {
+	return int(byte(_c))
 }
