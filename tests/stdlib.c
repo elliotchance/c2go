@@ -154,22 +154,21 @@ void test_calloc()
 
 void test_free()
 {
-	diag("free");
-  int * buffer1, * buffer2, * buffer3;
-  buffer1 = (int*) malloc (100*sizeof(int));
-  buffer2 = (int*) calloc (100,sizeof(int));
-  buffer3 = (int*) realloc (buffer2,500*sizeof(int));
-  int i = 0;
-  free ((i += 1, buffer1));
-  if (buffer2 != NULL){
-  	i+=1;
-  }
-  if (i == 2)
-  {
-  	free (buffer3);
-	i++;
-  }
-  is_eq(i,3);
+	int * buffer1, * buffer2, * buffer3;
+	buffer1 = (int*) malloc (100*sizeof(int));
+	buffer2 = (int*) calloc (100,sizeof(int));
+	buffer3 = (int*) realloc (buffer2,500*sizeof(int));
+	int i = 0;
+	free ((i += 1, buffer1));
+	if (buffer2 != NULL){
+		i+=1;
+	}
+	if (i == 2)
+	{
+		free (buffer3);
+	  i++;
+	}
+	is_eq(i,3);
 }
 
 int main()

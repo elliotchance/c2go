@@ -210,7 +210,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 	// Example of result Go code:
 	// i += 4
 	// _ = buffer
-	if functionName == "_" && functionDef.Name == "free" && functionDef.Substitution == "_" {
+	if functionDef.Substitution == "_" {
 		var argName string
 		if v, ok := realArgs[0].(*goast.CallExpr); ok && len(realArgs) == 1 {
 			if vv, ok := v.Args[0].(*goast.Ident); ok && len(v.Args) == 1 {
@@ -240,11 +240,6 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 			preStmts = append(preStmts, devNull)
 			return nil, "", preStmts, postStmts, nil
 		}
-	}
-
-	if functionName == "_" {
-		errorMessage := fmt.Sprintf("function with name: %s , cannot be used in Go", functionName)
-		p.AddMessage(p.GenerateWarningMessage(errors.New(errorMessage), n))
 	}
 
 	return util.NewCallExpr(functionName, realArgs...),
