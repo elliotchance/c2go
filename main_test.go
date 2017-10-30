@@ -108,7 +108,11 @@ func TestIntegrationScripts(t *testing.T) {
 			mainFileName = "main_test.go"
 
 			programArgs := DefaultProgramArgs()
+//<<<<<<< multiplyFiles
 			programArgs.inputFiles = []string{file}
+//=======
+			programArgs.inputFile = file
+//>>>>>>> master
 			programArgs.outputFile = subFolder + mainFileName
 			// This appends a TestApp function to the output source so we
 			// can run "go test" against the produced binary.
@@ -264,13 +268,21 @@ func TestStartPreprocess(t *testing.T) {
 	}
 	defer os.RemoveAll(dir) // clean up
 
+//<<<<<<< multiplyFiles
 	name := "preprocess.c"
 	filename := path.Join(dir, name)
+//=======
+	filename := path.Join(dir, "preprocess.c")
+//>>>>>>> master
 	body := ([]byte)("#include <AbsoluteWrongInclude.h>\nint main(void){\nwrong();\n}")
 	err = ioutil.WriteFile(filename, body, 0644)
 
 	args := DefaultProgramArgs()
+//<<<<<<< multiplyFiles
 	args.inputFiles = []string{dir + name}
+//=======
+	args.inputFile = filename
+//>>>>>>> master
 
 	err = Start(args)
 	if err == nil {

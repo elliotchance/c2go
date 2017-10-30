@@ -35,7 +35,7 @@ import (
 //     c2go -v
 //
 // See https://github.com/elliotchance/c2go/wiki/Release-Process
-const Version = "v0.16.5 Radium 2017-10-19"
+const Version = "v0.16.9 Radium 2017-10-30"
 
 var stderr io.Writer = os.Stderr
 
@@ -149,11 +149,17 @@ func Start(args ProgramArgs) (err error) {
 	}
 
 	// 1. Compile it first (checking for errors)
+//<<<<<<< multiplyFiles
 	for _, in := range args.inputFiles {
 		_, err := os.Stat(in)
 		if err != nil {
 			return fmt.Errorf("Input file %s is not found", in)
 		}
+//=======
+	_, err = os.Stat(args.inputFile)
+	if err != nil {
+		return fmt.Errorf("Input file is not found")
+//>>>>>>> master
 	}
 
 	// 2. Preprocess
@@ -246,6 +252,18 @@ func Start(args ProgramArgs) (err error) {
 		p.AddMessage(p.GenerateWarningMessage(errors.New(message), fErr.Node))
 	}
 
+//<<<<<<< multiplyFiles
+//=======
+	// transpile ast tree
+	if args.verbose {
+		fmt.Println("Transpiling tree...")
+	}
+	err = transpiler.TranspileAST(args.inputFile, args.packageName, p, tree[0].(ast.Node))
+	if err != nil {
+		return fmt.Errorf("cannot transpile AST : %v", err)
+	}
+
+//>>>>>>> master
 	outputFilePath := args.outputFile
 
 	if outputFilePath == "" {
@@ -256,6 +274,7 @@ func Start(args ProgramArgs) (err error) {
 		outputFilePath = cleanFileName[0:len(cleanFileName)-len(extension)] + ".go"
 	}
 
+//<<<<<<< multiplyFiles
 	// transpile ast tree
 	if args.verbose {
 		fmt.Println("Transpiling tree...")
@@ -266,6 +285,8 @@ func Start(args ProgramArgs) (err error) {
 		return fmt.Errorf("cannot transpile AST : %v", err)
 	}
 
+//=======
+//>>>>>>> master
 	// write the output Go code
 	if args.verbose {
 		fmt.Println("Writing the output Go code...")
