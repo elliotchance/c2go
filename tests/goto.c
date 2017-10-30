@@ -7,7 +7,7 @@
     diag(#t);         \
     test_##t();
 
-void test_goto()
+void test_goto1()
 {
     int i = 0;
     
@@ -18,6 +18,21 @@ void test_goto()
     }
 
     is_eq(i, 2);
+}
+
+void test_goto2()
+{
+    int i = 0;
+	int j = 0;
+    
+    mylabel: i++, j++;
+    
+    if (i == 1) {
+        goto mylabel;
+    }
+
+    is_eq(i, 2);
+    is_eq(j, 2);
 }
 
 void test_goto_stmt()
@@ -35,9 +50,10 @@ void test_goto_stmt()
 
 int main()
 {
-    plan(2);
+    plan(4);
 
-    START_TEST(goto)
+    START_TEST(goto1)
+    START_TEST(goto2)
     START_TEST(goto_stmt)
     
     done_testing();
