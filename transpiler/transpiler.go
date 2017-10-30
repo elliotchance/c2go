@@ -33,6 +33,7 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 	if p.OutputAsTest {
 		p.AddImport("testing")
 		p.AddImport("io/ioutil")
+		p.AddImport("os")
 
 		// TODO: There should be a cleaner way to add a function to the program.
 		// This code was taken from the end of transpileFunctionDecl.

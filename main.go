@@ -149,17 +149,11 @@ func Start(args ProgramArgs) (err error) {
 	}
 
 	// 1. Compile it first (checking for errors)
-//<<<<<<< multiplyFiles
 	for _, in := range args.inputFiles {
 		_, err := os.Stat(in)
 		if err != nil {
 			return fmt.Errorf("Input file %s is not found", in)
 		}
-//=======
-	_, err = os.Stat(args.inputFile)
-	if err != nil {
-		return fmt.Errorf("Input file is not found")
-//>>>>>>> master
 	}
 
 	// 2. Preprocess
@@ -252,18 +246,6 @@ func Start(args ProgramArgs) (err error) {
 		p.AddMessage(p.GenerateWarningMessage(errors.New(message), fErr.Node))
 	}
 
-//<<<<<<< multiplyFiles
-//=======
-	// transpile ast tree
-	if args.verbose {
-		fmt.Println("Transpiling tree...")
-	}
-	err = transpiler.TranspileAST(args.inputFile, args.packageName, p, tree[0].(ast.Node))
-	if err != nil {
-		return fmt.Errorf("cannot transpile AST : %v", err)
-	}
-
-//>>>>>>> master
 	outputFilePath := args.outputFile
 
 	if outputFilePath == "" {
@@ -274,7 +256,6 @@ func Start(args ProgramArgs) (err error) {
 		outputFilePath = cleanFileName[0:len(cleanFileName)-len(extension)] + ".go"
 	}
 
-//<<<<<<< multiplyFiles
 	// transpile ast tree
 	if args.verbose {
 		fmt.Println("Transpiling tree...")
@@ -285,8 +266,6 @@ func Start(args ProgramArgs) (err error) {
 		return fmt.Errorf("cannot transpile AST : %v", err)
 	}
 
-//=======
-//>>>>>>> master
 	// write the output Go code
 	if args.verbose {
 		fmt.Println("Writing the output Go code...")
