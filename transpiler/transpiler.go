@@ -210,7 +210,14 @@ func transpileToStmts(node ast.Node, p *program.Program) ([]goast.Stmt, error) {
 	}
 
 	stmt, preStmts, postStmts, err := transpileToStmt(node, p)
-	stmts := append(preStmts, stmt)
+	var stmts []goast.Stmt
+	// nil is happen, when we remove function `free` of <stdlib.h>
+	// see function CallExpr in transpiler
+	if stmt != nil {
+		stmts = append(preStmts, stmt)
+	} else {
+		stmts = preStmts
+	}
 	stmts = append(stmts, postStmts...)
 	return stmts, err
 }
@@ -295,7 +302,11 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 		return
 	}
 
-	stmt = util.NewExprStmt(expr)
+	// nil is happen, when we remove function `free` of <stdlib.h>
+	// see function CallExpr in transpiler
+	if expr != (*goast.CallExpr)(nil) {
+		stmt = util.NewExprStmt(expr)
+	}
 
 	return
 }

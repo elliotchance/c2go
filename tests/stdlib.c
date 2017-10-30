@@ -152,9 +152,28 @@ void test_calloc()
     is_eq(d[4], 456);
 }
 
+void test_free()
+{
+	int * buffer1, * buffer2, * buffer3;
+	buffer1 = (int*) malloc (100*sizeof(int));
+	buffer2 = (int*) calloc (100,sizeof(int));
+	buffer3 = (int*) realloc (buffer2,500*sizeof(int));
+	int i = 0;
+	free ((i += 1, buffer1));
+	if (buffer2 != NULL){
+		i+=1;
+	}
+	if (i == 2)
+	{
+		free (buffer3);
+	  i++;
+	}
+	is_eq(i,3);
+}
+
 int main()
 {
-    plan(741);
+    plan(742);
 
     char *endptr;
 
@@ -255,6 +274,8 @@ int main()
     // exit() is handled in tests/exit.c
 
     // free() is handled with the malloc and calloc tests.
+	diag("free");
+	test_free();
 
     diag("getenv")
     is_not_null(getenv("PATH"));
