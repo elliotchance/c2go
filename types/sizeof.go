@@ -1,13 +1,10 @@
 package types
 
 import (
-	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/elliotchance/c2go/program"
-	"github.com/elliotchance/c2go/util"
 )
 
 func removePrefix(s, prefix string) string {
@@ -37,7 +34,7 @@ func SizeOf(p *program.Program, cType string) (int, error) {
 
 		s := p.Structs[cType]
 		if s == nil {
-			return 0, fmt.Errorf("could not sizeof: %s", cType)
+			return 0, fmt.Errorf("cannot determine size of: `%s`", cType)
 		}
 
 		for _, t := range s.Fields {
@@ -73,7 +70,7 @@ func SizeOf(p *program.Program, cType string) (int, error) {
 
 		s := p.Unions[cType]
 		if s == nil {
-			return 0, errors.New(fmt.Sprintf("could not sizeof: %s", cType))
+			return 0, fmt.Errorf("cannot determine size of: `%s`", cType)
 		}
 
 		for _, t := range s.Fields {
@@ -133,21 +130,21 @@ func SizeOf(p *program.Program, cType string) (int, error) {
 	}
 
 	// Get size for array types like: `base_type [count]`
-	groups := util.GroupsFromRegex(`^(?P<type>[^ ]+) *\[(?P<count>\d+)\]$`, cType)
-	if groups == nil {
-		return pointerSize, errors.New(
-			fmt.Sprintf("cannot determine size of: `%s`", cType))
+	totalArraySize := 1
+	arrayType, arraySize := GetArrayTypeAndSize(cType)
+	if arraySize <= 0 {
+		return 0, fmt.Errorf("cannot determine size of: `%s`", cType)
 	}
 
-	baseSize, err := SizeOf(p, groups["type"])
+	for arraySize != -1 {
+		totalArraySize *= arraySize
+		arrayType, arraySize = GetArrayTypeAndSize(arrayType)
+	}
+
+	baseSize, err := SizeOf(p, arrayType)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("cannot determine size of: `%s`", cType)
 	}
 
-	count, err := strconv.Atoi(groups["count"])
-	if err != nil {
-		return pointerSize, fmt.Errorf("cannot determine size of: %s", cType)
-	}
-
-	return baseSize * count, nil
+	return baseSize * totalArraySize, nil
 }
