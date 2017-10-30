@@ -279,7 +279,7 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 		}
 
 	case *ast.LabelStmt:
-		stmt, err = transpileLabelStmt(n, p)
+		stmt, preStmts, postStmts, err = transpileLabelStmt(n, p)
 		return
 
 	case *ast.GotoStmt:
