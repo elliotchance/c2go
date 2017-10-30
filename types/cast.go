@@ -63,7 +63,7 @@ func CastExpr(p *program.Program, expr goast.Expr, fromType, toType string) (goa
 	// Replace for specific case of fromType for darwin:
 	// Fo : union (anonymous union at sqlite3.c:619241696:3)
 	if strings.Contains(fromType, "anonymous union") {
-		// FIXME : I don't understood - How to change correctly
+		// I don't understood - How to change correctly
 		// Try change to : `union` , but it is FAIL with that
 		fromType = ""
 	}
