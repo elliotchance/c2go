@@ -3,20 +3,22 @@ package ast
 type InitListExpr struct {
 	Addr       Address
 	Pos        Position
-	Type       string
+	Type1      string
+	Type2      string
 	ChildNodes []Node
 }
 
 func parseInitListExpr(line string) *InitListExpr {
 	groups := groupsFromRegex(
-		"<(?P<position>.*)> '(?P<type>.*)'",
+		"<(?P<position>.*)> '(?P<type1>.*?)'(:'(?P<type2>.*)')?",
 		line,
 	)
 
 	return &InitListExpr{
 		Addr:       ParseAddress(groups["address"]),
 		Pos:        NewPositionFromString(groups["position"]),
-		Type:       groups["type"],
+		Type1:      groups["type1"],
+		Type2:      groups["type2"],
 		ChildNodes: []Node{},
 	}
 }

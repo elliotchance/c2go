@@ -181,6 +181,9 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 	case *ast.UnaryExprOrTypeTraitExpr:
 		return transpileUnaryExprOrTypeTraitExpr(n, p)
 
+	case *ast.InitListExpr:
+		expr, exprType, err = transpileInitListExpr(n, p)
+
 	case *ast.StmtExpr:
 		return transpileStmtExpr(n, p)
 
@@ -267,6 +270,14 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 			stmt, preStmts, err = transpileBinaryOperatorComma(n, p)
 			return
 		}
+
+	case *ast.LabelStmt:
+		stmt, err = transpileLabelStmt(n, p)
+		return
+
+	case *ast.GotoStmt:
+		stmt, err = transpileGotoStmt(n, p)
+		return
 
 	case *ast.GCCAsmStmt:
 		// Go does not support inline assembly. See:

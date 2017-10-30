@@ -5,14 +5,15 @@ import (
 )
 
 type ParmVarDecl struct {
-	Addr       Address
-	Pos        Position
-	Position2  string
-	Name       string
-	Type       string
-	Type2      string
-	IsUsed     bool
-	ChildNodes []Node
+	Addr         Address
+	Pos          Position
+	Position2    string
+	Name         string
+	Type         string
+	Type2        string
+	IsUsed       bool
+	IsReferenced bool
+	ChildNodes   []Node
 }
 
 func parseParmVarDecl(line string) *ParmVarDecl {
@@ -20,6 +21,7 @@ func parseParmVarDecl(line string) *ParmVarDecl {
 		`<(?P<position>.*)>
 		(?P<position2> [^ ]+:[\d:]+)?
 		(?P<used> used)?
+		(?P<referenced> referenced)?
 		(?P<name> \w+)?
 		 '(?P<type>.*?)'
 		(?P<type2>:'.*?')?`,
@@ -37,14 +39,15 @@ func parseParmVarDecl(line string) *ParmVarDecl {
 	}
 
 	return &ParmVarDecl{
-		Addr:       ParseAddress(groups["address"]),
-		Pos:        NewPositionFromString(groups["position"]),
-		Position2:  strings.TrimSpace(groups["position2"]),
-		Name:       strings.TrimSpace(groups["name"]),
-		Type:       groups["type"],
-		Type2:      type2,
-		IsUsed:     len(groups["used"]) > 0,
-		ChildNodes: []Node{},
+		Addr:         ParseAddress(groups["address"]),
+		Pos:          NewPositionFromString(groups["position"]),
+		Position2:    strings.TrimSpace(groups["position2"]),
+		Name:         strings.TrimSpace(groups["name"]),
+		Type:         groups["type"],
+		Type2:        type2,
+		IsUsed:       len(groups["used"]) > 0,
+		IsReferenced: len(groups["referenced"]) > 0,
+		ChildNodes:   []Node{},
 	}
 }
 
