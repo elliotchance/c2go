@@ -12,13 +12,13 @@ func TestInitListExpr(t *testing.T) {
 			Type1:      "const unsigned char [256]",
 			ChildNodes: []Node{},
 		},
-		`InitListExpr 0x32017f0 <col:24, col:41> 'struct node [2]'`: &InitListExpr{
+		`0x32017f0 <col:24, col:41> 'struct node [2]'`: &InitListExpr{
 			Addr:       0x32017f0,
 			Pos:        NewPositionFromString("col:24, col:41"),
 			Type1:      "struct node [2]",
 			ChildNodes: []Node{},
 		},
-		`InitListExpr 0x3201840 <col:25, col:31> 'struct node':'struct node'`: &InitListExpr{
+		`0x3201840 <col:25, col:31> 'struct node':'struct node'`: &InitListExpr{
 			Addr:       0x3201840,
 			Pos:        NewPositionFromString("col:25, col:31"),
 			Type1:      "struct node",
