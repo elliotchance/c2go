@@ -35,7 +35,7 @@ import (
 //     c2go -v
 //
 // See https://github.com/elliotchance/c2go/wiki/Release-Process
-const Version = "v0.16.9 Radium 2017-10-30"
+const Version = "v0.16.10 Radium 2017-10-31"
 
 var stderr io.Writer = os.Stderr
 
@@ -217,7 +217,7 @@ func Start(args ProgramArgs) (err error) {
 
 	p := program.NewProgram()
 	p.Verbose = args.verbose
-	p.OutputAsTest = true // args.outputAsTest
+	p.OutputAsTest = args.outputAsTest
 
 	// Converting to nodes
 	if args.verbose {

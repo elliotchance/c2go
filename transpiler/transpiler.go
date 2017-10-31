@@ -33,6 +33,7 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 	if p.OutputAsTest {
 		p.AddImport("testing")
 		p.AddImport("io/ioutil")
+		p.AddImport("os")
 
 		// TODO: There should be a cleaner way to add a function to the program.
 		// This code was taken from the end of transpileFunctionDecl.
@@ -302,7 +303,11 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 		return
 	}
 
-	stmt = util.NewExprStmt(expr)
+	// nil is happen, when we remove function `free` of <stdlib.h>
+	// see function CallExpr in transpiler
+	if expr != (*goast.CallExpr)(nil) {
+		stmt = util.NewExprStmt(expr)
+	}
 
 	return
 }

@@ -195,6 +195,7 @@ var builtInFunctionDefinitions = []string{
 	"long long strtoll(const char *, char **, int) -> noarch.Strtoll",
 	"long unsigned int strtoul(const char *, char **, int) -> noarch.Strtoul",
 	"long long unsigned int strtoull(const char *, char **, int) -> noarch.Strtoull",
+	"void free(void*) -> _",
 
 	// time.h
 	"time_t time(time_t *) -> noarch.Time",

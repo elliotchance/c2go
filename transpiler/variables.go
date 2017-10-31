@@ -124,7 +124,7 @@ func transpileInitListExpr(e *ast.InitListExpr, p *program.Program) (goast.Expr,
 	var cTypeString string
 
 	arrayType, arraySize := types.GetArrayTypeAndSize(e.Type1)
-	if arrayType != "" {
+	if arraySize != -1 {
 		goArrayType, err := types.ResolveType(p, arrayType)
 		p.AddMessage(p.GenerateWarningMessage(err, e))
 
