@@ -232,10 +232,16 @@ func ResolveType(p *program.Program, s string) (string, error) {
 
 	// It could be an array of fixed length. These needs to be converted to
 	// slices.
-	search2 := regexp.MustCompile("([\\w ]+)\\[(\\d+)\\]").FindStringSubmatch(s)
-	if len(search2) > 0 {
+	// int [2][3] -> [][]int
+	// int [2][3][4] -> [][][]int
+	search2 := regexp.MustCompile(`([\w ]+)\s*((\[\d+\])+)`).FindStringSubmatch(s)
+	if len(search2) > 2 {
 		t, err := ResolveType(p, search2[1])
-		return fmt.Sprintf("[]%s", t), err
+
+		var re = regexp.MustCompile(`[0-9]+`)
+		arraysNoSize := re.ReplaceAllString(search2[2], "")
+
+		return fmt.Sprintf("%s%s", arraysNoSize, t), err
 	}
 
 	errMsg := fmt.Sprintf(

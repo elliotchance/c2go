@@ -94,9 +94,28 @@ void test_argarr()
     is_eq(8, dummy(abc));
 }
 
+void test_multidim() {
+    int a[2][3] = {{5,6,7},{50,60,70}};
+    is_eq(a[1][2], 70);
+
+    // omit array length
+    int b[][3][2] = {{{1,2},{3,4},{5,6}},
+                     {{6,5},{4,3},{2,1}}};
+    is_eq(b[1][1][0], 4);
+    // 2 * 3 * 2 * sizeof(int32)
+    is_eq(sizeof(b), 48);
+
+    struct s c[2][3] = {{{1,'a'},{2,'b'},{3,'c'}}, {{4,'d'},{5,'e'},{6,'f'}}};
+    is_eq(c[1][1].i, 5);
+    is_eq(c[1][1].c, 'e');
+    c[1][1] = c[0][0];
+    is_eq(c[1][1].i, 1);
+    is_eq(c[1][1].c, 'a');
+}
+
 int main()
 {
-    plan(26);
+    plan(33);
 
     START_TEST(intarr);
     START_TEST(doublearr);
@@ -107,6 +126,7 @@ int main()
     START_TEST(exprarr);
     START_TEST(structarr);
     START_TEST(argarr);
+    START_TEST(multidim);
 
     done_testing();
 }
