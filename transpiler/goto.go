@@ -14,20 +14,18 @@ import (
 func transpileLabelStmt(n *ast.LabelStmt, p *program.Program) (*goast.LabeledStmt, []goast.Stmt, []goast.Stmt, error) {
 
 	var post []goast.Stmt
-	if len(n.Children()) > 0 {
-		for _, node := range n.Children() {
-			var stmt goast.Stmt
-			stmt, preStmts, postStmts, err := transpileToStmt(node, p)
-			if err != nil {
-				return nil, nil, nil, err
-			}
-			post = append(post, preStmts...)
-			// nil is happen, when transpile For
-			if stmt != (*goast.ForStmt)(nil) {
-				post = append(post, stmt)
-			}
-			post = append(post, postStmts...)
+	for _, node := range n.Children() {
+		var stmt goast.Stmt
+		stmt, preStmts, postStmts, err := transpileToStmt(node, p)
+		if err != nil {
+			return nil, nil, nil, err
 		}
+		post = append(post, preStmts...)
+		// nil is happen, when transpile For
+		if stmt != (*goast.ForStmt)(nil) {
+			post = append(post, stmt)
+		}
+		post = append(post, postStmts...)
 	}
 
 	return &goast.LabeledStmt{
