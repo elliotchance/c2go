@@ -2,14 +2,15 @@ package program
 
 import (
 	"fmt"
-	"github.com/elliotchance/c2go/ast"
 	"reflect"
+
+	"github.com/elliotchance/c2go/ast"
 )
 
 func (p *Program) GenerateErrorMessage(e error, n ast.Node) string {
 	if e != nil {
 		structName := reflect.TypeOf(n).Elem().Name()
-		return fmt.Sprintf("// Error (%s): %s: %s", structName,
+		return fmt.Sprintf("// Error (%s): %d: %s", structName,
 			n.Position().Line, e.Error())
 	}
 
@@ -19,7 +20,7 @@ func (p *Program) GenerateErrorMessage(e error, n ast.Node) string {
 func (p *Program) GenerateWarningMessage(e error, n ast.Node) string {
 	if e != nil {
 		structName := reflect.TypeOf(n).Elem().Name()
-		return fmt.Sprintf("// Warning (%s): %s: %s", structName,
+		return fmt.Sprintf("// Warning (%s): %d: %s", structName,
 			n.Position().Line, e.Error())
 	}
 

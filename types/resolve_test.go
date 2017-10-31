@@ -23,6 +23,10 @@ var resolveTestCases = []resolveTestCase{
 	{"div_t", "noarch.DivT"},
 	{"ldiv_t", "noarch.LdivT"},
 	{"lldiv_t", "noarch.LldivT"},
+	{"int [2]", "[]int"},
+	{"int [2][3]", "[][]int"},
+	{"int [2][3][4]", "[][][]int"},
+	{"int [2][3][4][5]", "[][][][]int"},
 }
 
 func TestResolve(t *testing.T) {

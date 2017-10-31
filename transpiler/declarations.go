@@ -251,7 +251,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 		switch name {
 		// Below are for macOS.
 		case "__stdinp", "__stdoutp":
-			p.AddImports("github.com/elliotchance/c2go/noarch", "os")
+			p.AddImport("github.com/elliotchance/c2go/noarch")
 			p.AppendStartupExpr(
 				util.NewBinaryExpr(
 					goast.NewIdent(name),
@@ -265,7 +265,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 			// Below are for linux.
 		case "stdout", "stdin", "stderr":
 			theType = "*noarch.File"
-			p.AddImports("github.com/elliotchance/c2go/noarch", "os")
+			p.AddImport("github.com/elliotchance/c2go/noarch")
 			p.AppendStartupExpr(
 				util.NewBinaryExpr(
 					goast.NewIdent(name),

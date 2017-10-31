@@ -69,3 +69,28 @@ func TestCast(t *testing.T) {
 		})
 	}
 }
+
+func TestGetArrayTypeAndSize(t *testing.T) {
+	tests := []struct {
+		in    string
+		cType string
+		size  int
+	}{
+		{"int", "int", -1},
+		{"int [4]", "int", 4},
+		{"int [4][3]", "int [3]", 4},
+		{"int [4][3][2]", "int [3][2]", 4},
+		{"int [4][3][2][1]", "int [3][2][1]", 4},
+	}
+
+	for _, tt := range tests {
+		cType, size := GetArrayTypeAndSize(tt.in)
+		if cType != tt.cType {
+			t.Errorf("Expected type '%s', got '%s'", tt.cType, cType)
+		}
+
+		if size != tt.size {
+			t.Errorf("Expected size '%d', got '%d'", tt.size, size)
+		}
+	}
+}
