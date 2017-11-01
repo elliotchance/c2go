@@ -1,8 +1,9 @@
 package program
 
 import (
-	"regexp"
 	"strings"
+
+	"github.com/elliotchance/c2go/util"
 )
 
 // FunctionDefinition contains the prototype definition for a function.
@@ -260,7 +261,7 @@ func loadFunctionDefinitions() {
 	builtInFunctionDefinitionsHaveBeenLoaded = true
 
 	for _, f := range builtInFunctionDefinitions {
-		match := regexp.MustCompile(`^(.+) ([^ ]+)\(([, a-z*A-Z_0-9]*)\)( -> .+)?$`).
+		match := util.GetRegex(`^(.+) ([^ ]+)\(([, a-z*A-Z_0-9]*)\)( -> .+)?$`).
 			FindStringSubmatch(f)
 
 		// Unpack argument types.
@@ -282,7 +283,7 @@ func loadFunctionDefinitions() {
 
 			// The substitution might also rearrange the parameters (return and
 			// parameter transformation).
-			subMatch := regexp.MustCompile(`^(.*?) = (.*)\((.*)\)$`).
+			subMatch := util.GetRegex(`^(.*?) = (.*)\((.*)\)$`).
 				FindStringSubmatch(substitution)
 			if len(subMatch) > 0 {
 				returnParameters = dollarArgumentsToIntSlice(subMatch[1])

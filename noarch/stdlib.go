@@ -3,9 +3,10 @@ package noarch
 import (
 	"math"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/elliotchance/c2go/util"
 )
 
 // DivT is the representation of "div_t". It is used by div().
@@ -157,7 +158,7 @@ func atoll(str []byte, radix int) (int64, int) {
 			rx += string(87 + i)
 		}
 	}
-	r := regexp.MustCompile(`^([+-]?[` + rx + `]+)`)
+	r := util.GetRegex(`^([+-]?[` + rx + `]+)`)
 	match := r.FindStringSubmatch(s)
 	if match == nil {
 		return 0, 0
@@ -366,7 +367,7 @@ func atof(str []byte) (float64, int) {
 
 	// 1. Hexadecimal integer? This must be checked before floating-point
 	// because it starts with a 0.
-	r := regexp.MustCompile(`^([+-])?0x([0-9a-f]+)(p[-+]?[0-9a-f]+)?`)
+	r := util.GetRegex(`^([+-])?0x([0-9a-f]+)(p[-+]?[0-9a-f]+)?`)
 	match := r.FindStringSubmatch(s)
 	if match != nil {
 		n, err := strconv.ParseUint(match[2], 16, 32)
@@ -393,7 +394,7 @@ func atof(str []byte) (float64, int) {
 	}
 
 	// 2. Floating-point number?
-	r = regexp.MustCompile(`^[+-]?\d*(\.\d*)?(e[+-]?\d+)?`)
+	r = util.GetRegex(`^[+-]?\d*(\.\d*)?(e[+-]?\d+)?`)
 	match = r.FindStringSubmatch(s)
 	if match != nil {
 		f, err := strconv.ParseFloat(match[0], 64)
