@@ -219,6 +219,7 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 	// important value for creating (.....)
 	// with constants inside
 	decl.Lparen = 1
+	decl.Rparen = 2
 
 	p.File.Decls = append(p.File.Decls, decl)
 

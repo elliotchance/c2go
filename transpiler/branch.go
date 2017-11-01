@@ -298,6 +298,7 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 	})
 	block.List = append(block.List, postStmts...)
 	block.Lbrace = 1
+	block.Rbrace = 2
 
 	return &goast.ForStmt{}, []goast.Stmt{}, []goast.Stmt{&block}, nil
 }
