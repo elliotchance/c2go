@@ -102,6 +102,26 @@ func convertLinesToNodes(lines []string) []treeNode {
 	return nodes
 }
 
+func convertLinesToNodesParallel(lines []string) []treeNode {
+	part := len(lines) / 2
+
+	var tr1 = make(chan []treeNode)
+	var tr2 = make(chan []treeNode)
+
+	go func(lines []string) {
+		tr1 <- convertLinesToNodes(lines)
+	}(lines[0:part])
+
+	go func(lines []string) {
+		tr2 <- convertLinesToNodes(lines)
+	}(lines[part:])
+
+	defer close(tr1)
+	defer close(tr2)
+
+	return append(<-tr1, <-tr2...)
+}
+
 // buildTree converts an array of nodes, each prefixed with a depth into a tree.
 func buildTree(nodes []treeNode, depth int) []ast.Node {
 	if len(nodes) == 0 {
@@ -223,7 +243,7 @@ func Start(args ProgramArgs) (err error) {
 	if args.verbose {
 		fmt.Println("Converting to nodes...")
 	}
-	nodes := convertLinesToNodes(lines)
+	nodes := convertLinesToNodesParallel(lines)
 
 	// build tree
 	if args.verbose {
