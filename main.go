@@ -104,6 +104,8 @@ func convertLinesToNodes(lines []string) []treeNode {
 }
 
 func convertLinesToNodesParallel(lines []string) []treeNode {
+	// function f separate full list on 2 parts and
+	// then each part can recursive run function f
 	var f func([]string, int) []treeNode
 
 	f = func(lines []string, deep int) []treeNode {
@@ -138,6 +140,10 @@ func convertLinesToNodesParallel(lines []string) []treeNode {
 	// Value amountGoroutine must be 2,4,6,8,10,...
 	// and never cannot be 3,5,...
 	amountGoroutine := 2 * runtime.NumCPU()
+	// NumCPU - cannot garantee value more then 0, So:
+	if amountGoroutine <= 0 {
+		amountGoroutine = 2
+	}
 	return f(lines, amountGoroutine)
 }
 
