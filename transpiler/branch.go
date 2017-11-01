@@ -297,8 +297,9 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 		Body: body,
 	})
 	block.List = append(block.List, postStmts...)
+	block.Lbrace = 1
 
-	return nil, []goast.Stmt{}, []goast.Stmt{&block}, nil
+	return &goast.ForStmt{}, []goast.Stmt{}, []goast.Stmt{&block}, nil
 }
 
 // transpileWhileStmt - transpiler for operator While.
