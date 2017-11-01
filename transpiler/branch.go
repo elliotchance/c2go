@@ -289,6 +289,7 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 	// for avoid dublication of init values for
 	// case with 2 for`s
 	var block goast.BlockStmt
+	block.List = make([]goast.Stmt)
 	block.List = append(block.List, preStmts...)
 	block.List = append(block.List, &goast.ForStmt{
 		Init: init,
