@@ -14,7 +14,7 @@ type resolveTestCase struct {
 
 var resolveTestCases = []resolveTestCase{
 	{"int", "int"},
-	{"char *[13]", "[]string"},
+	{"char *[13]", "[][]byte"},
 	{"__uint16_t", "uint16"},
 	{"void *", "[]byte"},
 	{"unsigned short int", "uint16"},
