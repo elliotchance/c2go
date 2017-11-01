@@ -21,6 +21,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 
 	"errors"
@@ -103,23 +104,41 @@ func convertLinesToNodes(lines []string) []treeNode {
 }
 
 func convertLinesToNodesParallel(lines []string) []treeNode {
-	part := len(lines) / 2
+	var f func([]string, int) []treeNode
 
-	var tr1 = make(chan []treeNode)
-	var tr2 = make(chan []treeNode)
+	f = func(lines []string, deep int) []treeNode {
+		deep = deep - 2
+		part := len(lines) / 2
 
-	go func(lines []string) {
-		tr1 <- convertLinesToNodes(lines)
-	}(lines[0:part])
+		var tr1 = make(chan []treeNode)
+		var tr2 = make(chan []treeNode)
 
-	go func(lines []string) {
-		tr2 <- convertLinesToNodes(lines)
-	}(lines[part:])
+		go func(lines []string, deep int) {
+			if deep == 0 || len(lines) < deep {
+				tr1 <- convertLinesToNodes(lines)
+				return
+			}
+			tr1 <- f(lines, deep)
+		}(lines[0:part], deep)
 
-	defer close(tr1)
-	defer close(tr2)
+		go func(lines []string, deep int) {
+			if deep == 0 || len(lines) < deep {
+				tr2 <- convertLinesToNodes(lines)
+				return
+			}
+			tr2 <- f(lines, deep)
+		}(lines[part:], deep)
 
-	return append(<-tr1, <-tr2...)
+		defer close(tr1)
+		defer close(tr2)
+
+		return append(<-tr1, <-tr2...)
+	}
+
+	// Value amountGoroutine must be 2,4,6,8,10,...
+	// and never cannot be 3,5,...
+	amountGoroutine := 2 * runtime.NumCPU()
+	return f(lines, amountGoroutine)
 }
 
 // buildTree converts an array of nodes, each prefixed with a depth into a tree.
