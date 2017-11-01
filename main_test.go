@@ -15,8 +15,6 @@ import (
 	"syscall"
 	"testing"
 
-	"regexp"
-
 	"github.com/elliotchance/c2go/cc"
 	"github.com/elliotchance/c2go/util"
 )
@@ -152,7 +150,7 @@ func TestIntegrationScripts(t *testing.T) {
 			cProgramStderr := cProgram.stderr.String()
 			goProgramStderr := goProgram.stderr.String()
 
-			r := regexp.MustCompile("warning: no packages being tested depend on .+\n")
+			r := util.GetRegex("warning: no packages being tested depend on .+\n")
 			goProgramStderr = r.ReplaceAllString(goProgramStderr, "")
 
 			if cProgramStderr != goProgramStderr {
@@ -237,7 +235,7 @@ func TestIntegrationScripts(t *testing.T) {
 			if strings.Index(file, "examples/") == -1 && isVerbose {
 				firstLine := strings.Split(goOut, "\n")[0]
 
-				matches := regexp.MustCompile(`1\.\.(\d+)`).
+				matches := util.GetRegex(`1\.\.(\d+)`).
 					FindStringSubmatch(firstLine)
 				if len(matches) == 0 {
 					t.Fatalf("Test did not output tap: %s, got:\n%s", file,

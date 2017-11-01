@@ -2,10 +2,10 @@ package cc
 
 import (
 	"fmt"
-	"github.com/elliotchance/c2go/util"
 	"io/ioutil"
-	"regexp"
 	"strings"
+
+	"github.com/elliotchance/c2go/util"
 )
 
 // fileCache contains the previous read files. This is important because
@@ -37,7 +37,7 @@ func GetLineFromPreprocessedFile(inputFilePath, filePath string, lineNumber int)
 
 		// There is also an integer that appears after the path - not sure what this
 		// is? I will ignore it for now.
-		resetLineRegexp := regexp.MustCompile(`^# (\d+) "(.+)"`)
+		resetLineRegexp := util.GetRegex(`^# (\d+) "(.+)"`)
 
 		for _, line := range lines {
 			if len(line) > 0 && line[0] == '#' {
