@@ -116,7 +116,7 @@ func convertLinesToNodesParallel(lines []string) []treeNode {
 		var tr2 = make(chan []treeNode)
 
 		go func(lines []string, deep int) {
-			if deep == 0 || len(lines) < deep {
+			if deep <= 0 || len(lines) < deep {
 				tr1 <- convertLinesToNodes(lines)
 				return
 			}
@@ -124,7 +124,7 @@ func convertLinesToNodesParallel(lines []string) []treeNode {
 		}(lines[0:part], deep)
 
 		go func(lines []string, deep int) {
-			if deep == 0 || len(lines) < deep {
+			if deep <= 0 || len(lines) < deep {
 				tr2 <- convertLinesToNodes(lines)
 				return
 			}
@@ -137,14 +137,9 @@ func convertLinesToNodesParallel(lines []string) []treeNode {
 		return append(<-tr1, <-tr2...)
 	}
 
-	// Value amountGoroutine must be 2,4,6,8,10,...
-	// and never cannot be 3,5,...
-	amountGoroutine := 2 * runtime.NumCPU()
-	// NumCPU - cannot garantee value more then 0, So:
-	if amountGoroutine <= 0 {
-		amountGoroutine = 2
-	}
-	return f(lines, amountGoroutine)
+	// Parameter of deep - can be any, but effective to use
+	// same amount of CPU
+	return f(lines, runtime.NumCPU())
 }
 
 // buildTree converts an array of nodes, each prefixed with a depth into a tree.
