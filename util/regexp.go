@@ -31,12 +31,13 @@ func GroupsFromRegex(rx, line string) map[string]string {
 	return result
 }
 
-// cachedRegex - global map variable for saving regexp`s
+// cachedRegex - structure for saving regexp`s
 type cachedRegex struct {
 	sync.RWMutex
 	m map[string]*regexp.Regexp
 }
 
+// Global variable
 var cr = cachedRegex{m: map[string]*regexp.Regexp{}}
 
 // GetRegex return regexp
@@ -45,14 +46,12 @@ func GetRegex(rx string) *regexp.Regexp {
 	cr.RLock()
 	v, ok := cr.m[rx]
 	cr.RUnlock()
-	if !ok {
-		cr.Lock()
-		cr.m[rx] = regexp.MustCompile(rx)
-		cr.Unlock()
-
-		cr.RLock()
-		defer cr.RUnlock()
-		return cr.m[rx]
+	if ok {
+		return v
 	}
-	return v
+	// if regexp is not in map
+	cr.Lock()
+	cr.m[rx] = regexp.MustCompile(rx)
+	cr.Unlock()
+	return GetRegex(rx)
 }
