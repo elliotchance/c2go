@@ -20,7 +20,6 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"errors"
@@ -28,6 +27,7 @@ import (
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/transpiler"
+	"github.com/elliotchance/c2go/util"
 )
 
 // Version can be requested through the command line with:
@@ -70,7 +70,7 @@ func DefaultProgramArgs() ProgramArgs {
 }
 
 func readAST(data []byte) []string {
-	uncolored := regexp.MustCompile(`\x1b\[[\d;]+m`).ReplaceAll(data, []byte{})
+	uncolored := util.GetRegex(`\x1b\[[\d;]+m`).ReplaceAll(data, []byte{})
 	return strings.Split(string(uncolored), "\n")
 }
 
