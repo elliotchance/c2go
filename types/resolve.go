@@ -214,7 +214,7 @@ func ResolveType(p *program.Program, s string) (string, error) {
 	}
 
 	if util.GetRegex(`[\w ]+\*\[\d+\]$`).MatchString(s) {
-		return "[]string", nil
+		return "[][]byte", nil
 	}
 
 	// Function pointers are not yet supported. In the mean time they will be

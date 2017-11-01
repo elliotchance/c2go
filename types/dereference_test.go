@@ -14,6 +14,11 @@ func TestGetDereferenceType(t *testing.T) {
 	}{
 		{args{"char [8]"}, "char", false},
 		{args{"char**"}, "char*", false},
+		{args{"char *[8]"}, "char *", false},
+		{args{"char *[8][7]"}, "char *[7]", false},
+		{args{"char *[8][7][6]"}, "char *[7][6]", false},
+		{args{"char **[8]"}, "char **", false},
+		{args{"char ***[8]"}, "char ***", false},
 	}
 	for _, tt := range tests {
 		name := fmt.Sprintf("%#v", tt.args)

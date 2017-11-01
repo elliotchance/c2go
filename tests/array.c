@@ -113,9 +113,17 @@ void test_multidim() {
     is_eq(c[1][1].c, 'a');
 }
 
+void test_stringarr_init()
+{
+    char *a[] = {"a", "bc", "def"};
+    is_streq(a[0], "a");
+    is_streq(a[1], "bc");
+    is_streq(a[2], "def");
+}
+
 int main()
 {
-    plan(33);
+    plan(36);
 
     START_TEST(intarr);
     START_TEST(doublearr);
@@ -127,6 +135,7 @@ int main()
     START_TEST(structarr);
     START_TEST(argarr);
     START_TEST(multidim);
+    START_TEST(stringarr_init);
 
     done_testing();
 }
