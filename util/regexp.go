@@ -47,9 +47,12 @@ func GetRegex(rx string) *regexp.Regexp {
 	cr.RUnlock()
 	if !ok {
 		cr.Lock()
-		defer cr.Unlock()
 		cr.m[rx] = regexp.MustCompile(rx)
-		return GetRegex(rx)
+		cr.Unlock()
+
+		cr.RLock()
+		defer cr.RUnlock()
+		return cr.m[rx]
 	}
 	return v
 }
