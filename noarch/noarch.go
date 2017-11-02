@@ -30,7 +30,7 @@ func NotUint16(x uint16) uint16 {
 }
 
 // Ternary simulates the ternary (also known as the conditional operator). Go
-// does not have the equivilent of using if statements as expressions or inline
+// does not have the equivalent of using if statements as expressions or inline
 // if statements. This function takes the true and false parts as closures to be
 // sure that only the true or false condition is evaulated - to prevent side
 // effects.

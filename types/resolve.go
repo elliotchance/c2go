@@ -92,7 +92,7 @@ var simpleResolveTypes = map[string]string{
 //
 // 1. The Go type must be deterministic. The same C type will ALWAYS return the
 //    same Go type, in any condition. This is extremely important since the
-//    nature of C is that is may not have certain information avilable about the
+//    nature of C is that is may not have certain information available about the
 //    rest of the program or libraries when it is being compiled.
 //
 // 2. Many C type modifiers and properties are lost as they have no sensible or

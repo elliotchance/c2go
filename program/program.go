@@ -168,7 +168,7 @@ func (p *Program) DefineType(typeName string) {
 	p.typesAlreadyDefined = append(p.typesAlreadyDefined, typeName)
 }
 
-// GetNextIdentifier generates a new gloablly unique identifier name. This can
+// GetNextIdentifier generates a new globally unique identifier name. This can
 // be used for variables and functions in generated code.
 //
 // The value of prefix is only useful for readability in the code. If the prefix
