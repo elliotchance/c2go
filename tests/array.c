@@ -81,6 +81,12 @@ void test_structarr()
     is_eq(a[0].c, 'a');
     is_eq(a[1].i, 2);
     is_eq(a[1].c, 'b');
+
+    struct s b[] = {(struct s){1, 'a'}, (struct s){2, 'b'}};
+    is_eq(b[0].i, 1);
+    is_eq(b[0].c, 'a');
+    is_eq(b[1].i, 2);
+    is_eq(b[1].c, 'b');
 }
 
 long dummy(char foo[42])
@@ -137,7 +143,7 @@ void test_stringarr_init()
 
 int main()
 {
-    plan(38);
+    plan(42);
 
     START_TEST(intarr);
     START_TEST(doublearr);
