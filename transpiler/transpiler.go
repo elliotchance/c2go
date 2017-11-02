@@ -33,6 +33,7 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 	if p.OutputAsTest {
 		p.AddImport("testing")
 		p.AddImport("io/ioutil")
+		p.AddImport("os")
 
 		// TODO: There should be a cleaner way to add a function to the program.
 		// This code was taken from the end of transpileFunctionDecl.
@@ -181,6 +182,9 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 	case *ast.UnaryExprOrTypeTraitExpr:
 		return transpileUnaryExprOrTypeTraitExpr(n, p)
 
+	case *ast.InitListExpr:
+		expr, exprType, err = transpileInitListExpr(n, p)
+
 	case *ast.StmtExpr:
 		return transpileStmtExpr(n, p)
 
@@ -207,7 +211,14 @@ func transpileToStmts(node ast.Node, p *program.Program) ([]goast.Stmt, error) {
 	}
 
 	stmt, preStmts, postStmts, err := transpileToStmt(node, p)
-	stmts := append(preStmts, stmt)
+	var stmts []goast.Stmt
+	// nil is happen, when we remove function `free` of <stdlib.h>
+	// see function CallExpr in transpiler
+	if stmt != nil {
+		stmts = append(preStmts, stmt)
+	} else {
+		stmts = preStmts
+	}
 	stmts = append(stmts, postStmts...)
 	return stmts, err
 }
@@ -268,6 +279,14 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 			return
 		}
 
+	case *ast.LabelStmt:
+		stmt, err = transpileLabelStmt(n, p)
+		return
+
+	case *ast.GotoStmt:
+		stmt, err = transpileGotoStmt(n, p)
+		return
+
 	case *ast.GCCAsmStmt:
 		// Go does not support inline assembly. See:
 		// https://github.com/elliotchance/c2go/issues/228
@@ -284,7 +303,11 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 		return
 	}
 
-	stmt = util.NewExprStmt(expr)
+	// nil is happen, when we remove function `free` of <stdlib.h>
+	// see function CallExpr in transpiler
+	if expr != (*goast.CallExpr)(nil) {
+		stmt = util.NewExprStmt(expr)
+	}
 
 	return
 }

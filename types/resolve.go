@@ -3,10 +3,10 @@ package types
 import (
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/util"
 )
 
 // TODO: Some of these are based on assumptions that may not be true for all
@@ -27,6 +27,7 @@ var simpleResolveTypes = map[string]string{
 	"long int":               "int32",
 	"long long":              "int64",
 	"long long int":          "int64",
+	"long long unsigned int": "uint64",
 	"long unsigned int":      "uint32",
 	"long":                   "int32",
 	"short":                  "int16",
@@ -39,7 +40,6 @@ var simpleResolveTypes = map[string]string{
 	"unsigned short int":     "uint16",
 	"void":                   "",
 	"_Bool":                  "bool",
-	"long long unsigned int": "uint64",
 
 	// void* is treated like char*
 	"void*":  "[]byte",
@@ -58,6 +58,7 @@ var simpleResolveTypes = map[string]string{
 	"div_t":      "github.com/elliotchance/c2go/noarch.DivT",
 	"ldiv_t":     "github.com/elliotchance/c2go/noarch.LdivT",
 	"lldiv_t":    "github.com/elliotchance/c2go/noarch.LldivT",
+	"time_t":     "github.com/elliotchance/c2go/noarch.TimeT",
 
 	// Darwin specific
 	"__darwin_ct_rune_t": "github.com/elliotchance/c2go/darwin.CtRuneT",
@@ -196,7 +197,7 @@ func ResolveType(p *program.Program, s string) (string, error) {
 
 	// It may be a pointer of a simple type. For example, float *, int *,
 	// etc.
-	if regexp.MustCompile("[\\w ]+\\*+$").MatchString(s) {
+	if util.GetRegex("[\\w ]+\\*+$").MatchString(s) {
 		// The "-1" is important because there may or may not be a space between
 		// the name and the "*". If there is an extra space it will be trimmed
 		// off.
@@ -212,29 +213,35 @@ func ResolveType(p *program.Program, s string) (string, error) {
 		return prefix + t, err
 	}
 
-	if regexp.MustCompile(`[\w ]+\*\[\d+\]$`).MatchString(s) {
-		return "[]string", nil
+	if util.GetRegex(`[\w ]+\*\[\d+\]$`).MatchString(s) {
+		return "[][]byte", nil
 	}
 
 	// Function pointers are not yet supported. In the mean time they will be
 	// replaced with a type that certainly wont work until we can fix this
 	// properly.
-	search := regexp.MustCompile("[\\w ]+\\(\\*.*?\\)\\(.*\\)").MatchString(s)
+	search := util.GetRegex("[\\w ]+\\(\\*.*?\\)\\(.*\\)").MatchString(s)
 	if search {
 		return "interface{}", errors.New("function pointers are not supported")
 	}
 
-	search = regexp.MustCompile("[\\w ]+ \\(.*\\)").MatchString(s)
+	search = util.GetRegex("[\\w ]+ \\(.*\\)").MatchString(s)
 	if search {
 		return "interface{}", errors.New("function pointers are not supported")
 	}
 
 	// It could be an array of fixed length. These needs to be converted to
 	// slices.
-	search2 := regexp.MustCompile("([\\w ]+)\\[(\\d+)\\]").FindStringSubmatch(s)
-	if len(search2) > 0 {
+	// int [2][3] -> [][]int
+	// int [2][3][4] -> [][][]int
+	search2 := util.GetRegex(`([\w ]+)\s*((\[\d+\])+)`).FindStringSubmatch(s)
+	if len(search2) > 2 {
 		t, err := ResolveType(p, search2[1])
-		return fmt.Sprintf("[]%s", t), err
+
+		var re = util.GetRegex(`[0-9]+`)
+		arraysNoSize := re.ReplaceAllString(search2[2], "")
+
+		return fmt.Sprintf("%s%s", arraysNoSize, t), err
 	}
 
 	errMsg := fmt.Sprintf(

@@ -6,14 +6,14 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"strings"
 	"syscall"
 	"testing"
-
-	"regexp"
 
 	"github.com/elliotchance/c2go/cc"
 	"github.com/elliotchance/c2go/util"
@@ -105,15 +105,12 @@ func TestIntegrationScripts(t *testing.T) {
 
 			mainFileName = "main_test.go"
 
-			programArgs := ProgramArgs{
-				inputFile:   file,
-				outputFile:  subFolder + mainFileName,
-				packageName: "main",
-
-				// This appends a TestApp function to the output source so we
-				// can run "go test" against the produced binary.
-				outputAsTest: true,
-			}
+			programArgs := DefaultProgramArgs()
+			programArgs.inputFile = file
+			programArgs.outputFile = subFolder + mainFileName
+			// This appends a TestApp function to the output source so we
+			// can run "go test" against the produced binary.
+			programArgs.outputAsTest = true
 
 			// Compile Go
 			err = Start(programArgs)
@@ -153,7 +150,7 @@ func TestIntegrationScripts(t *testing.T) {
 			cProgramStderr := cProgram.stderr.String()
 			goProgramStderr := goProgram.stderr.String()
 
-			r := regexp.MustCompile("warning: no packages being tested depend on .+\n")
+			r := util.GetRegex("warning: no packages being tested depend on .+\n")
 			goProgramStderr = r.ReplaceAllString(goProgramStderr, "")
 
 			if cProgramStderr != goProgramStderr {
@@ -238,7 +235,7 @@ func TestIntegrationScripts(t *testing.T) {
 			if strings.Index(file, "examples/") == -1 && isVerbose {
 				firstLine := strings.Split(goOut, "\n")[0]
 
-				matches := regexp.MustCompile(`1\.\.(\d+)`).
+				matches := util.GetRegex(`1\.\.(\d+)`).
 					FindStringSubmatch(firstLine)
 				if len(matches) == 0 {
 					t.Fatalf("Test did not output tap: %s, got:\n%s", file,
@@ -257,30 +254,24 @@ func TestIntegrationScripts(t *testing.T) {
 }
 
 func TestStartPreprocess(t *testing.T) {
-	// temp dir
-	tempDir := os.TempDir()
-
-	// create temp file with garantee
+	// create temp file with guarantee
 	// wrong file body
-	tempFile, err := newTempFile(tempDir, "c2go", "preprocess.c")
+	dir, err := ioutil.TempDir("", "c2go-preprocess")
 	if err != nil {
-		t.Errorf("Cannot create temp file for execute test")
+		t.Fatalf("Cannot create temp folder: %v", err)
 	}
-	defer os.Remove(tempFile.Name())
+	defer os.RemoveAll(dir) // clean up
 
-	fmt.Fprintf(tempFile, "#include <AbsoluteWrongInclude.h>\nint main(void){\nwrong();\n}")
+	filename := path.Join(dir, "preprocess.c")
+	body := ([]byte)("#include <AbsoluteWrongInclude.h>\nint main(void){\nwrong();\n}")
+	err = ioutil.WriteFile(filename, body, 0644)
 
-	err = tempFile.Close()
-	if err != nil {
-		t.Errorf("Cannot close the temp file")
-	}
-
-	var args ProgramArgs
-	args.inputFile = tempFile.Name()
+	args := DefaultProgramArgs()
+	args.inputFile = filename
 
 	err = Start(args)
 	if err == nil {
-		t.Errorf("Cannot test preprocess of application")
+		t.Fatalf("Cannot test preprocess of application")
 	}
 }
 
@@ -307,7 +298,7 @@ func TestGoPath(t *testing.T) {
 	}
 
 	// testing
-	err = Start(ProgramArgs{})
+	err = Start(DefaultProgramArgs())
 	if err == nil {
 		t.Errorf(err.Error())
 	}

@@ -79,32 +79,46 @@ Prime number.
 ```go
 package main
 
-import (
-    "fmt"
-)
+import "unsafe"
+
+import "github.com/elliotchance/c2go/noarch"
 
 // ... lots of system types in Go removed for brevity.
 
+var stdin *noarch.File
+var stdout *noarch.File
+var stderr *noarch.File
+
 func main() {
-    var n int
-    var c int
-    fmt.Printf("Enter a number\n")
-    fmt.Scanf("%d", &n)
-    if n == 2 {
-        fmt.Printf("Prime number.\n")
-    } else {
-        for c = 2; c <= n - 1; c += 1 {
-            if n % c == 0 {
-                break
-            }
-        }
-        if c != n {
-            fmt.Printf("Not prime.\n")
-        } else {
-            fmt.Printf("Prime number.\n")
-        }
-    }
-    return
+	__init()
+	var n int
+	var c int
+	noarch.Printf([]byte("Enter a number\n\x00"))
+	noarch.Scanf([]byte("%d\x00"), (*[1]int)(unsafe.Pointer(&n))[:])
+	if n == 2 {
+		noarch.Printf([]byte("Prime number.\n\x00"))
+	} else {
+		for c = 2; c <= n-1; func() int {
+			c += 1
+			return c
+		}() {
+			if n%c == 0 {
+				break
+			}
+		}
+		if c != n {
+			noarch.Printf([]byte("Not prime.\n\x00"))
+		} else {
+			noarch.Printf([]byte("Prime number.\n\x00"))
+		}
+	}
+	return
+}
+
+func __init() {
+	stdin = noarch.Stdin
+	stdout = noarch.Stdout
+	stderr = noarch.Stderr
 }
 ```
 

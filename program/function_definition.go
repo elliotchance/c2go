@@ -1,8 +1,9 @@
 package program
 
 import (
-	"regexp"
 	"strings"
+
+	"github.com/elliotchance/c2go/util"
 )
 
 // FunctionDefinition contains the prototype definition for a function.
@@ -195,6 +196,11 @@ var builtInFunctionDefinitions = []string{
 	"long long strtoll(const char *, char **, int) -> noarch.Strtoll",
 	"long unsigned int strtoul(const char *, char **, int) -> noarch.Strtoul",
 	"long long unsigned int strtoull(const char *, char **, int) -> noarch.Strtoull",
+	"void free(void*) -> _",
+
+	// time.h
+	"time_t time(time_t *) -> noarch.Time",
+	"char* ctime(const time_t *) -> noarch.Ctime",
 
 	// I'm not sure which header file these comes from?
 	"uint32 __builtin_bswap32(uint32) -> darwin.BSwap32",
@@ -255,7 +261,7 @@ func loadFunctionDefinitions() {
 	builtInFunctionDefinitionsHaveBeenLoaded = true
 
 	for _, f := range builtInFunctionDefinitions {
-		match := regexp.MustCompile(`^(.+) ([^ ]+)\(([, a-z*A-Z_0-9]*)\)( -> .+)?$`).
+		match := util.GetRegex(`^(.+) ([^ ]+)\(([, a-z*A-Z_0-9]*)\)( -> .+)?$`).
 			FindStringSubmatch(f)
 
 		// Unpack argument types.
@@ -277,7 +283,7 @@ func loadFunctionDefinitions() {
 
 			// The substitution might also rearrange the parameters (return and
 			// parameter transformation).
-			subMatch := regexp.MustCompile(`^(.*?) = (.*)\((.*)\)$`).
+			subMatch := util.GetRegex(`^(.*?) = (.*)\((.*)\)$`).
 				FindStringSubmatch(substitution)
 			if len(subMatch) > 0 {
 				returnParameters = dollarArgumentsToIntSlice(subMatch[1])
