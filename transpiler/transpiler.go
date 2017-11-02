@@ -12,8 +12,8 @@ import (
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/types"
 	"github.com/elliotchance/c2go/util"
-	"github.com/yulvil/c2go/types"
 )
 
 // TranspileAST iterates through the Clang AST and builds a Go AST
