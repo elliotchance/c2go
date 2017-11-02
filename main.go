@@ -11,7 +11,6 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
 	"io"
@@ -26,6 +25,7 @@ import (
 	"errors"
 
 	"github.com/elliotchance/c2go/ast"
+	"github.com/elliotchance/c2go/preprocessor"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/transpiler"
 )
@@ -35,7 +35,7 @@ import (
 //     c2go -v
 //
 // See https://github.com/elliotchance/c2go/wiki/Release-Process
-const Version = "v0.16.9 Radium 2017-10-30"
+const Version = "v0.16.10 Radium 2017-10-31"
 
 var stderr io.Writer = os.Stderr
 
@@ -57,6 +57,9 @@ type ProgramArgs struct {
 
 	// A private option to output the Go as a *_test.go file.
 	outputAsTest bool
+
+	// Keep unused entities
+	keepUnused bool
 }
 
 // DefaultProgramArgs default value of ProgramArgs
@@ -66,6 +69,7 @@ func DefaultProgramArgs() ProgramArgs {
 		ast:          false,
 		packageName:  "main",
 		outputAsTest: false,
+		keepUnused:   false,
 	}
 }
 
@@ -160,22 +164,10 @@ func Start(args ProgramArgs) (err error) {
 	if args.verbose {
 		fmt.Println("Running clang preprocessor...")
 	}
-	var pp []byte
-	{
-		// See : https://clang.llvm.org/docs/CommandGuide/clang.html
-		// clang -E <file>    Run the preprocessor stage.
-		argList := []string{"-E"}
-		argList = append(argList, args.inputFiles...)
-		cmd := exec.Command("clang", argList...)
-		var out bytes.Buffer
-		var stderr bytes.Buffer
-		cmd.Stdout = &out
-		cmd.Stderr = &stderr
-		err := cmd.Run()
-		if err != nil {
-			return fmt.Errorf("preprocess failed: %v\nStdErr = %v", err, stderr.String())
-		}
-		pp = out.Bytes()
+
+	pp, userPosition, err := preprocessor.Analyze(args.inputFile)
+	if err != nil {
+		return err
 	}
 
 	if args.verbose {
@@ -221,7 +213,8 @@ func Start(args ProgramArgs) (err error) {
 
 	p := program.NewProgram()
 	p.Verbose = args.verbose
-	p.OutputAsTest = true // args.outputAsTest
+	p.OutputAsTest = args.outputAsTest
+	p.UserPosition = userPosition
 
 	// Converting to nodes
 	if args.verbose {
@@ -325,6 +318,7 @@ func runCommand() int {
 	}
 
 	args := DefaultProgramArgs()
+	args.keepUnused = *keepUnused
 
 	switch os.Args[1] {
 	case "ast":

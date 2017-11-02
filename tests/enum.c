@@ -5,8 +5,8 @@ enum number{zero, one, two, three};
 
 enum
 {
-  _ISupper = ((0) < 8 ? ((1 << (0)) << 8) : ((1 << (0)) >> 8)),
-  _ISalnum = ((11) < 8 ? ((1 << (11)) << 8) : ((1 << (11)) >> 8))
+	qupper = 256,
+	qalnum = 8
 };
 
 enum year{Jan, Feb, Mar, Apr, May, Jun, Jul, 
@@ -27,31 +27,31 @@ int main()
 {
 	plan(17);
 
-	// step 1
+	// step 
 	enum number n;
 	n = two;
 	is_eq(two ,2);
 	is_eq(n   ,2);
 
-	// step 2
-	is_eq(_ISupper ,256);
-	is_eq(_ISalnum ,8  );
+	// step
+	is_eq(qupper ,256);
+	is_eq(qalnum ,8  );
 
-	// step 3
+	// step 
 	for (int i=Jan; i < Feb; i++){   
 		is_eq(i, Jan);
 	}
 
-	// step 4
+	// step 
 	is_eq( Working , 1);
 	is_eq( Failed  , 0);
 	is_eq( Freezed , 0);
 
-	// step 5
+	// step 
 	enum day d = thursday;
 	is_eq( d , 10);
 
-	// step 6
+	// step 
 	is_eq( sunday    ,  1);
 	is_eq( monday    ,  2);
 	is_eq( tuesday   ,  5);
@@ -60,7 +60,7 @@ int main()
 	is_eq( friday    , 11);
 	is_eq( saturday  , 12);
 
-	// step 7
+	// step 
 	is_eq( FindState() , FREEZED);
 
 	done_testing();

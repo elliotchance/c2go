@@ -73,8 +73,22 @@ var builtInFunctionDefinitions = []string{
 
 	// linux/ctype.h
 	"const unsigned short int** __ctype_b_loc() -> linux.CtypeLoc",
-	"int tolower(int) -> linux.ToLower",
+	// See https://opensource.apple.com/source/xnu/xnu-344.49/osfmk/libsa/ctype.h.auto.html
+	"int isalpha(int) -> linux.IsAlpha",
+	"int isalnum(int) -> linux.IsAlnum",
+	"int iscntrl(int) -> linux.IsCntrl",
+	"int isdigit(int) -> linux.IsDigit",
+	"int isgraph(int) -> linux.IsGraph",
+	"int islower(int) -> linux.IsLower",
+	"int isprint(int) -> linux.IsPrint",
+	"int ispunct(int) -> linux.IsPunct",
+	"int isspace(int) -> linux.IsSpace",
+	"int isupper(int) -> linux.IsUpper",
+	"int isxdigit(int) -> linux.IsXDigit",
 	"int toupper(int) -> linux.ToUpper",
+	"int tolower(int) -> linux.ToLower",
+	"int isascii(int) -> linux.IsASCII",
+	"int toascii(int) -> linux.ToASCII",
 
 	// linux/math.h
 	"int __signbitf(float) -> noarch.Signbitf",
@@ -84,11 +98,15 @@ var builtInFunctionDefinitions = []string{
 	"int __builtin_signbit(double) -> noarch.Signbitd",
 	"int __builtin_signbitl(long double) -> noarch.Signbitl",
 	"int __isnanf(float) -> linux.IsNanf",
+	"int __inline_isnanf(float) -> linux.IsNanf",
 	"int __isnan(double) -> noarch.IsNaN",
+	"int __inline_isnand(double) -> noarch.IsNaN",
+	"int __inline_isnanl(long double) -> noarch.IsNaN",
 	"int __isnanl(long double) -> noarch.IsNaN",
 	"int __isinff(float) -> linux.IsInff",
 	"int __isinf(double) -> linux.IsInf",
 	"int __isinfl(long double) -> linux.IsInf",
+	"int __inline_isinfl(long double) -> linux.IsInf",
 
 	// darwin/math.h
 	"double __builtin_fabs(double) -> darwin.Fabs",
@@ -106,6 +124,8 @@ var builtInFunctionDefinitions = []string{
 	"int __inline_signbitd(double) -> noarch.Signbitd",
 	"int __inline_signbitl(long double) -> noarch.Signbitl",
 	"double __builtin_nanf(const char*) -> darwin.NaN",
+	"int __inline_isinff(float) -> linux.IsInff",
+	"int __inline_isinfd(double) -> linux.IsInfd",
 
 	// linux/assert.h
 	"bool __assert_fail(const char*, const char*, unsigned int, const char*) -> linux.AssertFail",
@@ -195,6 +215,7 @@ var builtInFunctionDefinitions = []string{
 	"long long strtoll(const char *, char **, int) -> noarch.Strtoll",
 	"long unsigned int strtoul(const char *, char **, int) -> noarch.Strtoul",
 	"long long unsigned int strtoull(const char *, char **, int) -> noarch.Strtoull",
+	"void free(void*) -> _",
 
 	// time.h
 	"time_t time(time_t *) -> noarch.Time",
