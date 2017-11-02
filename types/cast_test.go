@@ -42,8 +42,8 @@ func TestCast(t *testing.T) {
 		// Casting to bool
 		{args{util.NewIntLit(1), "int", "bool"}, util.NewBinaryExpr(util.NewIntLit(1), token.NEQ, util.NewIntLit(0), "bool", false)},
 
-		// Casting from bool. This is a special case becuase C int and bool
-		// values are very commonly used interchangably.
+		// Casting from bool. This is a special case because C int and bool
+		// values are very commonly used interchangeably.
 		{args{util.NewIntLit(1), "bool", "int"}, util.NewCallExpr("noarch.BoolToInt", util.NewIntLit(1))},
 
 		// String types

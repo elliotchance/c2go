@@ -92,7 +92,7 @@ var simpleResolveTypes = map[string]string{
 //
 // 1. The Go type must be deterministic. The same C type will ALWAYS return the
 //    same Go type, in any condition. This is extremely important since the
-//    nature of C is that is may not have certain information avilable about the
+//    nature of C is that is may not have certain information available about the
 //    rest of the program or libraries when it is being compiled.
 //
 // 2. Many C type modifiers and properties are lost as they have no sensible or
@@ -213,10 +213,6 @@ func ResolveType(p *program.Program, s string) (string, error) {
 		return prefix + t, err
 	}
 
-	if util.GetRegex(`[\w ]+\*\[\d+\]$`).MatchString(s) {
-		return "[][]byte", nil
-	}
-
 	// Function pointers are not yet supported. In the mean time they will be
 	// replaced with a type that certainly wont work until we can fix this
 	// properly.
@@ -234,7 +230,7 @@ func ResolveType(p *program.Program, s string) (string, error) {
 	// slices.
 	// int [2][3] -> [][]int
 	// int [2][3][4] -> [][][]int
-	search2 := util.GetRegex(`([\w ]+)\s*((\[\d+\])+)`).FindStringSubmatch(s)
+	search2 := util.GetRegex(`([\w\* ]+)((\[\d+\])+)`).FindStringSubmatch(s)
 	if len(search2) > 2 {
 		t, err := ResolveType(p, search2[1])
 

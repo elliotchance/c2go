@@ -15,6 +15,14 @@ func removePrefix(s, prefix string) string {
 	return s
 }
 
+func removeSuffix(s, suffix string) string {
+	if strings.HasSuffix(s, suffix) {
+		s = s[:len(suffix)+1]
+	}
+
+	return s
+}
+
 // SizeOf returns the number of bytes for a type. This the same as using the
 // sizeof operator/function in C.
 func SizeOf(p *program.Program, cType string) (int, error) {
@@ -23,6 +31,7 @@ func SizeOf(p *program.Program, cType string) (int, error) {
 	cType = removePrefix(cType, "unsigned ")
 	cType = removePrefix(cType, "const ")
 	cType = removePrefix(cType, "volatile ")
+	cType = removeSuffix(cType, "const")
 
 	// FIXME: The pointer size will be different on different platforms. We
 	// should find out the correct size at runtime.
