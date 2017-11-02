@@ -8,6 +8,7 @@ import (
 	"fmt"
 	goast "go/ast"
 	"go/token"
+	"strings"
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
@@ -145,9 +146,9 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 	   |-TypedefDecl 0x24d7910 <line:8:1, line:12:3> col:3 referenced s_t 'struct s_t':'s_t'
 	   | `-ElaboratedType 0x24d78c0 'struct s_t' sugar
 	   |   `-RecordType 0x24d7790 's_t'
-	   |     `-Record 0x24d7710 ''  <-- Adress of struct without name
+	   |     `-Record 0x24d7710 ''  <-- Address of struct without name
 	*/
-	if len(n.ChildNodes) > 0 {
+	if len(n.ChildNodes) > 0 && (strings.Contains(n.Type, "struct") || strings.Contains(n.Type2, "struct")) {
 		// find inside AST element Record
 		var deeper func([]ast.Node) (*ast.Record, error)
 
@@ -176,7 +177,7 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 					return err
 				}
 				// removing from map, because now defined
-				delete(p.StructsEmptyName, n.Addr)
+				// delete(p.StructsEmptyName, n.Addr)
 				return nil
 			} else {
 				p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Cannot found address for struct without name"), n))
