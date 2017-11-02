@@ -245,6 +245,8 @@ func setPosition(node Node, position Position) {
 		n.Pos = position
 	case *CompoundAssignOperator:
 		n.Pos = position
+	case *CompoundLiteralExpr:
+		n.Pos = position
 	case *CStyleCastExpr:
 		n.Pos = position
 	case *DeclRefExpr:

@@ -185,6 +185,9 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 	case *ast.InitListExpr:
 		expr, exprType, err = transpileInitListExpr(n, p)
 
+	case *ast.CompoundLiteralExpr:
+		expr, exprType, err = transpileCompoundLiteralExpr(n, p)
+
 	case *ast.StmtExpr:
 		return transpileStmtExpr(n, p)
 
