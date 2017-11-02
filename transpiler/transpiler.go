@@ -302,7 +302,11 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 		return
 	}
 
-	stmt = util.NewExprStmt(expr)
+	// nil is happen, when we remove function `free` of <stdlib.h>
+	// see function CallExpr in transpiler
+	if expr != (*goast.CallExpr)(nil) {
+		stmt = util.NewExprStmt(expr)
+	}
 
 	return
 }
