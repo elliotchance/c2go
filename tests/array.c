@@ -94,7 +94,8 @@ void test_argarr()
     is_eq(8, dummy(abc));
 }
 
-void test_multidim() {
+void test_multidim()
+{
     int a[2][3] = {{5,6,7},{50,60,70}};
     is_eq(a[1][2], 70);
 
@@ -113,6 +114,19 @@ void test_multidim() {
     is_eq(c[1][1].c, 'a');
 }
 
+void test_ptrarr()
+{
+    int b = 22;
+
+    int *d[3];
+    d[1] = &b;
+    is_eq(*(d[1]), 22);
+
+    int **e[4];
+    e[0] = d;
+    is_eq(*(e[0][1]), 22);
+}
+
 void test_stringarr_init()
 {
     char *a[] = {"a", "bc", "def"};
@@ -123,7 +137,7 @@ void test_stringarr_init()
 
 int main()
 {
-    plan(36);
+    plan(38);
 
     START_TEST(intarr);
     START_TEST(doublearr);
@@ -135,6 +149,7 @@ int main()
     START_TEST(structarr);
     START_TEST(argarr);
     START_TEST(multidim);
+    START_TEST(ptrarr);
     START_TEST(stringarr_init);
 
     done_testing();
