@@ -40,7 +40,7 @@ int b;
 
 int main()
 {
-    plan(37);
+    plan(39);
 
     diag("Integer types");
     check_sizes(char, 1);
@@ -95,6 +95,10 @@ int main()
     int **e[4];
     e[0] = d;
     is_eq(sizeof(e), 32);
+
+    const char * const f[] = {"a", "b", "c", "d", "e", "f"};
+    is_eq(sizeof(f), 48);
+    is_streq(f[1], "b");
 
     done_testing();
 }
