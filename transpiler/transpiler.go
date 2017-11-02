@@ -13,6 +13,7 @@ import (
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/util"
+	"github.com/yulvil/c2go/types"
 )
 
 // TranspileAST iterates through the Clang AST and builds a Go AST
@@ -169,6 +170,9 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 
 	case *ast.CStyleCastExpr:
 		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children()[0], p, exprIsStmt)
+		if err == nil {
+			expr, err = types.CastExpr(p, expr, exprType, n.Type)
+		}
 
 	case *ast.CharacterLiteral:
 		expr, exprType, err = transpileCharacterLiteral(n), "char", nil
