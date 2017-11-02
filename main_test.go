@@ -308,12 +308,12 @@ func TestGoPath(t *testing.T) {
 }
 
 func TestMultifileTranspilation(t *testing.T) {
-	testFiles, err := filepath.Glob("./tests/multi/*.c")
-	if err != nil {
-		t.Fatal(err)
-	}
 	var args = ProgramArgs{}
-	args.inputFiles = testFiles
+	args.inputFiles = []string{
+		"./tests/multi/four.c",
+		"./tests/multi/two.c",
+		"./tests/multi/main.c",
+	}
 	dir, err := ioutil.TempDir("", "c2go_multi")
 	if err != nil {
 		t.Fatal(err)

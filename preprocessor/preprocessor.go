@@ -21,10 +21,54 @@ type entity struct {
 }
 
 // Analyze - separation preprocessor code to part
-func Analyze(inputFile string) (pp []byte, userPosition int, err error) {
+func Analyze(inputFiles []string) (pp []byte, err error) {
+	var allItems []entity
+
+	allItems, err = analyzeFiles(inputFiles)
+	if err != nil {
+		return
+	}
+
+	// Merge the entities
+	var lines []string
+	for i := range allItems {
+		var found bool
+		for j := 0; j < i; j++ {
+			if allItems[i].include == allItems[j].include &&
+				allItems[i].positionInSource == allItems[j].positionInSource &&
+				allItems[i].other == allItems[j].other {
+				found = true
+			}
+		}
+		if found {
+			continue
+		}
+
+		// Parameter "other" is not included for avoid like:
+		// ./tests/multi/head.h:4:28: error: invalid line marker flag '2': cannot pop empty include stack
+		// # 2 "./tests/multi/main.c" 2
+		//                            ^
+		header := fmt.Sprintf("# %d \"%s\"", allItems[i].positionInSource, allItems[i].include)
+		lines = append(lines, header)
+		if len(allItems[i].lines) > 0 {
+			for ii, l := range allItems[i].lines {
+				if ii == 0 {
+					continue
+				}
+				lines = append(lines, *l)
+			}
+		}
+	}
+	pp = ([]byte)(strings.Join(lines, "\n"))
+
+	return
+}
+
+// analyze - analyze single file and separation preprocessor code to part
+func analyzeFiles(inputFiles []string) (items []entity, err error) {
 	// See : https://clang.llvm.org/docs/CommandGuide/clang.html
 	// clang -E <file>    Run the preprocessor stage.
-	out, err := getPreprocessSource(inputFile)
+	out, err := getPreprocessSources(inputFiles)
 	if err != nil {
 		return
 	}
@@ -37,7 +81,6 @@ func Analyze(inputFile string) (pp []byte, userPosition int, err error) {
 	var counter int
 	// item, items - entity of preprocess file
 	var item *entity
-	var items []entity
 	for scanner.Scan() {
 		line := scanner.Text()
 		if len(line) > 0 && line[0] == '#' &&
@@ -63,51 +106,21 @@ func Analyze(inputFile string) (pp []byte, userPosition int, err error) {
 	if item != (*entity)(nil) {
 		items = append(items, *item)
 	}
+	return
+}
 
-	// Get list of include files
-	includeList, err := getIncludeList(inputFile)
+// See : https://clang.llvm.org/docs/CommandGuide/clang.html
+// clang -E <file>    Run the preprocessor stage.
+func getPreprocessSources(inputFiles []string) (out bytes.Buffer, err error) {
+	var stderr bytes.Buffer
+	cmd := exec.Command("clang", append([]string{"-E"}, inputFiles...)...)
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+	err = cmd.Run()
 	if err != nil {
+		err = fmt.Errorf("preprocess failed: %v\nStdErr = %v", err, stderr.String())
 		return
 	}
-
-	// Renumbering positionInSource in source for user code to unique
-	// Let`s call that positionInSource - userPosition
-	// for example: if some entity(GenDecl,...) have positionInSource
-	// less userPosition, then that is from system library, but not
-	// from user source.
-	for _, item := range items {
-		if userPosition < item.positionInSource {
-			userPosition = item.positionInSource
-		}
-	}
-	for _, item := range items {
-		userPosition += len(item.lines)
-	}
-	for i := range items {
-		for _, inc := range includeList {
-			if inc == items[i].include {
-				items[i].positionInSource = (userPosition + 1) * (i + 1)
-			}
-		}
-	}
-	// Now, userPosition is unique and more then other
-
-	// Merge the entities
-	lines := make([]string, 0, counter)
-	for _, item := range items {
-		header := fmt.Sprintf("# %d \"%s\"%s", item.positionInSource, item.include, item.other)
-		lines = append(lines, header)
-		if len(item.lines) > 0 {
-			for i, l := range item.lines {
-				if i == 0 {
-					continue
-				}
-				lines = append(lines, *l)
-			}
-		}
-	}
-	pp = ([]byte)(strings.Join(lines, "\n"))
-
 	return
 }
 
@@ -127,19 +140,4 @@ func getIncludeList(inputFile string) (lines []string, err error) {
 		return
 	}
 	return parseIncludeList(out.String())
-}
-
-// See : https://clang.llvm.org/docs/CommandGuide/clang.html
-// clang -E <file>    Run the preprocessor stage.
-func getPreprocessSource(inputFile string) (out bytes.Buffer, err error) {
-	var stderr bytes.Buffer
-	cmd := exec.Command("clang", "-E", inputFile)
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
-	err = cmd.Run()
-	if err != nil {
-		err = fmt.Errorf("preprocess failed: %v\nStdErr = %v", err, stderr.String())
-		return
-	}
-	return
 }

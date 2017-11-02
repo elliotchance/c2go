@@ -57,9 +57,6 @@ type ProgramArgs struct {
 
 	// A private option to output the Go as a *_test.go file.
 	outputAsTest bool
-
-	// Keep unused entities
-	keepUnused bool
 }
 
 // DefaultProgramArgs default value of ProgramArgs
@@ -69,7 +66,6 @@ func DefaultProgramArgs() ProgramArgs {
 		ast:          false,
 		packageName:  "main",
 		outputAsTest: false,
-		keepUnused:   false,
 	}
 }
 
@@ -165,7 +161,7 @@ func Start(args ProgramArgs) (err error) {
 		fmt.Println("Running clang preprocessor...")
 	}
 
-	pp, userPosition, err := preprocessor.Analyze(args.inputFile)
+	pp, err := preprocessor.Analyze(args.inputFiles)
 	if err != nil {
 		return err
 	}
@@ -214,7 +210,6 @@ func Start(args ProgramArgs) (err error) {
 	p := program.NewProgram()
 	p.Verbose = args.verbose
 	p.OutputAsTest = args.outputAsTest
-	p.UserPosition = userPosition
 
 	// Converting to nodes
 	if args.verbose {
@@ -245,7 +240,9 @@ func Start(args ProgramArgs) (err error) {
 		// We choose name for output Go code at the base
 		// on filename for first input file
 		cleanFileName := filepath.Clean(filepath.Base(args.inputFiles[0]))
-		extension := filepath.Ext(args.inputFiles[0])
+		// for output file we choose last file for avoid problem with
+		// global variables
+		extension := filepath.Ext(args.inputFiles[len(args.inputFiles)-1])
 		outputFilePath = cleanFileName[0:len(cleanFileName)-len(extension)] + ".go"
 	}
 
@@ -318,7 +315,6 @@ func runCommand() int {
 	}
 
 	args := DefaultProgramArgs()
-	args.keepUnused = *keepUnused
 
 	switch os.Args[1] {
 	case "ast":
