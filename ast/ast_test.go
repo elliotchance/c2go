@@ -36,3 +36,23 @@ func runNodeTests(t *testing.T, tests map[string]Node) {
 		})
 	}
 }
+
+func TestPrint(t *testing.T) {
+	cond := &ConditionalOperator{}
+	cond.AddChild(&ImplicitCastExpr{})
+	cond.AddChild(&ImplicitCastExpr{})
+	s := Atos(cond)
+	if len(s) == 0 {
+		t.Fatalf("Cannot convert AST tree : %#v", cond)
+	}
+	lines := strings.Split(s, "\n")
+	var amount int
+	for _, l := range lines {
+		if strings.Contains(l, "ImplicitCastExpr") {
+			amount++
+		}
+	}
+	if amount != 2 {
+		t.Error("Not correct design of output")
+	}
+}

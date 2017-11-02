@@ -11,7 +11,6 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
 	"io"
@@ -26,6 +25,7 @@ import (
 	"errors"
 
 	"github.com/elliotchance/c2go/ast"
+	"github.com/elliotchance/c2go/preprocessor"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/transpiler"
 	"github.com/elliotchance/c2go/util"
@@ -58,6 +58,9 @@ type ProgramArgs struct {
 
 	// A private option to output the Go as a *_test.go file.
 	outputAsTest bool
+
+	// Keep unused entities
+	keepUnused bool
 }
 
 // DefaultProgramArgs default value of ProgramArgs
@@ -67,6 +70,7 @@ func DefaultProgramArgs() ProgramArgs {
 		ast:          false,
 		packageName:  "main",
 		outputAsTest: false,
+		keepUnused:   false,
 	}
 }
 
@@ -198,20 +202,13 @@ func Start(args ProgramArgs) (err error) {
 	if args.verbose {
 		fmt.Println("Running clang preprocessor...")
 	}
-	var pp []byte
-	{
-		// See : https://clang.llvm.org/docs/CommandGuide/clang.html
-		// clang -E <file>    Run the preprocessor stage.
-		cmd := exec.Command("clang", "-E", args.inputFile)
-		var out bytes.Buffer
-		var stderr bytes.Buffer
-		cmd.Stdout = &out
-		cmd.Stderr = &stderr
-		err = cmd.Run()
-		if err != nil {
-			return fmt.Errorf("preprocess failed: %v\nStdErr = %v", err, stderr.String())
-		}
-		pp = out.Bytes()
+
+	pp, userPosition, err := preprocessor.Analyze(args.inputFile)
+	if err != nil {
+		return err
+	}
+	if args.keepUnused {
+		userPosition = 0
 	}
 
 	if args.verbose {
@@ -258,6 +255,7 @@ func Start(args ProgramArgs) (err error) {
 	p := program.NewProgram()
 	p.Verbose = args.verbose
 	p.OutputAsTest = args.outputAsTest
+	p.UserPosition = userPosition
 
 	// Converting to nodes
 	if args.verbose {
@@ -317,6 +315,7 @@ var (
 	verboseFlag       = transpileCommand.Bool("V", false, "print progress as comments")
 	outputFlag        = transpileCommand.String("o", "", "output Go generated code to the specified file")
 	packageFlag       = transpileCommand.String("p", "main", "set the name of the generated package")
+	keepUnused        = transpileCommand.Bool("keep-unused", false, "Keep unused constants, functions, variables, types and methods of unused types from C system headers")
 	transpileHelpFlag = transpileCommand.Bool("h", false, "print help information")
 	astCommand        = flag.NewFlagSet("ast", flag.ContinueOnError)
 	astHelpFlag       = astCommand.Bool("h", false, "print help information")
@@ -331,7 +330,7 @@ func main() {
 
 func runCommand() int {
 	flag.Usage = func() {
-		usage := "Usage: %s [-v] [<command>] [<flags>] file.c\n\n"
+		usage := "Usage: %s [-v] [<command>] [<flags>] [-keep-unused] file.c\n\n"
 		usage += "Commands:\n"
 		usage += "  transpile\ttranspile an input C source file to Go\n"
 		usage += "  ast\t\tprint AST before translated Go code\n\n"
@@ -358,6 +357,7 @@ func runCommand() int {
 	}
 
 	args := DefaultProgramArgs()
+	args.keepUnused = *keepUnused
 
 	switch os.Args[1] {
 	case "ast":

@@ -46,6 +46,8 @@ func Parse(line string) Node {
 	switch nodeName {
 	case "AlignedAttr":
 		return parseAlignedAttr(line)
+	case "AllocSizeAttr":
+		return parseAllocSizeAttr(line)
 	case "AlwaysInlineAttr":
 		return parseAlwaysInlineAttr(line)
 	case "ArraySubscriptExpr":
@@ -86,6 +88,8 @@ func Parse(line string) Node {
 		return parseDeclStmt(line)
 	case "DefaultStmt":
 		return parseDefaultStmt(line)
+	case "DisableTailCallsAttr":
+		return parseDisableTailCallsAttr(line)
 	case "DeprecatedAttr":
 		return parseDeprecatedAttr(line)
 	case "DoStmt":
