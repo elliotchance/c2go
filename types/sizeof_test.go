@@ -19,6 +19,12 @@ var sizeofTestCases = []sizeofTestCase{
 	{"int [2]", 4 * 2, nil},
 	{"int [2][3]", 4 * 2 * 3, nil},
 	{"int [2][3][4]", 4 * 2 * 3 * 4, nil},
+	{"int *[2]", 8 * 2, nil},
+	{"int *[2][3]", 8 * 2 * 3, nil},
+	{"int *[2][3][4]", 8 * 2 * 3 * 4, nil},
+	{"int *", 8, nil},
+	{"int **", 8, nil},
+	{"int ***", 8, nil},
 	{"struct c [2]", 0, fmt.Errorf("cannot determine size of: `struct c [2]`")},
 }
 
