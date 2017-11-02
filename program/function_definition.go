@@ -23,7 +23,7 @@ type FunctionDefinition struct {
 	// function. For example, "sin()".
 	Substitution string
 
-	// Can be overriden with the substitution to rearrange the return variables
+	// Can be overridden with the substitution to rearrange the return variables
 	// and parameters. When either of these are nil the behavior is to keep the
 	// single return value and parameters the same.
 	ReturnParameters []int
@@ -55,7 +55,7 @@ var builtInFunctionDefinitionsHaveBeenLoaded = false
 // Where $0 represents the C return value and $1 and above are for each of the
 // parameters.
 //
-// Transformations can also be used to specify varaible that need to be passed
+// Transformations can also be used to specify variable that need to be passed
 // by reference by using the prefix "&" instead of "$":
 //
 //     size_t fread(void*, size_t, size_t, FILE*) -> $0 = noarch.Fread(&1, $2, $3, $4)

@@ -45,7 +45,7 @@ func generateCharacterTable() {
 			c |= ((1 << (6)) << 8)
 		}
 
-		// The IsSpace check is required becuase Go treats spaces as graphic
+		// The IsSpace check is required because Go treats spaces as graphic
 		// characters, which C does not.
 		if unicode.IsGraphic(rune(i)) && !unicode.IsSpace(rune(i)) {
 			c |= ((1 << (7)) << 8)
