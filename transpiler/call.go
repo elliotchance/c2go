@@ -204,6 +204,44 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 		}
 	}
 
+	// Added for support removing function `free` of <stdlib.h>
+	// Example of C code:
+	// free(i+=4,buffer)
+	// Example of result Go code:
+	// i += 4
+	// _ = buffer
+	if functionDef.Substitution == "_" {
+		var argName string
+		if v, ok := realArgs[0].(*goast.CallExpr); ok && len(realArgs) == 1 {
+			if vv, ok := v.Args[0].(*goast.Ident); ok && len(v.Args) == 1 {
+				argName = vv.Name
+			}
+			if vv, ok := v.Args[0].(*goast.ParenExpr); ok && len(v.Args) == 1 {
+				argName = vv.X.(*goast.Ident).Name
+			}
+		}
+		if v, ok := realArgs[0].(*goast.Ident); ok {
+			argName = v.Name
+		}
+		if argName != "" {
+			devNull := &goast.AssignStmt{
+				Lhs: []goast.Expr{
+					&goast.Ident{
+						Name: "_",
+					},
+				},
+				Tok: token.ASSIGN,
+				Rhs: []goast.Expr{
+					&goast.Ident{
+						Name: argName,
+					},
+				},
+			}
+			preStmts = append(preStmts, devNull)
+			return nil, "", preStmts, postStmts, nil
+		}
+	}
+
 	return util.NewCallExpr(functionName, realArgs...),
 		functionDef.ReturnType, preStmts, postStmts, nil
 }

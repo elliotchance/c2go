@@ -13,6 +13,13 @@ func TestEnumDecl(t *testing.T) {
 			Name:       "__codecvt_result",
 			ChildNodes: []Node{},
 		},
+		`0x32fb5a0 <enum.c:3:1, col:45> col:6 week`: &EnumDecl{
+			Addr:       0x32fb5a0,
+			Pos:        NewPositionFromString("enum.c:3:1, col:45"),
+			Position2:  " col:6",
+			Name:       "week",
+			ChildNodes: []Node{},
+		},
 	}
 
 	runNodeTests(t, nodes)

@@ -3,7 +3,7 @@
 
 int main()
 {
-    plan(40);
+    plan(48);
 
     int i = 0;
 
@@ -88,6 +88,18 @@ int main()
 	for(int f = 0 , g = 0;g < 2 || f < 2; g++, f++){
 		pass("%d",f)
 		pass("%d",g)
+	}
+
+	{
+		diag("double initialization inside for with double for");
+		for(int ef = 0 , eg = 0;eg < 2 || ef < 2; eg++, ef++){
+			pass("%d",ef)
+			pass("%d",eg)
+		}
+		for(int ef = 0 , eg = 0;eg < 2 || ef < 2; eg++, ef++){
+			pass("%d",ef)
+			pass("%d",eg)
+		}
 	}
 
     done_testing();
