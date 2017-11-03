@@ -2,6 +2,8 @@ package program
 
 import (
 	"fmt"
+	goast "go/ast"
+	"go/token"
 
 	"github.com/elliotchance/c2go/ast"
 )
@@ -36,11 +38,13 @@ func NewStruct(n *ast.RecordDecl) *Struct {
 		case *ast.RecordDecl:
 			fields[f.Name] = NewStruct(f)
 
-		case *ast.MaxFieldAlignmentAttr, *ast.AlignedAttr:
+		case *ast.MaxFieldAlignmentAttr, *ast.AlignedAttr, *ast.TransparentUnionAttr:
 			// FIXME: Should these really be ignored?
 
 		default:
-			panic(fmt.Sprintf("cannot decode: %#v", f))
+			// show AST tree for analyzing
+			goast.Print(token.NewFileSet(), n)
+			panic(fmt.Sprintf("cannot decode: %#v\nin\n%#v", f, n))
 		}
 	}
 
