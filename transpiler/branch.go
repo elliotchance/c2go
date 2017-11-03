@@ -297,9 +297,9 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 // transpileWhileStmt - transpiler for operator While.
 // We have only operator FOR in Go, but in C we also have
 // operator WHILE. So, we have to convert to operator FOR.
-// We choose directly convertion  from AST C code to AST C code, for
+// We choose directly conversion  from AST C code to AST C code, for
 // - avoid dublicate of code in realization WHILE and FOR.
-// - create only one operator FOR powerfull.
+// - create only one operator FOR powerful.
 // Example of C code with operator WHILE:
 //	while(i > 0){
 //		printf("While: %d\n",i);
@@ -364,9 +364,9 @@ func transpileWhileStmt(n *ast.WhileStmt, p *program.Program) (
 // transpileDoStmt - transpiler for operator Do...While
 // We have only operators FOR and IF in Go, but in C we also have
 // operator DO...WHILE. So, we have to convert to operators FOR and IF.
-// We choose directly convertion  from AST C code to AST C code, for:
+// We choose directly conversion  from AST C code to AST C code, for:
 // - avoid dublicate of code in realization DO...WHILE and FOR.
-// - create only one powerfull operator FOR.
+// - create only one powerful operator FOR.
 // Example of C code with operator DO...WHILE:
 //	do{
 //		printf("While: %d\n",i);

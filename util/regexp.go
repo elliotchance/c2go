@@ -3,6 +3,7 @@ package util
 import (
 	"regexp"
 	"strings"
+	"sync"
 )
 
 // GroupsFromRegex gets RegExp groups after matching it on a line
@@ -30,14 +31,27 @@ func GroupsFromRegex(rx, line string) map[string]string {
 	return result
 }
 
-// cachedRegex - global map variable for saving regexp`s
-var cachedRegex = map[string]*regexp.Regexp{}
+// cachedRegex - structure for saving regexp`s
+type cachedRegex struct {
+	sync.RWMutex
+	m map[string]*regexp.Regexp
+}
+
+// Global variable
+var cr = cachedRegex{m: map[string]*regexp.Regexp{}}
 
 // GetRegex return regexp
 // added for minimaze regexp compilation
 func GetRegex(rx string) *regexp.Regexp {
-	if _, ok := cachedRegex[rx]; !ok {
-		cachedRegex[rx] = regexp.MustCompile(rx)
+	cr.RLock()
+	v, ok := cr.m[rx]
+	cr.RUnlock()
+	if ok {
+		return v
 	}
-	return cachedRegex[rx]
+	// if regexp is not in map
+	cr.Lock()
+	cr.m[rx] = regexp.MustCompile(rx)
+	cr.Unlock()
+	return GetRegex(rx)
 }

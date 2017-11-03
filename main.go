@@ -19,7 +19,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
-	"regexp"
+	"runtime"
 	"strings"
 
 	"errors"
@@ -28,6 +28,7 @@ import (
 	"github.com/elliotchance/c2go/preprocessor"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/transpiler"
+	"github.com/elliotchance/c2go/util"
 )
 
 // Version can be requested through the command line with:
@@ -35,7 +36,7 @@ import (
 //     c2go -v
 //
 // See https://github.com/elliotchance/c2go/wiki/Release-Process
-const Version = "v0.16.10 Radium 2017-10-31"
+const Version = "v0.16.12 Radium 2017-11-02"
 
 var stderr io.Writer = os.Stderr
 
@@ -70,7 +71,7 @@ func DefaultProgramArgs() ProgramArgs {
 }
 
 func readAST(data []byte) []string {
-	uncolored := regexp.MustCompile(`\x1b\[[\d;]+m`).ReplaceAll(data, []byte{})
+	uncolored := util.GetRegex(`\x1b\[[\d;]+m`).ReplaceAll(data, []byte{})
 	return strings.Split(string(uncolored), "\n")
 }
 
@@ -100,6 +101,45 @@ func convertLinesToNodes(lines []string) []treeNode {
 	nodes = nodes[0:counter]
 
 	return nodes
+}
+
+func convertLinesToNodesParallel(lines []string) []treeNode {
+	// function f separate full list on 2 parts and
+	// then each part can recursive run function f
+	var f func([]string, int) []treeNode
+
+	f = func(lines []string, deep int) []treeNode {
+		deep = deep - 2
+		part := len(lines) / 2
+
+		var tr1 = make(chan []treeNode)
+		var tr2 = make(chan []treeNode)
+
+		go func(lines []string, deep int) {
+			if deep <= 0 || len(lines) < deep {
+				tr1 <- convertLinesToNodes(lines)
+				return
+			}
+			tr1 <- f(lines, deep)
+		}(lines[0:part], deep)
+
+		go func(lines []string, deep int) {
+			if deep <= 0 || len(lines) < deep {
+				tr2 <- convertLinesToNodes(lines)
+				return
+			}
+			tr2 <- f(lines, deep)
+		}(lines[part:], deep)
+
+		defer close(tr1)
+		defer close(tr2)
+
+		return append(<-tr1, <-tr2...)
+	}
+
+	// Parameter of deep - can be any, but effective to use
+	// same amount of CPU
+	return f(lines, runtime.NumCPU())
 }
 
 // buildTree converts an array of nodes, each prefixed with a depth into a tree.
@@ -215,7 +255,7 @@ func Start(args ProgramArgs) (err error) {
 	if args.verbose {
 		fmt.Println("Converting to nodes...")
 	}
-	nodes := convertLinesToNodes(lines)
+	nodes := convertLinesToNodesParallel(lines)
 
 	// build tree
 	if args.verbose {

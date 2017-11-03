@@ -3,10 +3,10 @@ package types
 import (
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/util"
 )
 
 // TODO: Some of these are based on assumptions that may not be true for all
@@ -95,7 +95,7 @@ var simpleResolveTypes = map[string]string{
 //
 // 1. The Go type must be deterministic. The same C type will ALWAYS return the
 //    same Go type, in any condition. This is extremely important since the
-//    nature of C is that is may not have certain information avilable about the
+//    nature of C is that is may not have certain information available about the
 //    rest of the program or libraries when it is being compiled.
 //
 // 2. Many C type modifiers and properties are lost as they have no sensible or
@@ -200,7 +200,7 @@ func ResolveType(p *program.Program, s string) (string, error) {
 
 	// It may be a pointer of a simple type. For example, float *, int *,
 	// etc.
-	if regexp.MustCompile("[\\w ]+\\*+$").MatchString(s) {
+	if util.GetRegex("[\\w ]+\\*+$").MatchString(s) {
 		// The "-1" is important because there may or may not be a space between
 		// the name and the "*". If there is an extra space it will be trimmed
 		// off.
@@ -216,19 +216,15 @@ func ResolveType(p *program.Program, s string) (string, error) {
 		return prefix + t, err
 	}
 
-	if regexp.MustCompile(`[\w ]+\*\[\d+\]$`).MatchString(s) {
-		return "[]string", nil
-	}
-
 	// Function pointers are not yet supported. In the mean time they will be
 	// replaced with a type that certainly wont work until we can fix this
 	// properly.
-	search := regexp.MustCompile("[\\w ]+\\(\\*.*?\\)\\(.*\\)").MatchString(s)
+	search := util.GetRegex("[\\w ]+\\(\\*.*?\\)\\(.*\\)").MatchString(s)
 	if search {
 		return "interface{}", errors.New("function pointers are not supported")
 	}
 
-	search = regexp.MustCompile("[\\w ]+ \\(.*\\)").MatchString(s)
+	search = util.GetRegex("[\\w ]+ \\(.*\\)").MatchString(s)
 	if search {
 		return "interface{}", errors.New("function pointers are not supported")
 	}
@@ -237,11 +233,11 @@ func ResolveType(p *program.Program, s string) (string, error) {
 	// slices.
 	// int [2][3] -> [][]int
 	// int [2][3][4] -> [][][]int
-	search2 := regexp.MustCompile(`([\w ]+)\s*((\[\d+\])+)`).FindStringSubmatch(s)
+	search2 := util.GetRegex(`([\w\* ]+)((\[\d+\])+)`).FindStringSubmatch(s)
 	if len(search2) > 2 {
 		t, err := ResolveType(p, search2[1])
 
-		var re = regexp.MustCompile(`[0-9]+`)
+		var re = util.GetRegex(`[0-9]+`)
 		arraysNoSize := re.ReplaceAllString(search2[2], "")
 
 		return fmt.Sprintf("%s%s", arraysNoSize, t), err

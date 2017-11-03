@@ -42,8 +42,8 @@ func TestCast(t *testing.T) {
 		// Casting to bool
 		{args{util.NewIntLit(1), "int", "bool"}, util.NewBinaryExpr(util.NewIntLit(1), token.NEQ, util.NewIntLit(0), "bool", false)},
 
-		// Casting from bool. This is a special case becuase C int and bool
-		// values are very commonly used interchangably.
+		// Casting from bool. This is a special case because C int and bool
+		// values are very commonly used interchangeably.
 		{args{util.NewIntLit(1), "bool", "int"}, util.NewCallExpr("noarch.BoolToInt", util.NewIntLit(1))},
 
 		// String types
@@ -81,6 +81,13 @@ func TestGetArrayTypeAndSize(t *testing.T) {
 		{"int [4][3]", "int [3]", 4},
 		{"int [4][3][2]", "int [3][2]", 4},
 		{"int [4][3][2][1]", "int [3][2][1]", 4},
+		{"int *[4]", "int *", 4},
+		{"int *[4][3]", "int *[3]", 4},
+		{"int *[4][3][2]", "int *[3][2]", 4},
+		{"int *[4][3][2][1]", "int *[3][2][1]", 4},
+		{"char *const", "char *const", -1},
+		{"char *const [6]", "char *const", 6},
+		{"char *const [6][5]", "char *const [5]", 6},
 	}
 
 	for _, tt := range tests {

@@ -214,7 +214,7 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 	[]goast.Stmt, []goast.Stmt, string) {
 	// There are cases where the same variable is defined more than once. I
-	// assume this is becuase they are extern or static definitions. For now, we
+	// assume this is because they are extern or static definitions. For now, we
 	// will ignore any redefinitions.
 	if _, found := p.GlobalVariables[n.Name]; found {
 		return nil, nil, ""

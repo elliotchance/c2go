@@ -20,7 +20,7 @@ import (
 //
 //     a ? b : c
 //
-// We cannot simply convert these to an "if" statement becuase they by inside
+// We cannot simply convert these to an "if" statement because they by inside
 // another expression.
 //
 // Since Go does not support the ternary operator or inline "if" statements we
@@ -98,7 +98,7 @@ func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program
 // transpileParenExpr transpiles an expression that is wrapped in parentheses.
 // There is a special case where "(0)" is treated as a NULL (since that's what
 // the macro expands to). We have to return the type as "null" since we don't
-// know at this point what the NULL expression will be used in conjuction with.
+// know at this point what the NULL expression will be used in conjunction with.
 func transpileParenExpr(n *ast.ParenExpr, p *program.Program) (
 	*goast.ParenExpr, string, []goast.Stmt, []goast.Stmt, error) {
 	preStmts := []goast.Stmt{}
