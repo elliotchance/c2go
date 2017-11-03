@@ -84,10 +84,11 @@ curl https://sqlite.org/2017/$SQLITE3_FILE.zip > $SQLITE_TEMP_FOLDER/$SQLITE3_FI
 unzip $SQLITE_TEMP_FOLDER/$SQLITE3_FILE.zip -d $SQLITE_TEMP_FOLDER
 
 # Transpile the SQLite3 files.
+# If transpiling write to stderr, then it will be append into OUTFILE
 echo "Transpiling shell.c..."
-./c2go transpile -o=$SQLITE_TEMP_FOLDER/shell.go   $SQLITE_TEMP_FOLDER/sqlite-amalgamation-3190300/shell.c
+./c2go transpile -o=$SQLITE_TEMP_FOLDER/shell.go   $SQLITE_TEMP_FOLDER/sqlite-amalgamation-3190300/shell.c  >> $OUTFILE 2>&1
 echo "Transpiling sqlite3.c..."
-./c2go transpile -o=$SQLITE_TEMP_FOLDER/sqlite3.go $SQLITE_TEMP_FOLDER/sqlite-amalgamation-3190300/sqlite3.c
+./c2go transpile -o=$SQLITE_TEMP_FOLDER/sqlite3.go $SQLITE_TEMP_FOLDER/sqlite-amalgamation-3190300/sqlite3.c >> $OUTFILE 2>&1
 
 # Show amount "Warning" in sqlite Go codes
 SQLITE_WARNING=`cat $SQLITE_TEMP_FOLDER/sqlite3.go | grep "// Warning" | wc -l`
