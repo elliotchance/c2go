@@ -68,6 +68,8 @@ func Parse(line string) Node {
 		return parseCaseStmt(line)
 	case "CharacterLiteral":
 		return parseCharacterLiteral(line)
+	case "CompoundLiteralExpr":
+		return parseCompoundLiteralExpr(line)
 	case "CompoundStmt":
 		return parseCompoundStmt(line)
 	case "ConditionalOperator":
