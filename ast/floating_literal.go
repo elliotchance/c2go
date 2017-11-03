@@ -3,9 +3,8 @@ package ast
 import (
 	"errors"
 	"fmt"
-	"reflect"
-
 	"github.com/elliotchance/c2go/cc"
+	"reflect"
 )
 
 type FloatingLiteral struct {
