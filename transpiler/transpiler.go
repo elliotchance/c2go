@@ -320,7 +320,6 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 }
 
 func transpileToNode(node ast.Node, p *program.Program) error {
-
 	switch n := node.(type) {
 	case *ast.TranslationUnitDecl:
 		for _, c := range n.Children() {

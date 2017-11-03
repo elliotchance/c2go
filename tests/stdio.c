@@ -178,7 +178,8 @@ void test_fscanf()
 
     is_eq(f, 3.1416);
     is_streq(str, "PI");
-	  // remove temp file
+    
+	// remove temp file
     is_eq(remove("/tmp/myfile2.txt"),0)
 }
 
@@ -234,7 +235,7 @@ void test_fputs()
     pFile = fopen("/tmp/mylog.txt", "w");
     fputs(sentence, pFile);
     fclose(pFile);
-	  // remove temp file
+	// remove temp file
     is_eq(remove("/tmp/mylog.txt"),0)
 }
 
@@ -280,7 +281,7 @@ void test_fseek()
     fseek(pFile, 9, SEEK_SET);
     fputs(" sam", pFile);
     fclose(pFile);
-	  // remove temp file
+	// remove temp file
     is_eq(remove("/tmp/example.txt"),0)
 }
 
@@ -374,7 +375,7 @@ void test_fsetpos()
     fsetpos(pFile, &position);
     fputs("This", pFile);
     fclose(pFile);
-	  // remove temp file
+	// remove temp file
     is_eq(remove("/tmp/myfile.txt"),0)
 }
 
@@ -393,7 +394,8 @@ void test_rewind()
     buffer[26] = '\0';
 
     is_eq(strlen(buffer), 26);
-	  // remove temp file
+	
+	// remove temp file
     is_eq(remove("/tmp/myfile.txt"),0)
 }
 
