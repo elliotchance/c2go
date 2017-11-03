@@ -36,23 +36,6 @@ func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (
 	// FIXME: This is for linux to make sure the globals have the right type.
 	if n.Name == "stdout" || n.Name == "stdin" || n.Name == "stderr" {
 		theType = "FILE *"
-		return &goast.Ident{Name: fmt.Sprintf("noarch.%s", util.Ucfirst(n.Name))}, theType, nil
-	}
-	// Added for darwin
-	if n.Name == "__stdoutp" || n.Name == "__stdinp" || n.Name == "__stderrp" {
-		theType = "FILE *"
-		return &goast.Ident{Name: fmt.Sprintf("noarch.%s", util.Ucfirst(n.Name[2:len(n.Name)-1]))}, theType, nil
-	}
-
-	// For future : we don't check - that value from 'ctype.h' or not ?
-	// That is for constants from `ctype.h`
-	ctypeConstants := []string{"_ISupper", "_ISlower", "_ISalpha", "_ISdigit", "_ISxdigit",
-		"_ISspace", "_ISprint", "_ISgraph", "_ISblank", "_IScntrl",
-		"_ISpunct", "_ISalnum"}
-	for _, c := range ctypeConstants {
-		if n.Name == c {
-			return &goast.Ident{Name: fmt.Sprintf("noarch.%s", n.Name[1:])}, "uint16", nil
-		}
 	}
 
 	return util.NewIdent(n.Name), theType, nil
