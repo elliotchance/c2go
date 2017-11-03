@@ -26,7 +26,7 @@ char arrnul[] = "this string has a \0 NUL";
 
 int main()
 {
-  plan(104);
+  plan(112);
 
   //              . Lower alpha (a)
   //              |  . Upper alpha (B)
@@ -68,6 +68,30 @@ int main()
   is_eq(toupper(' '), ' ');
   is_eq(toupper('\n'), '\n');
   is_eq(toupper('z'), 'Z');
+
+  int counter = 0;
+
+  diag("isdigit");
+  if (isdigit('1')){ counter ++; }
+  is_eq(counter,1);
+  if (isdigit('0')){ counter ++; }
+  is_eq(counter,2);
+  if (isdigit('O')){ counter ++; }
+  is_eq(counter,2);
+
+  diag("isalpha");
+  if (isalpha('j')){ counter ++; }
+  is_eq(counter,3);
+  if (isalpha('*')){ counter ++; }
+  is_eq(counter,3);
+
+  diag("isalnum");
+  if (isalnum('j')){ counter ++; }
+  is_eq(counter,4);
+  if (isalnum('4')){ counter ++; }
+  is_eq(counter,5);
+  if (isalnum('*')){ counter ++; }
+  is_eq(counter,5);
 
   done_testing();
 }
