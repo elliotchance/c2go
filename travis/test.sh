@@ -89,5 +89,9 @@ echo "Transpiling shell.c..."
 echo "Transpiling sqlite3.c..."
 ./c2go transpile -o=$SQLITE_TEMP_FOLDER/sqlite3.go $SQLITE_TEMP_FOLDER/sqlite-amalgamation-3190300/sqlite3.c
 
+# Show amount "Warning" in sqlite Go codes
+SQLITE_WARNING=`cat $SQLITE_TEMP_FOLDER/sqlite3.go | grep "// Warning" | wc -l`
+echo "In file sqlite3.go : $SQLITE_WARNING warnings."
+
 # Remove c2go executable file
 rm ./c2go
