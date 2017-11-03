@@ -277,12 +277,14 @@ func Start(args ProgramArgs) (err error) {
 	outputFilePath := args.outputFile
 
 	if outputFilePath == "" {
+		// Choose inputFile for creating name of output file
+		input := args.inputFiles[len(args.inputFiles)-1]
 		// We choose name for output Go code at the base
 		// on filename for first input file
-		cleanFileName := filepath.Clean(filepath.Base(args.inputFiles[0]))
+		cleanFileName := filepath.Clean(filepath.Base(input))
 		// for output file we choose last file for avoid problem with
 		// global variables
-		extension := filepath.Ext(args.inputFiles[len(args.inputFiles)-1])
+		extension := filepath.Ext(input)
 		outputFilePath = cleanFileName[0:len(cleanFileName)-len(extension)] + ".go"
 	}
 
