@@ -179,9 +179,8 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 				// removing from map, because now defined
 				// delete(p.StructsEmptyName, n.Addr)
 				return nil
-			} else {
-				p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Cannot found address for struct without name"), n))
 			}
+			p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Cannot found address for struct without name"), n))
 		}
 	}
 
