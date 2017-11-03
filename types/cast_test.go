@@ -81,6 +81,13 @@ func TestGetArrayTypeAndSize(t *testing.T) {
 		{"int [4][3]", "int [3]", 4},
 		{"int [4][3][2]", "int [3][2]", 4},
 		{"int [4][3][2][1]", "int [3][2][1]", 4},
+		{"int *[4]", "int *", 4},
+		{"int *[4][3]", "int *[3]", 4},
+		{"int *[4][3][2]", "int *[3][2]", 4},
+		{"int *[4][3][2][1]", "int *[3][2][1]", 4},
+		{"char *const", "char *const", -1},
+		{"char *const [6]", "char *const", 6},
+		{"char *const [6][5]", "char *const [5]", 6},
 	}
 
 	for _, tt := range tests {
