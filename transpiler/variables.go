@@ -91,13 +91,19 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 
 					if vv, ok := v.Children()[0].(*ast.ImplicitCastExpr); ok {
 						if decl, ok := vv.Children()[0].(*ast.DeclRefExpr); ok {
-
 							nameVar2 := decl.Name
 
-							fmt.Println("Type         : ", v.Type)
-							fmt.Printf("functionType : %#v\n", functionType)
-							fmt.Printf("nameVar1     : %#v\n", nameVar1)
-							fmt.Printf("nameVar2     : %#v\n", nameVar2)
+							return &goast.DeclStmt{Decl: &goast.GenDecl{
+								Tok: token.VAR,
+								Specs: []goast.Spec{&goast.ValueSpec{
+									Names: []*goast.Ident{&goast.Ident{Name: nameVar1}},
+									Type:  functionType,
+									Values: []goast.Expr{&goast.TypeAssertExpr{
+										X:    &goast.Ident{Name: nameVar2},
+										Type: functionType,
+									}},
+								},
+								}}}, preStmts, postStmts, nil
 						}
 					}
 				}
