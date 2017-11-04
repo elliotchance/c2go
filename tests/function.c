@@ -8,7 +8,7 @@ void function(){
 
 int main()
 {
-    plan(4);
+    plan(5);
 
     pass("%s", "Main function.");
 
@@ -17,7 +17,8 @@ int main()
     pass("%s", "Back in function main.");
 
 	// pointer on function
-	void * a;
+	void * a = NULL;
+	is_null(a);
 	a = function;
 	is_not_null(a);	
 
