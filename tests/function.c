@@ -3,12 +3,15 @@
 
 void my_function();
 
+int i = 40;
+
 void function(){
+	i += 2;
 }
 
 int main()
 {
-    plan(5);
+    plan(7);
 
     pass("%s", "Main function.");
 
@@ -20,7 +23,11 @@ int main()
 	void * a = NULL;
 	is_null(a);
 	a = function;
-	is_not_null(a);	
+	is_not_null(a);
+	void(*t)(void) = a;
+	is_not_null(t);
+	t();
+	is_eq(i,42);
 
     done_testing();
 }
