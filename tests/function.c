@@ -3,15 +3,23 @@
 
 void my_function();
 
+void function(){
+}
+
 int main()
 {
-    plan(3);
+    plan(4);
 
     pass("%s", "Main function.");
 
     my_function();
 
     pass("%s", "Back in function main.");
+
+	// pointer on function
+	void * a;
+	a = function;
+	is_not_null(a);	
 
     done_testing();
 }

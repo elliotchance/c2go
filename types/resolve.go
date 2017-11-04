@@ -41,9 +41,9 @@ var simpleResolveTypes = map[string]string{
 	"void":                   "",
 	"_Bool":                  "bool",
 
-	// void* is treated like char*
-	"void*":  "[]byte",
-	"void *": "[]byte",
+	// void*
+	"void*":  "interface{}",
+	"void *": "interface{}",
 
 	// null is a special case (it should probably have a less ambiguos name)
 	// when using the NULL macro.
