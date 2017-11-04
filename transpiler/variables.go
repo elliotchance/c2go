@@ -54,9 +54,13 @@ func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
 
 	var values []goast.Expr
 	if !types.IsNullExpr(defaultValue) {
-		t, err := types.CastExpr(p, defaultValue, defaultValueType, a.Type)
-		if !p.AddMessage(p.GenerateWarningMessage(err, a)) {
-			values = []goast.Expr{t}
+		if _, ok := defaultValue.(*goast.CallExpr); ok {
+			values = append(values, defaultValue)
+		} else {
+			t, err := types.CastExpr(p, defaultValue, defaultValueType, a.Type)
+			if !p.AddMessage(p.GenerateWarningMessage(err, a)) {
+				values = []goast.Expr{t}
+			}
 		}
 	}
 
