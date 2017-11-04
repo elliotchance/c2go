@@ -56,10 +56,10 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 	// } name;
 	// Name of RecordDecl is empty
 	// So, we have to save all n.Children at the base of Address
-	//if name == "" {
-	p.StructsEmptyName[n.Addr] = n.ChildNodes
-	//	return nil
-	//}
+	if name == "" && n.Kind == "struct" {
+		p.StructsEmptyName[n.Addr] = n.ChildNodes
+		return nil
+	}
 
 	if name == "" || p.IsTypeAlreadyDefined(name) {
 		return nil
@@ -136,10 +136,6 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 	name := n.Name
 
-	if p.IsTypeAlreadyDefined(name) {
-		return nil
-	}
-
 	// added for support "struct typedef" with empty name of struct
 	// Example :
 	/*
@@ -181,13 +177,15 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 					if err != nil {
 						return err
 					}
-					// removing from map, because now defined
-					// delete(p.StructsEmptyName, n.Addr)
 					return nil
 				}
-				p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Cannot found address for struct without name"), n))
+				p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Cannot found address for struct without name for node : %#v", n), n))
 			}
 		}
+	}
+
+	if p.IsTypeAlreadyDefined(name) {
+		return nil
 	}
 
 	p.DefineType(name)
