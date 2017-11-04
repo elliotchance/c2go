@@ -33,6 +33,7 @@ int main()
 	t();
 	is_eq(i,42);
 	t = function2;
+	is_not_null(t);
 	t();
 	is_eq(i,50);
 
