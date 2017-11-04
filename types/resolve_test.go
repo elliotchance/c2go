@@ -16,7 +16,7 @@ var resolveTestCases = []resolveTestCase{
 	{"int", "int"},
 	{"char *[13]", "[][]byte"},
 	{"__uint16_t", "uint16"},
-	{"void *", "[]byte"},
+	{"void *", "interface{}"},
 	{"unsigned short int", "uint16"},
 	{"_Bool", "bool"},
 	{"struct RowSetEntry *", "[]RowSetEntry"},
