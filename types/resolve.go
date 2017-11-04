@@ -244,3 +244,43 @@ func ResolveType(p *program.Program, s string) (string, error) {
 		"I couldn't find an appropriate Go type for the C type '%s'.", s)
 	return "interface{}", errors.New(errMsg)
 }
+
+func ResolveFunction(p *program.Program, s string) (fields []string, returns []string, err error) {
+	f, r, err := ParseFunction(s)
+	if err != nil {
+		return
+	}
+	for i := range f {
+		var t string
+		t, err = ResolveType(p, f[i])
+		if err != nil {
+			return
+		}
+		fields = append(fields, t)
+	}
+	for i := range r {
+		var t string
+		t, err = ResolveType(p, r[i])
+		if err != nil {
+			return
+		}
+		returns = append(returns, t)
+	}
+	return
+}
+
+func ParseFunction(s string) (f []string, r []string, err error) {
+	i := strings.Index(s, "(")
+	r = append(r, s[0:i])
+	inside := strings.TrimSpace(strings.Split(s, "(*)")[1])
+	f = append(f, strings.Split(inside[1:len(inside)-1], ",")...)
+
+	for i := range r {
+		r[i] = strings.TrimSpace(r[i])
+	}
+	for i := range f {
+		f[i] = strings.TrimSpace(f[i])
+	}
+
+	return
+}
