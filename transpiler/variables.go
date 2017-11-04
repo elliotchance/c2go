@@ -82,13 +82,24 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 			if len(v.Type) > 0 {
 				// Is it function ?
 				if v.Type[len(v.Type)-1] == ')' {
-					fmt.Println("ImplicitCastExpr function : ", v.Type)
 					fields, returns, err := types.ResolveFunction(p, v.Type)
 					if err != nil {
 						panic(err)
 					}
-					ft := GenerateFuncType(fields, returns)
-					fmt.Printf("%v\n", ft)
+					functionType := GenerateFuncType(fields, returns)
+					nameVar1 := a.Name
+
+					if vv, ok := v.Children()[0].(*ast.ImplicitCastExpr); ok {
+						if decl, ok := vv.Children()[0].(*ast.DeclRefExpr); ok {
+
+							nameVar2 := decl.Name
+
+							fmt.Println("Type         : ", v.Type)
+							fmt.Printf("functionType : %#v\n", functionType)
+							fmt.Printf("nameVar1     : %#v\n", nameVar1)
+							fmt.Printf("nameVar2     : %#v\n", nameVar2)
+						}
+					}
 				}
 			}
 		}
