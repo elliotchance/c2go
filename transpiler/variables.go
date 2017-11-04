@@ -84,7 +84,7 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 				if v.Type[len(v.Type)-1] == ')' {
 					fields, returns, err := types.ResolveFunction(p, v.Type)
 					if err != nil {
-						panic(err)
+						return &goast.DeclStmt{}, preStmts, postStmts, fmt.Errorf("Cannot resolve function : %v", err)
 					}
 					functionType := GenerateFuncType(fields, returns)
 					nameVar1 := a.Name

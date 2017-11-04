@@ -245,6 +245,7 @@ func ResolveType(p *program.Program, s string) (string, error) {
 	return "interface{}", errors.New(errMsg)
 }
 
+// ResolveFunction determines the Go type from a C type.
 func ResolveFunction(p *program.Program, s string) (fields []string, returns []string, err error) {
 	f, r, err := ParseFunction(s)
 	if err != nil {
@@ -269,10 +270,24 @@ func ResolveFunction(p *program.Program, s string) (fields []string, returns []s
 	return
 }
 
+// ParseFunction - parsing elements of C function
 func ParseFunction(s string) (f []string, r []string, err error) {
 	i := strings.Index(s, "(")
+	if i == -1 {
+		err = fmt.Errorf("Cannot parse (index of function): %v", s)
+		return
+	}
 	r = append(r, s[0:i])
-	inside := strings.TrimSpace(strings.Split(s, "(*)")[1])
+	parts := strings.Split(s, "(*)")
+	if parts != 2 {
+		err = fmt.Errorf("Cannot parse (separation on parts) : %v", s)
+		return
+	}
+	inside := strings.TrimSpace(parts[1])
+	if inside == "" {
+		err = fmt.Errorf("Cannot parse (right part is nil) : %v", s)
+		return
+	}
 	f = append(f, strings.Split(inside[1:len(inside)-1], ",")...)
 
 	for i := range r {
