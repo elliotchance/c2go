@@ -279,7 +279,7 @@ func ParseFunction(s string) (f []string, r []string, err error) {
 	}
 	r = append(r, s[0:i])
 	parts := strings.Split(s, "(*)")
-	if parts != 2 {
+	if len(parts) != 2 {
 		err = fmt.Errorf("Cannot parse (separation on parts) : %v", s)
 		return
 	}
