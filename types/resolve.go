@@ -270,8 +270,25 @@ func ResolveFunction(p *program.Program, s string) (fields []string, returns []s
 	return
 }
 
+// IsFunction - return true if string is function like "void (*)(void)"
+func IsFunction(s string) bool {
+	parts := strings.Split(s, "(*)")
+	if len(parts) != 2 {
+		return false
+	}
+	inside := strings.TrimSpace(parts[1])
+	if inside[0] != '(' || inside[len(inside)-1] != ')' {
+		return false
+	}
+	return true
+}
+
 // ParseFunction - parsing elements of C function
 func ParseFunction(s string) (f []string, r []string, err error) {
+	if !IsFunction(s) {
+		err = fmt.Errorf("Is not function : %s", s)
+		return
+	}
 	i := strings.Index(s, "(")
 	if i == -1 {
 		err = fmt.Errorf("Cannot parse (index of function): %v", s)

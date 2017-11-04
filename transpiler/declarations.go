@@ -220,6 +220,24 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 		return nil, nil, ""
 	}
 
+	if types.IsFunction(n.Type) {
+		fields, returns, err := types.ResolveFunction(p, n.Type)
+		if err != nil {
+			p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Cannot resolve function : %v", err), n))
+			return []goast.Stmt{}, []goast.Stmt{}, ""
+		}
+		functionType := GenerateFuncType(fields, returns)
+		nameVar1 := n.Name
+		p.File.Decls = append(p.File.Decls, &goast.GenDecl{
+			Tok: token.VAR,
+			Specs: []goast.Spec{&goast.ValueSpec{
+				Names: []*goast.Ident{&goast.Ident{Name: nameVar1}},
+				Type:  functionType,
+			},
+			}})
+		return []goast.Stmt{}, []goast.Stmt{}, ""
+	}
+
 	theType, err := types.ResolveType(p, n.Type)
 	p.AddMessage(p.GenerateWarningMessage(err, n))
 

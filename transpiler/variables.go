@@ -81,7 +81,7 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 		if v, ok := (a.Children()[0]).(*ast.ImplicitCastExpr); ok {
 			if len(v.Type) > 0 {
 				// Is it function ?
-				if v.Type[len(v.Type)-1] == ')' {
+				if types.IsFunction(v.Type) {
 					fields, returns, err := types.ResolveFunction(p, v.Type)
 					if err != nil {
 						return &goast.DeclStmt{}, preStmts, postStmts, fmt.Errorf("Cannot resolve function : %v", err)
