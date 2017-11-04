@@ -96,7 +96,8 @@ func NewProgram() *Program {
 		typesAlreadyDefined: []string{},
 		startupStatements:   []goast.Stmt{},
 		Structs: StructRegistry(map[string]*Struct{
-			// Example:
+			// Structs without implementations inside system C headers
+			// Example node for adding:
 			// &ast.TypedefDecl{ ... Type:"struct __locale_struct *" ... }
 
 			"struct __va_list_tag [1]": &Struct{
