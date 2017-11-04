@@ -13,9 +13,20 @@ void function2(){
 	i += 8;
 }
 
+
+int (*f)(int, int);
+
+int add(int a, int b) {
+        return a + b;
+}
+
+int mul(int a, int b) {
+        return a * b;
+}
+
 int main()
 {
-    plan(9);
+    plan(11);
 
     pass("%s", "Main function.");
 
@@ -36,6 +47,14 @@ int main()
 	is_not_null(t);
 	t();
 	is_eq(i,50);
+
+	// pointer on function
+	f = add;
+	int i = f(3,4);
+	is_eq(i,7);
+	f = mul;
+	int j = f(3,4);
+	is_eq(j,12);
 
     done_testing();
 }
