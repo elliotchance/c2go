@@ -148,39 +148,45 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 	   |   `-RecordType 0x24d7790 's_t'
 	   |     `-Record 0x24d7710 ''  <-- Address of struct without name
 	*/
-	if len(n.ChildNodes) > 0 && (strings.Contains(n.Type, "struct") || strings.Contains(n.Type2, "struct")) {
-		// find inside AST element Record
-		var deeper func([]ast.Node) (*ast.Record, error)
+	if len(n.ChildNodes) > 0 && strings.Contains(n.Type, "struct") {
+		// Check for case C code:
+		// typedef struct ff { ... } def;
+		// no need to address ff
+		if _, ok := p.Structs[n.Type]; !ok {
+			// find inside AST element Record
+			var deeper func([]ast.Node) (*ast.Record, error)
 
-		deeper = func(nodes []ast.Node) (*ast.Record, error) {
-			for _, n := range nodes {
-				if rec, ok := n.(*ast.Record); ok {
-					return rec, nil
+			deeper = func(nodes []ast.Node) (*ast.Record, error) {
+				for _, n := range nodes {
+					if rec, ok := n.(*ast.Record); ok {
+						return rec, nil
+					}
+					rec, err := deeper(n.Children())
+					if err == nil {
+						return rec, nil
+					}
 				}
-				rec, err := deeper(n.Children())
-				if err == nil {
-					return rec, nil
-				}
+				return nil, fmt.Errorf("Cannot found ast.Record")
 			}
-			return nil, fmt.Errorf("Cannot found ast.Record")
-		}
 
-		rec, err := deeper(n.Children())
-		if err == nil {
-			if v, ok := p.StructsEmptyName[rec.Addr]; ok {
-				// create like typical struct
-				var recordDecl ast.RecordDecl
-				recordDecl.Name = n.Name
-				recordDecl.ChildNodes = v
-				err := transpileRecordDecl(p, &recordDecl)
-				if err != nil {
-					return err
+			rec, err := deeper(n.Children())
+			if err == nil {
+				if v, ok := p.StructsEmptyName[rec.Addr]; ok {
+					//fmt.Println("Addr is found")
+					// create like typical struct
+					var recordDecl ast.RecordDecl
+					recordDecl.Name = n.Name
+					recordDecl.ChildNodes = v
+					err := transpileRecordDecl(p, &recordDecl)
+					if err != nil {
+						return err
+					}
+					// removing from map, because now defined
+					// delete(p.StructsEmptyName, n.Addr)
+					return nil
 				}
-				// removing from map, because now defined
-				// delete(p.StructsEmptyName, n.Addr)
-				return nil
+				p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Cannot found address for struct without name"), n))
 			}
-			p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Cannot found address for struct without name"), n))
 		}
 	}
 

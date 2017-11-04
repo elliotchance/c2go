@@ -78,7 +78,6 @@ var simpleResolveTypes = map[string]string{
 	"__mbstate_t":                  "int64",
 	"__sbuf":                       "int64",
 	"__sFILEX":                     "interface{}",
-	"__va_list_tag":                "interface{}",
 	"FILE":                         "github.com/elliotchance/c2go/noarch.File",
 }
 
