@@ -9,9 +9,13 @@ void function(){
 	i += 2;
 }
 
+void function2(){
+	i += 8;
+}
+
 int main()
 {
-    plan(7);
+    plan(9);
 
     pass("%s", "Main function.");
 
@@ -28,6 +32,9 @@ int main()
 	is_not_null(t);
 	t();
 	is_eq(i,42);
+	t = function2;
+	t();
+	is_eq(i,50);
 
     done_testing();
 }
