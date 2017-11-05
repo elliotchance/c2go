@@ -36,7 +36,7 @@ import (
 //     c2go -v
 //
 // See https://github.com/elliotchance/c2go/wiki/Release-Process
-const Version = "v0.16.12 Radium 2017-11-02"
+const Version = "v0.16.13 Radium 2017-11-05"
 
 var stderr io.Writer = os.Stderr
 
