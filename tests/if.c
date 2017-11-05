@@ -13,7 +13,7 @@ int main()
 
     // With else
     if (x != 1)
-        fail("%s", "x is not equal to one")
+        fail("%s", "x is not equal to one");
     else
         pass("%s", "x is equal to one");
 

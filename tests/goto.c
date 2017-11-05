@@ -15,7 +15,7 @@ void test_goto1()
     
     if (i > 5) {
         fail("Parameter i = %d, but expect 1",i);
-		return
+		return;
     }
     
     if (i == 1) {
@@ -34,7 +34,7 @@ void test_goto2()
 
     if (j > 5) {
 		fail("Parameter j = %d, but expect 1",j);
-		return
+		return;
 	}
     if (i == 1) {
         goto mylabel;
