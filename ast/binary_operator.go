@@ -4,20 +4,22 @@ type BinaryOperator struct {
 	Addr       Address
 	Pos        Position
 	Type       string
+	Type2      string
 	Operator   string
 	ChildNodes []Node
 }
 
 func parseBinaryOperator(line string) *BinaryOperator {
 	groups := groupsFromRegex(
-		"<(?P<position>.*)> '(?P<type>.*?)' '(?P<operator>.*?)'",
+		"<(?P<position>.*)> '(?P<type1>.*?)'(:'(?P<type2>.*?)')? '(?P<operator>.*?)'",
 		line,
 	)
 
 	return &BinaryOperator{
 		Addr:       ParseAddress(groups["address"]),
 		Pos:        NewPositionFromString(groups["position"]),
-		Type:       groups["type"],
+		Type:       groups["type1"],
+		Type2:      groups["type2"],
 		Operator:   groups["operator"],
 		ChildNodes: []Node{},
 	}
