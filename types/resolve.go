@@ -41,9 +41,9 @@ var simpleResolveTypes = map[string]string{
 	"void":                   "",
 	"_Bool":                  "bool",
 
-	// void* is treated like char*
-	"void*":  "[]byte",
-	"void *": "[]byte",
+	// void*
+	"void*":  "interface{}",
+	"void *": "interface{}",
 
 	// null is a special case (it should probably have a less ambiguos name)
 	// when using the NULL macro.
@@ -243,4 +243,76 @@ func ResolveType(p *program.Program, s string) (string, error) {
 	errMsg := fmt.Sprintf(
 		"I couldn't find an appropriate Go type for the C type '%s'.", s)
 	return "interface{}", errors.New(errMsg)
+}
+
+// ResolveFunction determines the Go type from a C type.
+func ResolveFunction(p *program.Program, s string) (fields []string, returns []string, err error) {
+	f, r, err := ParseFunction(s)
+	if err != nil {
+		return
+	}
+	for i := range f {
+		var t string
+		t, err = ResolveType(p, f[i])
+		if err != nil {
+			return
+		}
+		fields = append(fields, t)
+	}
+	for i := range r {
+		var t string
+		t, err = ResolveType(p, r[i])
+		if err != nil {
+			return
+		}
+		returns = append(returns, t)
+	}
+	return
+}
+
+// IsFunction - return true if string is function like "void (*)(void)"
+func IsFunction(s string) bool {
+	parts := strings.Split(s, "(*)")
+	if len(parts) != 2 {
+		return false
+	}
+	inside := strings.TrimSpace(parts[1])
+	if inside[0] != '(' || inside[len(inside)-1] != ')' {
+		return false
+	}
+	return true
+}
+
+// ParseFunction - parsing elements of C function
+func ParseFunction(s string) (f []string, r []string, err error) {
+	if !IsFunction(s) {
+		err = fmt.Errorf("Is not function : %s", s)
+		return
+	}
+	i := strings.Index(s, "(")
+	if i == -1 {
+		err = fmt.Errorf("Cannot parse (index of function): %v", s)
+		return
+	}
+	r = append(r, s[0:i])
+	parts := strings.Split(s, "(*)")
+	if len(parts) != 2 {
+		err = fmt.Errorf("Cannot parse (separation on parts) : %v", s)
+		return
+	}
+	inside := strings.TrimSpace(parts[1])
+	if inside == "" {
+		err = fmt.Errorf("Cannot parse (right part is nil) : %v", s)
+		return
+	}
+	f = append(f, strings.Split(inside[1:len(inside)-1], ",")...)
+
+	for i := range r {
+		r[i] = strings.TrimSpace(r[i])
+	}
+	for i := range f {
+		f[i] = strings.TrimSpace(f[i])
+	}
+
+	return
 }

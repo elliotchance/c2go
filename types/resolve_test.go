@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/elliotchance/c2go/program"
@@ -16,7 +17,7 @@ var resolveTestCases = []resolveTestCase{
 	{"int", "int"},
 	{"char *[13]", "[][]byte"},
 	{"__uint16_t", "uint16"},
-	{"void *", "[]byte"},
+	{"void *", "interface{}"},
 	{"unsigned short int", "uint16"},
 	{"_Bool", "bool"},
 	{"struct RowSetEntry *", "[]RowSetEntry"},
@@ -44,4 +45,63 @@ func TestResolve(t *testing.T) {
 				testCase.cType, testCase.goType, goType)
 		}
 	}
+}
+
+func TestResolveFunction(t *testing.T) {
+	var tcs = []struct {
+		input   string
+		fields  []string
+		returns []string
+	}{
+		{
+			input:   " void (*)(void)",
+			fields:  []string{"void"},
+			returns: []string{"void"},
+		},
+		{
+			input:   " int (*)(sqlite3_file *)",
+			fields:  []string{"sqlite3_file *"},
+			returns: []string{"int"},
+		},
+		{
+			input:   " int (*)(int)",
+			fields:  []string{"int"},
+			returns: []string{"int"},
+		},
+		{
+			input:   " int (*)(void *) ",
+			fields:  []string{"void *"},
+			returns: []string{"int"},
+		},
+		{
+			input:   " void (*)(sqlite3_context *, int, sqlite3_value **)",
+			fields:  []string{"sqlite3_context *", "int", "sqlite3_value **"},
+			returns: []string{"void"},
+		},
+	}
+	for i, tc := range tcs {
+		t.Run(fmt.Sprintf("Test %d : %s", i, tc.input), func(t *testing.T) {
+			actualField, actualReturn, err := types.ParseFunction(tc.input)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(actualField) != len(tc.fields) {
+				t.Error("Amount of fields is different")
+			}
+			for i := range actualField {
+				if actualField[i] != tc.fields[i] {
+					t.Errorf("Not correct field: %v\nExpected: %v", actualField, tc.fields)
+				}
+			}
+			if len(actualReturn) != len(tc.returns) {
+				t.Error("Amount of return elements are different")
+			}
+			for i := range actualReturn {
+				if actualReturn[i] != tc.returns[i] {
+					t.Errorf("Not correct returns: %v\nExpected: %v", actualReturn, tc.returns)
+				}
+			}
+		})
+	}
+
 }
