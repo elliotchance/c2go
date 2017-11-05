@@ -299,8 +299,7 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 	block.List = combine(&forStmt, preStmts, postStmts)
 	block.Lbrace = 1
 
-	//return nil, nil, []goast.Stmt{&block}, nil
-	return &goast.ForStmt{
+	return &goast.ForStmt{ // This is workaround
 			Body: &goast.BlockStmt{
 				Lbrace: 1,
 				List:   []goast.Stmt{&goast.BranchStmt{Tok: token.BREAK}},
