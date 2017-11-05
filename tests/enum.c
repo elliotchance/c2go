@@ -21,11 +21,15 @@ enum state {WORKING = 0, FAILED, FREEZED};
 enum state currState = 2;
 enum state FindState() {return currState;}
 
+typedef enum {
+    a, b, c
+ } T_ENUM;
+
 // main function
 
 int main()
 {
-	plan(17);
+	plan(20);
 
 	// step 1
 	enum number n;
@@ -62,6 +66,14 @@ int main()
 
 	// step 7
 	is_eq( FindState() , FREEZED);
+
+	// step
+	T_ENUM cc = a;
+	is_eq( cc , a );
+	cc = c;
+	is_eq( cc , c );
+	cc = (T_ENUM)(1);
+	is_eq( cc , b );
 
 	done_testing();
 }
