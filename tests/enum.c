@@ -21,15 +21,19 @@ enum state {WORKING = 0, FAILED, FREEZED};
 enum state currState = 2;
 enum state FindState() {return currState;}
 
+// TYPEDEF
+
 typedef enum {
     a, b, c
  } T_ENUM;
+
+typedef enum e_strategy {RANDOM, IMMEDIATE, SEARCH} strategy;
 
 // main function
 
 int main()
 {
-	plan(20);
+	plan(23);
 
 	// step 1
 	enum number n;
@@ -74,6 +78,13 @@ int main()
 	is_eq( cc , c );
 	cc = (T_ENUM)(1);
 	is_eq( cc , b );
+
+	// step
+	strategy str = RANDOM;
+	is_eq( str , RANDOM );
+	enum e_strategy e_str = RANDOM;
+	is_eq( e_str, RANDOM );
+	is_eq( str , e_str );
 
 	done_testing();
 }
