@@ -135,6 +135,7 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 					}
 					counter++
 				default:
+					fmt.Printf("Found some new : %#v\n", v)
 					e = val
 					p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Add support for type : %T", v), n))
 				}
