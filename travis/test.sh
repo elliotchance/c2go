@@ -70,29 +70,27 @@ export SQLITE3_FILE=sqlite-amalgamation-3190300
 
 # Variable for location of temp sqlite files
 SQLITE_TEMP_FOLDER="/tmp/SQLITE"
+mkdir -p $SQLITE_TEMP_FOLDER
 
-# Remove temp folder of SQLITE3
-if [ -d $SQLITE_TEMP_FOLDER ]; then
-	rm -r $SQLITE_TEMP_FOLDER
+# Download/unpack SQLite if required.
+if [ ! -e $SQLITE_TEMP_FOLDER/$SQLITE3_FILE.zip ]; then
+    curl https://sqlite.org/2017/$SQLITE3_FILE.zip > $SQLITE_TEMP_FOLDER/$SQLITE3_FILE.zip
+    unzip $SQLITE_TEMP_FOLDER/$SQLITE3_FILE.zip -d $SQLITE_TEMP_FOLDER
 fi
 
-# Create a folder SQLITE
-mkdir $SQLITE_TEMP_FOLDER
-
-# Download Sqlite3 amalgamated source.
-curl https://sqlite.org/2017/$SQLITE3_FILE.zip > $SQLITE_TEMP_FOLDER/$SQLITE3_FILE.zip
-unzip $SQLITE_TEMP_FOLDER/$SQLITE3_FILE.zip -d $SQLITE_TEMP_FOLDER
+# Clean generated files. This should not be required, but it's polite.
+rm -f $SQLITE_TEMP_FOLDER/sqlite3.go $SQLITE_TEMP_FOLDER/shell.go
 
 # Transpile the SQLite3 files.
 # If transpiling write to stderr, then it will be append into OUTFILE
 echo "Transpiling shell.c..."
-./c2go transpile -o=$SQLITE_TEMP_FOLDER/shell.go   $SQLITE_TEMP_FOLDER/sqlite-amalgamation-3190300/shell.c  >> $OUTFILE 2>&1
+./c2go transpile -o=$SQLITE_TEMP_FOLDER/shell.go   $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/shell.c   >> $OUTFILE 2>&1
 echo "Transpiling sqlite3.c..."
-./c2go transpile -o=$SQLITE_TEMP_FOLDER/sqlite3.go $SQLITE_TEMP_FOLDER/sqlite-amalgamation-3190300/sqlite3.c >> $OUTFILE 2>&1
+./c2go transpile -o=$SQLITE_TEMP_FOLDER/sqlite3.go $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite3.c >> $OUTFILE 2>&1
 
 # Show amount "Warning" in sqlite Go codes
-SQLITE_WARNING=`cat $SQLITE_TEMP_FOLDER/sqlite3.go | grep "// Warning" | wc -l`
-echo "In file sqlite3.go : $SQLITE_WARNING warnings."
+SQLITE_WARNING_SQLITE3=`cat $SQLITE_TEMP_FOLDER/sqlite3.go | grep "// Warning" | wc -l`
+echo "In file sqlite3.go : $SQLITE_WARNING_SQLITE3 warnings."
 
-# Remove c2go executable file
-rm ./c2go
+SQLITE_WARNING_SHELL=`cat $SQLITE_TEMP_FOLDER/shell.go | grep "// Warning" | wc -l`
+echo "In file shell.go   : $SQLITE_WARNING_SHELL warnings."
