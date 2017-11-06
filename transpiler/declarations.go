@@ -57,6 +57,7 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 	// Name of RecordDecl is empty
 	// So, we have to save all n.Children at the base of Address
 	if name == "" && n.Kind == "struct" {
+		fmt.Println("Registration struct : ", n.Addr, " with ", len(n.Children()), " elements")
 		p.StructsEmptyName[n.Addr] = n.ChildNodes
 		return nil
 	}
@@ -145,6 +146,7 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 	   |     `-Record 0x24d7710 ''  <-- Address of struct without name
 	*/
 	if len(n.ChildNodes) > 0 && strings.Contains(n.Type, "struct") {
+		fmt.Println("Inside struct...")
 		// Check for case C code:
 		// typedef struct ff { ... } def;
 		// no need to address ff
@@ -168,7 +170,7 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 			rec, err := deeper(n.Children())
 			if err == nil {
 				if v, ok := p.StructsEmptyName[rec.Addr]; ok {
-					//fmt.Println("Addr is found")
+					fmt.Println("Addr is found : ", rec.Addr)
 					// create like typical struct
 					var recordDecl ast.RecordDecl
 					recordDecl.Name = n.Name
@@ -179,6 +181,7 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 					}
 					return nil
 				}
+				fmt.Println("Not found address : ", rec.Addr)
 				p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Cannot found address for struct without name for node : %#v", n), n))
 			}
 		}
