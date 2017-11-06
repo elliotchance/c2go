@@ -122,9 +122,12 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 					val     *goast.ValueSpec
 				)
 				val, newPre, newPost = transpileEnumConstantDecl(p, c)
-				preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-				// TODO preStmts is not used
+				if len(newPre) > 0 || len(newPost) > 0 {
+					p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Check - added in code : (%d)(%d)", len(newPre), len(newPost)), n))
+				}
+
+				preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 				switch v := val.Values[0].(type) {
 				case *goast.Ident:
@@ -135,9 +138,8 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 					}
 					counter++
 				default:
-					fmt.Printf("Found some new : %#v\n", v)
 					e = val
-					p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Add support for type : %T", v), n))
+					p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Add support of continues counter for type : %T", v), n))
 				}
 
 				p.File.Decls = append(p.File.Decls, &goast.GenDecl{

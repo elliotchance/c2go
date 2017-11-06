@@ -124,6 +124,7 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 		// Registration new type in program.Program
 		if !p.IsTypeAlreadyDefined(n.Name) {
 			p.DefineType(n.Name)
+			p.EnumTypedefName[n.Name] = true
 		}
 		p.File.Decls = append(p.File.Decls, &goast.GenDecl{
 			Tok: token.TYPE,

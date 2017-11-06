@@ -146,6 +146,11 @@ func ResolveType(p *program.Program, s string) (string, error) {
 		}
 	}
 
+	// Check is it typedef enum
+	if _, ok := p.EnumTypedefName[s]; ok {
+		return ResolveType(p, "int")
+	}
+
 	// If the type is already defined we can proceed with the same name.
 	if p.IsTypeAlreadyDefined(s) {
 		return p.ImportType(s), nil
