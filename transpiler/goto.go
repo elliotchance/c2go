@@ -20,7 +20,7 @@ func transpileLabelStmt(n *ast.LabelStmt, p *program.Program) (*goast.LabeledStm
 		if err != nil {
 			return nil, nil, nil, err
 		}
-		post = combine(stmt, preStmts, postStmts)
+		post = combineStmts(stmt, preStmts, postStmts)
 	}
 
 	return &goast.LabeledStmt{

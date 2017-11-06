@@ -296,7 +296,7 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 		Post: post,
 		Body: body,
 	}
-	block.List = combine(&forStmt, preStmts, postStmts)
+	block.List = combineStmts(&forStmt, preStmts, postStmts)
 	block.Lbrace = 1
 
 	return &goast.ForStmt{ // This is workaround

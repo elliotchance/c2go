@@ -3,11 +3,14 @@
 
 int main()
 {
-    plan(2);
+    plan(3);
 
     int x = 1;
 
     // Without else
+    if (x == 1)
+        pass("%s", "x is equal to one");
+	
     if (x == 1){
         pass("%s", "x is equal to one");
 	}
