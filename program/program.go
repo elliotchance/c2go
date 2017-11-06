@@ -79,6 +79,10 @@ type Program struct {
 	// clang don`t show enum constant with enum type,
 	// so we have to use hack for repair the type
 	EnumConstantToEnum map[string]string
+
+	// EnumTypedefName - a map with key="Name of typedef enum" and
+	// value="exist ot not"
+	EnumTypedefName map[string]bool
 }
 
 // NewProgram creates a new blank program.
@@ -93,6 +97,7 @@ func NewProgram() *Program {
 		messages:            []string{},
 		GlobalVariables:     map[string]string{},
 		EnumConstantToEnum:  map[string]string{},
+		EnumTypedefName:     map[string]bool{},
 	}
 }
 

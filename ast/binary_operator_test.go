@@ -13,6 +13,14 @@ func TestBinaryOperator(t *testing.T) {
 			Operator:   "=",
 			ChildNodes: []Node{},
 		},
+		`0x1ff95b8 <line:78:2, col:7> 'T_ENUM':'T_ENUM' '='`: &BinaryOperator{
+			Addr:       0x1ff95b8,
+			Pos:        NewPositionFromString("line:78:2, col:7"),
+			Type:       "T_ENUM",
+			Type2:      "T_ENUM",
+			Operator:   "=",
+			ChildNodes: []Node{},
+		},
 	}
 
 	runNodeTests(t, nodes)

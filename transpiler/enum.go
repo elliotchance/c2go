@@ -3,6 +3,7 @@
 package transpiler
 
 import (
+	"fmt"
 	"go/token"
 	"strconv"
 
@@ -108,23 +109,51 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
-	// Enum without name is `const`
+	// For case `enum` without name
 	if n.Name == "" {
-		for _, c := range n.Children() {
-			e, newPre, newPost := transpileEnumConstantDecl(p, c.(*ast.EnumConstantDecl))
-			preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+		// create all EnumConstant like just constants
+		var counter int
+		for _, child := range n.Children() {
+			if c, ok := child.(*ast.EnumConstantDecl); ok {
+				var (
+					e       goast.Spec
+					newPre  []goast.Stmt
+					newPost []goast.Stmt
+					val     *goast.ValueSpec
+				)
+				val, newPre, newPost = transpileEnumConstantDecl(p, c)
 
-			p.File.Decls = append(p.File.Decls, &goast.GenDecl{
-				Tok: token.CONST,
-				Specs: []goast.Spec{
-					e,
-				},
-			})
+				if len(newPre) > 0 || len(newPost) > 0 {
+					p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Check - added in code : (%d)(%d)", len(newPre), len(newPost)), n))
+				}
+
+				preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
+				switch v := val.Values[0].(type) {
+				case *goast.Ident:
+					e = &goast.ValueSpec{
+						Names:  []*goast.Ident{&goast.Ident{Name: c.Name}},
+						Values: []goast.Expr{&goast.BasicLit{Kind: token.INT, Value: strconv.Itoa(counter)}},
+						Type:   val.Type,
+					}
+					counter++
+				default:
+					e = val
+					p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Add support of continues counter for type : %T", v), n))
+				}
+
+				p.File.Decls = append(p.File.Decls, &goast.GenDecl{
+					Tok: token.CONST,
+					Specs: []goast.Spec{
+						e,
+					},
+				})
+			}
 		}
 		return nil
 	}
 
-	// Enums with names
+	// For case `enum` with name
 	theType, err := types.ResolveType(p, "int")
 	if err != nil {
 		// by defaults enum in C is INT
