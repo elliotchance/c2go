@@ -286,12 +286,28 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	return &goast.ForStmt{
+	// for avoid dublication of init values for
+	// case with 2 for`s
+
+	var block goast.BlockStmt
+	var forStmt = goast.ForStmt{
 		Init: init,
 		Cond: condition,
 		Post: post,
 		Body: body,
-	}, preStmts, postStmts, nil
+	}
+	block.List = combineStmts(&forStmt, preStmts, postStmts)
+	block.Lbrace = 1
+
+	return &goast.ForStmt{ // This is workaround
+			Body: &goast.BlockStmt{
+				Lbrace: 1,
+				List:   []goast.Stmt{&goast.BranchStmt{Tok: token.BREAK}},
+			},
+		},
+		nil,
+		[]goast.Stmt{&block},
+		nil
 }
 
 // transpileWhileStmt - transpiler for operator While.
