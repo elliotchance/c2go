@@ -39,11 +39,11 @@ typedef struct {
 
 typedef struct ff {
 	int v1,v2;
-} tt1;
+} tt1, tt2;
 
 int main()
 {
-    plan(11);
+    plan(12);
 
     struct programming variable;
     char *s = "Programming in Software Development.";
@@ -72,6 +72,10 @@ int main()
 	tt1 t1;
 	t1.v1 = 42.;
 	is_eq(t1.v1,42.)
+
+	tt2 t2;
+	t2.v1 = 42.;
+	is_eq(t2.v1,42.)
 
 	struct ff tf2;
 	tf2.v2 = t1.v1;
