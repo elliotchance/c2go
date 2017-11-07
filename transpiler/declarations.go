@@ -50,17 +50,6 @@ func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, str
 func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 	name := n.Name
 
-	// for case on C code:
-	// typedef struct {
-	// ...
-	// } name;
-	// Name of RecordDecl is empty
-	// So, we have to save all n.Children at the base of Address
-	if name == "" && n.Kind == "struct" {
-		p.StructsEmptyName[n.Addr] = n.ChildNodes
-		return nil
-	}
-
 	if name == "" || p.IsTypeAlreadyDefined(name) {
 		return nil
 	}
@@ -135,53 +124,6 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 
 func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 	name := n.Name
-
-	// added for support "struct typedef" with empty name of struct
-	// Example :
-	/*
-	   |-TypedefDecl 0x24d7910 <line:8:1, line:12:3> col:3 referenced s_t 'struct s_t':'s_t'
-	   | `-ElaboratedType 0x24d78c0 'struct s_t' sugar
-	   |   `-RecordType 0x24d7790 's_t'
-	   |     `-Record 0x24d7710 ''  <-- Address of struct without name
-	*/
-	if len(n.ChildNodes) > 0 && strings.Contains(n.Type, "struct") {
-		// Check for case C code:
-		// typedef struct ff { ... } def;
-		// no need to address ff
-		if _, ok := p.Structs[n.Type]; !ok {
-			// find inside AST element Record
-			var deeper func([]ast.Node) (*ast.Record, error)
-
-			deeper = func(nodes []ast.Node) (*ast.Record, error) {
-				for _, n := range nodes {
-					if rec, ok := n.(*ast.Record); ok {
-						return rec, nil
-					}
-					rec, err := deeper(n.Children())
-					if err == nil {
-						return rec, nil
-					}
-				}
-				return nil, fmt.Errorf("Cannot found ast.Record")
-			}
-
-			rec, err := deeper(n.Children())
-			if err == nil {
-				if v, ok := p.StructsEmptyName[rec.Addr]; ok {
-					// create like typical struct
-					var recordDecl ast.RecordDecl
-					recordDecl.Name = n.Name
-					recordDecl.ChildNodes = v
-					err := transpileRecordDecl(p, &recordDecl)
-					if err != nil {
-						return err
-					}
-					return nil
-				}
-				p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Cannot found address for struct without name for node : %#v", n), n))
-			}
-		}
-	}
 
 	// added for support "typedef enum {...} dd" with empty name of struct
 	// Result in Go: "type dd int"

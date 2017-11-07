@@ -80,14 +80,6 @@ type Program struct {
 	// so we have to use hack for repair the type
 	EnumConstantToEnum map[string]string
 
-	// for case on C code:
-	// typedef struct {
-	// ...
-	// } name;
-	// Name of RecordDecl is empty
-	// So, we have to save all n.Children at the base of Address
-	StructsEmptyName map[ast.Address][]ast.Node
-
 	// EnumTypedefName - a map with key="Name of typedef enum" and
 	// value="exist ot not"
 	EnumTypedefName map[string]bool
@@ -126,7 +118,6 @@ func NewProgram() *Program {
 		messages:           []string{},
 		GlobalVariables:    map[string]string{},
 		EnumConstantToEnum: map[string]string{},
-		StructsEmptyName:   map[ast.Address][]ast.Node{},
 		EnumTypedefName:    map[string]bool{},
 	}
 }
