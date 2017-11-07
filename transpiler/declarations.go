@@ -24,6 +24,13 @@ func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, str
 		return nil, ""
 	}
 
+	// Add for fix bug in "stdlib.h"
+	// build/tests/exit/main_test.go:90:11: undefined: wait
+	// it is "union" with some anonymous struct
+	if n.Type == "union wait *" {
+		return nil, ""
+	}
+
 	fieldType, err := types.ResolveType(p, n.Type)
 	p.AddMessage(p.GenerateWarningMessage(err, n))
 
@@ -225,7 +232,7 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 		},
 	})
 
-	// added for support "struct typedef"
+	// added for support "struct typedef" with non-empty name of struct
 	if v, ok := p.Structs["struct "+resolvedType]; ok {
 		p.Structs["struct "+name] = v
 	}
