@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"testing"
@@ -37,21 +38,17 @@ type programOut struct {
 //     go test -tags=integration -run=TestIntegrationScripts/tests/ctype.c
 //
 func TestIntegrationScripts(t *testing.T) {
-	/*
-		testFiles, err := filepath.Glob("tests/*.c")
-		if err != nil {
-			t.Fatal(err)
-		}
+	testFiles, err := filepath.Glob("tests/*.c")
+	if err != nil {
+		t.Fatal(err)
+	}
 
-		exampleFiles, err := filepath.Glob("examples/*.c")
-		if err != nil {
-			t.Fatal(err)
-		}
+	exampleFiles, err := filepath.Glob("examples/*.c")
+	if err != nil {
+		t.Fatal(err)
+	}
 
-		files := append(testFiles, exampleFiles...)
-	*/
-	var err error
-	files := []string{"tests/struct.c"}
+	files := append(testFiles, exampleFiles...)
 
 	isVerbose := flag.CommandLine.Lookup("test.v").Value.String() == "true"
 

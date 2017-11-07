@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"go/format"
 	"go/token"
-	"os"
 
 	goast "go/ast"
 
@@ -146,8 +145,6 @@ func (p *Program) AddMessage(message string) bool {
 	if message == "" {
 		return false
 	}
-
-	fmt.Fprintf(os.Stderr, "AddMessage ---- > %#v\n", message)
 
 	p.messages = append(p.messages, message)
 	return true
