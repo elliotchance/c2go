@@ -325,7 +325,7 @@ func transpileToNode(node ast.Node, p *program.Program) error {
 			switch v := n.Children()[i].(type) {
 			case *ast.RecordDecl:
 				// specific for `typedef struct` without name
-				if v.Name != "" {
+				if v.Name != "" || i == len(n.Children())-1 {
 					err := transpileRecordDecl(p, v)
 					if err != nil {
 						return err
