@@ -24,7 +24,7 @@ func TestImplicitCastExpr(t *testing.T) {
 			Addr:       0x21267c8,
 			Pos:        NewPositionFromString("col:8"),
 			Type:       "enum week1",
-			Type2:      ":'enum week2'",
+			Type2:      "enum week2",
 			Kind:       "IntegralCast",
 			ChildNodes: []Node{},
 		},

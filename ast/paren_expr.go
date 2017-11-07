@@ -4,19 +4,23 @@ type ParenExpr struct {
 	Addr       Address
 	Pos        Position
 	Type       string
+	Type2      string
+	Lvalue     bool
 	ChildNodes []Node
 }
 
 func parseParenExpr(line string) *ParenExpr {
 	groups := groupsFromRegex(
-		"<(?P<position>.*)> '(?P<type>.*?)'",
+		`<(?P<position>.*)> '(?P<type1>.*?)'(:'(?P<type2>.*)')?(?P<lvalue> lvalue)?`,
 		line,
 	)
 
 	return &ParenExpr{
 		Addr:       ParseAddress(groups["address"]),
 		Pos:        NewPositionFromString(groups["position"]),
-		Type:       groups["type"],
+		Type:       groups["type1"],
+		Type2:      groups["type2"],
+		Lvalue:     len(groups["lvalue"]) > 0,
 		ChildNodes: []Node{},
 	}
 }

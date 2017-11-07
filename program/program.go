@@ -87,6 +87,10 @@ type Program struct {
 	// Name of RecordDecl is empty
 	// So, we have to save all n.Children at the base of Address
 	StructsEmptyName map[ast.Address][]ast.Node
+
+	// EnumTypedefName - a map with key="Name of typedef enum" and
+	// value="exist ot not"
+	EnumTypedefName map[string]bool
 }
 
 // NewProgram creates a new blank program.
@@ -123,6 +127,7 @@ func NewProgram() *Program {
 		GlobalVariables:    map[string]string{},
 		EnumConstantToEnum: map[string]string{},
 		StructsEmptyName:   map[ast.Address][]ast.Node{},
+		EnumTypedefName:    map[string]bool{},
 	}
 }
 

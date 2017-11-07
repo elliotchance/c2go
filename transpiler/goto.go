@@ -11,24 +11,22 @@ import (
 	"github.com/elliotchance/c2go/util"
 )
 
-func transpileLabelStmt(n *ast.LabelStmt, p *program.Program) (*goast.LabeledStmt, error) {
-	var stmt goast.Stmt
-	if len(n.Children()) > 0 {
-		var err error
-		stmt, _, _, err = transpileToStmt(n.Children()[0], p)
-		if err != nil {
-			return nil, err
-		}
-	}
+func transpileLabelStmt(n *ast.LabelStmt, p *program.Program) (*goast.LabeledStmt, []goast.Stmt, []goast.Stmt, error) {
 
-	if stmt == nil {
-		stmt = &goast.EmptyStmt{}
+	var post []goast.Stmt
+	for _, node := range n.Children() {
+		var stmt goast.Stmt
+		stmt, preStmts, postStmts, err := transpileToStmt(node, p)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		post = combineStmts(stmt, preStmts, postStmts)
 	}
 
 	return &goast.LabeledStmt{
 		Label: util.NewIdent(n.Name),
-		Stmt:  stmt,
-	}, nil
+		Stmt:  &goast.EmptyStmt{},
+	}, []goast.Stmt{}, post, nil
 }
 
 func transpileGotoStmt(n *ast.GotoStmt, p *program.Program) (*goast.BranchStmt, error) {

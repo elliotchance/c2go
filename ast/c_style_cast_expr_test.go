@@ -13,6 +13,14 @@ func TestCStyleCastExpr(t *testing.T) {
 			Kind:       "IntegralCast",
 			ChildNodes: []Node{},
 		},
+		`0x2781518 <col:7, col:17> 'T_ENUM':'T_ENUM' <IntegralCast>`: &CStyleCastExpr{
+			Addr:       0x2781518,
+			Pos:        NewPositionFromString("col:7, col:17"),
+			Type:       "T_ENUM",
+			Type2:      "T_ENUM",
+			Kind:       "IntegralCast",
+			ChildNodes: []Node{},
+		},
 	}
 
 	runNodeTests(t, nodes)
