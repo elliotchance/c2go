@@ -278,7 +278,7 @@ func Start(args ProgramArgs) (err error) {
 
 	if outputFilePath == "" {
 		// Choose inputFile for creating name of output file
-		input := args.inputFiles[len(args.inputFiles)-1]
+		input := args.inputFiles[0]
 		// We choose name for output Go code at the base
 		// on filename for choosed input file
 		cleanFileName := filepath.Clean(filepath.Base(input))
