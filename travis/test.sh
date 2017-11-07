@@ -66,31 +66,31 @@ if [ $($C2GO ast $C2GO_DIR/examples/prime.c | wc -l) -eq 0 ]; then exit 1; fi
 
 # This will have to be updated every so often to the latest version. You can
 # find the latest version here: https://sqlite.org/download.html
-export SQLITE3_FILE=sqlite-amalgamation-3190300
-
-# Variable for location of temp sqlite files
-SQLITE_TEMP_FOLDER="/tmp/SQLITE"
-mkdir -p $SQLITE_TEMP_FOLDER
-
-# Download/unpack SQLite if required.
-if [ ! -e $SQLITE_TEMP_FOLDER/$SQLITE3_FILE.zip ]; then
-    curl https://sqlite.org/2017/$SQLITE3_FILE.zip > $SQLITE_TEMP_FOLDER/$SQLITE3_FILE.zip
-    unzip $SQLITE_TEMP_FOLDER/$SQLITE3_FILE.zip -d $SQLITE_TEMP_FOLDER
-fi
-
-# Clean generated files. This should not be required, but it's polite.
-rm -f $SQLITE_TEMP_FOLDER/sqlite3.go $SQLITE_TEMP_FOLDER/shell.go
-
-# Transpile the SQLite3 files.
-# If transpiling write to stderr, then it will be append into OUTFILE
-echo "Transpiling shell.c..."
-./c2go transpile -o=$SQLITE_TEMP_FOLDER/shell.go   $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/shell.c   >> $OUTFILE 2>&1
-echo "Transpiling sqlite3.c..."
-./c2go transpile -o=$SQLITE_TEMP_FOLDER/sqlite3.go $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite3.c >> $OUTFILE 2>&1
-
-# Show amount "Warning" in sqlite Go codes
-SQLITE_WARNING_SQLITE3=`cat $SQLITE_TEMP_FOLDER/sqlite3.go | grep "// Warning" | wc -l`
-echo "In file sqlite3.go : $SQLITE_WARNING_SQLITE3 warnings."
-
-SQLITE_WARNING_SHELL=`cat $SQLITE_TEMP_FOLDER/shell.go | grep "// Warning" | wc -l`
-echo "In file shell.go   : $SQLITE_WARNING_SHELL warnings."
+# export SQLITE3_FILE=sqlite-amalgamation-3190300
+#
+# # Variable for location of temp sqlite files
+# SQLITE_TEMP_FOLDER="/tmp/SQLITE"
+# mkdir -p $SQLITE_TEMP_FOLDER
+#
+# # Download/unpack SQLite if required.
+# if [ ! -e $SQLITE_TEMP_FOLDER/$SQLITE3_FILE.zip ]; then
+#     curl https://sqlite.org/2017/$SQLITE3_FILE.zip > $SQLITE_TEMP_FOLDER/$SQLITE3_FILE.zip
+#     unzip $SQLITE_TEMP_FOLDER/$SQLITE3_FILE.zip -d $SQLITE_TEMP_FOLDER
+# fi
+#
+# # Clean generated files. This should not be required, but it's polite.
+# rm -f $SQLITE_TEMP_FOLDER/sqlite3.go $SQLITE_TEMP_FOLDER/shell.go
+#
+# # Transpile the SQLite3 files.
+# # If transpiling write to stderr, then it will be append into OUTFILE
+# echo "Transpiling shell.c..."
+# ./c2go transpile -o=$SQLITE_TEMP_FOLDER/shell.go   $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/shell.c   >> $OUTFILE 2>&1
+# echo "Transpiling sqlite3.c..."
+# ./c2go transpile -o=$SQLITE_TEMP_FOLDER/sqlite3.go $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite3.c >> $OUTFILE 2>&1
+#
+# # Show amount "Warning" in sqlite Go codes
+# SQLITE_WARNING_SQLITE3=`cat $SQLITE_TEMP_FOLDER/sqlite3.go | grep "// Warning" | wc -l`
+# echo "In file sqlite3.go : $SQLITE_WARNING_SQLITE3 warnings."
+#
+# SQLITE_WARNING_SHELL=`cat $SQLITE_TEMP_FOLDER/shell.go | grep "// Warning" | wc -l`
+# echo "In file shell.go   : $SQLITE_WARNING_SHELL warnings."
