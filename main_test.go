@@ -106,7 +106,7 @@ func TestIntegrationScripts(t *testing.T) {
 			mainFileName = "main_test.go"
 
 			programArgs := DefaultProgramArgs()
-			programArgs.inputFile = file
+			programArgs.inputFiles = []string{file}
 			programArgs.outputFile = subFolder + mainFileName
 			// This appends a TestApp function to the output source so we
 			// can run "go test" against the produced binary.
@@ -262,12 +262,13 @@ func TestStartPreprocess(t *testing.T) {
 	}
 	defer os.RemoveAll(dir) // clean up
 
-	filename := path.Join(dir, "preprocess.c")
+	name := "preprocess.c"
+	filename := path.Join(dir, name)
 	body := ([]byte)("#include <AbsoluteWrongInclude.h>\nint main(void){\nwrong();\n}")
 	err = ioutil.WriteFile(filename, body, 0644)
 
 	args := DefaultProgramArgs()
-	args.inputFile = filename
+	args.inputFiles = []string{dir + name}
 
 	err = Start(args)
 	if err == nil {
@@ -301,5 +302,41 @@ func TestGoPath(t *testing.T) {
 	err = Start(DefaultProgramArgs())
 	if err == nil {
 		t.Errorf(err.Error())
+	}
+}
+
+func TestMultifileTranspilation(t *testing.T) {
+	var args = ProgramArgs{}
+	args.inputFiles = []string{
+		"./tests/multi/four.c",
+		"./tests/multi/two.c",
+		"./tests/multi/main.c",
+	}
+	dir, err := ioutil.TempDir("", "c2go_multi")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir) // clean up
+	args.outputFile = path.Join(dir, "multi.go")
+	args.packageName = "main"
+	args.outputAsTest = true
+
+	// testing
+	err = Start(args)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	// Run Go program
+	var buf bytes.Buffer
+	cmd := exec.Command("go", "run", args.outputFile)
+	cmd.Stdout = &buf
+	cmd.Stderr = &buf
+	err = cmd.Run()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if buf.String() != "42" {
+		t.Errorf("Wrong result: %v", buf.String())
 	}
 }
