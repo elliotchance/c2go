@@ -19,7 +19,7 @@ import (
 // constants in ctype.h. This is to get around an issue that the real values
 // need to be evaulated by the compiler; which c2go does not yet do.
 //
-// TOOD: Ability to evaluate constant expressions at compile time
+// TODO: Ability to evaluate constant expressions at compile time
 // https://github.com/elliotchance/c2go/issues/77
 func ctypeEnumValue(value int, t token.Token) goast.Expr {
 	// Produces an expression like: ((1 << (0)) << 8)
