@@ -28,7 +28,6 @@ import (
 	"github.com/elliotchance/c2go/preprocessor"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/transpiler"
-	"github.com/elliotchance/c2go/util"
 )
 
 // Version can be requested through the command line with:
@@ -36,7 +35,7 @@ import (
 //     c2go -v
 //
 // See https://github.com/elliotchance/c2go/wiki/Release-Process
-const Version = "v0.16.12 Radium 2017-11-02"
+const Version = "v0.16.15 Radium 2017-11-07"
 
 var stderr io.Writer = os.Stderr
 
@@ -71,8 +70,7 @@ func DefaultProgramArgs() ProgramArgs {
 }
 
 func readAST(data []byte) []string {
-	uncolored := util.GetRegex(`\x1b\[[\d;]+m`).ReplaceAll(data, []byte{})
-	return strings.Split(string(uncolored), "\n")
+	return strings.Split(string(data), "\n")
 }
 
 type treeNode struct {
@@ -225,7 +223,7 @@ func Start(args ProgramArgs) (err error) {
 	if args.verbose {
 		fmt.Println("Running clang for AST tree...")
 	}
-	astPP, err := exec.Command("clang", "-Xclang", "-ast-dump", "-fsyntax-only", ppFilePath).Output()
+	astPP, err := exec.Command("clang", "-Xclang", "-ast-dump", "-fsyntax-only", "-fno-color-diagnostics", ppFilePath).Output()
 	if err != nil {
 		// If clang fails it still prints out the AST, so we have to run it
 		// again to get the real error.

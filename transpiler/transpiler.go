@@ -204,30 +204,29 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 	return
 }
 
-func transpileToStmts(node ast.Node, p *program.Program) ([]goast.Stmt, error) {
+func transpileToStmts(node ast.Node, p *program.Program) (stmts []goast.Stmt, err error) {
 	if node == nil {
 		return nil, nil
 	}
 
+	var (
+		stmt      goast.Stmt
+		preStmts  []goast.Stmt
+		postStmts []goast.Stmt
+	)
 	switch n := node.(type) {
 	case *ast.DeclStmt:
-		stmts, preStmts, postStmts, err := transpileDeclStmt(n, p)
-		stmts = append(preStmts, stmts...)
-		stmts = append(stmts, postStmts...)
-		return stmts, err
+		var s []goast.Stmt
+		s, preStmts, postStmts, err = transpileDeclStmt(n, p)
+		preStmts = append(preStmts, s...)
+	default:
+		stmt, preStmts, postStmts, err = transpileToStmt(node, p)
 	}
-
-	stmt, preStmts, postStmts, err := transpileToStmt(node, p)
-	var stmts []goast.Stmt
-	// nil is happen, when we remove function `free` of <stdlib.h>
-	// see function CallExpr in transpiler
-	if stmt != nil {
-		stmts = append(preStmts, stmt)
-	} else {
-		stmts = preStmts
+	if err != nil {
+		return
 	}
-	stmts = append(stmts, postStmts...)
-	return stmts, err
+	stmts = append(stmts, combineStmts(stmt, preStmts, postStmts)...)
+	return
 }
 
 func transpileToStmt(node ast.Node, p *program.Program) (
@@ -287,7 +286,7 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 		}
 
 	case *ast.LabelStmt:
-		stmt, err = transpileLabelStmt(n, p)
+		stmt, preStmts, postStmts, err = transpileLabelStmt(n, p)
 		return
 
 	case *ast.GotoStmt:
@@ -353,23 +352,39 @@ func transpileToNode(node ast.Node, p *program.Program) error {
 	return nil
 }
 
-func transpileStmts(nodes []ast.Node, p *program.Program) ([]goast.Stmt, error) {
-	preStmts := []goast.Stmt{}
-	postStmts := []goast.Stmt{}
-	stmts := []goast.Stmt{}
-
+func transpileStmts(nodes []ast.Node, p *program.Program) (stmts []goast.Stmt, err error) {
 	for _, s := range nodes {
 		if s != nil {
-			a, newPre, newPost, err := transpileToStmt(s, p)
+			var (
+				stmt      goast.Stmt
+				preStmts  []goast.Stmt
+				postStmts []goast.Stmt
+			)
+			stmt, preStmts, postStmts, err = transpileToStmt(s, p)
 			if err != nil {
-				return nil, err
+				return
 			}
-
-			preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
-
-			stmts = append(stmts, a)
+			stmts = append(stmts, combineStmts(stmt, preStmts, postStmts)...)
 		}
 	}
 
 	return stmts, nil
+}
+
+// combineStmts - combine elements to slice
+func combineStmts(stmt goast.Stmt, preStmts, postStmts []goast.Stmt) (stmts []goast.Stmt) {
+	for i := range preStmts {
+		if preStmts[i] != nil {
+			stmts = append(stmts, preStmts[i])
+		}
+	}
+	if stmt != nil {
+		stmts = append(stmts, stmt)
+	}
+	for i := range postStmts {
+		if postStmts[i] != nil {
+			stmts = append(stmts, postStmts[i])
+		}
+	}
+	return
 }

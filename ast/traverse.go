@@ -7,7 +7,7 @@ import (
 // GetAllNodesOfType returns all of the nodes of the tree that match the type
 // provided. The type should be a pointer to an object in the ast package.
 //
-// The nodes returned may reference each other and there is no guarenteed order
+// The nodes returned may reference each other and there is no guaranteed order
 // in which the nodes are returned.
 func GetAllNodesOfType(root Node, t reflect.Type) []Node {
 	nodes := []Node{}
