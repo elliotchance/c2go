@@ -313,7 +313,21 @@ func TestMultifileTranspilation(t *testing.T) {
 			"./tests/multi/two.c",
 			"./tests/multi/main.c",
 		},
-		[]string{"./tests/multi2/main.c"},
+		[]string{
+			"./tests/multi2/main.c",
+		},
+		// checking with dublicates
+		[]string{
+			"./tests/multi/four.c",
+			"./tests/multi/four.c",
+			"./tests/multi/two.c",
+			"./tests/multi/main.c",
+		},
+		[]string{
+			"./tests/multi2/head.h",
+			"./tests/multi2/head.h",
+			"./tests/multi2/main.c",
+		},
 	}
 
 	for pos, tc := range tcs {

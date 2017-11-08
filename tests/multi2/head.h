@@ -1,6 +1,5 @@
 #ifndef HEADER
 #define HEADER
-
 #include <stdio.h>
 
 void say_four(){
@@ -10,3 +9,10 @@ void say_two(){
 	printf("2");
 }
 #endif /* HEADER */
+
+#ifndef HEADER2
+#define HEADER2
+
+#include <stdio.h>
+
+#endif
