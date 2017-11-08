@@ -3,7 +3,7 @@
 
 int main()
 {
-    plan(40);
+    plan(48);
 
     int i = 0;
 
@@ -74,20 +74,32 @@ int main()
 
 	diag("Without body and with 2 and more increments");
 	for(i = 0, j = 0; i < 2; j++,i++);
-	pass("%d",i)
+	pass("%d",i);
 
 	diag("Without body and with 2 and more conditions");
 	for(i = 0, j = 0; j++,i++,i < 2; );
-	pass("%d",i)
+	pass("%d",i);
 
 	diag("initialization inside for");
 	for(int h = 0;h < 3; h++)
-		pass("%d",h)
+		pass("%d",h);
 	
 	diag("double initialization inside for");
 	for(int f = 0 , g = 0;g < 2 || f < 2; g++, f++){
-		pass("%d",f)
-		pass("%d",g)
+		pass("%d",f);
+		pass("%d",g);
+	}
+
+	{
+		diag("double initialization inside for with double for");
+		for(int ef = 0 , eg = 0;eg < 2 || ef < 2; eg++, ef++){
+			pass("%d",ef);
+			pass("%d",eg);
+		}
+		for(int ef = 0 , eg = 0;eg < 2 || ef < 2; eg++, ef++){
+			pass("%d",ef);
+			pass("%d",eg);
+		}
 	}
 
     done_testing();

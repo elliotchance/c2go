@@ -13,7 +13,7 @@ func parseImplicitCastExpr(line string) *ImplicitCastExpr {
 	groups := groupsFromRegex(
 		`<(?P<position>.*)>
 		 '(?P<type>.*?)'
-		(?P<type2>:'.*?')?
+		(:'(?P<type2>.*?)')?
 		 <(?P<kind>.*)>`,
 		line,
 	)

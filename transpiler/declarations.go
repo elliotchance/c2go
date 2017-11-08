@@ -8,6 +8,7 @@ import (
 	"fmt"
 	goast "go/ast"
 	"go/token"
+	"strings"
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
@@ -20,6 +21,13 @@ func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, str
 
 	// FIXME: What causes this? See __darwin_fp_control for example.
 	if name == "" {
+		return nil, ""
+	}
+
+	// Add for fix bug in "stdlib.h"
+	// build/tests/exit/main_test.go:90:11: undefined: wait
+	// it is "union" with some anonymous struct
+	if n.Type == "union wait *" {
 		return nil, ""
 	}
 
@@ -41,6 +49,7 @@ func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, str
 
 func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 	name := n.Name
+
 	if name == "" || p.IsTypeAlreadyDefined(name) {
 		return nil
 	}
@@ -115,6 +124,26 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 
 func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 	name := n.Name
+
+	// added for support "typedef enum {...} dd" with empty name of struct
+	// Result in Go: "type dd int"
+	if strings.Contains(n.Type, "enum") {
+		// Registration new type in program.Program
+		if !p.IsTypeAlreadyDefined(n.Name) {
+			p.DefineType(n.Name)
+			p.EnumTypedefName[n.Name] = true
+		}
+		p.File.Decls = append(p.File.Decls, &goast.GenDecl{
+			Tok: token.TYPE,
+			Specs: []goast.Spec{
+				&goast.TypeSpec{
+					Name: util.NewIdent(name),
+					Type: util.NewTypeIdent("int"),
+				},
+			},
+		})
+		return nil
+	}
 
 	if p.IsTypeAlreadyDefined(name) {
 		return nil
@@ -203,9 +232,13 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 		},
 	})
 
-	// added for support "struct typedef"
+	// added for support "struct typedef" with non-empty name of struct
 	if v, ok := p.Structs["struct "+resolvedType]; ok {
 		p.Structs["struct "+name] = v
+	}
+
+	if v, ok := p.EnumConstantToEnum["enum "+resolvedType]; ok {
+		p.EnumConstantToEnum["enum "+resolvedType] = v
 	}
 
 	return nil
@@ -214,10 +247,28 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 	[]goast.Stmt, []goast.Stmt, string) {
 	// There are cases where the same variable is defined more than once. I
-	// assume this is becuase they are extern or static definitions. For now, we
+	// assume this is because they are extern or static definitions. For now, we
 	// will ignore any redefinitions.
 	if _, found := p.GlobalVariables[n.Name]; found {
 		return nil, nil, ""
+	}
+
+	if types.IsFunction(n.Type) {
+		fields, returns, err := types.ResolveFunction(p, n.Type)
+		if err != nil {
+			p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Cannot resolve function : %v", err), n))
+			return []goast.Stmt{}, []goast.Stmt{}, ""
+		}
+		functionType := GenerateFuncType(fields, returns)
+		nameVar1 := n.Name
+		p.File.Decls = append(p.File.Decls, &goast.GenDecl{
+			Tok: token.VAR,
+			Specs: []goast.Spec{&goast.ValueSpec{
+				Names: []*goast.Ident{&goast.Ident{Name: nameVar1}},
+				Type:  functionType,
+			},
+			}})
+		return []goast.Stmt{}, []goast.Stmt{}, ""
 	}
 
 	theType, err := types.ResolveType(p, n.Type)
@@ -251,7 +302,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 		switch name {
 		// Below are for macOS.
 		case "__stdinp", "__stdoutp":
-			p.AddImports("github.com/elliotchance/c2go/noarch", "os")
+			p.AddImport("github.com/elliotchance/c2go/noarch")
 			p.AppendStartupExpr(
 				util.NewBinaryExpr(
 					goast.NewIdent(name),
@@ -265,7 +316,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 			// Below are for linux.
 		case "stdout", "stdin", "stderr":
 			theType = "*noarch.File"
-			p.AddImports("github.com/elliotchance/c2go/noarch", "os")
+			p.AddImport("github.com/elliotchance/c2go/noarch")
 			p.AppendStartupExpr(
 				util.NewBinaryExpr(
 					goast.NewIdent(name),

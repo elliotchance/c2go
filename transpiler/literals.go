@@ -64,3 +64,8 @@ func transpilePredefinedExpr(n *ast.PredefinedExpr, p *program.Program) (goast.E
 		panic(fmt.Sprintf("unknown PredefinedExpr: %s", n.Name))
 	}
 }
+
+func transpileCompoundLiteralExpr(n *ast.CompoundLiteralExpr, p *program.Program) (goast.Expr, string, error) {
+	expr, t, _, _, err := transpileToExpr(n.Children()[0], p, false)
+	return expr, t, err
+}

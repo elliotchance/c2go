@@ -79,6 +79,10 @@ type Program struct {
 	// clang don`t show enum constant with enum type,
 	// so we have to use hack for repair the type
 	EnumConstantToEnum map[string]string
+
+	// EnumTypedefName - a map with key="Name of typedef enum" and
+	// value="exist ot not"
+	EnumTypedefName map[string]bool
 }
 
 // NewProgram creates a new blank program.
@@ -87,12 +91,34 @@ func NewProgram() *Program {
 		imports:             []string{},
 		typesAlreadyDefined: []string{},
 		startupStatements:   []goast.Stmt{},
-		Structs:             make(StructRegistry),
-		Unions:              make(StructRegistry),
-		Verbose:             false,
-		messages:            []string{},
-		GlobalVariables:     map[string]string{},
-		EnumConstantToEnum:  map[string]string{},
+		Structs: StructRegistry(map[string]*Struct{
+			// Structs without implementations inside system C headers
+			// Example node for adding:
+			// &ast.TypedefDecl{ ... Type:"struct __locale_struct *" ... }
+
+			"struct __va_list_tag [1]": &Struct{
+				Name:    "struct __va_list_tag [1]",
+				IsUnion: false,
+			},
+
+			// Pos:ast.Position{File:"/usr/include/xlocale.h", Line:27
+			"struct __locale_struct *": &Struct{
+				Name:    "struct __locale_struct *",
+				IsUnion: false,
+			},
+
+			// Pos:ast.Position{File:"/usr/include/x86_64-linux-gnu/sys/time.h", Line:61
+			"struct timezone *__restrict": &Struct{
+				Name:    "struct timezone *__restrict",
+				IsUnion: false,
+			},
+		}),
+		Unions:             make(StructRegistry),
+		Verbose:            false,
+		messages:           []string{},
+		GlobalVariables:    map[string]string{},
+		EnumConstantToEnum: map[string]string{},
+		EnumTypedefName:    map[string]bool{},
 	}
 }
 
@@ -168,7 +194,7 @@ func (p *Program) DefineType(typeName string) {
 	p.typesAlreadyDefined = append(p.typesAlreadyDefined, typeName)
 }
 
-// GetNextIdentifier generates a new gloablly unique identifier name. This can
+// GetNextIdentifier generates a new globally unique identifier name. This can
 // be used for variables and functions in generated code.
 //
 // The value of prefix is only useful for readability in the code. If the prefix

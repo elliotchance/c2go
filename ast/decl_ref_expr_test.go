@@ -50,6 +50,17 @@ func TestDeclRefExpr(t *testing.T) {
 			Type2:      "int",
 			ChildNodes: []Node{},
 		},
+		`0x1ff8770 <col:33> 'T_ENUM':'T_ENUM' lvalue Var 0x1ff8600 'cc' 'T_ENUM':'T_ENUM'`: &DeclRefExpr{
+			Addr:       0x1ff8770,
+			Pos:        NewPositionFromString("col:33"),
+			Type:       "T_ENUM",
+			Lvalue:     true,
+			For:        "Var",
+			Address2:   "0x1ff8600",
+			Name:       "cc",
+			Type2:      "T_ENUM",
+			ChildNodes: []Node{},
+		},
 	}
 
 	runNodeTests(t, nodes)

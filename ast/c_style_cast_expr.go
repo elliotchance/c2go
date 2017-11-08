@@ -4,20 +4,22 @@ type CStyleCastExpr struct {
 	Addr       Address
 	Pos        Position
 	Type       string
+	Type2      string
 	Kind       string
 	ChildNodes []Node
 }
 
 func parseCStyleCastExpr(line string) *CStyleCastExpr {
 	groups := groupsFromRegex(
-		"<(?P<position>.*)> '(?P<type>.*?)' <(?P<kind>.*)>",
+		"<(?P<position>.*)> '(?P<type1>.*?)'(:'(?P<type2>.*?)')? <(?P<kind>.*)>",
 		line,
 	)
 
 	return &CStyleCastExpr{
 		Addr:       ParseAddress(groups["address"]),
 		Pos:        NewPositionFromString(groups["position"]),
-		Type:       groups["type"],
+		Type:       groups["type1"],
+		Type2:      groups["type2"],
 		Kind:       groups["kind"],
 		ChildNodes: []Node{},
 	}

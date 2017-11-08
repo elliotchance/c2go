@@ -33,9 +33,17 @@ typedef struct mainStruct{
 	double constant;
 } secondStruct;
 
+typedef struct {
+	double t;
+} ts_c;
+
+typedef struct ff {
+	int v1,v2;
+} tt1, tt2;
+
 int main()
 {
-    plan(8);
+    plan(12);
 
     struct programming variable;
     char *s = "Programming in Software Development.";
@@ -56,6 +64,22 @@ int main()
 	secondStruct s2;
 	s2.constant = 42.;
 	is_eq(s2.constant, 42.);
+	
+	ts_c c;
+	c.t = 42.;
+	is_eq(c.t , 42.);
+
+	tt1 t1;
+	t1.v1 = 42.;
+	is_eq(t1.v1,42.)
+
+	tt2 t2;
+	t2.v1 = 42.;
+	is_eq(t2.v1,42.)
+
+	struct ff tf2;
+	tf2.v2 = t1.v1;
+	is_eq(tf2.v2,t1.v1);
 
     done_testing();
 }
