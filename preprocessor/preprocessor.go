@@ -21,10 +21,10 @@ type entity struct {
 }
 
 // Analyze - separation preprocessor code to part
-func Analyze(inputFiles []string) (pp []byte, err error) {
+func Analyze(inputFiles, clangFlags []string) (pp []byte, err error) {
 	var allItems []entity
 
-	allItems, err = analyzeFiles(inputFiles)
+	allItems, err = analyzeFiles(inputFiles, clangFlags)
 	if err != nil {
 		return
 	}
@@ -65,10 +65,10 @@ func Analyze(inputFiles []string) (pp []byte, err error) {
 }
 
 // analyze - analyze single file and separation preprocessor code to part
-func analyzeFiles(inputFiles []string) (items []entity, err error) {
+func analyzeFiles(inputFiles, clangFlags []string) (items []entity, err error) {
 	// See : https://clang.llvm.org/docs/CommandGuide/clang.html
 	// clang -E <file>    Run the preprocessor stage.
-	out, err := getPreprocessSources(inputFiles)
+	out, err := getPreprocessSources(inputFiles, clangFlags)
 	if err != nil {
 		return
 	}
@@ -111,9 +111,15 @@ func analyzeFiles(inputFiles []string) (items []entity, err error) {
 
 // See : https://clang.llvm.org/docs/CommandGuide/clang.html
 // clang -E <file>    Run the preprocessor stage.
-func getPreprocessSources(inputFiles []string) (out bytes.Buffer, err error) {
+func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, err error) {
 	var stderr bytes.Buffer
-	cmd := exec.Command("clang", append([]string{"-E"}, inputFiles...)...)
+
+	var args []string
+	args = append(args, "-E")
+	args = append(args, clangFlags...)
+	args = append(args, inputFiles...)
+
+	cmd := exec.Command("clang", args...)
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
 	err = cmd.Run()

@@ -52,6 +52,7 @@ type ProgramArgs struct {
 	verbose     bool
 	ast         bool
 	inputFiles  []string
+	clangFlags  []string
 	outputFile  string
 	packageName string
 
@@ -65,6 +66,7 @@ func DefaultProgramArgs() ProgramArgs {
 		verbose:      false,
 		ast:          false,
 		packageName:  "main",
+		clangFlags:   []string{},
 		outputAsTest: false,
 	}
 }
@@ -199,7 +201,7 @@ func Start(args ProgramArgs) (err error) {
 		fmt.Println("Running clang preprocessor...")
 	}
 
-	pp, err := preprocessor.Analyze(args.inputFiles)
+	pp, err := preprocessor.Analyze(args.inputFiles, args.clangFlags)
 	if err != nil {
 		return err
 	}
@@ -306,6 +308,20 @@ func Start(args ProgramArgs) (err error) {
 	return nil
 }
 
+type inputDataFlags []string
+
+func (i *inputDataFlags) String() (s string) {
+	for pos, item := range *i {
+		s += fmt.Sprintf("Flag %d. %s\n", pos, item)
+	}
+	return
+}
+
+func (i *inputDataFlags) Set(value string) error {
+	*i = append(*i, value)
+	return nil
+}
+
 var (
 	versionFlag       = flag.Bool("v", false, "print the version and exit")
 	transpileCommand  = flag.NewFlagSet("transpile", flag.ContinueOnError)
@@ -325,6 +341,9 @@ func main() {
 }
 
 func runCommand() int {
+	var clangFlags inputDataFlags
+	transpileCommand.Var(&clangFlags, "clang-flag", "input C code and specific flags for clang")
+
 	flag.Usage = func() {
 		usage := "Usage: %s [-v] [<command>] [<flags>] file1.c ...\n\n"
 		usage += "Commands:\n"
@@ -387,6 +406,7 @@ func runCommand() int {
 		args.outputFile = *outputFlag
 		args.packageName = *packageFlag
 		args.verbose = *verboseFlag
+		args.clangFlags = clangFlags
 	default:
 		flag.Usage()
 		return 1
