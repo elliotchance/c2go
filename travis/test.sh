@@ -94,3 +94,14 @@ echo "In file sqlite3.go : $SQLITE_WARNING_SQLITE3 warnings."
 
 SQLITE_WARNING_SHELL=`cat $SQLITE_TEMP_FOLDER/shell.go | grep "// Warning" | wc -l`
 echo "In file shell.go   : $SQLITE_WARNING_SHELL warnings."
+
+# SQLITE 
+# See https://sqlite.org/howtocompile.html
+# Step 1. Add header "sqlite3.h" into "sqlite3.c"
+echo "File sqlite.c preparing..."
+echo "#include \"sqlite3.h\""                    >  $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite.c
+cat $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite3.c  >> $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite.c
+
+# Step 2. Transpiling two "*.C" files
+echo "Combined file transpiling..."
+./c2go transpile -o=$SQLITE_TEMP_FOLDER/sqlite3.go -clang-flag="-DSQLITE_THREADSAFE=0" -clang-flag="-DSQLITE_OMIT_LOAD_EXTENSION" -clang-flag="-D_GNU_SOURCE" $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/shell.c $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite.c >> $OUTFILE 2>&1

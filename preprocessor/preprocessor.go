@@ -113,36 +113,26 @@ func analyzeFiles(inputFiles, clangFlags []string) (items []entity, err error) {
 // clang -E <file>    Run the preprocessor stage.
 func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, err error) {
 	var stderr bytes.Buffer
-
-	var args []string
-	args = append(args, "-E")
-	args = append(args, clangFlags...)
-	args = append(args, inputFiles...)
-	/*
-		var headers []string
-		for _, s := range inputFiles {
-			var lines []string
-			lines, err = getIncludeList(s)
-			if err != nil {
-				panic(err)
-			}
-			fmt.Println("File  : ", s)
-			fmt.Println("Parts : ", lines)
-			for _, l := range lines {
-				if l[len(l)-1] == 'h' {
-					headers = append(headers, l)
-				}
-			}
+	for _, inputFile := range inputFiles {
+		if inputFile[len(inputFile)-1] != 'c' {
+			continue
 		}
-		fmt.Println("Headers : ", headers)
-	*/
-	cmd := exec.Command("clang", args...)
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
-	err = cmd.Run()
-	if err != nil {
-		err = fmt.Errorf("preprocess failed: %v\nStdErr = %v", err, stderr.String())
-		return
+
+		var args []string
+		args = append(args, "-E")
+		args = append(args, clangFlags...)
+		args = append(args, inputFile)
+
+		var outFile bytes.Buffer
+		cmd := exec.Command("clang", args...)
+		cmd.Stdout = &outFile
+		cmd.Stderr = &stderr
+		err = cmd.Run()
+		if err != nil {
+			err = fmt.Errorf("preprocess for file: %s\nfailed: %v\nStdErr = %v", inputFile, err, stderr.String())
+			return
+		}
+		_, _ = out.Write(outFile.Bytes())
 	}
 	return
 }
