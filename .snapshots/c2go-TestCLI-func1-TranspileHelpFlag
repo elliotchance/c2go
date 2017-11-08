@@ -1,6 +1,8 @@
-([]string) (len=8) {
+([]string) (len=10) {
   (string) (len=64) "Usage: test transpile [-V] [-o file.go] [-p package] file1.c ...",
   (string) (len=31) "  -V\tprint progress as comments",
+  (string) (len=19) "  -clang-flag value",
+  (string) (len=46) "    \tinput C code and specific flags for clang",
   (string) (len=27) "  -h\tprint help information",
   (string) (len=11) "  -o string",
   (string) (len=51) "    \toutput Go generated code to the specified file",

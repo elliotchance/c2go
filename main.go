@@ -332,6 +332,11 @@ var (
 	astCommand        = flag.NewFlagSet("ast", flag.ContinueOnError)
 	astHelpFlag       = astCommand.Bool("h", false, "print help information")
 )
+var clangFlags inputDataFlags
+
+func init() {
+	transpileCommand.Var(&clangFlags, "clang-flag", "input C code and specific flags for clang")
+}
 
 func main() {
 	code := runCommand()
@@ -341,8 +346,6 @@ func main() {
 }
 
 func runCommand() int {
-	var clangFlags inputDataFlags
-	transpileCommand.Var(&clangFlags, "clang-flag", "input C code and specific flags for clang")
 
 	flag.Usage = func() {
 		usage := "Usage: %s [-v] [<command>] [<flags>] file1.c ...\n\n"
