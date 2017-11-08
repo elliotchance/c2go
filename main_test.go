@@ -368,3 +368,36 @@ func TestMultifileTranspilation(t *testing.T) {
 		})
 	}
 }
+
+func TestTrigraph(t *testing.T) {
+	var args = ProgramArgs{}
+	args.inputFiles = []string{"./tests/trigraph/main.c"}
+	dir, err := ioutil.TempDir("", "c2go_trigraph")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir) // clean up
+	args.outputFile = path.Join(dir, "multi.go")
+	args.clangFlags = []string{"-trigraphs"}
+	args.packageName = "main"
+	args.outputAsTest = true
+
+	// testing
+	err = Start(args)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	// Run Go program
+	var buf bytes.Buffer
+	cmd := exec.Command("go", "run", args.outputFile)
+	cmd.Stdout = &buf
+	cmd.Stderr = &buf
+	err = cmd.Run()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if buf.String() != "#" {
+		t.Errorf("Wrong result: %v", buf.String())
+	}
+}

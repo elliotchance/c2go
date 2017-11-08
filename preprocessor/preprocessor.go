@@ -118,7 +118,24 @@ func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, er
 	args = append(args, "-E")
 	args = append(args, clangFlags...)
 	args = append(args, inputFiles...)
-
+	/*
+		var headers []string
+		for _, s := range inputFiles {
+			var lines []string
+			lines, err = getIncludeList(s)
+			if err != nil {
+				panic(err)
+			}
+			fmt.Println("File  : ", s)
+			fmt.Println("Parts : ", lines)
+			for _, l := range lines {
+				if l[len(l)-1] == 'h' {
+					headers = append(headers, l)
+				}
+			}
+		}
+		fmt.Println("Headers : ", headers)
+	*/
 	cmd := exec.Command("clang", args...)
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
