@@ -400,3 +400,36 @@ func TestTrigraph(t *testing.T) {
 		t.Errorf("Wrong result: %v", buf.String())
 	}
 }
+
+func TestExternalInclude(t *testing.T) {
+	var args = ProgramArgs{}
+	args.inputFiles = []string{"./tests/multi4/main/main.c"}
+	dir, err := ioutil.TempDir("", "c2go_multi4")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir) // clean up
+	args.outputFile = path.Join(dir, "multi.go")
+	args.clangFlags = []string{"-I./tests/multi4/include/"}
+	args.packageName = "main"
+	args.outputAsTest = true
+
+	// testing
+	err = Start(args)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	// Run Go program
+	var buf bytes.Buffer
+	cmd := exec.Command("go", "run", args.outputFile)
+	cmd.Stdout = &buf
+	cmd.Stderr = &buf
+	err = cmd.Run()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if buf.String() != "42" {
+		t.Errorf("Wrong result: %v", buf.String())
+	}
+}
