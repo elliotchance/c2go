@@ -322,6 +322,12 @@ func (i *inputDataFlags) Set(value string) error {
 	return nil
 }
 
+var clangFlags inputDataFlags
+
+func init() {
+	transpileCommand.Var(&clangFlags, "clang-flag", "input C code and specific flags for clang")
+}
+
 var (
 	versionFlag       = flag.Bool("v", false, "print the version and exit")
 	transpileCommand  = flag.NewFlagSet("transpile", flag.ContinueOnError)
@@ -332,11 +338,6 @@ var (
 	astCommand        = flag.NewFlagSet("ast", flag.ContinueOnError)
 	astHelpFlag       = astCommand.Bool("h", false, "print help information")
 )
-var clangFlags inputDataFlags
-
-func init() {
-	transpileCommand.Var(&clangFlags, "clang-flag", "input C code and specific flags for clang")
-}
 
 func main() {
 	code := runCommand()

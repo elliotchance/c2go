@@ -132,7 +132,10 @@ func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, er
 			err = fmt.Errorf("preprocess for file: %s\nfailed: %v\nStdErr = %v", inputFile, err, stderr.String())
 			return
 		}
-		_, _ = out.Write(outFile.Bytes())
+		_, err = out.Write(outFile.Bytes())
+		if err != nil {
+			return
+		}
 	}
 	return
 }

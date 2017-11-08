@@ -306,7 +306,6 @@ func TestGoPath(t *testing.T) {
 }
 
 func TestMultifileTranspilation(t *testing.T) {
-
 	tcs := [][]string{
 		[]string{
 			"./tests/multi/four.c",
