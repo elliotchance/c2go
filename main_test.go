@@ -316,6 +316,10 @@ func TestMultifileTranspilation(t *testing.T) {
 		[]string{
 			"./tests/multi2/main.c",
 		},
+		[]string{
+			"./tests/multi3/1.h",
+			"./tests/multi3/1.c",
+		},
 		// checking with dublicates
 		[]string{
 			"./tests/multi/four.c",
