@@ -1,10 +1,7 @@
-#ifndef SQLITE3_H
-#define SQLITE3_H
+#ifndef SQLITE
+#define SQLITE
 
-int sqlite3_exec(){
-	return 0;
+void sql(){
 }
 
-#endif /* SQLITE3_H */
-
-
+#endif /* SQLITE */
