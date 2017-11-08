@@ -317,7 +317,7 @@ func TestMultifileTranspilation(t *testing.T) {
 			"./tests/multi2/main.c",
 		},
 		[]string{
-			"./tests/multi3/1.h",
+			"./tests/multi3/2.c",
 			"./tests/multi3/1.c",
 		},
 		// checking with dublicates

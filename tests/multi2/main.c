@@ -1,4 +1,5 @@
 #include"head.h"
+
 #ifndef HEADER
 #define HEADER
 

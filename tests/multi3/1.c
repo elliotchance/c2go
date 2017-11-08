@@ -6,7 +6,6 @@ void sql(){
 
 #endif /* SQLITE */
 
-#include "1.h"
 #include <stdio.h>
 
 int main(){
