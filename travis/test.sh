@@ -121,8 +121,7 @@ case $OS in
     ;;
   'Darwin') 
     OS='Mac'
-	echo "Not sure"
-    FLAG_OS="__APPLE__"
+	FLAG_OS="_XOPEN_SOURCE"
     ;;
   'SunOS')
     OS='Solaris'
