@@ -306,37 +306,47 @@ func TestGoPath(t *testing.T) {
 }
 
 func TestMultifileTranspilation(t *testing.T) {
-	var args = ProgramArgs{}
-	args.inputFiles = []string{
-		"./tests/multi/four.c",
-		"./tests/multi/two.c",
-		"./tests/multi/main.c",
-	}
-	dir, err := ioutil.TempDir("", "c2go_multi")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dir) // clean up
-	args.outputFile = path.Join(dir, "multi.go")
-	args.packageName = "main"
-	args.outputAsTest = true
 
-	// testing
-	err = Start(args)
-	if err != nil {
-		t.Errorf(err.Error())
+	tcs := [][]string{
+		[]string{
+			"./tests/multi/four.c",
+			"./tests/multi/two.c",
+			"./tests/multi/main.c",
+		},
+		[]string{"./tests/multi2/main.c"},
 	}
 
-	// Run Go program
-	var buf bytes.Buffer
-	cmd := exec.Command("go", "run", args.outputFile)
-	cmd.Stdout = &buf
-	cmd.Stderr = &buf
-	err = cmd.Run()
-	if err != nil {
-		t.Errorf(err.Error())
-	}
-	if buf.String() != "42" {
-		t.Errorf("Wrong result: %v", buf.String())
+	for pos, tc := range tcs {
+		t.Run(fmt.Sprintf("Test %d", pos), func(t *testing.T) {
+			var args = ProgramArgs{}
+			args.inputFiles = tc
+			dir, err := ioutil.TempDir("", "c2go_multi")
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer os.RemoveAll(dir) // clean up
+			args.outputFile = path.Join(dir, "multi.go")
+			args.packageName = "main"
+			args.outputAsTest = true
+
+			// testing
+			err = Start(args)
+			if err != nil {
+				t.Errorf(err.Error())
+			}
+
+			// Run Go program
+			var buf bytes.Buffer
+			cmd := exec.Command("go", "run", args.outputFile)
+			cmd.Stdout = &buf
+			cmd.Stderr = &buf
+			err = cmd.Run()
+			if err != nil {
+				t.Errorf(err.Error())
+			}
+			if buf.String() != "42" {
+				t.Errorf("Wrong result: %v", buf.String())
+			}
+		})
 	}
 }
