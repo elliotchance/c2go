@@ -1,5 +1,6 @@
 package ast
 
+// EmptyDecl - element of AST
 type EmptyDecl struct {
 	Addr       Address
 	Pos        Position
