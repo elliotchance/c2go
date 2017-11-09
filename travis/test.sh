@@ -83,8 +83,15 @@ rm -f $SQLITE_TEMP_FOLDER/sqlite3.go $SQLITE_TEMP_FOLDER/shell.go
 
 # Transpile the SQLite3 files.
 # If transpiling write to stderr, then it will be append into OUTFILE
+# shell.c
 echo "Transpiling shell.c..."
 ./c2go transpile -o=$SQLITE_TEMP_FOLDER/shell.go   $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/shell.c   >> $OUTFILE 2>&1
+
+# Show amount "Warning" in sqlite Go codes
+SQLITE_WARNING_SHELL=`cat $SQLITE_TEMP_FOLDER/shell.go | grep "// Warning" | wc -l`
+echo "In file shell.go   : $SQLITE_WARNING_SHELL warnings."
+
+# sqlite3.c
 echo "Transpiling sqlite3.c..."
 ./c2go transpile -o=$SQLITE_TEMP_FOLDER/sqlite3.go $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite3.c >> $OUTFILE 2>&1
 
@@ -92,52 +99,49 @@ echo "Transpiling sqlite3.c..."
 SQLITE_WARNING_SQLITE3=`cat $SQLITE_TEMP_FOLDER/sqlite3.go | grep "// Warning" | wc -l`
 echo "In file sqlite3.go : $SQLITE_WARNING_SQLITE3 warnings."
 
-SQLITE_WARNING_SHELL=`cat $SQLITE_TEMP_FOLDER/shell.go | grep "// Warning" | wc -l`
-echo "In file shell.go   : $SQLITE_WARNING_SHELL warnings."
-
-# SQLITE 
+# SQLITE
+echo "----------------------"
+echo "SQLITE3 transpiling..."
 # See https://sqlite.org/howtocompile.html
-# Step 1. Add header "sqlite3.h" into "sqlite3.c"
-echo "File sqlite.c preparing..."
-echo "#include \"sqlite3.h\""                    >  $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite.c
-cat $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite3.c  >> $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite.c
 
-# Detect the platform (similar to $OSTYPE)
+# Step . Create a temp folder for transpiling
+SQLITE_TEMP_FOLDER_COMBINE=$SQLITE_TEMP_FOLDER/Combine
+
+if [ -d "$SQLITE_TEMP_FOLDER_COMBINE" ]; then rm -Rf $SQLITE_TEMP_FOLDER_COMBINE; fi
+mkdir $SQLITE_TEMP_FOLDER_COMBINE
+
+# Step . Add header "sqlite3.h" into "sqlite3.c"
+echo "File sqlite3.c preparing..."
+echo "#include \"sqlite3.h\"\n"                  >  $SQLITE_TEMP_FOLDER_COMBINE/sqlite3.c
+cat $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite3.c  >> $SQLITE_TEMP_FOLDER_COMBINE/sqlite3.c
+
+# Step . Add header "time.h" and "sys/time.h" into "sqlite.h"
+echo "File sqlite3.h preparing..."
+echo "#include <time.h>\n#include<sys/time.h>\n" >  $SQLITE_TEMP_FOLDER_COMBINE/sqlite3.h
+cat $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite3.h  >> $SQLITE_TEMP_FOLDER_COMBINE/sqlite3.h
+
+# Step .
+echo "File shell.c   preparing..."
+cat $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/shell.c    >  $SQLITE_TEMP_FOLDER_COMBINE/shell.c
+
+# Step . Detect the platform (similar to $OSTYPE)
 OS="`uname`"
 case $OS in
   'Linux')
     OS='Linux'
     FLAG_OS="_GNU_SOURCE"
     ;;
-  'FreeBSD')
-    OS='FreeBSD'
-	echo "Not sure"
-    FLAG_OS="_GNU_SOURCE"
-    ;;
-  'WindowsNT')
-    OS='Windows'
-	echo "Not sure"
-    FLAG_OS="_GNU_SOURCE"
-    ;;
   'Darwin') 
     OS='Mac'
-	FLAG_OS="_XOPEN_SOURCE"
+	FLAG_OS="__APPLE__"
     ;;
-  'SunOS')
-    OS='Solaris'
-	echo "Not sure"
-    ;;
-  'AIX') ;;
-  *) ;;
 esac
-
 echo "Result of OS detection: $OS, so flag is $FLAG_OS" 
 
-# Step 2. Transpiling two "*.C" files
+# Step . Transpiling two "*.C" files
 echo "Transpiling shell.c with sqlite.c..."
-./c2go transpile -o=$SQLITE_TEMP_FOLDER/sqlite.go -clang-flag="-DSQLITE_THREADSAFE=0" -clang-flag="-DSQLITE_OMIT_LOAD_EXTENSION" -clang-flag="-D$FLAG_OS" $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/shell.c $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite.c >> $OUTFILE 2>&1
+./c2go transpile -o=$SQLITE_TEMP_FOLDER_COMBINE/sqlite.go -clang-flag="-DSQLITE_THREADSAFE=0" -clang-flag="-DSQLITE_OMIT_LOAD_EXTENSION" -clang-flag="-D$FLAG_OS" $SQLITE_TEMP_FOLDER_COMBINE/shell.c $SQLITE_TEMP_FOLDER_COMBINE/sqlite3.c >> $OUTFILE 2>&1
 
-# Step 3. Calculate amount of warnings
-SQLITE_WARNING_SQLITE=`cat $SQLITE_TEMP_FOLDER/sqlite.go | grep "// Warning" | wc -l`
-echo "In file sqlite.go : $SQLITE_WARNING_SQLITE warnings."
-
+# Step . Calculate amount of warnings
+SQLITE_WARNING_SQLITE_COMBINE=`cat $SQLITE_TEMP_FOLDER_COMBINE/sqlite.go | grep "// Warning" | wc -l`
+echo "In file sqlite.go : $SQLITE_WARNING_SQLITE_COMBINE warnings."
