@@ -47,8 +47,11 @@ if [ $COVERAGE_FILES != 0 ]; then
 fi
 
 # Print stats
-echo "Unit tests: " $(grep "=== RUN" $OUTFILE | wc -l)
-echo "Integration tests: " $(grep "# Total tests" $OUTFILE | cut -c21-)
+UNIT_TESTS=$(grep "=== RUN" $OUTFILE | wc -l | tr -d '[:space:]')
+INT_TESTS=$(grep "# Total tests" $OUTFILE | cut -c21- | tr -d '[:space:]')
+
+echo "Unit tests: ${UNIT_TESTS}"
+echo "Integration tests: ${INT_TESTS}"
 
 # These steps are from the README to verify it can be installed and run as
 # documented.
@@ -99,6 +102,16 @@ echo "Transpiling sqlite3.c..."
 SQLITE_WARNING_SQLITE3=`cat $SQLITE_TEMP_FOLDER/sqlite3.go | grep "// Warning" | wc -l`
 echo "In file sqlite3.go : $SQLITE_WARNING_SQLITE3 warnings."
 
+# Update Github PR statuses. These two statuses will always pass but will show
+# information about the number of tests run and how many warnings are generated
+# in the SQLite3 transpile.
+if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+    curl -H "Authorization: token ${GITHUB_API_TOKEN}" -H "Content-Type: application/json" https://api.github.com/repos/elliotchance/c2go/statuses/${TRAVIS_COMMIT} -d "{\"state\": \"success\",\"target_url\": \"https://travis-ci.org/elliotchance/c2go/builds/${TRAVIS_JOB_ID}\", \"description\": \"$(($UNIT_TESTS + $INT_TESTS)) tests passed (${UNIT_TESTS} unit + ${INT_TESTS} integration)\", \"context\": \"c2go/tests\"}"
+
+    curl -H "Authorization: token ${GITHUB_API_TOKEN}" -H "Content-Type: application/json" https://api.github.com/repos/elliotchance/c2go/statuses/${TRAVIS_COMMIT} -d "{\"state\": \"success\",\"target_url\": \"https://travis-ci.org/elliotchance/c2go/builds/${TRAVIS_JOB_ID}\", \"description\": \"$(($SQLITE_WARNING_SQLITE3 + $SQLITE_WARNING_SHELL)) warnings\", \"context\": \"c2go/sqlite3\"}" 
+fi
+
+
 # SQLITE
 echo "----------------------"
 echo "SQLITE3 transpiling..."
@@ -145,3 +158,4 @@ echo "Transpiling shell.c with sqlite.c..."
 # Step . Calculate amount of warnings
 SQLITE_WARNING_SQLITE_COMBINE=`cat $SQLITE_TEMP_FOLDER_COMBINE/sqlite.go | grep "// Warning" | wc -l`
 echo "In file sqlite.go : $SQLITE_WARNING_SQLITE_COMBINE warnings."
+
