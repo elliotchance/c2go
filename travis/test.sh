@@ -130,8 +130,8 @@ echo "OS : $OS"
 
 # Step . Add header "sqlite3.h" into "sqlite3.c"
 echo "File sqlite3.c preparing..."
-echo "#include \"sqlite3.h\"\n"                  >  $SQLITE_TEMP_FOLDER_COMBINE/sqlite3.c
-cat $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite3.c  >> $SQLITE_TEMP_FOLDER_COMBINE/sqlite3.c
+echo -e "#include \"sqlite3.h\"\n#include <sys/time.h>\n" >  $SQLITE_TEMP_FOLDER_COMBINE/sqlite3.c
+cat $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite3.c           >> $SQLITE_TEMP_FOLDER_COMBINE/sqlite3.c
 
 # Step . Add header "time.h" and "sys/time.h" into "sqlite.h"
 echo "File sqlite3.h preparing..."
@@ -140,7 +140,7 @@ case $OS in
 		# nothing
     ;;
   'Darwin') 
-		echo "#include <time.h>\n#include<sys/time.h>\n" >  $SQLITE_TEMP_FOLDER_COMBINE/sqlite3.h
+		echo -e "#include <time.h>\n#include<sys/time.h>\n" >  $SQLITE_TEMP_FOLDER_COMBINE/sqlite3.h
     ;;
 esac
 cat $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite3.h  >> $SQLITE_TEMP_FOLDER_COMBINE/sqlite3.h
