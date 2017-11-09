@@ -1,6 +1,7 @@
+#include <stdio.h>
+
 #ifndef HEADER
 #define HEADER
-#include <stdio.h>
 
 void say_four(){
 	printf("4");

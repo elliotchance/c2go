@@ -123,6 +123,10 @@ SQLITE_TEMP_FOLDER_COMBINE=$SQLITE_TEMP_FOLDER/Combine
 if [ -d "$SQLITE_TEMP_FOLDER_COMBINE" ]; then rm -Rf $SQLITE_TEMP_FOLDER_COMBINE; fi
 mkdir $SQLITE_TEMP_FOLDER_COMBINE
 
+# Step . Detect the platform (similar to $OSTYPE)
+OS="`uname`"
+echo "OS : $OS"
+
 # Step . Add header "sqlite3.h" into "sqlite3.c"
 echo "File sqlite3.c preparing..."
 echo "#include \"sqlite3.h\"\n"                  >  $SQLITE_TEMP_FOLDER_COMBINE/sqlite3.c
@@ -130,22 +134,26 @@ cat $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite3.c  >> $SQLITE_TEMP_FOLDER_COMBINE/
 
 # Step . Add header "time.h" and "sys/time.h" into "sqlite.h"
 echo "File sqlite3.h preparing..."
-echo "#include <time.h>\n#include<sys/time.h>\n" >  $SQLITE_TEMP_FOLDER_COMBINE/sqlite3.h
+case $OS in
+  'Linux')
+		# nothing
+    ;;
+  'Darwin') 
+		echo "#include <time.h>\n#include<sys/time.h>\n" >  $SQLITE_TEMP_FOLDER_COMBINE/sqlite3.h
+    ;;
+esac
 cat $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite3.h  >> $SQLITE_TEMP_FOLDER_COMBINE/sqlite3.h
 
 # Step .
 echo "File shell.c   preparing..."
 cat $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/shell.c    >  $SQLITE_TEMP_FOLDER_COMBINE/shell.c
 
-# Step . Detect the platform (similar to $OSTYPE)
-OS="`uname`"
+# Step . Flag
 case $OS in
   'Linux')
-    OS='Linux'
     FLAG_OS="_GNU_SOURCE"
     ;;
   'Darwin') 
-    OS='Mac'
 	FLAG_OS="__APPLE__"
     ;;
 esac

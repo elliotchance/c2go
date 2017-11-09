@@ -1,7 +1,6 @@
 #ifndef SQLITE
 #define SQLITE
 
-void sql(){
-}
+void sql(){};
 
 #endif /* SQLITE */

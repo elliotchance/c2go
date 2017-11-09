@@ -335,7 +335,7 @@ func TestMultifileTranspilation(t *testing.T) {
 
 	for pos, tc := range tcs {
 		t.Run(fmt.Sprintf("Test %d", pos), func(t *testing.T) {
-			var args = ProgramArgs{}
+			var args = DefaultProgramArgs()
 			args.inputFiles = tc
 			dir, err := ioutil.TempDir("", "c2go_multi")
 			if err != nil {
@@ -369,7 +369,7 @@ func TestMultifileTranspilation(t *testing.T) {
 }
 
 func TestTrigraph(t *testing.T) {
-	var args = ProgramArgs{}
+	var args = DefaultProgramArgs()
 	args.inputFiles = []string{"./tests/trigraph/main.c"}
 	dir, err := ioutil.TempDir("", "c2go_trigraph")
 	if err != nil {
@@ -402,7 +402,7 @@ func TestTrigraph(t *testing.T) {
 }
 
 func TestExternalInclude(t *testing.T) {
-	var args = ProgramArgs{}
+	var args = DefaultProgramArgs()
 	args.inputFiles = []string{"./tests/multi4/main/main.c"}
 	dir, err := ioutil.TempDir("", "c2go_multi4")
 	if err != nil {

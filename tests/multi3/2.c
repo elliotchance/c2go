@@ -1,6 +1,5 @@
 #include "1.h"
 
-void empty(){
-}
+void empty(){};
 
 
