@@ -18,7 +18,8 @@ type TypedefDecl struct {
 
 func parseTypedefDecl(line string) *TypedefDecl {
 	groups := groupsFromRegex(
-		`<(?P<position><invalid sloc>|.*?)>
+		`(?:prev (?P<prev>0x[0-9a-f]+) )?
+		<(?P<position><invalid sloc>|.*?)>
 		(?P<position2> <invalid sloc>| col:\d+| line:\d+:\d+)?
 		(?P<implicit> implicit)?
 		(?P<referenced> referenced)?

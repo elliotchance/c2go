@@ -20,7 +20,8 @@ type VarDecl struct {
 
 func parseVarDecl(line string) *VarDecl {
 	groups := groupsFromRegex(
-		`<(?P<position>.*)>(?P<position2> .+:\d+)?
+		`(?:prev (?P<prev>0x[0-9a-f]+) )?
+		<(?P<position>.*)>(?P<position2> .+:\d+)?
 		(?P<used> used)?
 		(?P<referenced> referenced)?
 		(?P<name> \w+)?
