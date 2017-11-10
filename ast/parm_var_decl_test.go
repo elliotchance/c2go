@@ -83,7 +83,7 @@ func TestParmVarDecl(t *testing.T) {
 			IsReferenced: false,
 			ChildNodes:   []Node{},
 		},
-		`ParmVarDecl 0x1d82850 <col:11, col:22> col:16 referenced foo 'char *':'char *'`: &ParmVarDecl{
+		`0x1d82850 <col:11, col:22> col:16 referenced foo 'char *':'char *'`: &ParmVarDecl{
 			Addr:         0x1d82850,
 			Pos:          NewPositionFromString("col:11, col:22"),
 			Position2:    "col:16",
