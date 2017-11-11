@@ -322,42 +322,42 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 		    `-ImplicitCastExpr 0x365ff30 <col:20> 'void *' <LValueToRValue>
 		      `-DeclRefExpr 0x365ff08 <col:20> 'void *' lvalue Var 0x365f8c8 'r' 'void *'
 	*/
-	/*
-		if len(a.Children()) > 0 {
-			if v, ok := (a.Children()[0]).(*ast.ImplicitCastExpr); ok {
-				if len(v.Type) > 0 {
-					// Is it function ?
-					if types.IsFunction(v.Type) {
-						var fields, returns []string
-						fields, returns, err = types.ResolveFunction(p, v.Type)
-						if err != nil {
-							err = fmt.Errorf("Cannot resolve function : %v", err)
-							return
-						}
-						functionType := GenerateFuncType(fields, returns)
-						nameVar1 := a.Name
 
-						if vv, ok := v.Children()[0].(*ast.ImplicitCastExpr); ok {
-							if decl, ok := vv.Children()[0].(*ast.DeclRefExpr); ok {
-								nameVar2 := decl.Name
+	if len(n.Children()) > 0 {
+		if v, ok := (n.Children()[0]).(*ast.ImplicitCastExpr); ok {
+			if len(v.Type) > 0 {
+				// Is it function ?
+				if types.IsFunction(v.Type) {
+					var fields, returns []string
+					fields, returns, err = types.ResolveFunction(p, v.Type)
+					if err != nil {
+						err = fmt.Errorf("Cannot resolve function : %v", err)
+						return
+					}
+					functionType := GenerateFuncType(fields, returns)
+					nameVar1 := n.Name
 
-								return []goast.Decl{&goast.GenDecl{
-									Tok: token.VAR,
-									Specs: []goast.Spec{&goast.ValueSpec{
-										Names: []*goast.Ident{&goast.Ident{Name: nameVar1}},
-										Type:  functionType,
-										Values: []goast.Expr{&goast.TypeAssertExpr{
-											X:    &goast.Ident{Name: nameVar2},
-											Type: functionType,
-										}},
-									},
-									}}}, "", nil
-							}
+					if vv, ok := v.Children()[0].(*ast.ImplicitCastExpr); ok {
+						if decl, ok := vv.Children()[0].(*ast.DeclRefExpr); ok {
+							nameVar2 := decl.Name
+
+							return []goast.Decl{&goast.GenDecl{
+								Tok: token.VAR,
+								Specs: []goast.Spec{&goast.ValueSpec{
+									Names: []*goast.Ident{&goast.Ident{Name: nameVar1}},
+									Type:  functionType,
+									Values: []goast.Expr{&goast.TypeAssertExpr{
+										X:    &goast.Ident{Name: nameVar2},
+										Type: functionType,
+									}},
+								},
+								}}}, "", nil
 						}
 					}
 				}
 			}
-		}*/
+		}
+	}
 
 	if types.IsFunction(n.Type) {
 		var fields, returns []string
