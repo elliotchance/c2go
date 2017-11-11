@@ -258,6 +258,7 @@ func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) (
 	[]goast.Stmt, []goast.Stmt, []goast.Stmt, error) {
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
+	var err error
 
 	// There may be more than one variable defined on the same line. With C it
 	// is possible for them to have similar but different types, whereas in Go
@@ -283,14 +284,14 @@ func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) (
 			decls = append(decls, e)
 
 		case *ast.TypedefDecl:
-			p.AddMessage(p.GenerateWarningMessage(errors.New("cannot use TypedefDecl for DeclStmt"), c))
+			err = transpileTypedefDecl(p, a)
 
 		default:
 			panic(a)
 		}
 	}
 
-	return decls, preStmts, postStmts, nil
+	return decls, preStmts, postStmts, err
 }
 
 func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program) (
