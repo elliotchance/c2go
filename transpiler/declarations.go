@@ -448,25 +448,3 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 		},
 	}}, "", nil
 }
-
-/*, preStmts, postStmts, nil
-	decls = append(decls, &goast.GenDecl{
-		Tok: token.VAR,
-		Specs: []goast.Spec{
-			&goast.ValueSpec{
-				Names: []*goast.Ident{
-					util.NewIdent(name),
-				},
-				Type:   util.NewTypeIdent(theType),
-				Values: defaultValue,
-			},
-		},
-	})
-
-	if len(preStmts) != 0 || len(postStmts) != 0 {
-		panic("Not acceptable Stmt")
-	}
-
-	err = nil
-	return
-}*/
