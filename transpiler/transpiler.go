@@ -217,16 +217,13 @@ func transpileToStmts(node ast.Node, p *program.Program) (stmts []goast.Stmt, er
 	)
 	switch n := node.(type) {
 	case *ast.DeclStmt:
-		var s []goast.Stmt
-		s, err = transpileDeclStmt(n, p)
-		preStmts = append(preStmts, s...)
+		stmts, _ = transpileDeclStmt(n, p) // Hack : error not handled
+		return
 	default:
 		stmt, preStmts, postStmts, err = transpileToStmt(node, p)
 	}
-	if err != nil {
-		return
-	}
 	stmts = append(stmts, combineStmts(stmt, preStmts, postStmts)...)
+	err = nil // Hack : error not handled
 	return
 }
 

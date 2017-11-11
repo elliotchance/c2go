@@ -252,19 +252,119 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 }
 
 func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, theType string, err error) {
+
+	// There may be some startup code for this global variable.
+	if p.Function == nil {
+		name := n.Name
+		switch name {
+		// Below are for macOS.
+		case "__stdinp", "__stdoutp":
+			theType = "*noarch.File"
+			p.AddImport("github.com/elliotchance/c2go/noarch")
+			p.AppendStartupExpr(
+				util.NewBinaryExpr(
+					goast.NewIdent(name),
+					token.ASSIGN,
+					util.NewTypeIdent("noarch."+util.Ucfirst(name[2:len(name)-1])),
+					"*noarch.File",
+					true,
+				),
+			)
+			return []goast.Decl{&goast.GenDecl{
+				Tok: token.VAR,
+				Specs: []goast.Spec{&goast.ValueSpec{
+					Names: []*goast.Ident{&goast.Ident{Name: name}},
+					Type:  util.NewTypeIdent(theType),
+				}},
+			}}, "", nil
+
+		// Below are for linux.
+		case "stdout", "stdin", "stderr":
+			theType = "*noarch.File"
+			p.AddImport("github.com/elliotchance/c2go/noarch")
+			p.AppendStartupExpr(
+				util.NewBinaryExpr(
+					goast.NewIdent(name),
+					token.ASSIGN,
+					util.NewTypeIdent("noarch."+util.Ucfirst(name)),
+					theType,
+					true,
+				),
+			)
+			return []goast.Decl{&goast.GenDecl{
+				Tok: token.VAR,
+				Specs: []goast.Spec{&goast.ValueSpec{
+					Names: []*goast.Ident{&goast.Ident{Name: name}},
+					Type:  util.NewTypeIdent(theType),
+				}},
+			}}, "", nil
+
+		default:
+			// No init needed.
+		}
+	}
 	// There are cases where the same variable is defined more than once. I
 	// assume this is because they are extern or static definitions. For now, we
 	// will ignore any redefinitions.
-	if _, found := p.GlobalVariables[n.Name]; found {
-		return
-	}
+	/*
+		if _, found := p.GlobalVariables[n.Name]; found {
+			return
+		}
+	*/
+
+	/*
+		Example of DeclStmt for C code:
+		void * a = NULL;
+		void(*t)(void) = a;
+		Example of AST:
+		`-VarDecl 0x365fea8 <col:3, col:20> col:9 used t 'void (*)(void)' cinit
+		  `-ImplicitCastExpr 0x365ff48 <col:20> 'void (*)(void)' <BitCast>
+		    `-ImplicitCastExpr 0x365ff30 <col:20> 'void *' <LValueToRValue>
+		      `-DeclRefExpr 0x365ff08 <col:20> 'void *' lvalue Var 0x365f8c8 'r' 'void *'
+	*/
+	/*
+		if len(a.Children()) > 0 {
+			if v, ok := (a.Children()[0]).(*ast.ImplicitCastExpr); ok {
+				if len(v.Type) > 0 {
+					// Is it function ?
+					if types.IsFunction(v.Type) {
+						var fields, returns []string
+						fields, returns, err = types.ResolveFunction(p, v.Type)
+						if err != nil {
+							err = fmt.Errorf("Cannot resolve function : %v", err)
+							return
+						}
+						functionType := GenerateFuncType(fields, returns)
+						nameVar1 := a.Name
+
+						if vv, ok := v.Children()[0].(*ast.ImplicitCastExpr); ok {
+							if decl, ok := vv.Children()[0].(*ast.DeclRefExpr); ok {
+								nameVar2 := decl.Name
+
+								return []goast.Decl{&goast.GenDecl{
+									Tok: token.VAR,
+									Specs: []goast.Spec{&goast.ValueSpec{
+										Names: []*goast.Ident{&goast.Ident{Name: nameVar1}},
+										Type:  functionType,
+										Values: []goast.Expr{&goast.TypeAssertExpr{
+											X:    &goast.Ident{Name: nameVar2},
+											Type: functionType,
+										}},
+									},
+									}}}, "", nil
+							}
+						}
+					}
+				}
+			}
+		}*/
 
 	if types.IsFunction(n.Type) {
 		var fields, returns []string
 		fields, returns, err = types.ResolveFunction(p, n.Type)
 		if err != nil {
 			p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Cannot resolve function : %v", err), n))
-			err = nil
+			err = nil // Hack
 			return
 		}
 		functionType := GenerateFuncType(fields, returns)
@@ -308,44 +408,48 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 		name = "type_"
 	}
 
-	// There may be some startup code for this global variable.
-	if p.Function == nil {
-		switch name {
-		// Below are for macOS.
-		case "__stdinp", "__stdoutp":
-			p.AddImport("github.com/elliotchance/c2go/noarch")
-			p.AppendStartupExpr(
-				util.NewBinaryExpr(
-					goast.NewIdent(name),
-					token.ASSIGN,
-					util.NewTypeIdent("noarch."+util.Ucfirst(name[2:len(name)-1])),
-					"*noarch.File",
-					true,
-				),
-			)
-
-			// Below are for linux.
-		case "stdout", "stdin", "stderr":
-			theType = "*noarch.File"
-			p.AddImport("github.com/elliotchance/c2go/noarch")
-			p.AppendStartupExpr(
-				util.NewBinaryExpr(
-					goast.NewIdent(name),
-					token.ASSIGN,
-					util.NewTypeIdent("noarch."+util.Ucfirst(name)),
-					theType,
-					true,
-				),
-			)
-
-		default:
-			// No init needed.
-		}
-	}
-
 	defaultValue, _, newPre, newPost, err := getDefaultValueForVar(p, n)
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
+	// Allocate slice so that it operates like a fixed size array.
+	arrayType, arraySize := types.GetArrayTypeAndSize(n.Type)
+
+	if arraySize != -1 && defaultValue == nil {
+		goArrayType, err := types.ResolveType(p, arrayType)
+		p.AddMessage(p.GenerateWarningMessage(err, n))
+
+		defaultValue = []goast.Expr{
+			util.NewCallExpr(
+				"make",
+				&goast.ArrayType{
+					Elt: util.NewTypeIdent(goArrayType),
+				},
+				util.NewIntLit(arraySize),
+				util.NewIntLit(arraySize),
+			),
+		}
+	}
+
+	t, err := types.ResolveType(p, n.Type)
+	p.AddMessage(p.GenerateWarningMessage(err, n))
+
+	if len(preStmts) != 0 || len(postStmts) != 0 {
+		panic("Not acceptable Stmt")
+	}
+
+	return []goast.Decl{&goast.GenDecl{
+		Tok: token.VAR,
+		Specs: []goast.Spec{
+			&goast.ValueSpec{
+				Names:  []*goast.Ident{util.NewIdent(n.Name)},
+				Type:   util.NewTypeIdent(t),
+				Values: defaultValue,
+			},
+		},
+	}}, "", nil
+}
+
+/*, preStmts, postStmts, nil
 	decls = append(decls, &goast.GenDecl{
 		Tok: token.VAR,
 		Specs: []goast.Spec{
@@ -365,4 +469,4 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 
 	err = nil
 	return
-}
+}*/

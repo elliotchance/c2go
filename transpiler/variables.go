@@ -3,7 +3,6 @@ package transpiler
 import (
 	"errors"
 	"fmt"
-	"go/token"
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
@@ -63,6 +62,7 @@ func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
 	return values, defaultValueType, newPre, newPost, nil
 }
 
+/*
 func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 	*goast.DeclStmt, []goast.Stmt, []goast.Stmt, error) {
 	preStmts := []goast.Stmt{}
@@ -76,7 +76,8 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 		  `-ImplicitCastExpr 0x365ff48 <col:20> 'void (*)(void)' <BitCast>
 		    `-ImplicitCastExpr 0x365ff30 <col:20> 'void *' <LValueToRValue>
 		      `-DeclRefExpr 0x365ff08 <col:20> 'void *' lvalue Var 0x365f8c8 'r' 'void *'
-	*/
+*/
+/*
 	if len(a.Children()) > 0 {
 		if v, ok := (a.Children()[0]).(*ast.ImplicitCastExpr); ok {
 			if len(v.Type) > 0 {
@@ -110,10 +111,13 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 			}
 		}
 	}
+*/
 
+/*
 	defaultValue, _, newPre, newPost, err := getDefaultValueForVar(p, a)
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
-
+*/
+/*
 	// Allocate slice so that it operates like a fixed size array.
 	arrayType, arraySize := types.GetArrayTypeAndSize(a.Type)
 
@@ -149,6 +153,7 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 		},
 	}, preStmts, postStmts, nil
 }
+*/
 
 // GenerateFuncType in according to types
 /*
