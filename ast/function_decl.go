@@ -20,7 +20,7 @@ type FunctionDecl struct {
 
 func parseFunctionDecl(line string) *FunctionDecl {
 	groups := groupsFromRegex(
-		`(?P<prev>prev [0-9a-fx]+ )?
+		`(?:prev (?P<prev>0x[0-9a-f]+) )?
 		<(?P<position1>.*?)>
 		(?P<position2> <scratch space>[^ ]+| [^ ]+)?
 		(?P<implicit> implicit)?
@@ -32,15 +32,10 @@ func parseFunctionDecl(line string) *FunctionDecl {
 		line,
 	)
 
-	prev := groups["prev"]
-	if prev != "" {
-		prev = prev[5 : len(prev)-1]
-	}
-
 	return &FunctionDecl{
 		Addr:         ParseAddress(groups["address"]),
 		Pos:          NewPositionFromString(groups["position1"]),
-		Prev:         prev,
+		Prev:         groups["prev"],
 		Position2:    strings.TrimSpace(groups["position2"]),
 		Name:         groups["name"],
 		Type:         groups["type"],

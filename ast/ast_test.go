@@ -56,3 +56,15 @@ func TestPrint(t *testing.T) {
 		t.Error("Not correct design of output")
 	}
 }
+
+var lines = []string{
+// c2go ast sqlite3.c | head -5000 | sed 's/^[ |`-]*//' | sed 's/<<<NULL>>>/NullStmt/g' | gawk 'length > 0 {print "`" $0 "`,"}'
+}
+
+func BenchmarkParse(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		for _, line := range lines {
+			Parse(line)
+		}
+	}
+}
