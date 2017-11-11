@@ -254,43 +254,19 @@ func transpileInitListExpr(e *ast.InitListExpr, p *program.Program) (goast.Expr,
 	}, cTypeString, nil
 }
 
-func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) (
-	[]goast.Stmt, []goast.Stmt, []goast.Stmt, error) {
-	preStmts := []goast.Stmt{}
-	postStmts := []goast.Stmt{}
-
-	// There may be more than one variable defined on the same line. With C it
-	// is possible for them to have similar but different types, whereas in Go
-	// this is not possible. The easiest way around this is to split the
-	// variables up into multiple declarations. That is why this function
-	// returns one or more DeclStmts.
-	decls := []goast.Stmt{}
-
-	for _, c := range n.Children() {
-		switch a := c.(type) {
-		case *ast.RecordDecl:
-			// I'm not sure why this is ignored. Maybe we haven't found a
-			// situation where this is needed yet?
-
-		case *ast.VarDecl:
-			e, newPre, newPost, err := newDeclStmt(a, p)
-			if err != nil {
-				return nil, nil, nil, err
-			}
-
-			preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
-
-			decls = append(decls, e)
-
-		case *ast.TypedefDecl:
-			p.AddMessage(p.GenerateWarningMessage(errors.New("cannot use TypedefDecl for DeclStmt"), c))
-
-		default:
-			panic(a)
-		}
+func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) (stmts []goast.Stmt, err error) {
+	if len(n.Children()) == 0 {
+		return
+	}
+	var tud ast.TranslationUnitDecl
+	tud.ChildNodes = n.Children()
+	var decls []goast.Decl
+	decls, _ = transpileToNode(&tud, p) // Hack : error is ignored
+	for i := range decls {
+		stmts = append(stmts, &goast.DeclStmt{Decl: decls[i]})
 	}
 
-	return decls, preStmts, postStmts, nil
+	return
 }
 
 func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program) (

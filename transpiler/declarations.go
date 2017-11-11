@@ -47,11 +47,12 @@ func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, str
 	}, "unknown3"
 }
 
-func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
+func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.Decl, err error) {
 	name := n.Name
 
 	if name == "" || p.IsTypeAlreadyDefined(name) {
-		return nil
+		err = nil
+		return
 	}
 
 	p.DefineType(name)
@@ -68,7 +69,8 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 	if name == "__locale_struct" ||
 		name == "__sigaction" ||
 		name == "sigaction" {
-		return nil
+		err = nil
+		return
 	}
 
 	var fields []*goast.Field
@@ -101,10 +103,10 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 			p.AddImports("reflect", "unsafe")
 
 			// Declaration for implementing union type
-			p.File.Decls = append(p.File.Decls, transpileUnion(name, size, fields)...)
+			decls = append(decls, transpileUnion(name, size, fields)...)
 		}
 	} else {
-		p.File.Decls = append(p.File.Decls, &goast.GenDecl{
+		decls = append(decls, &goast.GenDecl{
 			Tok: token.TYPE,
 			Specs: []goast.Spec{
 				&goast.TypeSpec{
@@ -119,10 +121,10 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 		})
 	}
 
-	return nil
+	return
 }
 
-func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
+func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast.Decl, err error) {
 	name := n.Name
 
 	// added for support "typedef enum {...} dd" with empty name of struct
@@ -133,7 +135,7 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 			p.DefineType(n.Name)
 			p.EnumTypedefName[n.Name] = true
 		}
-		p.File.Decls = append(p.File.Decls, &goast.GenDecl{
+		decls = append(decls, &goast.GenDecl{
 			Tok: token.TYPE,
 			Specs: []goast.Spec{
 				&goast.TypeSpec{
@@ -142,11 +144,13 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 				},
 			},
 		})
-		return nil
+		err = nil
+		return
 	}
 
 	if p.IsTypeAlreadyDefined(name) {
-		return nil
+		err = nil
+		return
 	}
 
 	p.DefineType(name)
@@ -171,7 +175,8 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 	// Until which time that we actually need this to work I am going to
 	// suppress these.
 	if name == resolvedType {
-		return nil
+		err = nil
+		return
 	}
 
 	if name == "__darwin_ct_rune_t" {
@@ -195,7 +200,8 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 		name == "locale_t" ||
 		name == "fsid_t" ||
 		name == "sigset_t" {
-		return nil
+		err = nil
+		return
 	}
 
 	if name == "div_t" || name == "ldiv_t" || name == "lldiv_t" {
@@ -222,7 +228,7 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 		}
 	}
 
-	p.File.Decls = append(p.File.Decls, &goast.GenDecl{
+	decls = append(decls, &goast.GenDecl{
 		Tok: token.TYPE,
 		Specs: []goast.Spec{
 			&goast.TypeSpec{
@@ -241,38 +247,42 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 		p.EnumConstantToEnum["enum "+resolvedType] = v
 	}
 
-	return nil
+	err = nil
+	return
 }
 
-func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
-	[]goast.Stmt, []goast.Stmt, string) {
+func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, theType string, err error) {
 	// There are cases where the same variable is defined more than once. I
 	// assume this is because they are extern or static definitions. For now, we
 	// will ignore any redefinitions.
 	if _, found := p.GlobalVariables[n.Name]; found {
-		return nil, nil, ""
+		return
 	}
 
 	if types.IsFunction(n.Type) {
-		fields, returns, err := types.ResolveFunction(p, n.Type)
+		var fields, returns []string
+		fields, returns, err = types.ResolveFunction(p, n.Type)
 		if err != nil {
 			p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Cannot resolve function : %v", err), n))
-			return []goast.Stmt{}, []goast.Stmt{}, ""
+			err = nil
+			return
 		}
 		functionType := GenerateFuncType(fields, returns)
 		nameVar1 := n.Name
-		p.File.Decls = append(p.File.Decls, &goast.GenDecl{
+		decls = append(decls, &goast.GenDecl{
 			Tok: token.VAR,
 			Specs: []goast.Spec{&goast.ValueSpec{
 				Names: []*goast.Ident{&goast.Ident{Name: nameVar1}},
 				Type:  functionType,
 			},
 			}})
-		return []goast.Stmt{}, []goast.Stmt{}, ""
+		err = nil
+		return
 	}
 
-	theType, err := types.ResolveType(p, n.Type)
+	theType, err = types.ResolveType(p, n.Type)
 	p.AddMessage(p.GenerateWarningMessage(err, n))
+	err = nil
 
 	p.GlobalVariables[n.Name] = theType
 
@@ -288,7 +298,8 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 		name == "_IO_2_1_stderr_" ||
 		name == "_DefaultRuneLocale" ||
 		name == "_CurrentRuneLocale" {
-		return nil, nil, "unknown10"
+		theType = "unknown10"
+		return
 	}
 
 	// TODO: The name of a variable or field cannot be "type"
@@ -335,7 +346,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 	defaultValue, _, newPre, newPost, err := getDefaultValueForVar(p, n)
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	p.File.Decls = append(p.File.Decls, &goast.GenDecl{
+	decls = append(decls, &goast.GenDecl{
 		Tok: token.VAR,
 		Specs: []goast.Spec{
 			&goast.ValueSpec{
@@ -348,5 +359,10 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 		},
 	})
 
-	return nil, nil, theType
+	if len(preStmts) != 0 || len(postStmts) != 0 {
+		panic("Not acceptable Stmt")
+	}
+
+	err = nil
+	return
 }

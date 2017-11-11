@@ -42,7 +42,7 @@ func getFunctionBody(n *ast.FunctionDecl) *ast.CompoundStmt {
 // either way the function is registered internally) but we do not do anything
 // because Go does not use or have any use for forward declarations of
 // functions.
-func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
+func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (decls []goast.Decl, err error) {
 	var body *goast.BlockStmt
 
 	// This is set at the start of the function declaration so when the
@@ -70,7 +70,8 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 	// output the C definition of it.
 	f := program.GetFunctionDefinition(n.Name)
 	if f != nil && f.Substitution != "" {
-		return nil
+		err = nil
+		return
 	}
 
 	// Test if the function has a body. This is identified by a child node that
@@ -78,12 +79,8 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 	// curly brackets).
 	functionBody := getFunctionBody(n)
 	if functionBody != nil {
-		var err error
-
-		body, _, _, err = transpileToBlockStmt(functionBody, p)
-		if err != nil {
-			return err
-		}
+		body, _, _, _ = transpileToBlockStmt(functionBody, p)
+		// Hack : Error is not handled for
 	}
 
 	// These functions cause us trouble for whatever reason. Some of them might
@@ -98,7 +95,8 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 		n.Name == "__inline_signbitf" ||
 		n.Name == "__inline_signbitd" ||
 		n.Name == "__inline_signbitl" {
-		return nil
+		err = nil
+		return
 	}
 
 	if functionBody != nil {
@@ -110,9 +108,10 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 				strings.Join(f.ArgumentTypes, ", "))
 		}
 
-		fieldList, err := getFieldList(n, p)
+		var fieldList *goast.FieldList
+		fieldList, err = getFieldList(n, p)
 		if err != nil {
-			return err
+			return
 		}
 
 		t, err := types.ResolveType(p, f.ReturnType)
@@ -186,14 +185,15 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 			fieldList = &goast.FieldList{}
 		}
 
-		p.File.Decls = append(p.File.Decls, &goast.FuncDecl{
+		decls = append(decls, &goast.FuncDecl{
 			Name: util.NewIdent(n.Name),
 			Type: util.NewFuncType(fieldList, t),
 			Body: body,
 		})
 	}
 
-	return nil
+	err = nil
+	return
 }
 
 // getFieldList returns the parameters of a C function as a Go AST FieldList.

@@ -29,7 +29,8 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 	}
 
 	// Now begin building the Go AST.
-	err = transpileToNode(root, p)
+	decls, _ := transpileToNode(root, p)
+	p.File.Decls = append(p.File.Decls, decls...)
 
 	if p.OutputAsTest {
 		p.AddImport("testing")
@@ -217,7 +218,7 @@ func transpileToStmts(node ast.Node, p *program.Program) (stmts []goast.Stmt, er
 	switch n := node.(type) {
 	case *ast.DeclStmt:
 		var s []goast.Stmt
-		s, preStmts, postStmts, err = transpileDeclStmt(n, p)
+		s, err = transpileDeclStmt(n, p)
 		preStmts = append(preStmts, s...)
 	default:
 		stmt, preStmts, postStmts, err = transpileToStmt(node, p)
@@ -318,7 +319,7 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 	return
 }
 
-func transpileToNode(node ast.Node, p *program.Program) error {
+func transpileToNode(node ast.Node, p *program.Program) (decls []goast.Decl, err error) {
 	switch n := node.(type) {
 	case *ast.TranslationUnitDecl:
 		for i := 0; i < len(n.Children()); i++ {
@@ -326,10 +327,9 @@ func transpileToNode(node ast.Node, p *program.Program) error {
 			case *ast.RecordDecl:
 				// specific for `typedef struct` without name
 				if v.Name != "" || i == len(n.Children())-1 {
-					err := transpileRecordDecl(p, v)
-					if err != nil {
-						return err
-					}
+					d, _ := transpileRecordDecl(p, v)
+					// err is ignored
+					decls = append(decls, d...)
 				}
 				for counter := 1; i+counter < len(n.Children()); counter++ {
 					if vv, ok := n.Children()[i+counter].(*ast.TypedefDecl); ok {
@@ -340,10 +340,8 @@ func transpileToNode(node ast.Node, p *program.Program) error {
 						var recordDecl ast.RecordDecl
 						recordDecl.Name = nameTypedefStruct
 						recordDecl.ChildNodes = fields
-						err := transpileRecordDecl(p, &recordDecl)
-						if err != nil {
-							return err
-						}
+						d, _ := transpileRecordDecl(p, &recordDecl)
+						decls = append(decls, d...)
 					} else {
 						counter--
 						i = i + counter
@@ -351,35 +349,36 @@ func transpileToNode(node ast.Node, p *program.Program) error {
 					}
 				}
 			default:
-				transpileToNode(n.Children()[i], p)
+				d, _ := transpileToNode(n.Children()[i], p)
+				decls = append(decls, d...)
 			}
 		}
 
 	case *ast.FunctionDecl:
-		err := transpileFunctionDecl(n, p)
-		if err != nil {
-			return err
-		}
+		d, _ := transpileFunctionDecl(n, p)
+		decls = append(decls, d...)
 
 	case *ast.TypedefDecl:
-		return transpileTypedefDecl(p, n)
+		d, _ := transpileTypedefDecl(p, n)
+		decls = append(decls, d...)
 
 	case *ast.RecordDecl:
-		return transpileRecordDecl(p, n)
+		d, _ := transpileRecordDecl(p, n)
+		decls = append(decls, d...)
 
 	case *ast.VarDecl:
-		transpileVarDecl(p, n)
-		return nil
+		d, _, _ := transpileVarDecl(p, n)
+		decls = append(decls, d...)
 
 	case *ast.EnumDecl:
-		transpileEnumDecl(p, n)
-		return nil
+		d, _ := transpileEnumDecl(p, n)
+		decls = append(decls, d...)
 
 	default:
 		panic(fmt.Sprintf("cannot transpile to node: %#v", node))
 	}
 
-	return nil
+	return
 }
 
 func transpileStmts(nodes []ast.Node, p *program.Program) (stmts []goast.Stmt, err error) {
