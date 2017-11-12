@@ -21,7 +21,7 @@ func parseMemberExpr(line string) *MemberExpr {
 		 lvalue
 		(?P<bitfield> bitfield)?
 		 (?P<pointer>[->.]+)
-		(?P<name>\w+)
+		(?P<name>\w+)?
 		 (?P<address2>[0-9a-fx]+)`,
 		line,
 	)

@@ -399,6 +399,11 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 		}
 	}
 
+	// anonymous struct member?
+	if rhs == "" {
+		rhs = "anon"
+	}
+
 	return &goast.SelectorExpr{
 		X:   x,
 		Sel: util.NewIdent(rhs),
