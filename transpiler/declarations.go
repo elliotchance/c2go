@@ -83,7 +83,8 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 		} else if field, ok := c.(*ast.RecordDecl); ok {
 			err := transpileRecordDecl(p, field)
 			if err != nil {
-				// ...
+				message := fmt.Sprintf("could not parse %v", c)
+				p.AddMessage(p.GenerateWarningMessage(errors.New(message), c))
 			}
 		} else {
 			message := fmt.Sprintf("could not parse %v", c)
