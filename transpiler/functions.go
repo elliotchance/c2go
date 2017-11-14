@@ -79,8 +79,12 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (decls []goa
 	// curly brackets).
 	functionBody := getFunctionBody(n)
 	if functionBody != nil {
-		body, _, _, _ = transpileToBlockStmt(functionBody, p)
-		// Hack : Error is not handled for
+		var pre, post []goast.Stmt
+		body, pre, post, err = transpileToBlockStmt(functionBody, p)
+		if err != nil || len(pre) > 0 || len(post) > 0 {
+			p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Not correct result in function %s body: err = %v", n.Name, err), n))
+			err = nil // Error is ignored
+		}
 	}
 
 	// These functions cause us trouble for whatever reason. Some of them might

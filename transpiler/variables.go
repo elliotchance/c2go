@@ -173,9 +173,15 @@ func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) (stmts []goast.Stmt,
 	var tud ast.TranslationUnitDecl
 	tud.ChildNodes = n.Children()
 	var decls []goast.Decl
-	decls, _ = transpileToNode(&tud, p) // Hack : error is ignored
+	decls, err = transpileToNode(&tud, p)
+	if err != nil {
+		p.AddMessage(p.GenerateErrorMessage(err, n))
+		err = nil
+	}
 	for i := range decls {
-		stmts = append(stmts, &goast.DeclStmt{Decl: decls[i]})
+		if decls[i] != nil {
+			stmts = append(stmts, &goast.DeclStmt{Decl: decls[i]})
+		}
 	}
 
 	return

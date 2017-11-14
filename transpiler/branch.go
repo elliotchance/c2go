@@ -82,6 +82,12 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
+	if body == nil {
+		return nil, nil, nil, fmt.Errorf("Body of If cannot by nil")
+	}
+	if boolCondition == nil {
+		return nil, nil, nil, fmt.Errorf("Bool Condition in If cannot by nil")
+	}
 	r := &goast.IfStmt{
 		Cond: boolCondition,
 		Body: body,
@@ -95,7 +101,11 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
 
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-		r.Else = elseBody
+		if elseBody != nil {
+			r.Else = elseBody
+		} else {
+			return nil, nil, nil, fmt.Errorf("Body of Else in If cannot be nil")
+		}
 	}
 
 	return r, newPre, newPost, nil
@@ -145,9 +155,7 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 			if err != nil {
 				return nil, nil, nil, err
 			}
-			preStmts = append(preStmts, newPre...)
-			preStmts = append(preStmts, before)
-			preStmts = append(preStmts, newPost...)
+			preStmts = append(preStmts, combineStmts(before, newPre, newPost)...)
 			children[0] = c.Children()[1]
 		}
 	case *ast.DeclStmt:
@@ -282,6 +290,9 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 	body, newPre, newPost, err := transpileToBlockStmt(children[4], p)
 	if err != nil {
 		return nil, nil, nil, err
+	}
+	if body == nil {
+		return nil, nil, nil, fmt.Errorf("Body of For cannot be nil")
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)

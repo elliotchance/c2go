@@ -29,7 +29,11 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 	}
 
 	// Now begin building the Go AST.
-	decls, _ := transpileToNode(root, p)
+	decls, err := transpileToNode(root, p)
+	if err != nil {
+		p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Error of transpiling: err = %v", err), root))
+		err = nil // Error is ignored
+	}
 	p.File.Decls = append(p.File.Decls, decls...)
 
 	if p.OutputAsTest {
@@ -115,6 +119,10 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 	if node == nil {
 		panic(node)
 	}
+	defer func() {
+		preStmts = nilFilterStmts(preStmts)
+		postStmts = nilFilterStmts(postStmts)
+	}()
 
 	switch n := node.(type) {
 	case *ast.StringLiteral:
@@ -209,6 +217,9 @@ func transpileToStmts(node ast.Node, p *program.Program) (stmts []goast.Stmt, er
 	if node == nil {
 		return nil, nil
 	}
+	defer func() {
+		stmts = nilFilterStmts(stmts)
+	}()
 
 	var (
 		stmt      goast.Stmt
@@ -217,13 +228,20 @@ func transpileToStmts(node ast.Node, p *program.Program) (stmts []goast.Stmt, er
 	)
 	switch n := node.(type) {
 	case *ast.DeclStmt:
-		stmts, _ = transpileDeclStmt(n, p) // Hack : error not handled
+		stmts, err = transpileDeclStmt(n, p)
+		if err != nil {
+			p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Error in DeclStmt: %v", err), n))
+			err = nil // Error is ignored
+		}
 		return
 	default:
 		stmt, preStmts, postStmts, err = transpileToStmt(node, p)
+		if err != nil {
+			p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Error in DeclStmt: %v", err), n))
+			err = nil // Error is ignored
+		}
 	}
 	stmts = append(stmts, combineStmts(stmt, preStmts, postStmts)...)
-	err = nil // Hack : error not handled
 	return
 }
 
@@ -232,6 +250,17 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 	if node == nil {
 		return
 	}
+
+	defer func() {
+		if err != nil {
+			p.AddMessage(p.GenerateErrorMessage(err, node))
+			err = nil // Error is ignored
+		}
+	}()
+	defer func() {
+		preStmts = nilFilterStmts(preStmts)
+		postStmts = nilFilterStmts(postStmts)
+	}()
 
 	var expr goast.Expr
 
@@ -265,7 +294,8 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 		return
 
 	case *ast.IfStmt:
-		return transpileIfStmt(n, p)
+		stmt, preStmts, postStmts, err = transpileIfStmt(n, p)
+		return
 
 	case *ast.ForStmt:
 		return transpileForStmt(n, p)
@@ -317,6 +347,13 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 }
 
 func transpileToNode(node ast.Node, p *program.Program) (decls []goast.Decl, err error) {
+	defer func() {
+		if err != nil {
+			p.AddMessage(p.GenerateErrorMessage(err, node))
+			err = nil // Error is ignored
+		}
+	}()
+
 	switch n := node.(type) {
 	case *ast.TranslationUnitDecl:
 		for i := 0; i < len(n.Children()); i++ {
@@ -324,8 +361,11 @@ func transpileToNode(node ast.Node, p *program.Program) (decls []goast.Decl, err
 			case *ast.RecordDecl:
 				// specific for `typedef struct` without name
 				if v.Name != "" || i == len(n.Children())-1 {
-					d, _ := transpileRecordDecl(p, v)
-					// err is ignored
+					var d []goast.Decl
+					d, err = transpileRecordDecl(p, v)
+					if err != nil {
+						return
+					}
 					decls = append(decls, d...)
 				}
 				for counter := 1; i+counter < len(n.Children()); counter++ {
@@ -337,8 +377,14 @@ func transpileToNode(node ast.Node, p *program.Program) (decls []goast.Decl, err
 						var recordDecl ast.RecordDecl
 						recordDecl.Name = nameTypedefStruct
 						recordDecl.ChildNodes = fields
-						d, _ := transpileRecordDecl(p, &recordDecl)
-						decls = append(decls, d...)
+						var d []goast.Decl
+						d, err = transpileRecordDecl(p, &recordDecl)
+						if err != nil {
+							p.AddMessage(p.GenerateErrorMessage(err, node))
+							err = nil
+						} else {
+							decls = append(decls, d...)
+						}
 					} else {
 						counter--
 						i = i + counter
@@ -346,30 +392,31 @@ func transpileToNode(node ast.Node, p *program.Program) (decls []goast.Decl, err
 					}
 				}
 			default:
-				d, _ := transpileToNode(n.Children()[i], p)
-				decls = append(decls, d...)
+				var d []goast.Decl
+				d, err = transpileToNode(n.Children()[i], p)
+				if err != nil {
+					p.AddMessage(p.GenerateErrorMessage(err, node))
+					err = nil
+				} else {
+					decls = append(decls, d...)
+				}
 			}
 		}
 
 	case *ast.FunctionDecl:
-		d, _ := transpileFunctionDecl(n, p)
-		decls = append(decls, d...)
+		decls, err = transpileFunctionDecl(n, p)
 
 	case *ast.TypedefDecl:
-		d, _ := transpileTypedefDecl(p, n)
-		decls = append(decls, d...)
+		decls, err = transpileTypedefDecl(p, n)
 
 	case *ast.RecordDecl:
-		d, _ := transpileRecordDecl(p, n)
-		decls = append(decls, d...)
+		decls, err = transpileRecordDecl(p, n)
 
 	case *ast.VarDecl:
-		d, _, _ := transpileVarDecl(p, n)
-		decls = append(decls, d...)
+		decls, _, err = transpileVarDecl(p, n)
 
 	case *ast.EnumDecl:
-		d, _ := transpileEnumDecl(p, n)
-		decls = append(decls, d...)
+		decls, err = transpileEnumDecl(p, n)
 
 	default:
 		panic(fmt.Sprintf("cannot transpile to node: %#v", node))
@@ -379,6 +426,13 @@ func transpileToNode(node ast.Node, p *program.Program) (decls []goast.Decl, err
 }
 
 func transpileStmts(nodes []ast.Node, p *program.Program) (stmts []goast.Stmt, err error) {
+	defer func() {
+		if err != nil {
+			p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Error in transpileToStmts", err), nodes[0]))
+			err = nil // Error is ignored
+		}
+	}()
+
 	for _, s := range nodes {
 		if s != nil {
 			var (
@@ -395,22 +449,4 @@ func transpileStmts(nodes []ast.Node, p *program.Program) (stmts []goast.Stmt, e
 	}
 
 	return stmts, nil
-}
-
-// combineStmts - combine elements to slice
-func combineStmts(stmt goast.Stmt, preStmts, postStmts []goast.Stmt) (stmts []goast.Stmt) {
-	for i := range preStmts {
-		if preStmts[i] != nil {
-			stmts = append(stmts, preStmts[i])
-		}
-	}
-	if stmt != nil {
-		stmts = append(stmts, stmt)
-	}
-	for i := range postStmts {
-		if postStmts[i] != nil {
-			stmts = append(stmts, postStmts[i])
-		}
-	}
-	return
 }

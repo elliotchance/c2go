@@ -4,6 +4,7 @@
 package transpiler
 
 import (
+	"fmt"
 	goast "go/ast"
 
 	"github.com/elliotchance/c2go/ast"
@@ -43,6 +44,10 @@ func transpileToBlockStmt(node ast.Node, p *program.Program) (
 		if block, ok := stmts[0].(*goast.BlockStmt); ok {
 			return block, nil, nil, nil
 		}
+	}
+
+	if stmts == nil {
+		return nil, nil, nil, fmt.Errorf("Stmts inside Block cannot be nil")
 	}
 
 	return &goast.BlockStmt{

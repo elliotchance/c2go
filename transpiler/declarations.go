@@ -88,7 +88,6 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 				message := fmt.Sprintf("could not parse %v", c)
 				p.AddMessage(p.GenerateWarningMessage(errors.New(message), c))
 			}
-			return
 		} else {
 			message := fmt.Sprintf("could not parse %v", c)
 			p.AddMessage(p.GenerateWarningMessage(errors.New(message), c))
@@ -310,14 +309,6 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 			// No init needed.
 		}
 	}
-	// There are cases where the same variable is defined more than once. I
-	// assume this is because they are extern or static definitions. For now, we
-	// will ignore any redefinitions.
-	/*
-		if _, found := p.GlobalVariables[n.Name]; found {
-			return
-		}
-	*/
 
 	/*
 		Example of DeclStmt for C code:
@@ -370,8 +361,8 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 		var fields, returns []string
 		fields, returns, err = types.ResolveFunction(p, n.Type)
 		if err != nil {
-			p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Cannot resolve function : %v", err), n))
-			err = nil // Hack
+			p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Cannot resolve function : %v", err), n))
+			err = nil // Error is ignored
 			return
 		}
 		functionType := GenerateFuncType(fields, returns)
@@ -388,8 +379,10 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 	}
 
 	theType, err = types.ResolveType(p, n.Type)
-	p.AddMessage(p.GenerateWarningMessage(err, n))
-	err = nil
+	if err != nil {
+		p.AddMessage(p.GenerateErrorMessage(err, n))
+		err = nil // Error is ignored
+	}
 
 	p.GlobalVariables[n.Name] = theType
 
@@ -416,14 +409,22 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 	}
 
 	defaultValue, _, newPre, newPost, err := getDefaultValueForVar(p, n)
+	if err != nil {
+		p.AddMessage(p.GenerateErrorMessage(err, n))
+		err = nil // Error is ignored
+	}
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	// Allocate slice so that it operates like a fixed size array.
 	arrayType, arraySize := types.GetArrayTypeAndSize(n.Type)
 
 	if arraySize != -1 && defaultValue == nil {
-		goArrayType, err := types.ResolveType(p, arrayType)
-		p.AddMessage(p.GenerateWarningMessage(err, n))
+		var goArrayType string
+		goArrayType, err = types.ResolveType(p, arrayType)
+		if err != nil {
+			p.AddMessage(p.GenerateErrorMessage(err, n))
+			err = nil // Error is ignored
+		}
 
 		defaultValue = []goast.Expr{
 			util.NewCallExpr(
@@ -438,10 +439,13 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 	}
 
 	t, err := types.ResolveType(p, n.Type)
-	p.AddMessage(p.GenerateWarningMessage(err, n))
+	if err != nil {
+		p.AddMessage(p.GenerateErrorMessage(err, n))
+		err = nil // Error is ignored
+	}
 
 	if len(preStmts) != 0 || len(postStmts) != 0 {
-		panic("Not acceptable Stmt")
+		p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Not acceptable length of Stmt : pre(%d), post(%d)", len(preStmts), len(postStmts)), n))
 	}
 
 	return []goast.Decl{&goast.GenDecl{
