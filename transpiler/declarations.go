@@ -82,6 +82,13 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 			if f != nil {
 				fields = append(fields, f)
 			}
+		} else if field, ok := c.(*ast.RecordDecl); ok {
+			decls, err = transpileRecordDecl(p, field)
+			if err != nil {
+				message := fmt.Sprintf("could not parse %v", c)
+				p.AddMessage(p.GenerateWarningMessage(errors.New(message), c))
+			}
+			return
 		} else {
 			message := fmt.Sprintf("could not parse %v", c)
 			p.AddMessage(p.GenerateWarningMessage(errors.New(message), c))
