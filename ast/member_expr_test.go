@@ -66,6 +66,18 @@ func TestMemberExpr(t *testing.T) {
 			IsPointer:  true,
 			ChildNodes: []Node{},
 		},
+		`0x2914fb8 <col:12, col:14> 'union vec3d_t::(anonymous at main.c:2:5)' lvalue . 0x2914920`: &MemberExpr{
+			Addr:       0x2914fb8,
+			Pos:        NewPositionFromString("col:12, col:14"),
+			Type:       "union vec3d_t::(anonymous at main.c:2:5)",
+			Type2:      "",
+			IsLvalue:   true,
+			IsBitfield: false,
+			Name:       "",
+			Address2:   "0x2914920",
+			IsPointer:  false,
+			ChildNodes: []Node{},
+		},
 	}
 
 	runNodeTests(t, nodes)

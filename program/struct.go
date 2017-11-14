@@ -36,7 +36,7 @@ func NewStruct(n *ast.RecordDecl) *Struct {
 		case *ast.RecordDecl:
 			fields[f.Name] = NewStruct(f)
 
-		case *ast.MaxFieldAlignmentAttr, *ast.AlignedAttr:
+		case *ast.MaxFieldAlignmentAttr, *ast.AlignedAttr, *ast.TransparentUnionAttr:
 			// FIXME: Should these really be ignored?
 
 		default:

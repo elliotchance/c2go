@@ -15,6 +15,10 @@ func (p *Program) Imports() []string {
 func (p *Program) AddImport(importPath string) {
 	quotedImportPath := strconv.Quote(importPath)
 
+	if len(importPath) == 0 {
+		return
+	}
+
 	for _, i := range p.imports {
 		if i == quotedImportPath {
 			// Already imported, ignore.

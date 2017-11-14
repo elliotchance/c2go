@@ -56,7 +56,7 @@ func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
 	if !types.IsNullExpr(defaultValue) {
 		t, err := types.CastExpr(p, defaultValue, defaultValueType, a.Type)
 		if !p.AddMessage(p.GenerateWarningMessage(err, a)) {
-			values = []goast.Expr{t}
+			values = append(values, t)
 		}
 	}
 
@@ -67,6 +67,49 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 	*goast.DeclStmt, []goast.Stmt, []goast.Stmt, error) {
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
+	/*
+		Example of DeclStmt for C code:
+		void * a = NULL;
+		void(*t)(void) = a;
+		Example of AST:
+		`-VarDecl 0x365fea8 <col:3, col:20> col:9 used t 'void (*)(void)' cinit
+		  `-ImplicitCastExpr 0x365ff48 <col:20> 'void (*)(void)' <BitCast>
+		    `-ImplicitCastExpr 0x365ff30 <col:20> 'void *' <LValueToRValue>
+		      `-DeclRefExpr 0x365ff08 <col:20> 'void *' lvalue Var 0x365f8c8 'r' 'void *'
+	*/
+	if len(a.Children()) > 0 {
+		if v, ok := (a.Children()[0]).(*ast.ImplicitCastExpr); ok {
+			if len(v.Type) > 0 {
+				// Is it function ?
+				if types.IsFunction(v.Type) {
+					fields, returns, err := types.ResolveFunction(p, v.Type)
+					if err != nil {
+						return &goast.DeclStmt{}, preStmts, postStmts, fmt.Errorf("Cannot resolve function : %v", err)
+					}
+					functionType := GenerateFuncType(fields, returns)
+					nameVar1 := a.Name
+
+					if vv, ok := v.Children()[0].(*ast.ImplicitCastExpr); ok {
+						if decl, ok := vv.Children()[0].(*ast.DeclRefExpr); ok {
+							nameVar2 := decl.Name
+
+							return &goast.DeclStmt{Decl: &goast.GenDecl{
+								Tok: token.VAR,
+								Specs: []goast.Spec{&goast.ValueSpec{
+									Names: []*goast.Ident{&goast.Ident{Name: nameVar1}},
+									Type:  functionType,
+									Values: []goast.Expr{&goast.TypeAssertExpr{
+										X:    &goast.Ident{Name: nameVar2},
+										Type: functionType,
+									}},
+								},
+								}}}, preStmts, postStmts, nil
+						}
+					}
+				}
+			}
+		}
+	}
 
 	defaultValue, _, newPre, newPost, err := getDefaultValueForVar(p, a)
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
@@ -107,6 +150,63 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 	}, preStmts, postStmts, nil
 }
 
+// GenerateFuncType in according to types
+/*
+Type: *ast.FuncType {
+.  Func: 13:7
+.  Params: *ast.FieldList {
+.  .  Opening: 13:12
+.  .  List: []*ast.Field (len = 2) {
+.  .  .  0: *ast.Field {
+.  .  .  .  Type: *ast.Ident {
+.  .  .  .  .  NamePos: 13:13
+.  .  .  .  .  Name: "int"
+.  .  .  .  }
+.  .  .  }
+.  .  .  1: *ast.Field {
+.  .  .  .  Type: *ast.Ident {
+.  .  .  .  .  NamePos: 13:17
+.  .  .  .  .  Name: "int"
+.  .  .  .  }
+.  .  .  }
+.  .  }
+.  .  Closing: 13:20
+.  }
+.  Results: *ast.FieldList {
+.  .  Opening: -
+.  .  List: []*ast.Field (len = 1) {
+.  .  .  0: *ast.Field {
+.  .  .  .  Type: *ast.Ident {
+.  .  .  .  .  NamePos: 13:21
+.  .  .  .  .  Name: "string"
+.  .  .  .  }
+.  .  .  }
+.  .  }
+.  .  Closing: -
+.  }
+}
+*/
+func GenerateFuncType(fields, returns []string) *goast.FuncType {
+	var ft goast.FuncType
+	{
+		var fieldList goast.FieldList
+		fieldList.Opening = 1
+		fieldList.Closing = 2
+		for i := range fields {
+			fieldList.List = append(fieldList.List, &goast.Field{Type: &goast.Ident{Name: fields[i]}})
+		}
+		ft.Params = &fieldList
+	}
+	{
+		var fieldList goast.FieldList
+		for i := range returns {
+			fieldList.List = append(fieldList.List, &goast.Field{Type: &goast.Ident{Name: returns[i]}})
+		}
+		ft.Results = &fieldList
+	}
+	return &ft
+}
+
 func transpileInitListExpr(e *ast.InitListExpr, p *program.Program) (goast.Expr, string, error) {
 	resp := []goast.Expr{}
 	for _, node := range e.Children() {
@@ -124,7 +224,7 @@ func transpileInitListExpr(e *ast.InitListExpr, p *program.Program) (goast.Expr,
 	var cTypeString string
 
 	arrayType, arraySize := types.GetArrayTypeAndSize(e.Type1)
-	if arrayType != "" {
+	if arraySize != -1 {
 		goArrayType, err := types.ResolveType(p, arrayType)
 		p.AddMessage(p.GenerateWarningMessage(err, e))
 
@@ -280,9 +380,15 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 
 	// Construct code for getting value to an union field
 	if structType != nil && structType.IsUnion {
-		ident := lhs.(*goast.Ident)
-		funcName := getFunctionNameForUnionGetter(ident.Name, lhsResolvedType, n.Name)
-		resExpr := util.NewCallExpr(funcName)
+		var resExpr goast.Expr
+
+		switch t := lhs.(type) {
+		case *goast.Ident:
+			funcName := getFunctionNameForUnionGetter(t.Name, lhsResolvedType, n.Name)
+			resExpr = util.NewCallExpr(funcName)
+		case *goast.SelectorExpr:
+			resExpr = t
+		}
 
 		return resExpr, rhsType, preStmts, postStmts, nil
 	}
@@ -297,6 +403,11 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 		if alias, ok := member[rhs]; ok {
 			rhs = alias
 		}
+	}
+
+	// anonymous struct member?
+	if rhs == "" {
+		rhs = "anon"
 	}
 
 	return &goast.SelectorExpr{

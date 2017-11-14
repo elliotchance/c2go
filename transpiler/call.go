@@ -3,7 +3,6 @@
 package transpiler
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -75,9 +74,6 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 	functionDef := program.GetFunctionDefinition(functionName)
 
 	if functionDef == nil {
-		errorMessage := fmt.Sprintf("unknown function: %s", functionName)
-		p.AddMessage(p.GenerateWarningMessage(errors.New(errorMessage), n))
-
 		// We do not have a prototype for the function, but we should not exit
 		// here. Instead we will create a mock definition for it so that this
 		// transpile function will always return something and continue.
@@ -88,6 +84,17 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 		// be handled correctly. Or at least "more" correctly.
 		functionDef = &program.FunctionDefinition{
 			Name: functionName,
+		}
+		if len(n.Children()) > 0 {
+			if v, ok := n.Children()[0].(*ast.ImplicitCastExpr); ok && types.IsFunction(v.Type) {
+				fields, returns, err := types.ResolveFunction(p, v.Type)
+				if err != nil {
+					p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Cannot resolve function : %v", err), n))
+					return nil, "", nil, nil, err
+				}
+				functionDef.ReturnType = returns[0]
+				functionDef.ArgumentTypes = fields
+			}
 		}
 	}
 
@@ -201,6 +208,44 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 			}
 
 			realArgs = append(realArgs, a)
+		}
+	}
+
+	// Added for support removing function `free` of <stdlib.h>
+	// Example of C code:
+	// free(i+=4,buffer)
+	// Example of result Go code:
+	// i += 4
+	// _ = buffer
+	if functionDef.Substitution == "_" {
+		var argName string
+		if v, ok := realArgs[0].(*goast.CallExpr); ok && len(realArgs) == 1 {
+			if vv, ok := v.Args[0].(*goast.Ident); ok && len(v.Args) == 1 {
+				argName = vv.Name
+			}
+			if vv, ok := v.Args[0].(*goast.ParenExpr); ok && len(v.Args) == 1 {
+				argName = vv.X.(*goast.Ident).Name
+			}
+		}
+		if v, ok := realArgs[0].(*goast.Ident); ok {
+			argName = v.Name
+		}
+		if argName != "" {
+			devNull := &goast.AssignStmt{
+				Lhs: []goast.Expr{
+					&goast.Ident{
+						Name: "_",
+					},
+				},
+				Tok: token.ASSIGN,
+				Rhs: []goast.Expr{
+					&goast.Ident{
+						Name: argName,
+					},
+				},
+			}
+			preStmts = append(preStmts, devNull)
+			return nil, "", preStmts, postStmts, nil
 		}
 	}
 

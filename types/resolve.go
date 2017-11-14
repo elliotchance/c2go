@@ -3,10 +3,10 @@ package types
 import (
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/util"
 )
 
 // TODO: Some of these are based on assumptions that may not be true for all
@@ -41,9 +41,9 @@ var simpleResolveTypes = map[string]string{
 	"void":                   "",
 	"_Bool":                  "bool",
 
-	// void* is treated like char*
-	"void*":  "[]byte",
-	"void *": "[]byte",
+	// void*
+	"void*":  "interface{}",
+	"void *": "interface{}",
 
 	// null is a special case (it should probably have a less ambiguos name)
 	// when using the NULL macro.
@@ -78,7 +78,6 @@ var simpleResolveTypes = map[string]string{
 	"__mbstate_t":                  "int64",
 	"__sbuf":                       "int64",
 	"__sFILEX":                     "interface{}",
-	"__va_list_tag":                "interface{}",
 	"FILE":                         "github.com/elliotchance/c2go/noarch.File",
 }
 
@@ -92,7 +91,7 @@ var simpleResolveTypes = map[string]string{
 //
 // 1. The Go type must be deterministic. The same C type will ALWAYS return the
 //    same Go type, in any condition. This is extremely important since the
-//    nature of C is that is may not have certain information avilable about the
+//    nature of C is that is may not have certain information available about the
 //    rest of the program or libraries when it is being compiled.
 //
 // 2. Many C type modifiers and properties are lost as they have no sensible or
@@ -146,6 +145,11 @@ func ResolveType(p *program.Program, s string) (string, error) {
 		}
 	}
 
+	// Check is it typedef enum
+	if _, ok := p.EnumTypedefName[s]; ok {
+		return ResolveType(p, "int")
+	}
+
 	// If the type is already defined we can proceed with the same name.
 	if p.IsTypeAlreadyDefined(s) {
 		return p.ImportType(s), nil
@@ -197,7 +201,7 @@ func ResolveType(p *program.Program, s string) (string, error) {
 
 	// It may be a pointer of a simple type. For example, float *, int *,
 	// etc.
-	if regexp.MustCompile("[\\w ]+\\*+$").MatchString(s) {
+	if util.GetRegex("[\\w ]+\\*+$").MatchString(s) {
 		// The "-1" is important because there may or may not be a space between
 		// the name and the "*". If there is an extra space it will be trimmed
 		// off.
@@ -213,32 +217,106 @@ func ResolveType(p *program.Program, s string) (string, error) {
 		return prefix + t, err
 	}
 
-	if regexp.MustCompile(`[\w ]+\*\[\d+\]$`).MatchString(s) {
-		return "[]string", nil
-	}
-
 	// Function pointers are not yet supported. In the mean time they will be
 	// replaced with a type that certainly wont work until we can fix this
 	// properly.
-	search := regexp.MustCompile("[\\w ]+\\(\\*.*?\\)\\(.*\\)").MatchString(s)
+	search := util.GetRegex("[\\w ]+\\(\\*.*?\\)\\(.*\\)").MatchString(s)
 	if search {
 		return "interface{}", errors.New("function pointers are not supported")
 	}
 
-	search = regexp.MustCompile("[\\w ]+ \\(.*\\)").MatchString(s)
+	search = util.GetRegex("[\\w ]+ \\(.*\\)").MatchString(s)
 	if search {
 		return "interface{}", errors.New("function pointers are not supported")
 	}
 
 	// It could be an array of fixed length. These needs to be converted to
 	// slices.
-	search2 := regexp.MustCompile("([\\w ]+)\\[(\\d+)\\]").FindStringSubmatch(s)
-	if len(search2) > 0 {
+	// int [2][3] -> [][]int
+	// int [2][3][4] -> [][][]int
+	search2 := util.GetRegex(`([\w\* ]+)((\[\d+\])+)`).FindStringSubmatch(s)
+	if len(search2) > 2 {
 		t, err := ResolveType(p, search2[1])
-		return fmt.Sprintf("[]%s", t), err
+
+		var re = util.GetRegex(`[0-9]+`)
+		arraysNoSize := re.ReplaceAllString(search2[2], "")
+
+		return fmt.Sprintf("%s%s", arraysNoSize, t), err
 	}
 
 	errMsg := fmt.Sprintf(
 		"I couldn't find an appropriate Go type for the C type '%s'.", s)
 	return "interface{}", errors.New(errMsg)
+}
+
+// ResolveFunction determines the Go type from a C type.
+func ResolveFunction(p *program.Program, s string) (fields []string, returns []string, err error) {
+	f, r, err := ParseFunction(s)
+	if err != nil {
+		return
+	}
+	for i := range f {
+		var t string
+		t, err = ResolveType(p, f[i])
+		if err != nil {
+			return
+		}
+		fields = append(fields, t)
+	}
+	for i := range r {
+		var t string
+		t, err = ResolveType(p, r[i])
+		if err != nil {
+			return
+		}
+		returns = append(returns, t)
+	}
+	return
+}
+
+// IsFunction - return true if string is function like "void (*)(void)"
+func IsFunction(s string) bool {
+	parts := strings.Split(s, "(*)")
+	if len(parts) != 2 {
+		return false
+	}
+	inside := strings.TrimSpace(parts[1])
+	if inside[0] != '(' || inside[len(inside)-1] != ')' {
+		return false
+	}
+	return true
+}
+
+// ParseFunction - parsing elements of C function
+func ParseFunction(s string) (f []string, r []string, err error) {
+	if !IsFunction(s) {
+		err = fmt.Errorf("Is not function : %s", s)
+		return
+	}
+	i := strings.Index(s, "(")
+	if i == -1 {
+		err = fmt.Errorf("Cannot parse (index of function): %v", s)
+		return
+	}
+	r = append(r, s[0:i])
+	parts := strings.Split(s, "(*)")
+	if len(parts) != 2 {
+		err = fmt.Errorf("Cannot parse (separation on parts) : %v", s)
+		return
+	}
+	inside := strings.TrimSpace(parts[1])
+	if inside == "" {
+		err = fmt.Errorf("Cannot parse (right part is nil) : %v", s)
+		return
+	}
+	f = append(f, strings.Split(inside[1:len(inside)-1], ",")...)
+
+	for i := range r {
+		r[i] = strings.TrimSpace(r[i])
+	}
+	for i := range f {
+		f[i] = strings.TrimSpace(f[i])
+	}
+
+	return
 }

@@ -40,7 +40,7 @@ func getFunctionBody(n *ast.FunctionDecl) *ast.CompoundStmt {
 //
 // If there is no function body we register the function interally (actually
 // either way the function is registered internally) but we do not do anything
-// becuase Go does not use or have any use for forward declarations of
+// because Go does not use or have any use for forward declarations of
 // functions.
 func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) error {
 	var body *goast.BlockStmt

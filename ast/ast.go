@@ -2,9 +2,10 @@
 package ast
 
 import (
-	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/elliotchance/c2go/util"
 )
 
 // Node represents any node in the AST.
@@ -40,11 +41,19 @@ func Parse(line string) Node {
 		return parseArrayFiller(line)
 	}
 
-	nodeName := strings.SplitN(line, " ", 2)[0]
+	parts := strings.SplitN(line, " ", 2)
+	nodeName := parts[0]
+
+	// skip node name
+	if len(parts) > 1 {
+		line = parts[1]
+	}
 
 	switch nodeName {
 	case "AlignedAttr":
 		return parseAlignedAttr(line)
+	case "AllocSizeAttr":
+		return parseAllocSizeAttr(line)
 	case "AlwaysInlineAttr":
 		return parseAlwaysInlineAttr(line)
 	case "ArraySubscriptExpr":
@@ -65,6 +74,8 @@ func Parse(line string) Node {
 		return parseCaseStmt(line)
 	case "CharacterLiteral":
 		return parseCharacterLiteral(line)
+	case "CompoundLiteralExpr":
+		return parseCompoundLiteralExpr(line)
 	case "CompoundStmt":
 		return parseCompoundStmt(line)
 	case "ConditionalOperator":
@@ -87,6 +98,8 @@ func Parse(line string) Node {
 		return parseDefaultStmt(line)
 	case "DeprecatedAttr":
 		return parseDeprecatedAttr(line)
+	case "DisableTailCallsAttr":
+		return parseDisableTailCallsAttr(line)
 	case "DoStmt":
 		return parseDoStmt(line)
 	case "ElaboratedType":
@@ -216,24 +229,19 @@ func Parse(line string) Node {
 	}
 }
 
-// Global cache of regexp
-var cachedRegex = map[string]*regexp.Regexp{}
-
 func groupsFromRegex(rx, line string) map[string]string {
 	// We remove tabs and newlines from the regex. This is purely cosmetic,
 	// as the regex input can be quite long and it's nice for the caller to
 	// be able to format it in a more readable way.
-	if _, ok := cachedRegex[rx]; !ok {
-		fullRegexp := "(?P<address>[0-9a-fx]+) " +
-			strings.Replace(strings.Replace(rx, "\n", "", -1), "\t", "", -1)
-		cachedRegex[rx] = regexp.MustCompile(fullRegexp)
-	}
-	re := cachedRegex[rx]
+	fullRegexp := "^(?P<address>[0-9a-fx]+) " +
+		strings.Replace(strings.Replace(rx, "\n", "", -1), "\t", "", -1)
+	rx = fullRegexp
+
+	re := util.GetRegex(rx)
 
 	match := re.FindStringSubmatch(line)
 	if len(match) == 0 {
-		panic("could not match regexp '" + rx +
-			"' with string '" + line + "'")
+		panic("could not match regexp with string\n" + rx + "\n" + line + "\n")
 	}
 
 	result := make(map[string]string)

@@ -13,6 +13,13 @@ func TestFloatingLiteral(t *testing.T) {
 			Value:      1.23,
 			ChildNodes: []Node{},
 		},
+		`0x21c65b8 <col:41> 'double' 2.718282e+00`: &FloatingLiteral{
+			Addr:       0x21c65b8,
+			Pos:        NewPositionFromString("col:41"),
+			Type:       "double",
+			Value:      2.718282e+00,
+			ChildNodes: []Node{},
+		},
 	}
 
 	runNodeTests(t, nodes)
