@@ -11,8 +11,8 @@ func combinePreAndPostStmts(
 	post []goast.Stmt,
 	newPre []goast.Stmt,
 	newPost []goast.Stmt) ([]goast.Stmt, []goast.Stmt) {
-	pre = append(pre, newPre...)
-	post = append(post, newPost...)
+	pre = append(pre, nilFilterStmts(newPre)...)
+	post = append(post, nilFilterStmts(newPost)...)
 
 	return pre, post
 }
@@ -20,7 +20,7 @@ func combinePreAndPostStmts(
 // nilFilterStmts - remove nil stmt from slice
 func nilFilterStmts(stmts []goast.Stmt) (out []goast.Stmt) {
 	for _, stmt := range stmts {
-		if stmt != nil {
+		if stmt != nil && stmt != (*goast.IfStmt)(nil) && stmt != (goast.Stmt)(nil) {
 			out = append(out, stmt)
 		}
 	}
