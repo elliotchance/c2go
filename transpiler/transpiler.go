@@ -376,7 +376,7 @@ func transpileToNode(node ast.Node, p *program.Program) error {
 		return nil
 
 	case *ast.EmptyDecl:
-		// Fix that...
+		p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("EmptyDecl is not transpiled"), n))
 		return nil
 
 	default:

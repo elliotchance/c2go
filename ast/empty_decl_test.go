@@ -9,7 +9,7 @@ func TestEmptyDecl(t *testing.T) {
 		`0x480bec8 <col:13> col:13`: &EmptyDecl{
 			Addr:       0x480bec8,
 			Pos:        NewPositionFromString("col:13"),
-			Position2:  "col:13",
+			Position2:  NewPositionFromString("col:13"),
 			ChildNodes: []Node{},
 		},
 	}

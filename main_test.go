@@ -129,7 +129,7 @@ func TestIntegrationScripts(t *testing.T) {
 				testName := strings.Split(file, ".")[0][6:]
 				args = append(
 					args,
-					"-race",
+					//	"-race",
 					"-covermode=atomic",
 					"-coverprofile="+testName+".coverprofile",
 					"-coverpkg=./noarch,./linux,./darwin",
@@ -306,37 +306,63 @@ func TestGoPath(t *testing.T) {
 }
 
 func TestMultifileTranspilation(t *testing.T) {
-	tcs := [][]string{
-		[]string{
-			"./tests/multi/four.c",
-			"./tests/multi/two.c",
-			"./tests/multi/main.c",
+	tcs := []struct {
+		source         []string
+		expectedOutput string
+	}{
+		{
+			[]string{
+				"./tests/multi/case1/four.c",
+				"./tests/multi/case1/two.c",
+				"./tests/multi/case1/main.c",
+			},
+			"42",
 		},
-		[]string{
-			"./tests/multi2/main.c",
+		{
+			[]string{
+				"./tests/multi/case2/main.c",
+			},
+			"42",
 		},
-		[]string{
-			"./tests/multi3/2.c",
-			"./tests/multi3/1.c",
+		{
+			[]string{
+				"./tests/multi/case3/2.c",
+				"./tests/multi/case3/1.c",
+			},
+			"42",
 		},
-		// checking with dublicates
-		[]string{
-			"./tests/multi/four.c",
-			"./tests/multi/four.c",
-			"./tests/multi/two.c",
-			"./tests/multi/main.c",
+		{
+			[]string{
+				"./tests/multi/case5/main1.c",
+				"./tests/multi/case5/main2.c",
+			},
+			"234",
 		},
-		[]string{
-			"./tests/multi2/head.h",
-			"./tests/multi2/head.h",
-			"./tests/multi2/main.c",
+		{
+			// checking with dublicates
+			[]string{
+				"./tests/multi/case1/four.c",
+				"./tests/multi/case1/four.c",
+				"./tests/multi/case1/two.c",
+				"./tests/multi/case1/main.c",
+			},
+			"42",
+		},
+		{
+			// checking with dublicates
+			[]string{
+				"./tests/multi/case2/head.h",
+				"./tests/multi/case2/head.h",
+				"./tests/multi/case2/main.c",
+			},
+			"42",
 		},
 	}
 
 	for pos, tc := range tcs {
 		t.Run(fmt.Sprintf("Test %d", pos), func(t *testing.T) {
 			var args = DefaultProgramArgs()
-			args.inputFiles = tc
+			args.inputFiles = tc.source
 			dir, err := ioutil.TempDir("", "c2go_multi")
 			if err != nil {
 				t.Fatal(err)
@@ -361,7 +387,7 @@ func TestMultifileTranspilation(t *testing.T) {
 			if err != nil {
 				t.Errorf(err.Error())
 			}
-			if buf.String() != "42" {
+			if buf.String() != tc.expectedOutput {
 				t.Errorf("Wrong result: %v", buf.String())
 			}
 		})
@@ -403,14 +429,14 @@ func TestTrigraph(t *testing.T) {
 
 func TestExternalInclude(t *testing.T) {
 	var args = DefaultProgramArgs()
-	args.inputFiles = []string{"./tests/multi4/main/main.c"}
+	args.inputFiles = []string{"./tests/multi/case4/main/main.c"}
 	dir, err := ioutil.TempDir("", "c2go_multi4")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(dir) // clean up
 	args.outputFile = path.Join(dir, "multi.go")
-	args.clangFlags = []string{"-I./tests/multi4/include/"}
+	args.clangFlags = []string{"-I./tests/multi/case4/include/"}
 	args.packageName = "main"
 	args.outputAsTest = true
 

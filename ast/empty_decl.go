@@ -4,7 +4,7 @@ package ast
 type EmptyDecl struct {
 	Addr       Address
 	Pos        Position
-	Position2  string
+	Position2  Position
 	ChildNodes []Node
 }
 
@@ -18,7 +18,7 @@ func parseEmptyDecl(line string) *EmptyDecl {
 	return &EmptyDecl{
 		Addr:       ParseAddress(groups["address"]),
 		Pos:        NewPositionFromString(groups["position"]),
-		Position2:  groups["position2"],
+		Position2:  NewPositionFromString(groups["position2"]),
 		ChildNodes: []Node{},
 	}
 }
