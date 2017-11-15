@@ -6,6 +6,7 @@ package util
 import (
 	"fmt"
 	goast "go/ast"
+	"go/parser"
 	"go/token"
 	"strconv"
 	"strings"
@@ -347,4 +348,16 @@ func NewFuncType(fieldList *goast.FieldList, returnType string) *goast.FuncType 
 			List: returnTypes,
 		},
 	}
+}
+
+// NewGoExpr is used to facilitate the creation of go AST
+//
+// It should not be used to transpile user code.
+func NewGoExpr(expr string) goast.Expr {
+	e, err := parser.ParseExpr(expr)
+	if err != nil {
+		panic("programming error: " + expr)
+	}
+
+	return e
 }
