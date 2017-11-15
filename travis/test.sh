@@ -91,17 +91,13 @@ rm -f $SQLITE_TEMP_FOLDER/sqlite3.go $SQLITE_TEMP_FOLDER/shell.go
 echo "Transpiling shell.c..."
 ./c2go transpile -o=$SQLITE_TEMP_FOLDER/shell.go   $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/shell.c   >> $OUTFILE 2>&1
 
-# Show amount "Warning" in sqlite Go codes
-SQLITE_WARNING_SHELL=`cat $SQLITE_TEMP_FOLDER/shell.go | grep "// Warning" | wc -l`
-echo "In file shell.go   : $SQLITE_WARNING_SHELL warnings."
-
 # sqlite3.c
 echo "Transpiling sqlite3.c..."
 ./c2go transpile -o=$SQLITE_TEMP_FOLDER/sqlite3.go $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite3.c >> $OUTFILE 2>&1
 
 # Show amount "Warning" in sqlite Go codes
-SQLITE_WARNING_SQLITE3=`cat $SQLITE_TEMP_FOLDER/sqlite3.go | grep "// Warning" | wc -l`
-echo "In file sqlite3.go : $SQLITE_WARNING_SQLITE3 warnings."
+SQLITE_WARNINGS=`cat $SQLITE_TEMP_FOLDER/sqlite3.go $SQLITE_TEMP_FOLDER/shell.go | grep "// Warning" | wc -l`
+echo "In file sqlite3.go : $SQLITE_WARNINGS warnings."
 
 # Update Github PR statuses. These two statuses will always pass but will show
 # information about the number of tests run and how many warnings are generated
