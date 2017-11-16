@@ -389,14 +389,14 @@ func TestTrigraph(t *testing.T) {
 
 func TestExternalInclude(t *testing.T) {
 	var args = DefaultProgramArgs()
-	args.inputFiles = []string{"./tests/multi/case4/main/main.c"}
+	args.inputFiles = []string{"./tests/externalHeader/main/main.c"}
 	dir, err := ioutil.TempDir("", "c2go_multi4")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(dir) // clean up
 	args.outputFile = path.Join(dir, "multi.go")
-	args.clangFlags = []string{"-I./tests/multi/case4/include/"}
+	args.clangFlags = []string{"-I./tests/externalHeader/include/"}
 	args.packageName = "main"
 	args.outputAsTest = true
 
