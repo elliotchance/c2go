@@ -18,7 +18,7 @@ func parseIndirectFieldDecl(line string) *IndirectFieldDecl {
 		(?P<position2> [^ ]+:[\d:]+)?
 		(?P<implicit> implicit)?
 		 (?P<name>\w+)
-		 '(?P<type>.+)'`,
+		 '(?P<type>.+?)'`,
 		line,
 	)
 

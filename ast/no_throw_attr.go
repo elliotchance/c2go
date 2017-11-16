@@ -4,11 +4,14 @@ type NoThrowAttr struct {
 	Addr       Address
 	Pos        Position
 	ChildNodes []Node
+	Implicit   bool
 }
 
 func parseNoThrowAttr(line string) *NoThrowAttr {
 	groups := groupsFromRegex(
-		"<(?P<position>.*)>",
+		`<(?P<position>.*)>
+		(?P<implicit> Implicit)?
+		`,
 		line,
 	)
 
@@ -16,6 +19,7 @@ func parseNoThrowAttr(line string) *NoThrowAttr {
 		Addr:       ParseAddress(groups["address"]),
 		Pos:        NewPositionFromString(groups["position"]),
 		ChildNodes: []Node{},
+		Implicit:   len(groups["implicit"]) > 0,
 	}
 }
 
