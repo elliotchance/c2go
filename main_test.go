@@ -129,7 +129,7 @@ func TestIntegrationScripts(t *testing.T) {
 				testName := strings.Split(file, ".")[0][6:]
 				args = append(
 					args,
-					//	"-race",
+					"-race",
 					"-covermode=atomic",
 					"-coverprofile="+testName+".coverprofile",
 					"-coverpkg=./noarch,./linux,./darwin",
@@ -312,50 +312,10 @@ func TestMultifileTranspilation(t *testing.T) {
 	}{
 		{
 			[]string{
-				"./tests/multi/case1/four.c",
-				"./tests/multi/case1/two.c",
-				"./tests/multi/case1/main.c",
-			},
-			"42",
-		},
-		{
-			[]string{
-				"./tests/multi/case2/main.c",
-			},
-			"42",
-		},
-		{
-			[]string{
-				"./tests/multi/case3/2.c",
-				"./tests/multi/case3/1.c",
-			},
-			"42",
-		},
-		{
-			[]string{
-				"./tests/multi/case5/main1.c",
-				"./tests/multi/case5/main2.c",
+				"./tests/multi/main1.c",
+				"./tests/multi/main2.c",
 			},
 			"234",
-		},
-		{
-			// checking with dublicates
-			[]string{
-				"./tests/multi/case1/four.c",
-				"./tests/multi/case1/four.c",
-				"./tests/multi/case1/two.c",
-				"./tests/multi/case1/main.c",
-			},
-			"42",
-		},
-		{
-			// checking with dublicates
-			[]string{
-				"./tests/multi/case2/head.h",
-				"./tests/multi/case2/head.h",
-				"./tests/multi/case2/main.c",
-			},
-			"42",
 		},
 	}
 
