@@ -105,6 +105,6 @@ echo "In files (sqlite3.go and shell.go) summary : $SQLITE_WARNINGS warnings."
 if [ "$TRAVIS_OS_NAME" == "osx" ]; then
     curl -H "Authorization: token ${GITHUB_API_TOKEN}" -H "Content-Type: application/json" https://api.github.com/repos/elliotchance/c2go/statuses/${TRAVIS_COMMIT} -d "{\"state\": \"success\",\"target_url\": \"https://travis-ci.org/elliotchance/c2go/builds/${TRAVIS_JOB_ID}\", \"description\": \"$(($UNIT_TESTS + $INT_TESTS)) tests passed (${UNIT_TESTS} unit + ${INT_TESTS} integration)\", \"context\": \"c2go/tests\"}"
 
-    curl -H "Authorization: token ${GITHUB_API_TOKEN}" -H "Content-Type: application/json" https://api.github.com/repos/elliotchance/c2go/statuses/${TRAVIS_COMMIT} -d "{\"state\": \"success\",\"target_url\": \"https://travis-ci.org/elliotchance/c2go/builds/${TRAVIS_JOB_ID}\", \"description\": \"$(($SQLITE_WARNING_SQLITE3 + $SQLITE_WARNING_SHELL)) warnings\", \"context\": \"c2go/sqlite3\"}" 
+    curl -H "Authorization: token ${GITHUB_API_TOKEN}" -H "Content-Type: application/json" https://api.github.com/repos/elliotchance/c2go/statuses/${TRAVIS_COMMIT} -d "{\"state\": \"success\",\"target_url\": \"https://travis-ci.org/elliotchance/c2go/builds/${TRAVIS_JOB_ID}\", \"description\": \"$(($SQLITE_WARNINGS)) warnings\", \"context\": \"c2go/sqlite3\"}" 
 fi
 
