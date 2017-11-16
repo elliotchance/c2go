@@ -34,7 +34,9 @@ func ParseAddress(address string) Address {
 
 // Parse takes the coloured output of the clang AST command and returns a root
 // node for the AST.
-func Parse(line string) Node {
+func Parse(fullline string) Node {
+	line := fullline
+
 	// This is a special case. I'm not sure if it's a bug in the clang AST
 	// dumper. It should have children.
 	if line == "array filler" {
@@ -218,6 +220,8 @@ func Parse(line string) Node {
 		return parseVAArgExpr(line)
 	case "VarDecl":
 		return parseVarDecl(line)
+	case "VisibilityAttr":
+		return parseVisibilityAttr(line)
 	case "WarnUnusedResultAttr":
 		return parseWarnUnusedResultAttr(line)
 	case "WeakAttr":
@@ -227,7 +231,7 @@ func Parse(line string) Node {
 	case "NullStmt":
 		return nil
 	default:
-		panic("unknown node type: '" + line + "'")
+		panic("unknown node type: '" + fullline + "'")
 	}
 }
 
@@ -237,7 +241,7 @@ func groupsFromRegex(rx, line string) map[string]string {
 	// be able to format it in a more readable way.
 	fullRegexp := "^(?P<address>[0-9a-fx]+) " +
 		strings.Replace(strings.Replace(rx, "\n", "", -1), "\t", "", -1)
-	rx = fullRegexp
+	rx = fullRegexp + "[\\s]*$"
 
 	re := util.GetRegex(rx)
 

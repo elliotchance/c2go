@@ -351,6 +351,8 @@ func setPosition(node Node, position Position) {
 		n.Pos = position
 	case *VarDecl:
 		n.Pos = position
+	case *VisibilityAttr:
+		n.Pos = position
 	case *WarnUnusedResultAttr:
 		n.Pos = position
 	case *WeakAttr:

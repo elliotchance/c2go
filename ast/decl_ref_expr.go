@@ -4,24 +4,27 @@ type DeclRefExpr struct {
 	Addr       Address
 	Pos        Position
 	Type       string
+	Type1      string
 	Lvalue     bool
 	For        string
 	Address2   string
 	Name       string
 	Type2      string
+	Type3      string
 	ChildNodes []Node
 }
 
 func parseDeclRefExpr(line string) *DeclRefExpr {
 	groups := groupsFromRegex(
 		`<(?P<position>.*)>
-		 '(?P<type>.*?)'
+		 '(?P<type>.*?)'(:'(?P<type1>.*?)')?
 		.*?
 		(?P<lvalue> lvalue)?
 		 (?P<for>\w+)
 		 (?P<address2>[0-9a-fx]+)
 		 '(?P<name>.*?)'
-		 '(?P<type2>.*?)'`,
+		 '(?P<type2>.*?)'(:'(?P<type3>.*?)')?
+		`,
 		line,
 	)
 
@@ -29,11 +32,13 @@ func parseDeclRefExpr(line string) *DeclRefExpr {
 		Addr:       ParseAddress(groups["address"]),
 		Pos:        NewPositionFromString(groups["position"]),
 		Type:       groups["type"],
+		Type1:      groups["type1"],
 		Lvalue:     len(groups["lvalue"]) > 0,
 		For:        groups["for"],
 		Address2:   groups["address2"],
 		Name:       groups["name"],
 		Type2:      groups["type2"],
+		Type3:      groups["type3"],
 		ChildNodes: []Node{},
 	}
 }

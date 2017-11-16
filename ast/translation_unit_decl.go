@@ -6,7 +6,7 @@ type TranslationUnitDecl struct {
 }
 
 func parseTranslationUnitDecl(line string) *TranslationUnitDecl {
-	groups := groupsFromRegex("", line)
+	groups := groupsFromRegex("<(?P<position>.*)> <(?P<position2>.*)>", line)
 
 	return &TranslationUnitDecl{
 		Addr:       ParseAddress(groups["address"]),

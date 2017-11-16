@@ -11,10 +11,13 @@ type FunctionDecl struct {
 	Position2    string
 	Name         string
 	Type         string
+	Type2        string
 	IsExtern     bool
 	IsImplicit   bool
 	IsUsed       bool
 	IsReferenced bool
+	IsStatic     bool
+	IsInline     bool
 	ChildNodes   []Node
 }
 
@@ -27,8 +30,12 @@ func parseFunctionDecl(line string) *FunctionDecl {
 		(?P<used> used)?
 		(?P<referenced> referenced)?
 		 (?P<name>[_\w]+)
-		 '(?P<type>.*)
-		'(?P<extern> extern)?`,
+		 '(?P<type>.*?)'
+		(:'(?P<type2>.*?)')?
+		(?P<extern> extern)?
+		(?P<static> static)?
+		(?P<inline> inline)?
+		`,
 		line,
 	)
 
@@ -39,10 +46,13 @@ func parseFunctionDecl(line string) *FunctionDecl {
 		Position2:    strings.TrimSpace(groups["position2"]),
 		Name:         groups["name"],
 		Type:         groups["type"],
+		Type2:        groups["type2"],
 		IsExtern:     len(groups["extern"]) > 0,
 		IsImplicit:   len(groups["implicit"]) > 0,
 		IsUsed:       len(groups["used"]) > 0,
 		IsReferenced: len(groups["referenced"]) > 0,
+		IsStatic:     len(groups["static"]) > 0,
+		IsInline:     len(groups["inline"]) > 0,
 		ChildNodes:   []Node{},
 	}
 }
