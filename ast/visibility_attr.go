@@ -1,5 +1,6 @@
 package ast
 
+// VisibilityAttr contains information for a VisibilityAttr AST line.
 type VisibilityAttr struct {
 	Addr       Address
 	Pos        Position
