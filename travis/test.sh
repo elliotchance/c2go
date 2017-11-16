@@ -97,7 +97,7 @@ echo "Transpiling sqlite3.c..."
 
 # Show amount "Warning" in sqlite Go codes
 SQLITE_WARNINGS=`cat $SQLITE_TEMP_FOLDER/sqlite3.go $SQLITE_TEMP_FOLDER/shell.go | grep "// Warning" | wc -l`
-echo "In file sqlite3.go : $SQLITE_WARNINGS warnings."
+echo "In files (sqlite3.go and shell.go) summary : $SQLITE_WARNINGS warnings."
 
 # Update Github PR statuses. These two statuses will always pass but will show
 # information about the number of tests run and how many warnings are generated
