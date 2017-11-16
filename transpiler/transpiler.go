@@ -375,6 +375,10 @@ func transpileToNode(node ast.Node, p *program.Program) error {
 		transpileEnumDecl(p, n)
 		return nil
 
+	case *ast.EmptyDecl:
+		p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("EmptyDecl is not transpiled"), n))
+		return nil
+
 	default:
 		panic(fmt.Sprintf("cannot transpile to node: %#v", node))
 	}

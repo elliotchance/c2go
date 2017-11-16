@@ -306,18 +306,97 @@ func TestGoPath(t *testing.T) {
 }
 
 func TestMultifileTranspilation(t *testing.T) {
-	var args = ProgramArgs{}
-	args.inputFiles = []string{
-		"./tests/multi/four.c",
-		"./tests/multi/two.c",
-		"./tests/multi/main.c",
+	tcs := []struct {
+		source         []string
+		expectedOutput string
+	}{
+		{
+			[]string{
+				"./tests/multi/main1.c",
+				"./tests/multi/main2.c",
+			},
+			"234",
+		},
 	}
-	dir, err := ioutil.TempDir("", "c2go_multi")
+
+	for pos, tc := range tcs {
+		t.Run(fmt.Sprintf("Test %d", pos), func(t *testing.T) {
+			var args = DefaultProgramArgs()
+			args.inputFiles = tc.source
+			dir, err := ioutil.TempDir("", "c2go_multi")
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer os.RemoveAll(dir) // clean up
+			args.outputFile = path.Join(dir, "multi.go")
+			args.packageName = "main"
+			args.outputAsTest = true
+
+			// testing
+			err = Start(args)
+			if err != nil {
+				t.Errorf(err.Error())
+			}
+
+			// Run Go program
+			var buf bytes.Buffer
+			cmd := exec.Command("go", "run", args.outputFile)
+			cmd.Stdout = &buf
+			cmd.Stderr = &buf
+			err = cmd.Run()
+			if err != nil {
+				t.Errorf(err.Error())
+			}
+			if buf.String() != tc.expectedOutput {
+				t.Errorf("Wrong result: %v", buf.String())
+			}
+		})
+	}
+}
+
+func TestTrigraph(t *testing.T) {
+	var args = DefaultProgramArgs()
+	args.inputFiles = []string{"./tests/trigraph/main.c"}
+	dir, err := ioutil.TempDir("", "c2go_trigraph")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(dir) // clean up
 	args.outputFile = path.Join(dir, "multi.go")
+	args.clangFlags = []string{"-trigraphs"}
+	args.packageName = "main"
+	args.outputAsTest = true
+
+	// testing
+	err = Start(args)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	// Run Go program
+	var buf bytes.Buffer
+	cmd := exec.Command("go", "run", args.outputFile)
+	cmd.Stdout = &buf
+	cmd.Stderr = &buf
+	err = cmd.Run()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if buf.String() != "#" {
+		t.Errorf("Wrong result: %v", buf.String())
+	}
+}
+
+func TestExternalInclude(t *testing.T) {
+	var args = DefaultProgramArgs()
+	args.inputFiles = []string{"./tests/externalHeader/main/main.c"}
+	dir, err := ioutil.TempDir("", "c2go_multi4")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir) // clean up
+	args.outputFile = path.Join(dir, "multi.go")
+	args.clangFlags = []string{"-I./tests/externalHeader/include/"}
 	args.packageName = "main"
 	args.outputAsTest = true
 

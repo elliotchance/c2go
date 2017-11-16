@@ -104,6 +104,8 @@ func Parse(line string) Node {
 		return parseDoStmt(line)
 	case "ElaboratedType":
 		return parseElaboratedType(line)
+	case "EmptyDecl":
+		return parseEmptyDecl(line)
 	case "Enum":
 		return parseEnum(line)
 	case "EnumConstantDecl":

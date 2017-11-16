@@ -67,6 +67,7 @@ if [ $($C2GO -v | wc -l) -ne 1 ]; then exit 1; fi
 if [ $(cat /tmp/prime.go | wc -l) -eq 0 ]; then exit 1; fi
 if [ $($C2GO ast $C2GO_DIR/examples/prime.c | wc -l) -eq 0 ]; then exit 1; fi
 
+echo "----------------------"
 # This will have to be updated every so often to the latest version. You can
 # find the latest version here: https://sqlite.org/download.html
 export SQLITE3_FILE=sqlite-amalgamation-3190300
@@ -86,17 +87,17 @@ rm -f $SQLITE_TEMP_FOLDER/sqlite3.go $SQLITE_TEMP_FOLDER/shell.go
 
 # Transpile the SQLite3 files.
 # If transpiling write to stderr, then it will be append into OUTFILE
+# shell.c
 echo "Transpiling shell.c..."
 ./c2go transpile -o=$SQLITE_TEMP_FOLDER/shell.go   $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/shell.c   >> $OUTFILE 2>&1
+
+# sqlite3.c
 echo "Transpiling sqlite3.c..."
 ./c2go transpile -o=$SQLITE_TEMP_FOLDER/sqlite3.go $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite3.c >> $OUTFILE 2>&1
 
 # Show amount "Warning" in sqlite Go codes
-SQLITE_WARNING_SQLITE3=`cat $SQLITE_TEMP_FOLDER/sqlite3.go | grep "// Warning" | wc -l`
-echo "In file sqlite3.go : $SQLITE_WARNING_SQLITE3 warnings."
-
-SQLITE_WARNING_SHELL=`cat $SQLITE_TEMP_FOLDER/shell.go | grep "// Warning" | wc -l`
-echo "In file shell.go   : $SQLITE_WARNING_SHELL warnings."
+SQLITE_WARNINGS=`cat $SQLITE_TEMP_FOLDER/sqlite3.go $SQLITE_TEMP_FOLDER/shell.go | grep "// Warning" | wc -l`
+echo "In files (sqlite3.go and shell.go) summary : $SQLITE_WARNINGS warnings."
 
 # Update Github PR statuses. These two statuses will always pass but will show
 # information about the number of tests run and how many warnings are generated
@@ -104,5 +105,6 @@ echo "In file shell.go   : $SQLITE_WARNING_SHELL warnings."
 if [ "$TRAVIS_OS_NAME" == "osx" ]; then
     curl -H "Authorization: token ${GITHUB_API_TOKEN}" -H "Content-Type: application/json" https://api.github.com/repos/elliotchance/c2go/statuses/${TRAVIS_COMMIT} -d "{\"state\": \"success\",\"target_url\": \"https://travis-ci.org/elliotchance/c2go/builds/${TRAVIS_JOB_ID}\", \"description\": \"$(($UNIT_TESTS + $INT_TESTS)) tests passed (${UNIT_TESTS} unit + ${INT_TESTS} integration)\", \"context\": \"c2go/tests\"}"
 
-    curl -H "Authorization: token ${GITHUB_API_TOKEN}" -H "Content-Type: application/json" https://api.github.com/repos/elliotchance/c2go/statuses/${TRAVIS_COMMIT} -d "{\"state\": \"success\",\"target_url\": \"https://travis-ci.org/elliotchance/c2go/builds/${TRAVIS_JOB_ID}\", \"description\": \"$(($SQLITE_WARNING_SQLITE3 + $SQLITE_WARNING_SHELL)) warnings\", \"context\": \"c2go/sqlite3\"}" 
+    curl -H "Authorization: token ${GITHUB_API_TOKEN}" -H "Content-Type: application/json" https://api.github.com/repos/elliotchance/c2go/statuses/${TRAVIS_COMMIT} -d "{\"state\": \"success\",\"target_url\": \"https://travis-ci.org/elliotchance/c2go/builds/${TRAVIS_JOB_ID}\", \"description\": \"$(($SQLITE_WARNINGS)) warnings\", \"context\": \"c2go/sqlite3\"}" 
 fi
+
