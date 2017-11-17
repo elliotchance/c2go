@@ -112,6 +112,7 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 	}
 
 	defaultValue, _, newPre, newPost, err := getDefaultValueForVar(p, a)
+	p.AddMessage(p.GenerateWarningMessage(err, a))
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	// Allocate slice so that it operates like a fixed size array.
@@ -209,7 +210,15 @@ func GenerateFuncType(fields, returns []string) *goast.FuncType {
 
 func transpileInitListExpr(e *ast.InitListExpr, p *program.Program) (goast.Expr, string, error) {
 	resp := []goast.Expr{}
+	var hasArrayFiller = false
+
 	for _, node := range e.Children() {
+		// Skip ArrayFiller
+		if _, ok := node.(*ast.ArrayFiller); ok {
+			hasArrayFiller = true
+			continue
+		}
+
 		var expr goast.Expr
 		var err error
 		expr, _, _, _, err = transpileToExpr(node, p, true)
@@ -228,13 +237,37 @@ func transpileInitListExpr(e *ast.InitListExpr, p *program.Program) (goast.Expr,
 		goArrayType, err := types.ResolveType(p, arrayType)
 		p.AddMessage(p.GenerateWarningMessage(err, e))
 
+		cTypeString = fmt.Sprintf("%s[%d]", arrayType, arraySize)
+
+		if hasArrayFiller {
+			t = &goast.ArrayType{
+				Elt: &goast.Ident{
+					Name: goArrayType,
+				},
+				Len: util.NewIntLit(arraySize),
+			}
+
+			// Array fillers do not work with slices.
+			// We initialize the array first, then convert to a slice.
+			// For example: (&[4]int{1,2})[:]
+			return &goast.SliceExpr{
+				X: &goast.ParenExpr{
+					X: &goast.UnaryExpr{
+						Op: token.AND,
+						X: &goast.CompositeLit{
+							Type: t,
+							Elts: resp,
+						},
+					},
+				},
+			}, cTypeString, nil
+		}
+
 		t = &goast.ArrayType{
 			Elt: &goast.Ident{
 				Name: goArrayType,
 			},
 		}
-
-		cTypeString = fmt.Sprintf("%s[%d]", arrayType, arraySize)
 	} else {
 		goType, err := types.ResolveType(p, e.Type1)
 		if err != nil {
