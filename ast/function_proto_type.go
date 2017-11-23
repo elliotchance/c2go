@@ -9,7 +9,7 @@ type FunctionProtoType struct {
 
 func parseFunctionProtoType(line string) *FunctionProtoType {
 	groups := groupsFromRegex(
-		"'(?P<type>.*)' (?P<kind>.*)",
+		"'(?P<type>.*?)' (?P<kind>.*)",
 		line,
 	)
 

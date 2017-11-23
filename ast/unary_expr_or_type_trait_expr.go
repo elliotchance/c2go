@@ -6,6 +6,7 @@ type UnaryExprOrTypeTraitExpr struct {
 	Type1      string
 	Function   string
 	Type2      string
+	Type3      string
 	ChildNodes []Node
 }
 
@@ -14,7 +15,9 @@ func parseUnaryExprOrTypeTraitExpr(line string) *UnaryExprOrTypeTraitExpr {
 		`<(?P<position>.*)>
 		 '(?P<type1>.+?)'
 		 (?P<function>[^ ]+)
-		(?P<type2> '.+?')?`,
+		(?P<type2> '.+?')?
+		(:'(?P<type3>.*?)')?
+		`,
 		line,
 	)
 
@@ -24,6 +27,7 @@ func parseUnaryExprOrTypeTraitExpr(line string) *UnaryExprOrTypeTraitExpr {
 		Type1:      groups["type1"],
 		Function:   groups["function"],
 		Type2:      removeQuotes(groups["type2"]),
+		Type3:      groups["type3"],
 		ChildNodes: []Node{},
 	}
 }

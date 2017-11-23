@@ -11,7 +11,7 @@ type CompoundLiteralExpr struct {
 
 func parseCompoundLiteralExpr(line string) *CompoundLiteralExpr {
 	groups := groupsFromRegex(
-		`<(?P<position>.*)> '(?P<type1>.*?)'(:'(?P<type2>.*)')? lvalue`,
+		`<(?P<position>.*)> '(?P<type1>.*?)'(:'(?P<type2>.*?)')? lvalue`,
 		line,
 	)
 

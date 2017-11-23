@@ -10,6 +10,7 @@ import (
 	"github.com/elliotchance/c2go/util"
 
 	goast "go/ast"
+	"go/token"
 )
 
 // This map is used to rename struct member names.
@@ -60,6 +61,94 @@ func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
 	}
 
 	return values, defaultValueType, newPre, newPost, nil
+}
+
+func newDeclStmt(a *ast.VarDecl, p *program.Program) (
+	*goast.DeclStmt, []goast.Stmt, []goast.Stmt, error) {
+	preStmts := []goast.Stmt{}
+	postStmts := []goast.Stmt{}
+	/*
+		Example of DeclStmt for C code:
+		void * a = NULL;
+		void(*t)(void) = a;
+		Example of AST:
+		`-VarDecl 0x365fea8 <col:3, col:20> col:9 used t 'void (*)(void)' cinit
+		  `-ImplicitCastExpr 0x365ff48 <col:20> 'void (*)(void)' <BitCast>
+		    `-ImplicitCastExpr 0x365ff30 <col:20> 'void *' <LValueToRValue>
+		      `-DeclRefExpr 0x365ff08 <col:20> 'void *' lvalue Var 0x365f8c8 'r' 'void *'
+	*/
+	if len(a.Children()) > 0 {
+		if v, ok := (a.Children()[0]).(*ast.ImplicitCastExpr); ok {
+			if len(v.Type) > 0 {
+				// Is it function ?
+				if types.IsFunction(v.Type) {
+					fields, returns, err := types.ResolveFunction(p, v.Type)
+					if err != nil {
+						return &goast.DeclStmt{}, preStmts, postStmts, fmt.Errorf("Cannot resolve function : %v", err)
+					}
+					functionType := GenerateFuncType(fields, returns)
+					nameVar1 := a.Name
+
+					if vv, ok := v.Children()[0].(*ast.ImplicitCastExpr); ok {
+						if decl, ok := vv.Children()[0].(*ast.DeclRefExpr); ok {
+							nameVar2 := decl.Name
+
+							return &goast.DeclStmt{Decl: &goast.GenDecl{
+								Tok: token.VAR,
+								Specs: []goast.Spec{&goast.ValueSpec{
+									Names: []*goast.Ident{&goast.Ident{Name: nameVar1}},
+									Type:  functionType,
+									Values: []goast.Expr{&goast.TypeAssertExpr{
+										X:    &goast.Ident{Name: nameVar2},
+										Type: functionType,
+									}},
+								},
+								}}}, preStmts, postStmts, nil
+						}
+					}
+				}
+			}
+		}
+	}
+
+	defaultValue, _, newPre, newPost, err := getDefaultValueForVar(p, a)
+	p.AddMessage(p.GenerateWarningMessage(err, a))
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
+	// Allocate slice so that it operates like a fixed size array.
+	arrayType, arraySize := types.GetArrayTypeAndSize(a.Type)
+
+	if arraySize != -1 && defaultValue == nil {
+		goArrayType, err := types.ResolveType(p, arrayType)
+		p.AddMessage(p.GenerateWarningMessage(err, a))
+
+		defaultValue = []goast.Expr{
+			util.NewCallExpr(
+				"make",
+				&goast.ArrayType{
+					Elt: util.NewTypeIdent(goArrayType),
+				},
+				util.NewIntLit(arraySize),
+				util.NewIntLit(arraySize),
+			),
+		}
+	}
+
+	t, err := types.ResolveType(p, a.Type)
+	p.AddMessage(p.GenerateWarningMessage(err, a))
+
+	return &goast.DeclStmt{
+		Decl: &goast.GenDecl{
+			Tok: token.VAR,
+			Specs: []goast.Spec{
+				&goast.ValueSpec{
+					Names:  []*goast.Ident{util.NewIdent(a.Name)},
+					Type:   util.NewTypeIdent(t),
+					Values: defaultValue,
+				},
+			},
+		},
+	}, preStmts, postStmts, nil
 }
 
 // GenerateFuncType in according to types
@@ -121,7 +210,15 @@ func GenerateFuncType(fields, returns []string) *goast.FuncType {
 
 func transpileInitListExpr(e *ast.InitListExpr, p *program.Program) (goast.Expr, string, error) {
 	resp := []goast.Expr{}
+	var hasArrayFiller = false
+
 	for _, node := range e.Children() {
+		// Skip ArrayFiller
+		if _, ok := node.(*ast.ArrayFiller); ok {
+			hasArrayFiller = true
+			continue
+		}
+
 		var expr goast.Expr
 		var err error
 		expr, _, _, _, err = transpileToExpr(node, p, true)
@@ -140,13 +237,37 @@ func transpileInitListExpr(e *ast.InitListExpr, p *program.Program) (goast.Expr,
 		goArrayType, err := types.ResolveType(p, arrayType)
 		p.AddMessage(p.GenerateWarningMessage(err, e))
 
+		cTypeString = fmt.Sprintf("%s[%d]", arrayType, arraySize)
+
+		if hasArrayFiller {
+			t = &goast.ArrayType{
+				Elt: &goast.Ident{
+					Name: goArrayType,
+				},
+				Len: util.NewIntLit(arraySize),
+			}
+
+			// Array fillers do not work with slices.
+			// We initialize the array first, then convert to a slice.
+			// For example: (&[4]int{1,2})[:]
+			return &goast.SliceExpr{
+				X: &goast.ParenExpr{
+					X: &goast.UnaryExpr{
+						Op: token.AND,
+						X: &goast.CompositeLit{
+							Type: t,
+							Elts: resp,
+						},
+					},
+				},
+			}, cTypeString, nil
+		}
+
 		t = &goast.ArrayType{
 			Elt: &goast.Ident{
 				Name: goArrayType,
 			},
 		}
-
-		cTypeString = fmt.Sprintf("%s[%d]", arrayType, arraySize)
 	} else {
 		goType, err := types.ResolveType(p, e.Type1)
 		if err != nil {

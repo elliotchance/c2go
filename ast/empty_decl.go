@@ -1,43 +1,47 @@
 package ast
 
-type EnumType struct {
+// EmptyDecl - element of AST
+type EmptyDecl struct {
 	Addr       Address
-	Name       string
+	Pos        Position
+	Position2  Position
 	ChildNodes []Node
 }
 
-func parseEnumType(line string) *EnumType {
+func parseEmptyDecl(line string) *EmptyDecl {
 	groups := groupsFromRegex(
-		"'(?P<name>.*?)'",
+		`<(?P<position>.*)>
+		( (?P<position2>.*))?`,
 		line,
 	)
 
-	return &EnumType{
+	return &EmptyDecl{
 		Addr:       ParseAddress(groups["address"]),
-		Name:       groups["name"],
+		Pos:        NewPositionFromString(groups["position"]),
+		Position2:  NewPositionFromString(groups["position2"]),
 		ChildNodes: []Node{},
 	}
 }
 
 // AddChild adds a new child node. Child nodes can then be accessed with the
 // Children attribute.
-func (n *EnumType) AddChild(node Node) {
+func (n *EmptyDecl) AddChild(node Node) {
 	n.ChildNodes = append(n.ChildNodes, node)
 }
 
 // Address returns the numeric address of the node. See the documentation for
 // the Address type for more information.
-func (n *EnumType) Address() Address {
+func (n *EmptyDecl) Address() Address {
 	return n.Addr
 }
 
 // Children returns the child nodes. If this node does not have any children or
 // this node does not support children it will always return an empty slice.
-func (n *EnumType) Children() []Node {
+func (n *EmptyDecl) Children() []Node {
 	return n.ChildNodes
 }
 
 // Position returns the position in the original source code.
-func (n *EnumType) Position() Position {
-	return Position{}
+func (n *EmptyDecl) Position() Position {
+	return n.Pos
 }
