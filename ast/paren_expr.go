@@ -6,12 +6,16 @@ type ParenExpr struct {
 	Type       string
 	Type2      string
 	Lvalue     bool
+	IsBitfield bool
 	ChildNodes []Node
 }
 
 func parseParenExpr(line string) *ParenExpr {
 	groups := groupsFromRegex(
-		`<(?P<position>.*)> '(?P<type1>.*?)'(:'(?P<type2>.*)')?(?P<lvalue> lvalue)?`,
+		`<(?P<position>.*)> '(?P<type1>.*?)'(:'(?P<type2>.*)')?
+		(?P<lvalue> lvalue)?
+		(?P<bitfield> bitfield)?
+		`,
 		line,
 	)
 
@@ -21,6 +25,7 @@ func parseParenExpr(line string) *ParenExpr {
 		Type:       groups["type1"],
 		Type2:      groups["type2"],
 		Lvalue:     len(groups["lvalue"]) > 0,
+		IsBitfield: len(groups["bitfield"]) > 0,
 		ChildNodes: []Node{},
 	}
 }

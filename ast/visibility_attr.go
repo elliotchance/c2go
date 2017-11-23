@@ -1,43 +1,48 @@
 package ast
 
-type EnumType struct {
+// VisibilityAttr contains information for a VisibilityAttr AST line.
+type VisibilityAttr struct {
 	Addr       Address
-	Name       string
+	Pos        Position
 	ChildNodes []Node
+	IsDefault  bool
 }
 
-func parseEnumType(line string) *EnumType {
+func parseVisibilityAttr(line string) *VisibilityAttr {
 	groups := groupsFromRegex(
-		"'(?P<name>.*?)'",
+		`<(?P<position>.*)>
+		(?P<default> Default)?
+		`,
 		line,
 	)
 
-	return &EnumType{
+	return &VisibilityAttr{
 		Addr:       ParseAddress(groups["address"]),
-		Name:       groups["name"],
+		Pos:        NewPositionFromString(groups["position"]),
 		ChildNodes: []Node{},
+		IsDefault:  len(groups["default"]) > 0,
 	}
 }
 
 // AddChild adds a new child node. Child nodes can then be accessed with the
 // Children attribute.
-func (n *EnumType) AddChild(node Node) {
+func (n *VisibilityAttr) AddChild(node Node) {
 	n.ChildNodes = append(n.ChildNodes, node)
 }
 
 // Address returns the numeric address of the node. See the documentation for
 // the Address type for more information.
-func (n *EnumType) Address() Address {
+func (n *VisibilityAttr) Address() Address {
 	return n.Addr
 }
 
 // Children returns the child nodes. If this node does not have any children or
 // this node does not support children it will always return an empty slice.
-func (n *EnumType) Children() []Node {
+func (n *VisibilityAttr) Children() []Node {
 	return n.ChildNodes
 }
 
 // Position returns the position in the original source code.
-func (n *EnumType) Position() Position {
-	return Position{}
+func (n *VisibilityAttr) Position() Position {
+	return n.Pos
 }

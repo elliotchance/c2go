@@ -112,6 +112,7 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 	}
 
 	defaultValue, _, newPre, newPost, err := getDefaultValueForVar(p, a)
+	p.AddMessage(p.GenerateWarningMessage(err, a))
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	// Allocate slice so that it operates like a fixed size array.
@@ -209,7 +210,15 @@ func GenerateFuncType(fields, returns []string) *goast.FuncType {
 
 func transpileInitListExpr(e *ast.InitListExpr, p *program.Program) (goast.Expr, string, error) {
 	resp := []goast.Expr{}
+	var hasArrayFiller = false
+
 	for _, node := range e.Children() {
+		// Skip ArrayFiller
+		if _, ok := node.(*ast.ArrayFiller); ok {
+			hasArrayFiller = true
+			continue
+		}
+
 		var expr goast.Expr
 		var err error
 		expr, _, _, _, err = transpileToExpr(node, p, true)
@@ -228,13 +237,37 @@ func transpileInitListExpr(e *ast.InitListExpr, p *program.Program) (goast.Expr,
 		goArrayType, err := types.ResolveType(p, arrayType)
 		p.AddMessage(p.GenerateWarningMessage(err, e))
 
+		cTypeString = fmt.Sprintf("%s[%d]", arrayType, arraySize)
+
+		if hasArrayFiller {
+			t = &goast.ArrayType{
+				Elt: &goast.Ident{
+					Name: goArrayType,
+				},
+				Len: util.NewIntLit(arraySize),
+			}
+
+			// Array fillers do not work with slices.
+			// We initialize the array first, then convert to a slice.
+			// For example: (&[4]int{1,2})[:]
+			return &goast.SliceExpr{
+				X: &goast.ParenExpr{
+					X: &goast.UnaryExpr{
+						Op: token.AND,
+						X: &goast.CompositeLit{
+							Type: t,
+							Elts: resp,
+						},
+					},
+				},
+			}, cTypeString, nil
+		}
+
 		t = &goast.ArrayType{
 			Elt: &goast.Ident{
 				Name: goArrayType,
 			},
 		}
-
-		cTypeString = fmt.Sprintf("%s[%d]", arrayType, arraySize)
 	} else {
 		goType, err := types.ResolveType(p, e.Type1)
 		if err != nil {
@@ -258,6 +291,7 @@ func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) (
 	[]goast.Stmt, []goast.Stmt, []goast.Stmt, error) {
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
+	var err error
 
 	// There may be more than one variable defined on the same line. With C it
 	// is possible for them to have similar but different types, whereas in Go
@@ -283,14 +317,14 @@ func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) (
 			decls = append(decls, e)
 
 		case *ast.TypedefDecl:
-			p.AddMessage(p.GenerateWarningMessage(errors.New("cannot use TypedefDecl for DeclStmt"), c))
+			err = transpileTypedefDecl(p, a)
 
 		default:
 			panic(a)
 		}
 	}
 
-	return decls, preStmts, postStmts, nil
+	return decls, preStmts, postStmts, err
 }
 
 func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program) (
@@ -380,9 +414,15 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 
 	// Construct code for getting value to an union field
 	if structType != nil && structType.IsUnion {
-		ident := lhs.(*goast.Ident)
-		funcName := getFunctionNameForUnionGetter(ident.Name, lhsResolvedType, n.Name)
-		resExpr := util.NewCallExpr(funcName)
+		var resExpr goast.Expr
+
+		switch t := lhs.(type) {
+		case *goast.Ident:
+			funcName := getFunctionNameForUnionGetter(t.Name, lhsResolvedType, n.Name)
+			resExpr = util.NewCallExpr(funcName)
+		case *goast.SelectorExpr:
+			resExpr = t
+		}
 
 		return resExpr, rhsType, preStmts, postStmts, nil
 	}
@@ -397,6 +437,11 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 		if alias, ok := member[rhs]; ok {
 			rhs = alias
 		}
+	}
+
+	// anonymous struct member?
+	if rhs == "" {
+		rhs = "anon"
 	}
 
 	return &goast.SelectorExpr{

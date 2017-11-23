@@ -10,6 +10,8 @@ type FieldDecl struct {
 	Position2  string
 	Name       string
 	Type       string
+	Type2      string
+	Implicit   bool
 	Referenced bool
 	ChildNodes []Node
 }
@@ -18,9 +20,12 @@ func parseFieldDecl(line string) *FieldDecl {
 	groups := groupsFromRegex(
 		`<(?P<position>.*)>
 		(?P<position2> col:\d+| line:\d+:\d+)?
+		(?P<implicit> implicit)?
 		(?P<referenced> referenced)?
 		(?P<name> \w+?)?
-		 '(?P<type>.+?)'`,
+		 '(?P<type>.+?)'
+		(:'(?P<type2>.*?)')?
+		`,
 		line,
 	)
 
@@ -30,6 +35,8 @@ func parseFieldDecl(line string) *FieldDecl {
 		Position2:  strings.TrimSpace(groups["position2"]),
 		Name:       strings.TrimSpace(groups["name"]),
 		Type:       groups["type"],
+		Type2:      groups["type2"],
+		Implicit:   len(groups["implicit"]) > 0,
 		Referenced: len(groups["referenced"]) > 0,
 		ChildNodes: []Node{},
 	}

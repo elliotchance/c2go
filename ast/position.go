@@ -263,6 +263,8 @@ func setPosition(node Node, position Position) {
 		n.Pos = position
 	case *DoStmt:
 		n.Pos = position
+	case *EmptyDecl:
+		n.Pos = position
 	case *EnumConstantDecl:
 		n.Pos = position
 	case *EnumDecl:
@@ -348,6 +350,8 @@ func setPosition(node Node, position Position) {
 	case *VAArgExpr:
 		n.Pos = position
 	case *VarDecl:
+		n.Pos = position
+	case *VisibilityAttr:
 		n.Pos = position
 	case *WarnUnusedResultAttr:
 		n.Pos = position

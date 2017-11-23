@@ -93,6 +93,15 @@ func transpileUnaryOperatorNot(n *ast.UnaryOperator, p *program.Program) (
 		}, "bool", preStmts, postStmts, nil
 	}
 
+	if strings.HasSuffix(eType, "*") {
+		// `!pointer` has to be converted to `pointer == nil`
+		return &goast.BinaryExpr{
+			X:  e,
+			Op: token.EQL,
+			Y:  util.NewIdent("nil"),
+		}, "bool", preStmts, postStmts, nil
+	}
+
 	t, err := types.ResolveType(p, eType)
 	p.AddMessage(p.GenerateWarningMessage(err, n))
 

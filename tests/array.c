@@ -141,9 +141,22 @@ void test_stringarr_init()
     is_streq(a[2], "def");
 }
 
+void test_partialarr_init()
+{
+    // Last 2 values are filled with zeros
+    double a[4] = {1.1, 2.2};
+    is_eq(a[2], 0.0);
+    is_eq(a[3], 0.0);
+
+    struct s b[3] = {{97, 'a'}};
+    is_eq(b[0].i, 97);
+    is_eq(b[2].i, 0);
+    is_eq(b[2].c, 0);
+}
+
 int main()
 {
-    plan(42);
+    plan(47);
 
     START_TEST(intarr);
     START_TEST(doublearr);
@@ -157,6 +170,7 @@ int main()
     START_TEST(multidim);
     START_TEST(ptrarr);
     START_TEST(stringarr_init);
+    START_TEST(partialarr_init);
 
     done_testing();
 }
