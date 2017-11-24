@@ -80,8 +80,7 @@ type treeNode struct {
 	node   ast.Node
 }
 
-func convertLinesToNodes(lines []string) []treeNode {
-	nodes := make([]treeNode, len(lines))
+func convertLinesToNodes(lines []string, nodes []treeNode) []int {
 	var counter int
 	for _, line := range lines {
 		if strings.TrimSpace(line) == "" {
@@ -98,38 +97,39 @@ func convertLinesToNodes(lines []string) []treeNode {
 		nodes[counter] = treeNode{indentLevel, node}
 		counter++
 	}
-	nodes = nodes[0:counter]
-
-	return nodes
+	// Result :
+	// first  - amount input  lines
+	// second - amount output nodes
+	return []int{len(lines), counter}
 }
 
 func convertLinesToNodesParallel(lines []string) []treeNode {
 	// function f separate full list on 2 parts and
 	// then each part can recursive run function f
-	var f func([]string, int) []treeNode
+	var f func([]string, int, []treeNode) []int
 
-	f = func(lines []string, deep int) []treeNode {
+	f = func(lines []string, deep int, treeNodes []treeNode) []int {
 		deep = deep - 2
 		part := len(lines) / 2
 
-		var tr1 = make(chan []treeNode)
-		var tr2 = make(chan []treeNode)
+		var tr1 = make(chan []int)
+		var tr2 = make(chan []int)
 
-		go func(lines []string, deep int) {
+		go func(lines []string, deep int, treeNodes []treeNode) {
 			if deep <= 0 || len(lines) < deep {
-				tr1 <- convertLinesToNodes(lines)
+				tr1 <- convertLinesToNodes(lines, treeNodes)
 				return
 			}
-			tr1 <- f(lines, deep)
-		}(lines[0:part], deep)
+			tr1 <- f(lines, deep, treeNodes)
+		}(lines[0:part], deep, treeNodes[0:part])
 
-		go func(lines []string, deep int) {
+		go func(lines []string, deep int, treeNodes []treeNode) {
 			if deep <= 0 || len(lines) < deep {
-				tr2 <- convertLinesToNodes(lines)
+				tr2 <- convertLinesToNodes(lines, treeNodes)
 				return
 			}
-			tr2 <- f(lines, deep)
-		}(lines[part:], deep)
+			tr2 <- f(lines, deep, treeNodes)
+		}(lines[part:], deep, treeNodes[part:])
 
 		defer close(tr1)
 		defer close(tr2)
@@ -139,7 +139,34 @@ func convertLinesToNodesParallel(lines []string) []treeNode {
 
 	// Parameter of deep - can be any, but effective to use
 	// same amount of CPU
-	return f(lines, runtime.NumCPU())
+	treeNodes := make([]treeNode, len(lines))
+	parts := f(lines, runtime.NumCPU(), treeNodes)
+
+	// Analyze elements
+	// Result is slice with pairs :
+	// first  - amount input  lines
+	// second - amount output nodes
+	var counter int
+	var ignoreCounter int
+	for i := 0; i < len(parts); i += 2 {
+		inputLines := parts[i]
+		outputNodes := parts[i+1]
+		counter += inputLines
+		if inputLines == outputNodes {
+			continue
+		}
+		// Ignore positions
+		// from (counter + outputNodes)
+		// to   (counter + inputLines )
+		delta := inputLines - outputNodes
+		for j := counter + outputNodes - ignoreCounter; j < len(treeNodes); j++ {
+			treeNodes[j] = treeNodes[j+delta]
+		}
+		ignoreCounter += delta
+	}
+	treeNodes = treeNodes[0 : len(treeNodes)-ignoreCounter]
+
+	return treeNodes
 }
 
 // buildTree converts an array of nodes, each prefixed with a depth into a tree.
