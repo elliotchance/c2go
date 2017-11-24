@@ -112,9 +112,18 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
 }
 
 func transpileForStmt(n *ast.ForStmt, p *program.Program) (
-	*goast.ForStmt, []goast.Stmt, []goast.Stmt, error) {
-	preStmts := []goast.Stmt{}
-	postStmts := []goast.Stmt{}
+	f *goast.ForStmt, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+
+	defer func() {
+		if f == (*goast.ForStmt)(nil) {
+			f = &goast.ForStmt{ // This is workaround
+				Body: &goast.BlockStmt{
+					Lbrace: 1,
+					List:   []goast.Stmt{&goast.BranchStmt{Tok: token.BREAK}},
+				},
+			}
+		}
+	}()
 
 	children := n.Children()
 
