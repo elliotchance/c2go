@@ -114,6 +114,8 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
 func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 	f *goast.ForStmt, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 
+	// This `defer` is workaround
+	// Please remove after solving all problems
 	defer func() {
 		if f == (*goast.ForStmt)(nil) {
 			f = &goast.ForStmt{ // This is workaround
