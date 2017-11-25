@@ -36,8 +36,24 @@ func Analyze(inputFiles, clangFlags []string) (pp []byte, err error) {
 		for j := 0; j < i; j++ {
 			if allItems[i].include == allItems[j].include &&
 				allItems[i].positionInSource == allItems[j].positionInSource &&
-				allItems[i].other == allItems[j].other {
-				found = true
+				allItems[i].other == allItems[j].other &&
+				len(allItems[i].lines) == len(allItems[j].lines) {
+				var indentical bool = true
+				for k := range allItems[i].lines {
+					is := allItems[i].lines[k]
+					js := allItems[j].lines[k]
+					if len(*is) != len(*js) {
+						indentical = false
+						break
+					}
+					if *is != *js {
+						indentical = false
+						break
+					}
+				}
+				if indentical {
+					found = true
+				}
 			}
 		}
 		if found {
