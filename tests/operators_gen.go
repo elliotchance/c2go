@@ -74,10 +74,9 @@ type Combination struct {
 func main() {
 	// All checked type
 	Types := []Value{
-		// TODO : Don't understood - How to add char ?
-		//	Value{"char", "c", "'a'", "%c"},
-		Value{"int", "i", "10", "%d"},
-		Value{"float", "f", "12.222", "%f"},
+		//Value{"char", "c", "'a'", "%c"},
+		Value{"int", "i", "2", "%d"},
+		Value{"float", "f", "2.222", "%f"},
 		Value{"double", "d", "2.333", "%f"},
 	}
 
@@ -132,7 +131,7 @@ int main(){
 				comb += fmt.Sprintf(" + %c", c)
 			}
 			result := getResultFromC(Types, combination, specifier)
-			code += fmt.Sprintf("	is_eq( ( %s ) (%s), %v);\n", specifierType.Type, comb, result)
+			code += fmt.Sprintf("	is_eq( ( %s ) (%s), %v);\n", "double", comb, result)
 		}
 	}
 	code += fmt.Sprintf(`
@@ -170,7 +169,7 @@ func getResultFromC(v []Value, combination string, specifier string) string {
 		}
 		comb += fmt.Sprintf(" + %c", c)
 	}
-	code += fmt.Sprintf("	printf(\"%s\",%s);\n", specifier, comb)
+	code += fmt.Sprintf("	printf(\"%s\", (double)(%s));\n", "%.13f", comb)
 
 	// finalize
 	code += `
