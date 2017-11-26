@@ -4,11 +4,16 @@ type ReturnsTwiceAttr struct {
 	Addr       Address
 	Pos        Position
 	ChildNodes []Node
+	Inherited  bool
+	Implicit   bool
 }
 
 func parseReturnsTwiceAttr(line string) *ReturnsTwiceAttr {
 	groups := groupsFromRegex(
-		"<(?P<position>.*)>",
+		`<(?P<position>.*)>
+		(?P<inherited> Inherited)?
+		(?P<implicit> Implicit)?
+		`,
 		line,
 	)
 
@@ -16,6 +21,8 @@ func parseReturnsTwiceAttr(line string) *ReturnsTwiceAttr {
 		Addr:       ParseAddress(groups["address"]),
 		Pos:        NewPositionFromString(groups["position"]),
 		ChildNodes: []Node{},
+		Inherited:  len(groups["inherited"]) > 0,
+		Implicit:   len(groups["implicit"]) > 0,
 	}
 }
 

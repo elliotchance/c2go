@@ -14,15 +14,16 @@ import (
 )
 
 // GetArrayTypeAndSize returns the size and type of a fixed array. If the type
-// is not an array with a fixed size then the type return will be an empty
-// string, and the size will be -1.
+// is not an array with a fixed size then the the size will be -1 and the
+// returned type should be ignored.
 func GetArrayTypeAndSize(s string) (string, int) {
-	match := util.GetRegex(`(.*) \[(\d+)\]`).FindStringSubmatch(s)
+	match := util.GetRegex(`([\w\* ]*)\[(\d+)\]((\[\d+\])*)`).FindStringSubmatch(s)
 	if len(match) > 0 {
-		return match[1], util.Atoi(match[2])
+		var t = fmt.Sprintf("%s%s", match[1], match[3])
+		return strings.Trim(t, " "), util.Atoi(match[2])
 	}
 
-	return "", -1
+	return s, -1
 }
 
 // CastExpr returns an expression that casts one type to another. For
@@ -59,7 +60,17 @@ func GetArrayTypeAndSize(s string) (string, int) {
 //    a bug. It is most useful to do this when dealing with compound types like
 //    FILE where those function probably exist (or should exist) in the noarch
 //    package.
-func CastExpr(p *program.Program, expr goast.Expr, fromType, toType string) (goast.Expr, error) {
+func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (goast.Expr, error) {
+	fromType := cFromType
+	toType := cToType
+
+	// Replace for specific case of fromType for darwin:
+	// Fo : union (anonymous union at sqlite3.c:619241696:3)
+	if strings.Contains(fromType, "anonymous union") {
+		// I don't understood - How to change correctly
+		// Try change to : `union` , but it is FAIL with that
+		fromType = ""
+	}
 
 	// convert enum to int and recursive
 	if strings.Contains(fromType, "enum") && !strings.Contains(toType, "enum") {
@@ -170,6 +181,12 @@ func CastExpr(p *program.Program, expr goast.Expr, fromType, toType string) (goa
 			)
 
 			return e, nil
+		}
+		if fromType == "bool" && toType == v {
+			e := util.NewGoExpr(`map[bool]int{false: 0, true: 1}[replaceme]`)
+			// Swap replaceme with the current expression
+			e.(*goast.IndexExpr).Index = expr
+			return CastExpr(p, e, "int", cToType)
 		}
 	}
 

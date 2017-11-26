@@ -40,7 +40,7 @@ int b;
 
 int main()
 {
-    plan(34);
+    plan(39);
 
     diag("Integer types");
     check_sizes(char, 1);
@@ -83,7 +83,22 @@ int main()
     diag("Function pointers");
     is_eq(sizeof(main), 1);
 
-    diag("TODO: Test arrays of fixed size like: int[3]");
+    diag("Arrays");
+    char c[3] = {'a', 'b', 'c'};
+    c[0] = 'a';
+    is_eq(sizeof(c), 3);
+
+    int *d[3];
+    d[0] = &b;
+    is_eq(sizeof(d), 24);
+
+    int **e[4];
+    e[0] = d;
+    is_eq(sizeof(e), 32);
+
+    const char * const f[] = {"a", "b", "c", "d", "e", "f"};
+    is_eq(sizeof(f), 48);
+    is_streq(f[1], "b");
 
     done_testing();
 }

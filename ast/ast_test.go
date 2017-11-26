@@ -36,3 +36,35 @@ func runNodeTests(t *testing.T, tests map[string]Node) {
 		})
 	}
 }
+
+func TestPrint(t *testing.T) {
+	cond := &ConditionalOperator{}
+	cond.AddChild(&ImplicitCastExpr{})
+	cond.AddChild(&ImplicitCastExpr{})
+	s := Atos(cond)
+	if len(s) == 0 {
+		t.Fatalf("Cannot convert AST tree : %#v", cond)
+	}
+	lines := strings.Split(s, "\n")
+	var amount int
+	for _, l := range lines {
+		if strings.Contains(l, "ImplicitCastExpr") {
+			amount++
+		}
+	}
+	if amount != 2 {
+		t.Error("Not correct design of output")
+	}
+}
+
+var lines = []string{
+// c2go ast sqlite3.c | head -5000 | sed 's/^[ |`-]*//' | sed 's/<<<NULL>>>/NullStmt/g' | gawk 'length > 0 {print "`" $0 "`,"}'
+}
+
+func BenchmarkParse(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		for _, line := range lines {
+			Parse(line)
+		}
+	}
+}

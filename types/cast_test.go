@@ -42,10 +42,6 @@ func TestCast(t *testing.T) {
 		// Casting to bool
 		{args{util.NewIntLit(1), "int", "bool"}, util.NewBinaryExpr(util.NewIntLit(1), token.NEQ, util.NewIntLit(0), "bool", false)},
 
-		// Casting from bool. This is a special case becuase C int and bool
-		// values are very commonly used interchangably.
-		{args{util.NewIntLit(1), "bool", "int"}, util.NewCallExpr("noarch.BoolToInt", util.NewIntLit(1))},
-
 		// String types
 		// {args{"foo", "[3]char", "const char*"}, "1 != 0"},
 
@@ -67,5 +63,37 @@ func TestCast(t *testing.T) {
 				t.Errorf("Cast()%s\n", util.ShowDiff(toJSON(got), toJSON(tt.want)))
 			}
 		})
+	}
+}
+
+func TestGetArrayTypeAndSize(t *testing.T) {
+	tests := []struct {
+		in    string
+		cType string
+		size  int
+	}{
+		{"int", "int", -1},
+		{"int [4]", "int", 4},
+		{"int [4][3]", "int [3]", 4},
+		{"int [4][3][2]", "int [3][2]", 4},
+		{"int [4][3][2][1]", "int [3][2][1]", 4},
+		{"int *[4]", "int *", 4},
+		{"int *[4][3]", "int *[3]", 4},
+		{"int *[4][3][2]", "int *[3][2]", 4},
+		{"int *[4][3][2][1]", "int *[3][2][1]", 4},
+		{"char *const", "char *const", -1},
+		{"char *const [6]", "char *const", 6},
+		{"char *const [6][5]", "char *const [5]", 6},
+	}
+
+	for _, tt := range tests {
+		cType, size := GetArrayTypeAndSize(tt.in)
+		if cType != tt.cType {
+			t.Errorf("Expected type '%s', got '%s'", tt.cType, cType)
+		}
+
+		if size != tt.size {
+			t.Errorf("Expected size '%d', got '%d'", tt.size, size)
+		}
 	}
 }

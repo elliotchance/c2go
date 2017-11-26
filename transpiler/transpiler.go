@@ -12,6 +12,7 @@ import (
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/types"
 	"github.com/elliotchance/c2go/util"
 )
 
@@ -33,6 +34,7 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 	if p.OutputAsTest {
 		p.AddImport("testing")
 		p.AddImport("io/ioutil")
+		p.AddImport("os")
 
 		// TODO: There should be a cleaner way to add a function to the program.
 		// This code was taken from the end of transpileFunctionDecl.
@@ -168,6 +170,9 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 
 	case *ast.CStyleCastExpr:
 		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children()[0], p, exprIsStmt)
+		if err == nil {
+			expr, err = types.CastExpr(p, expr, exprType, n.Type)
+		}
 
 	case *ast.CharacterLiteral:
 		expr, exprType, err = transpileCharacterLiteral(n), "char", nil
@@ -181,6 +186,12 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 	case *ast.UnaryExprOrTypeTraitExpr:
 		return transpileUnaryExprOrTypeTraitExpr(n, p)
 
+	case *ast.InitListExpr:
+		expr, exprType, err = transpileInitListExpr(n, p)
+
+	case *ast.CompoundLiteralExpr:
+		expr, exprType, err = transpileCompoundLiteralExpr(n, p)
+
 	case *ast.StmtExpr:
 		return transpileStmtExpr(n, p)
 
@@ -193,23 +204,29 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 	return
 }
 
-func transpileToStmts(node ast.Node, p *program.Program) ([]goast.Stmt, error) {
+func transpileToStmts(node ast.Node, p *program.Program) (stmts []goast.Stmt, err error) {
 	if node == nil {
 		return nil, nil
 	}
 
+	var (
+		stmt      goast.Stmt
+		preStmts  []goast.Stmt
+		postStmts []goast.Stmt
+	)
 	switch n := node.(type) {
 	case *ast.DeclStmt:
-		stmts, preStmts, postStmts, err := transpileDeclStmt(n, p)
-		stmts = append(preStmts, stmts...)
-		stmts = append(stmts, postStmts...)
-		return stmts, err
+		var s []goast.Stmt
+		s, preStmts, postStmts, err = transpileDeclStmt(n, p)
+		preStmts = append(preStmts, s...)
+	default:
+		stmt, preStmts, postStmts, err = transpileToStmt(node, p)
 	}
-
-	stmt, preStmts, postStmts, err := transpileToStmt(node, p)
-	stmts := append(preStmts, stmt)
-	stmts = append(stmts, postStmts...)
-	return stmts, err
+	if err != nil {
+		return
+	}
+	stmts = append(stmts, combineStmts(stmt, preStmts, postStmts)...)
+	return
 }
 
 func transpileToStmt(node ast.Node, p *program.Program) (
@@ -269,7 +286,7 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 		}
 
 	case *ast.LabelStmt:
-		stmt, err = transpileLabelStmt(n, p)
+		stmt, preStmts, postStmts, err = transpileLabelStmt(n, p)
 		return
 
 	case *ast.GotoStmt:
@@ -292,7 +309,11 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 		return
 	}
 
-	stmt = util.NewExprStmt(expr)
+	// nil is happen, when we remove function `free` of <stdlib.h>
+	// see function CallExpr in transpiler
+	if expr != (*goast.CallExpr)(nil) {
+		stmt = util.NewExprStmt(expr)
+	}
 
 	return
 }
@@ -300,8 +321,38 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 func transpileToNode(node ast.Node, p *program.Program) error {
 	switch n := node.(type) {
 	case *ast.TranslationUnitDecl:
-		for _, c := range n.Children() {
-			transpileToNode(c, p)
+		for i := 0; i < len(n.Children()); i++ {
+			switch v := n.Children()[i].(type) {
+			case *ast.RecordDecl:
+				// specific for `typedef struct` without name
+				if v.Name != "" || i == len(n.Children())-1 {
+					err := transpileRecordDecl(p, v)
+					if err != nil {
+						return err
+					}
+				}
+				for counter := 1; i+counter < len(n.Children()); counter++ {
+					if vv, ok := n.Children()[i+counter].(*ast.TypedefDecl); ok {
+						nameTypedefStruct := vv.Name
+						fields := v.Children()
+						// create a struct in according to
+						// name and fields
+						var recordDecl ast.RecordDecl
+						recordDecl.Name = nameTypedefStruct
+						recordDecl.ChildNodes = fields
+						err := transpileRecordDecl(p, &recordDecl)
+						if err != nil {
+							return err
+						}
+					} else {
+						counter--
+						i = i + counter
+						break
+					}
+				}
+			default:
+				transpileToNode(n.Children()[i], p)
+			}
 		}
 
 	case *ast.FunctionDecl:
@@ -324,6 +375,10 @@ func transpileToNode(node ast.Node, p *program.Program) error {
 		transpileEnumDecl(p, n)
 		return nil
 
+	case *ast.EmptyDecl:
+		p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("EmptyDecl is not transpiled"), n))
+		return nil
+
 	default:
 		panic(fmt.Sprintf("cannot transpile to node: %#v", node))
 	}
@@ -331,23 +386,39 @@ func transpileToNode(node ast.Node, p *program.Program) error {
 	return nil
 }
 
-func transpileStmts(nodes []ast.Node, p *program.Program) ([]goast.Stmt, error) {
-	preStmts := []goast.Stmt{}
-	postStmts := []goast.Stmt{}
-	stmts := []goast.Stmt{}
-
+func transpileStmts(nodes []ast.Node, p *program.Program) (stmts []goast.Stmt, err error) {
 	for _, s := range nodes {
 		if s != nil {
-			a, newPre, newPost, err := transpileToStmt(s, p)
+			var (
+				stmt      goast.Stmt
+				preStmts  []goast.Stmt
+				postStmts []goast.Stmt
+			)
+			stmt, preStmts, postStmts, err = transpileToStmt(s, p)
 			if err != nil {
-				return nil, err
+				return
 			}
-
-			preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
-
-			stmts = append(stmts, a)
+			stmts = append(stmts, combineStmts(stmt, preStmts, postStmts)...)
 		}
 	}
 
 	return stmts, nil
+}
+
+// combineStmts - combine elements to slice
+func combineStmts(stmt goast.Stmt, preStmts, postStmts []goast.Stmt) (stmts []goast.Stmt) {
+	for i := range preStmts {
+		if preStmts[i] != nil {
+			stmts = append(stmts, preStmts[i])
+		}
+	}
+	if stmt != nil {
+		stmts = append(stmts, stmt)
+	}
+	for i := range postStmts {
+		if postStmts[i] != nil {
+			stmts = append(stmts, postStmts[i])
+		}
+	}
+	return
 }

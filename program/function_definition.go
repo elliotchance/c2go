@@ -1,8 +1,9 @@
 package program
 
 import (
-	"regexp"
 	"strings"
+
+	"github.com/elliotchance/c2go/util"
 )
 
 // FunctionDefinition contains the prototype definition for a function.
@@ -22,7 +23,7 @@ type FunctionDefinition struct {
 	// function. For example, "sin()".
 	Substitution string
 
-	// Can be overriden with the substitution to rearrange the return variables
+	// Can be overridden with the substitution to rearrange the return variables
 	// and parameters. When either of these are nil the behavior is to keep the
 	// single return value and parameters the same.
 	ReturnParameters []int
@@ -54,7 +55,7 @@ var builtInFunctionDefinitionsHaveBeenLoaded = false
 // Where $0 represents the C return value and $1 and above are for each of the
 // parameters.
 //
-// Transformations can also be used to specify varaible that need to be passed
+// Transformations can also be used to specify variable that need to be passed
 // by reference by using the prefix "&" instead of "$":
 //
 //     size_t fread(void*, size_t, size_t, FILE*) -> $0 = noarch.Fread(&1, $2, $3, $4)
@@ -195,6 +196,7 @@ var builtInFunctionDefinitions = []string{
 	"long long strtoll(const char *, char **, int) -> noarch.Strtoll",
 	"long unsigned int strtoul(const char *, char **, int) -> noarch.Strtoul",
 	"long long unsigned int strtoull(const char *, char **, int) -> noarch.Strtoull",
+	"void free(void*) -> _",
 
 	// time.h
 	"time_t time(time_t *) -> noarch.Time",
@@ -259,7 +261,7 @@ func loadFunctionDefinitions() {
 	builtInFunctionDefinitionsHaveBeenLoaded = true
 
 	for _, f := range builtInFunctionDefinitions {
-		match := regexp.MustCompile(`^(.+) ([^ ]+)\(([, a-z*A-Z_0-9]*)\)( -> .+)?$`).
+		match := util.GetRegex(`^(.+) ([^ ]+)\(([, a-z*A-Z_0-9]*)\)( -> .+)?$`).
 			FindStringSubmatch(f)
 
 		// Unpack argument types.
@@ -281,7 +283,7 @@ func loadFunctionDefinitions() {
 
 			// The substitution might also rearrange the parameters (return and
 			// parameter transformation).
-			subMatch := regexp.MustCompile(`^(.*?) = (.*)\((.*)\)$`).
+			subMatch := util.GetRegex(`^(.*?) = (.*)\((.*)\)$`).
 				FindStringSubmatch(substitution)
 			if len(subMatch) > 0 {
 				returnParameters = dollarArgumentsToIntSlice(subMatch[1])

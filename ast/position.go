@@ -217,6 +217,8 @@ func setPosition(node Node, position Position) {
 	switch n := node.(type) {
 	case *AlignedAttr:
 		n.Pos = position
+	case *AllocSizeAttr:
+		n.Pos = position
 	case *AlwaysInlineAttr:
 		n.Pos = position
 	case *ArraySubscriptExpr:
@@ -245,6 +247,8 @@ func setPosition(node Node, position Position) {
 		n.Pos = position
 	case *CompoundAssignOperator:
 		n.Pos = position
+	case *CompoundLiteralExpr:
+		n.Pos = position
 	case *CStyleCastExpr:
 		n.Pos = position
 	case *DeclRefExpr:
@@ -255,7 +259,11 @@ func setPosition(node Node, position Position) {
 		n.Pos = position
 	case *DeprecatedAttr:
 		n.Pos = position
+	case *DisableTailCallsAttr:
+		n.Pos = position
 	case *DoStmt:
+		n.Pos = position
+	case *EmptyDecl:
 		n.Pos = position
 	case *EnumConstantDecl:
 		n.Pos = position
@@ -342,6 +350,8 @@ func setPosition(node Node, position Position) {
 	case *VAArgExpr:
 		n.Pos = position
 	case *VarDecl:
+		n.Pos = position
+	case *VisibilityAttr:
 		n.Pos = position
 	case *WarnUnusedResultAttr:
 		n.Pos = position

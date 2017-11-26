@@ -123,6 +123,8 @@ void test_fclose()
     pFile = fopen("/tmp/myfile.txt", "w");
     fputs("fclose example", pFile);
     fclose(pFile);
+    // remove temp file
+    is_eq(remove("/tmp/myfile.txt"),0)
 }
 
 void test_fflush()
@@ -136,6 +138,8 @@ void test_fflush()
     fflush(pFile); // flushing or repositioning required
     fgets(mybuffer, 80, pFile);
     fclose(pFile);
+    // remove temp file
+    is_eq(remove("/tmp/example.txt"),0)
 }
 
 void test_fprintf()
@@ -153,6 +157,8 @@ void test_fprintf()
     }
 
     fclose(pFile);
+    // remove temp file
+    is_eq(remove("/tmp/myfile1.txt"),0)
 }
 
 void test_fscanf()
@@ -172,6 +178,9 @@ void test_fscanf()
 
     is_eq(f, 3.1416);
     is_streq(str, "PI");
+    
+	// remove temp file
+    is_eq(remove("/tmp/myfile2.txt"),0)
 }
 
 void test_fgetc()
@@ -226,6 +235,8 @@ void test_fputs()
     pFile = fopen("/tmp/mylog.txt", "w");
     fputs(sentence, pFile);
     fclose(pFile);
+	// remove temp file
+    is_eq(remove("/tmp/mylog.txt"),0)
 }
 
 void test_getc()
@@ -258,6 +269,8 @@ void test_putc()
         putc(c, pFile);
     }
     fclose(pFile);
+	// remove temp file
+    is_eq(remove("/tmp/whatever.txt"),0)
 }
 
 void test_fseek()
@@ -268,6 +281,8 @@ void test_fseek()
     fseek(pFile, 9, SEEK_SET);
     fputs(" sam", pFile);
     fclose(pFile);
+	// remove temp file
+    is_eq(remove("/tmp/example.txt"),0)
 }
 
 void test_ftell()
@@ -282,7 +297,7 @@ void test_ftell()
     size = ftell(pFile);
     fclose(pFile);
 
-    is_eq(size, 7971);
+    is_eq(size, 8592);
 }
 
 void test_fread()
@@ -321,6 +336,8 @@ void test_fwrite()
     pFile = fopen("/tmp/myfile.bin", "w");
     fwrite("xyz", 1, 3, pFile);
     fclose(pFile);
+	// remove temp file
+    is_eq(remove("/tmp/myfile.bin"),0)
 }
 
 void test_fgetpos()
@@ -358,6 +375,8 @@ void test_fsetpos()
     fsetpos(pFile, &position);
     fputs("This", pFile);
     fclose(pFile);
+	// remove temp file
+    is_eq(remove("/tmp/myfile.txt"),0)
 }
 
 void test_rewind()
@@ -375,6 +394,9 @@ void test_rewind()
     buffer[26] = '\0';
 
     is_eq(strlen(buffer), 26);
+	
+	// remove temp file
+    is_eq(remove("/tmp/myfile.txt"),0)
 }
 
 void test_feof()
@@ -391,7 +413,7 @@ void test_feof()
     if (feof(pFile))
     {
         pass("%s", "End-of-File reached.");
-        is_eq(n, 7971);
+        is_eq(n, 8592);
     }
     else
     {
@@ -403,7 +425,7 @@ void test_feof()
 
 int main()
 {
-    plan(34);
+    plan(44);
 
     START_TEST(putchar)
     START_TEST(puts)

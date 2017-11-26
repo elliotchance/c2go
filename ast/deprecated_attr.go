@@ -1,25 +1,27 @@
 package ast
 
 type DeprecatedAttr struct {
-	Addr       Address
-	Pos        Position
-	Message1   string
-	Message2   string
-	ChildNodes []Node
+	Addr        Address
+	Pos         Position
+	Message1    string
+	Message2    string
+	IsInherited bool
+	ChildNodes  []Node
 }
 
 func parseDeprecatedAttr(line string) *DeprecatedAttr {
 	groups := groupsFromRegex(
-		`<(?P<position>.*)> "(?P<message1>.*?)"(?P<message2> ".*?")?`,
+		`<(?P<position>.*)>(?P<inherited> Inherited)? "(?P<message1>.*?)"(?P<message2> ".*?")?`,
 		line,
 	)
 
 	return &DeprecatedAttr{
-		Addr:       ParseAddress(groups["address"]),
-		Pos:        NewPositionFromString(groups["position"]),
-		Message1:   removeQuotes(groups["message1"]),
-		Message2:   removeQuotes(groups["message2"]),
-		ChildNodes: []Node{},
+		Addr:        ParseAddress(groups["address"]),
+		Pos:         NewPositionFromString(groups["position"]),
+		Message1:    removeQuotes(groups["message1"]),
+		Message2:    removeQuotes(groups["message2"]),
+		IsInherited: len(groups["inherited"]) > 0,
+		ChildNodes:  []Node{},
 	}
 }
 

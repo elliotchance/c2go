@@ -8,7 +8,7 @@ type EnumType struct {
 
 func parseEnumType(line string) *EnumType {
 	groups := groupsFromRegex(
-		"'(?P<name>.*)'",
+		"'(?P<name>.*?)'",
 		line,
 	)
 

@@ -54,7 +54,7 @@ func IsType(_c CtRuneT, _f uint32) uint32 {
 		return 1
 	}
 
-	// The IsSpace check is required becuase Go treats spaces as graphic
+	// The IsSpace check is required because Go treats spaces as graphic
 	// characters, which C does not.
 	if _f&CtypeG != 0 && unicode.IsGraphic(rune(_c)) && !unicode.IsSpace(rune(_c)) {
 		return 1

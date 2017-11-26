@@ -11,7 +11,6 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
 	"io"
@@ -20,12 +19,13 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
-	"regexp"
+	"runtime"
 	"strings"
 
 	"errors"
 
 	"github.com/elliotchance/c2go/ast"
+	"github.com/elliotchance/c2go/preprocessor"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/transpiler"
 )
@@ -35,7 +35,7 @@ import (
 //     c2go -v
 //
 // See https://github.com/elliotchance/c2go/wiki/Release-Process
-const Version = "v0.16.8 Radium 2017-10-25"
+const Version = "v0.17.6 Samarium 2017-11-18"
 
 var stderr io.Writer = os.Stderr
 
@@ -54,7 +54,8 @@ var stderr io.Writer = os.Stderr
 type ProgramArgs struct {
 	verbose     bool
 	ast         bool
-	inputFile   string
+	inputFiles  []string
+	clangFlags  []string
 	outputFile  string
 	packageName string
 
@@ -68,13 +69,13 @@ func DefaultProgramArgs() ProgramArgs {
 		verbose:      false,
 		ast:          false,
 		packageName:  "main",
+		clangFlags:   []string{},
 		outputAsTest: false,
 	}
 }
 
 func readAST(data []byte) []string {
-	uncolored := regexp.MustCompile(`\x1b\[[\d;]+m`).ReplaceAll(data, []byte{})
-	return strings.Split(string(uncolored), "\n")
+	return strings.Split(string(data), "\n")
 }
 
 type treeNode struct {
@@ -103,6 +104,45 @@ func convertLinesToNodes(lines []string) []treeNode {
 	nodes = nodes[0:counter]
 
 	return nodes
+}
+
+func convertLinesToNodesParallel(lines []string) []treeNode {
+	// function f separate full list on 2 parts and
+	// then each part can recursive run function f
+	var f func([]string, int) []treeNode
+
+	f = func(lines []string, deep int) []treeNode {
+		deep = deep - 2
+		part := len(lines) / 2
+
+		var tr1 = make(chan []treeNode)
+		var tr2 = make(chan []treeNode)
+
+		go func(lines []string, deep int) {
+			if deep <= 0 || len(lines) < deep {
+				tr1 <- convertLinesToNodes(lines)
+				return
+			}
+			tr1 <- f(lines, deep)
+		}(lines[0:part], deep)
+
+		go func(lines []string, deep int) {
+			if deep <= 0 || len(lines) < deep {
+				tr2 <- convertLinesToNodes(lines)
+				return
+			}
+			tr2 <- f(lines, deep)
+		}(lines[part:], deep)
+
+		defer close(tr1)
+		defer close(tr2)
+
+		return append(<-tr1, <-tr2...)
+	}
+
+	// Parameter of deep - can be any, but effective to use
+	// same amount of CPU
+	return f(lines, runtime.NumCPU())
 }
 
 // buildTree converts an array of nodes, each prefixed with a depth into a tree.
@@ -152,29 +192,21 @@ func Start(args ProgramArgs) (err error) {
 	}
 
 	// 1. Compile it first (checking for errors)
-	_, err = os.Stat(args.inputFile)
-	if err != nil {
-		return fmt.Errorf("Input file is not found")
+	for _, in := range args.inputFiles {
+		_, err := os.Stat(in)
+		if err != nil {
+			return fmt.Errorf("Input file %s is not found", in)
+		}
 	}
 
 	// 2. Preprocess
 	if args.verbose {
 		fmt.Println("Running clang preprocessor...")
 	}
-	var pp []byte
-	{
-		// See : https://clang.llvm.org/docs/CommandGuide/clang.html
-		// clang -E <file>    Run the preprocessor stage.
-		cmd := exec.Command("clang", "-E", args.inputFile)
-		var out bytes.Buffer
-		var stderr bytes.Buffer
-		cmd.Stdout = &out
-		cmd.Stderr = &stderr
-		err = cmd.Run()
-		if err != nil {
-			return fmt.Errorf("preprocess failed: %v\nStdErr = %v", err, stderr.String())
-		}
-		pp = out.Bytes()
+
+	pp, err := preprocessor.Analyze(args.inputFiles, args.clangFlags)
+	if err != nil {
+		return err
 	}
 
 	if args.verbose {
@@ -196,7 +228,7 @@ func Start(args ProgramArgs) (err error) {
 	if args.verbose {
 		fmt.Println("Running clang for AST tree...")
 	}
-	astPP, err := exec.Command("clang", "-Xclang", "-ast-dump", "-fsyntax-only", ppFilePath).Output()
+	astPP, err := exec.Command("clang", "-Xclang", "-ast-dump", "-fsyntax-only", "-fno-color-diagnostics", ppFilePath).Output()
 	if err != nil {
 		// If clang fails it still prints out the AST, so we have to run it
 		// again to get the real error.
@@ -220,13 +252,13 @@ func Start(args ProgramArgs) (err error) {
 
 	p := program.NewProgram()
 	p.Verbose = args.verbose
-	p.OutputAsTest = true // args.outputAsTest
+	p.OutputAsTest = args.outputAsTest
 
 	// Converting to nodes
 	if args.verbose {
 		fmt.Println("Converting to nodes...")
 	}
-	nodes := convertLinesToNodes(lines)
+	nodes := convertLinesToNodesParallel(lines)
 
 	// build tree
 	if args.verbose {
@@ -245,21 +277,26 @@ func Start(args ProgramArgs) (err error) {
 		p.AddMessage(p.GenerateWarningMessage(errors.New(message), fErr.Node))
 	}
 
+	outputFilePath := args.outputFile
+
+	if outputFilePath == "" {
+		// Choose inputFile for creating name of output file
+		input := args.inputFiles[0]
+		// We choose name for output Go code at the base
+		// on filename for choosed input file
+		cleanFileName := filepath.Clean(filepath.Base(input))
+		extension := filepath.Ext(input)
+		outputFilePath = cleanFileName[0:len(cleanFileName)-len(extension)] + ".go"
+	}
+
 	// transpile ast tree
 	if args.verbose {
 		fmt.Println("Transpiling tree...")
 	}
-	err = transpiler.TranspileAST(args.inputFile, args.packageName, p, tree[0].(ast.Node))
+
+	err = transpiler.TranspileAST(args.outputFile, args.packageName, p, tree[0].(ast.Node))
 	if err != nil {
 		return fmt.Errorf("cannot transpile AST : %v", err)
-	}
-
-	outputFilePath := args.outputFile
-
-	if outputFilePath == "" {
-		cleanFileName := filepath.Clean(filepath.Base(args.inputFile))
-		extension := filepath.Ext(args.inputFile)
-		outputFilePath = cleanFileName[0:len(cleanFileName)-len(extension)] + ".go"
 	}
 
 	// write the output Go code
@@ -272,6 +309,26 @@ func Start(args ProgramArgs) (err error) {
 	}
 
 	return nil
+}
+
+type inputDataFlags []string
+
+func (i *inputDataFlags) String() (s string) {
+	for pos, item := range *i {
+		s += fmt.Sprintf("Flag %d. %s\n", pos, item)
+	}
+	return
+}
+
+func (i *inputDataFlags) Set(value string) error {
+	*i = append(*i, value)
+	return nil
+}
+
+var clangFlags inputDataFlags
+
+func init() {
+	transpileCommand.Var(&clangFlags, "clang-flag", "Pass arguments to clang. You may provide multiple -clang-flag items.")
 }
 
 var (
@@ -293,10 +350,11 @@ func main() {
 }
 
 func runCommand() int {
+
 	flag.Usage = func() {
-		usage := "Usage: %s [-v] [<command>] [<flags>] file.c\n\n"
+		usage := "Usage: %s [-v] [<command>] [<flags>] file1.c ...\n\n"
 		usage += "Commands:\n"
-		usage += "  transpile\ttranspile an input C source file to Go\n"
+		usage += "  transpile\ttranspile an input C source file or files to Go\n"
 		usage += "  ast\t\tprint AST before translated Go code\n\n"
 
 		usage += "Flags:\n"
@@ -337,7 +395,7 @@ func runCommand() int {
 		}
 
 		args.ast = true
-		args.inputFile = astCommand.Arg(0)
+		args.inputFiles = astCommand.Args()
 	case "transpile":
 		err := transpileCommand.Parse(os.Args[2:])
 		if err != nil {
@@ -346,15 +404,16 @@ func runCommand() int {
 		}
 
 		if *transpileHelpFlag || transpileCommand.NArg() == 0 {
-			fmt.Fprintf(stderr, "Usage: %s transpile [-V] [-o file.go] [-p package] file.c\n", os.Args[0])
+			fmt.Fprintf(stderr, "Usage: %s transpile [-V] [-o file.go] [-p package] file1.c ...\n", os.Args[0])
 			transpileCommand.PrintDefaults()
 			return 1
 		}
 
-		args.inputFile = transpileCommand.Arg(0)
+		args.inputFiles = transpileCommand.Args()
 		args.outputFile = *outputFlag
 		args.packageName = *packageFlag
 		args.verbose = *verboseFlag
+		args.clangFlags = clangFlags
 	default:
 		flag.Usage()
 		return 1

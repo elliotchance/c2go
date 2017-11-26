@@ -11,43 +11,48 @@ type FunctionDecl struct {
 	Position2    string
 	Name         string
 	Type         string
+	Type2        string
 	IsExtern     bool
 	IsImplicit   bool
 	IsUsed       bool
 	IsReferenced bool
+	IsStatic     bool
+	IsInline     bool
 	ChildNodes   []Node
 }
 
 func parseFunctionDecl(line string) *FunctionDecl {
 	groups := groupsFromRegex(
-		`(?P<prev>prev [0-9a-fx]+ )?
+		`(?:prev (?P<prev>0x[0-9a-f]+) )?
 		<(?P<position1>.*?)>
 		(?P<position2> <scratch space>[^ ]+| [^ ]+)?
 		(?P<implicit> implicit)?
 		(?P<used> used)?
 		(?P<referenced> referenced)?
 		 (?P<name>[_\w]+)
-		 '(?P<type>.*)
-		'(?P<extern> extern)?`,
+		 '(?P<type>.*?)'
+		(:'(?P<type2>.*?)')?
+		(?P<extern> extern)?
+		(?P<static> static)?
+		(?P<inline> inline)?
+		`,
 		line,
 	)
-
-	prev := groups["prev"]
-	if prev != "" {
-		prev = prev[5 : len(prev)-1]
-	}
 
 	return &FunctionDecl{
 		Addr:         ParseAddress(groups["address"]),
 		Pos:          NewPositionFromString(groups["position1"]),
-		Prev:         prev,
+		Prev:         groups["prev"],
 		Position2:    strings.TrimSpace(groups["position2"]),
 		Name:         groups["name"],
 		Type:         groups["type"],
+		Type2:        groups["type2"],
 		IsExtern:     len(groups["extern"]) > 0,
 		IsImplicit:   len(groups["implicit"]) > 0,
 		IsUsed:       len(groups["used"]) > 0,
 		IsReferenced: len(groups["referenced"]) > 0,
+		IsStatic:     len(groups["static"]) > 0,
+		IsInline:     len(groups["inline"]) > 0,
 		ChildNodes:   []Node{},
 	}
 }

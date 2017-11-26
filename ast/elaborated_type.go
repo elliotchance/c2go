@@ -9,7 +9,7 @@ type ElaboratedType struct {
 
 func parseElaboratedType(line string) *ElaboratedType {
 	groups := groupsFromRegex(
-		"'(?P<type>.*)' (?P<tags>.+)",
+		"'(?P<type>.*?)' (?P<tags>.+)",
 		line,
 	)
 

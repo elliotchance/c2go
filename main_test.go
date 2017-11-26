@@ -15,8 +15,6 @@ import (
 	"syscall"
 	"testing"
 
-	"regexp"
-
 	"github.com/elliotchance/c2go/cc"
 	"github.com/elliotchance/c2go/util"
 )
@@ -108,7 +106,7 @@ func TestIntegrationScripts(t *testing.T) {
 			mainFileName = "main_test.go"
 
 			programArgs := DefaultProgramArgs()
-			programArgs.inputFile = file
+			programArgs.inputFiles = []string{file}
 			programArgs.outputFile = subFolder + mainFileName
 			// This appends a TestApp function to the output source so we
 			// can run "go test" against the produced binary.
@@ -152,7 +150,7 @@ func TestIntegrationScripts(t *testing.T) {
 			cProgramStderr := cProgram.stderr.String()
 			goProgramStderr := goProgram.stderr.String()
 
-			r := regexp.MustCompile("warning: no packages being tested depend on .+\n")
+			r := util.GetRegex("warning: no packages being tested depend on .+\n")
 			goProgramStderr = r.ReplaceAllString(goProgramStderr, "")
 
 			if cProgramStderr != goProgramStderr {
@@ -237,7 +235,7 @@ func TestIntegrationScripts(t *testing.T) {
 			if strings.Index(file, "examples/") == -1 && isVerbose {
 				firstLine := strings.Split(goOut, "\n")[0]
 
-				matches := regexp.MustCompile(`1\.\.(\d+)`).
+				matches := util.GetRegex(`1\.\.(\d+)`).
 					FindStringSubmatch(firstLine)
 				if len(matches) == 0 {
 					t.Fatalf("Test did not output tap: %s, got:\n%s", file,
@@ -264,12 +262,13 @@ func TestStartPreprocess(t *testing.T) {
 	}
 	defer os.RemoveAll(dir) // clean up
 
-	filename := path.Join(dir, "preprocess.c")
+	name := "preprocess.c"
+	filename := path.Join(dir, name)
 	body := ([]byte)("#include <AbsoluteWrongInclude.h>\nint main(void){\nwrong();\n}")
 	err = ioutil.WriteFile(filename, body, 0644)
 
 	args := DefaultProgramArgs()
-	args.inputFile = filename
+	args.inputFiles = []string{dir + name}
 
 	err = Start(args)
 	if err == nil {
@@ -303,5 +302,120 @@ func TestGoPath(t *testing.T) {
 	err = Start(DefaultProgramArgs())
 	if err == nil {
 		t.Errorf(err.Error())
+	}
+}
+
+func TestMultifileTranspilation(t *testing.T) {
+	tcs := []struct {
+		source         []string
+		expectedOutput string
+	}{
+		{
+			[]string{
+				"./tests/multi/main1.c",
+				"./tests/multi/main2.c",
+			},
+			"234",
+		},
+	}
+
+	for pos, tc := range tcs {
+		t.Run(fmt.Sprintf("Test %d", pos), func(t *testing.T) {
+			var args = DefaultProgramArgs()
+			args.inputFiles = tc.source
+			dir, err := ioutil.TempDir("", "c2go_multi")
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer os.RemoveAll(dir) // clean up
+			args.outputFile = path.Join(dir, "multi.go")
+			args.packageName = "main"
+			args.outputAsTest = true
+
+			// testing
+			err = Start(args)
+			if err != nil {
+				t.Errorf(err.Error())
+			}
+
+			// Run Go program
+			var buf bytes.Buffer
+			cmd := exec.Command("go", "run", args.outputFile)
+			cmd.Stdout = &buf
+			cmd.Stderr = &buf
+			err = cmd.Run()
+			if err != nil {
+				t.Errorf(err.Error())
+			}
+			if buf.String() != tc.expectedOutput {
+				t.Errorf("Wrong result: %v", buf.String())
+			}
+		})
+	}
+}
+
+func TestTrigraph(t *testing.T) {
+	var args = DefaultProgramArgs()
+	args.inputFiles = []string{"./tests/trigraph/main.c"}
+	dir, err := ioutil.TempDir("", "c2go_trigraph")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir) // clean up
+	args.outputFile = path.Join(dir, "multi.go")
+	args.clangFlags = []string{"-trigraphs"}
+	args.packageName = "main"
+	args.outputAsTest = true
+
+	// testing
+	err = Start(args)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	// Run Go program
+	var buf bytes.Buffer
+	cmd := exec.Command("go", "run", args.outputFile)
+	cmd.Stdout = &buf
+	cmd.Stderr = &buf
+	err = cmd.Run()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if buf.String() != "#" {
+		t.Errorf("Wrong result: %v", buf.String())
+	}
+}
+
+func TestExternalInclude(t *testing.T) {
+	var args = DefaultProgramArgs()
+	args.inputFiles = []string{"./tests/externalHeader/main/main.c"}
+	dir, err := ioutil.TempDir("", "c2go_multi4")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir) // clean up
+	args.outputFile = path.Join(dir, "multi.go")
+	args.clangFlags = []string{"-I./tests/externalHeader/include/"}
+	args.packageName = "main"
+	args.outputAsTest = true
+
+	// testing
+	err = Start(args)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	// Run Go program
+	var buf bytes.Buffer
+	cmd := exec.Command("go", "run", args.outputFile)
+	cmd.Stdout = &buf
+	cmd.Stderr = &buf
+	err = cmd.Run()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if buf.String() != "42" {
+		t.Errorf("Wrong result: %v", buf.String())
 	}
 }

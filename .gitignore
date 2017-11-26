@@ -11,3 +11,4 @@
 /c2go
 /.vscode
 *.coverprofile
+tests/*.go
