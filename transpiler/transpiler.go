@@ -433,7 +433,7 @@ func transpileToNode(node ast.Node, p *program.Program) (decls []goast.Decl, err
 func transpileStmts(nodes []ast.Node, p *program.Program) (stmts []goast.Stmt, err error) {
 	defer func() {
 		if err != nil {
-			p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Error in transpileToStmts", err), nodes[0]))
+			p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Error in transpileToStmts: %v", err), nodes[0]))
 			err = nil // Error is ignored
 		}
 	}()

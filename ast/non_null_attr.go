@@ -12,12 +12,13 @@ type NonNullAttr struct {
 	A          int
 	B          int
 	C          int
+	D          int
 	ChildNodes []Node
 }
 
 func parseNonNullAttr(line string) *NonNullAttr {
 	groups := groupsFromRegex(
-		`<(?P<position>.*)>(?P<a> \d+)(?P<b> \d+)?(?P<c> \d+)?`,
+		`<(?P<position>.*)>(?P<a> \d+)(?P<b> \d+)?(?P<c> \d+)?(?P<d> \d+)?`,
 		line,
 	)
 
@@ -31,12 +32,18 @@ func parseNonNullAttr(line string) *NonNullAttr {
 		c = util.Atoi(strings.TrimSpace(groups["c"]))
 	}
 
+	d := 0
+	if groups["d"] != "" {
+		d = util.Atoi(strings.TrimSpace(groups["d"]))
+	}
+
 	return &NonNullAttr{
 		Addr:       ParseAddress(groups["address"]),
 		Pos:        NewPositionFromString(groups["position"]),
 		A:          util.Atoi(strings.TrimSpace(groups["a"])),
 		B:          b,
 		C:          c,
+		D:          d,
 		ChildNodes: []Node{},
 	}
 }
