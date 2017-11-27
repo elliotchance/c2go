@@ -61,6 +61,9 @@ func GetArrayTypeAndSize(s string) (string, int) {
 //    FILE where those function probably exist (or should exist) in the noarch
 //    package.
 func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (goast.Expr, error) {
+	cFromType = CleanCType(cFromType)
+	cToType = CleanCType(cToType)
+
 	fromType := cFromType
 	toType := cToType
 
