@@ -111,13 +111,7 @@ var simpleResolveTypes = map[string]string{
 //    transpiler to step over type errors and put something as a placeholder
 //    until a more suitable solution is found for those cases.
 func ResolveType(p *program.Program, s string) (string, error) {
-	// Remove any whitespace or attributes that are not relevant to Go.
-	s = strings.Replace(s, "const ", "", -1)
-	s = strings.Replace(s, "volatile ", "", -1)
-	s = strings.Replace(s, "*__restrict", "*", -1)
-	s = strings.Replace(s, "*restrict", "*", -1)
-	s = strings.Replace(s, "*const", "*", -1)
-	s = strings.Trim(s, " \t\n\r")
+	s = CleanCType(s)
 
 	// FIXME: This is a hack to avoid casting in some situations.
 	if s == "" {
@@ -319,4 +313,35 @@ func ParseFunction(s string) (f []string, r []string, err error) {
 	}
 
 	return
+}
+
+// CleanCType - remove from C type not Go type
+func CleanCType(s string) (out string) {
+	out = s
+	out = strings.Replace(out, "()", "", -1)
+	out = strings.Replace(out, "(*)", "", -1)
+
+	// Remove any whitespace or attributes that are not relevant to Go.
+	out = strings.Replace(out, "const", "", -1)
+	out = strings.Replace(out, "volatile", "", -1)
+	out = strings.Replace(out, "__restrict", "", -1)
+	out = strings.Replace(out, "restrict", "", -1)
+	out = strings.Replace(out, "\t", "", -1)
+	out = strings.Replace(out, "\n", "", -1)
+	out = strings.Replace(out, "\r", "", -1)
+
+	// remove space from pointer symbols
+	out = strings.Replace(out, "* *", "**", -1)
+
+	// remove addition spaces
+	out = strings.Replace(out, "  ", " ", -1)
+
+	// remove spaces around
+	out = strings.TrimSpace(out)
+
+	if out != s {
+		return CleanCType(out)
+	}
+
+	return out
 }
