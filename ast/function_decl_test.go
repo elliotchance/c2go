@@ -166,6 +166,22 @@ func TestFunctionDecl(t *testing.T) {
 			IsInline:     true,
 			ChildNodes:   []Node{},
 		},
+		`0x21c3da0 <line:8201:1, line:8786:1> line:8201:25 used insertvertex 'enum insertvertexresult (struct mesh *, struct behavior *, vertex, struct otri *, struct osub *, int, int)'`: &FunctionDecl{
+			Addr:         0x21c3da0,
+			Pos:          NewPositionFromString("line:8201:1, line:8786:1"),
+			Prev:         "",
+			Position2:    "line:8201:25",
+			Name:         "insertvertex",
+			Type:         "enum insertvertexresult (struct mesh *, struct behavior *, vertex, struct otri *, struct osub *, int, int)",
+			Type2:        "",
+			IsExtern:     false,
+			IsImplicit:   false,
+			IsUsed:       true,
+			IsReferenced: false,
+			IsStatic:     false,
+			IsInline:     false,
+			ChildNodes:   []Node{},
+		},
 	}
 
 	runNodeTests(t, nodes)
