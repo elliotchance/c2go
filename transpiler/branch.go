@@ -118,6 +118,7 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 	// Please remove after solving all problems
 	defer func() {
 		if f == (*goast.ForStmt)(nil) {
+			p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("ForStmt cannot be nil"), n))
 			f = &goast.ForStmt{ // This is workaround
 				Body: &goast.BlockStmt{
 					Lbrace: 1,
