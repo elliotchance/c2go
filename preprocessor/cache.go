@@ -131,7 +131,7 @@ func checkBodyFile(file string, fileFolder string) (err error) {
 	// TODO :....
 }
 
-func saveCache(c Clang, out []byte, err error) {
+func saveCache(c Clang, out []byte, errResult error) {
 	env := os.Getenv("C2GO_CACHE_PREPROCESSOR")
 	if env == "" {
 		return
