@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"os/exec"
 	"strings"
 )
 
@@ -141,7 +140,6 @@ func analyzeFiles(inputFiles, clangFlags []string) (items []entity, err error) {
 // See : https://clang.llvm.org/docs/CommandGuide/clang.html
 // clang -E <file>    Run the preprocessor stage.
 func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, err error) {
-	var stderr bytes.Buffer
 	for _, inputFile := range inputFiles {
 		if inputFile[len(inputFile)-1] != 'c' {
 			continue
@@ -150,17 +148,13 @@ func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, er
 		var args []string
 		args = append(args, "-E")
 		args = append(args, clangFlags...)
-		args = append(args, inputFile)
 
 		var outFile bytes.Buffer
-		cmd := exec.Command("clang", args...)
-		cmd.Stdout = &outFile
-		cmd.Stderr = &stderr
-		err = cmd.Run()
+		outFile, err = RunClang(Clang{Args: args, Files: []string{inputFile}})
 		if err != nil {
-			err = fmt.Errorf("preprocess for file: %s\nfailed: %v\nStdErr = %v", inputFile, err, stderr.String())
 			return
 		}
+
 		_, err = out.Write(outFile.Bytes())
 		if err != nil {
 			return
@@ -175,13 +169,8 @@ func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, er
 // exit.o: exit.c tests.h
 func getIncludeList(inputFile string) (lines []string, err error) {
 	var out bytes.Buffer
-	var stderr bytes.Buffer
-	cmd := exec.Command("clang", "-MM", "-c", inputFile)
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
-	err = cmd.Run()
+	out, err = RunClang(Clang{Args: []string{"-MM", "-c"}, Files: []string{inputFile}})
 	if err != nil {
-		err = fmt.Errorf("preprocess failed: %v\nStdErr = %v", err, stderr.String())
 		return
 	}
 	return parseIncludeList(out.String())

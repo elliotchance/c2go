@@ -213,7 +213,7 @@ func Start(args ProgramArgs) (err error) {
 	if err != nil {
 		return fmt.Errorf("Cannot create temp folder: %v", err)
 	}
-	defer os.RemoveAll(dir) // clean up
+	defer func() { _ = os.RemoveAll(dir) }() // clean up
 
 	ppFilePath := path.Join(dir, "pp.c")
 	err = ioutil.WriteFile(ppFilePath, pp, 0644)
@@ -225,7 +225,7 @@ func Start(args ProgramArgs) (err error) {
 	if args.verbose {
 		fmt.Println("Running clang for AST tree...")
 	}
-	astPP, err := exec.Command("clang", "-Xclang", "-ast-dump", "-fsyntax-only", "-fno-color-diagnostics", ppFilePath).Output()
+	astPP, err := preprocessor.RunClang(preprocessor.Clang{Args: []string{"-Xclang", "-ast-dump", "-fsyntax-only", "-fno-color-diagnostics"}, Files: []string{ppFilePath}})
 	if err != nil {
 		// If clang fails it still prints out the AST, so we have to run it
 		// again to get the real error.
@@ -237,7 +237,7 @@ func Start(args ProgramArgs) (err error) {
 	if args.verbose {
 		fmt.Println("Reading clang AST tree...")
 	}
-	lines := readAST(astPP)
+	lines := readAST(astPP.Bytes())
 	if args.ast {
 		for _, l := range lines {
 			fmt.Println(l)
