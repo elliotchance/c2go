@@ -20,6 +20,33 @@ type entity struct {
 	lines []*string
 }
 
+// isSame - check is Same entities
+func (e *entity) isSame(x *entity) bool {
+	if e.include != x.include {
+		return false
+	}
+	if e.positionInSource != x.positionInSource {
+		return false
+	}
+	if e.other != x.other {
+		return false
+	}
+	if len(e.lines) != len(x.lines) {
+		return false
+	}
+	for k := range e.lines {
+		is := e.lines[k]
+		js := x.lines[k]
+		if len(*is) != len(*js) {
+			return false
+		}
+		if *is != *js {
+			return false
+		}
+	}
+	return true
+}
+
 // Analyze - separation preprocessor code to part
 func Analyze(inputFiles, clangFlags []string) (pp []byte, err error) {
 	var allItems []entity
@@ -32,12 +59,14 @@ func Analyze(inputFiles, clangFlags []string) (pp []byte, err error) {
 	// Merge the entities
 	var lines []string
 	for i := range allItems {
+		// If found same part of preprocess code, then
+		// don't include in result buffer for transpiling
+		// for avoid dublicate of code
 		var found bool
 		for j := 0; j < i; j++ {
-			if allItems[i].include == allItems[j].include &&
-				allItems[i].positionInSource == allItems[j].positionInSource &&
-				allItems[i].other == allItems[j].other {
+			if allItems[i].isSame(&allItems[j]) {
 				found = true
+				break
 			}
 		}
 		if found {
