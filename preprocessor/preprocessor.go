@@ -102,7 +102,7 @@ func analyzeFiles(inputFiles, clangFlags []string) (items []entity, err error) {
 	}
 
 	// Parsing preprocessor file
-	r := bytes.NewReader(out.Bytes())
+	r := bytes.NewReader(out)
 	scanner := bufio.NewScanner(r)
 	scanner.Split(bufio.ScanLines)
 	// counter - get position of line
@@ -139,7 +139,7 @@ func analyzeFiles(inputFiles, clangFlags []string) (items []entity, err error) {
 
 // See : https://clang.llvm.org/docs/CommandGuide/clang.html
 // clang -E <file>    Run the preprocessor stage.
-func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, err error) {
+func getPreprocessSources(inputFiles, clangFlags []string) (out []byte, err error) {
 	for _, inputFile := range inputFiles {
 		if inputFile[len(inputFile)-1] != 'c' {
 			continue
@@ -149,16 +149,13 @@ func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, er
 		args = append(args, "-E")
 		args = append(args, clangFlags...)
 
-		var outFile bytes.Buffer
-		outFile, err = RunClang(Clang{Args: args, Files: []string{inputFile}})
+		var outFile []byte
+		outFile, err = RunClang(Clang{Args: args, File: inputFile})
 		if err != nil {
 			return
 		}
 
-		_, err = out.Write(outFile.Bytes())
-		if err != nil {
-			return
-		}
+		out = append(out, outFile...)
 	}
 	return
 }
@@ -168,10 +165,10 @@ func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, er
 // $ clang  -MM -c exit.c
 // exit.o: exit.c tests.h
 func getIncludeList(inputFile string) (lines []string, err error) {
-	var out bytes.Buffer
-	out, err = RunClang(Clang{Args: []string{"-MM", "-c"}, Files: []string{inputFile}})
+	var out []byte
+	out, err = RunClang(Clang{Args: []string{"-MM", "-c"}, File: inputFile})
 	if err != nil {
 		return
 	}
-	return parseIncludeList(out.String())
+	return parseIncludeList(string(out))
 }

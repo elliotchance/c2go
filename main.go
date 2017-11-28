@@ -225,7 +225,7 @@ func Start(args ProgramArgs) (err error) {
 	if args.verbose {
 		fmt.Println("Running clang for AST tree...")
 	}
-	astPP, err := preprocessor.RunClang(preprocessor.Clang{Args: []string{"-Xclang", "-ast-dump", "-fsyntax-only", "-fno-color-diagnostics"}, Files: []string{ppFilePath}})
+	astPP, err := preprocessor.RunClang(preprocessor.Clang{Args: []string{"-Xclang", "-ast-dump", "-fsyntax-only", "-fno-color-diagnostics"}, File: ppFilePath})
 	if err != nil {
 		// If clang fails it still prints out the AST, so we have to run it
 		// again to get the real error.
@@ -237,7 +237,7 @@ func Start(args ProgramArgs) (err error) {
 	if args.verbose {
 		fmt.Println("Reading clang AST tree...")
 	}
-	lines := readAST(astPP.Bytes())
+	lines := readAST(astPP)
 	if args.ast {
 		for _, l := range lines {
 			fmt.Println(l)

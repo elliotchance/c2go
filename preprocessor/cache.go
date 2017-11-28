@@ -2,23 +2,29 @@ package preprocessor
 
 import (
 	"bytes"
+	"crypto/md5"
 	"fmt"
+	"io"
+	"os"
 	"os/exec"
 )
 
 // Clang - parameters of clang execution
 type Clang struct {
-	Args  []string
-	Files []string
+	Args []string
+	File string
 }
 
 // RunClang - run application clang with arguments
-func RunClang(c Clang) (out bytes.Buffer, err error) {
-	var stderr bytes.Buffer
+func RunClang(c Clang) (_ []byte, err error) {
+	var (
+		out    bytes.Buffer
+		stderr bytes.Buffer
+	)
 
 	var a []string
 	a = append(a, c.Args...)
-	a = append(a, c.Files...)
+	a = append(a, c.File)
 	cmd := exec.Command("clang", a...)
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
@@ -27,7 +33,82 @@ func RunClang(c Clang) (out bytes.Buffer, err error) {
 
 	if err != nil {
 		err = fmt.Errorf("clang error:\nargs = %v\nfiles = %v\nerror = %v\nstderr = %v",
-			c.Args, c.Files, err, stderr.String())
+			c.Args, c.File, err, stderr.String())
 	}
+	return out.Bytes(), err
+}
+
+// CacheClang - cache of clang
+func CacheClang(c Clang) (out []byte, err error) {
+	env := os.Getenv("C2GO_CACHE_PREPROCESSOR")
+	if env == "" {
+		return RunClang(c)
+	}
+
+	// check - cache folder is exist
+	if stat, err := os.Stat(env); err != nil || !stat.IsDir() {
+		return RunClang(c)
+	}
+
+	// correct name of folder is like
+	// ~/cache/
+	// but not:
+	// ~/cache
+	// So, we have to add `/` if not exist
+	if env[len(env)-1] == '/' {
+		env = env + '/'
+	}
+
+	// run clang if any error
+	defer func() {
+		if err != nil {
+			out, err = RunClang(c)
+			// memorization
+			saveCache(c, out, err)
+		}
+	}()
+
+	// calculate hash of files
+	f, err := os.Open(c.File)
+	if err != nil {
+		err = fmt.Errorf("Cannot open file : %v", c.File)
+		return
+	}
+	defer func() { _ = f.Close() }()
+
+	h := md5.New()
+	if _, err := io.Copy(h, f); err != nil {
+		err = fmt.Errorf("Cannot calculate hash : %v", err)
+		return
+	}
+	fileHash := fmt.Sprintf("%x", h.Sum(nil))
+
+	// check folder is exist
+	fileFolder := env + fileHash
+	if stat, err := os.Stat(fileFolder); err != nil || !stat.IsDir() {
+		err = fmt.Errorf("Cannot check folder %v. err = %v", fileFolder, err)
+		return
+	}
+
+	// check body of file
+
+	// calculate hash of arguments
+	hh := md5.New()
+	io.WriteString(hh, fmt.Sprintf("%#v", c.Args))
+	argsHash := fmt.Sprintf("%x", hh.Sum(nil))
+
+	// check folder is exist
+	argsFolder := fileFolder + argsHash
+	if stat, err := os.Stat(argsFolder); err != nil || !stat.IsDir() {
+		err = fmt.Errorf("Cannot check folder %v. err = %v", argsFolder, err)
+		return
+	}
+
+	// check arguments
+
+	// cache
+
+	// not found in cache
+	err = fmt.Errorf("Not found in cache")
 	return
 }
