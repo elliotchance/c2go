@@ -56,7 +56,7 @@ func CacheClang(c Clang) (out []byte, err error) {
 	// ~/cache
 	// So, we have to add `/` if not exist
 	if env[len(env)-1] == '/' {
-		env = env + '/'
+		env = fmt.Sprintf("%s/", env)
 	}
 
 	// run clang if any error
@@ -77,20 +77,24 @@ func CacheClang(c Clang) (out []byte, err error) {
 	defer func() { _ = f.Close() }()
 
 	h := md5.New()
-	if _, err := io.Copy(h, f); err != nil {
-		err = fmt.Errorf("Cannot calculate hash : %v", err)
+	if _, err2 := io.Copy(h, f); err2 != nil {
+		err = fmt.Errorf("Cannot calculate hash : %v", err2)
 		return
 	}
 	fileHash := fmt.Sprintf("%x", h.Sum(nil))
 
 	// check folder is exist
 	fileFolder := env + fileHash
-	if stat, err := os.Stat(fileFolder); err != nil || !stat.IsDir() {
-		err = fmt.Errorf("Cannot check folder %v. err = %v", fileFolder, err)
+	if stat, err2 := os.Stat(fileFolder); err2 != nil || !stat.IsDir() {
+		err = fmt.Errorf("Cannot check folder %v. err = %v", fileFolder, err2)
 		return
 	}
 
 	// check body of file
+	err = checkBodyFile(c.File, fileFolder)
+	if err != nil {
+		return
+	}
 
 	// calculate hash of arguments
 	hh := md5.New()
@@ -99,16 +103,17 @@ func CacheClang(c Clang) (out []byte, err error) {
 
 	// check folder is exist
 	argsFolder := fileFolder + argsHash
-	if stat, err := os.Stat(argsFolder); err != nil || !stat.IsDir() {
-		err = fmt.Errorf("Cannot check folder %v. err = %v", argsFolder, err)
+	if stat, err2 := os.Stat(argsFolder); err2 != nil || !stat.IsDir() {
+		err = fmt.Errorf("Cannot check folder %v. err = %v", argsFolder, err2)
 		return
 	}
 
 	// check arguments
+	err = checkArgs(c.Args, argsFolder)
+	if err != nil {
+		return
+	}
 
 	// cache
-
-	// not found in cache
-	err = fmt.Errorf("Not found in cache")
-	return
+	return getCache()
 }
