@@ -315,7 +315,7 @@ func TestMultifileTranspilation(t *testing.T) {
 				"./tests/multi/main1.c",
 				"./tests/multi/main2.c",
 			},
-			"234",
+			"234ERROR!ERROR!ERROR!",
 		},
 	}
 
