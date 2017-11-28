@@ -69,19 +69,10 @@ func CacheClang(c Clang) (out []byte, err error) {
 	}()
 
 	// calculate hash of files
-	f, err := os.Open(c.File)
-	if err != nil {
-		err = fmt.Errorf("Cannot open file : %v", c.File)
+	var fileHash string
+	if fileHash, err = calculateFileHash(c.File); err != nil {
 		return
 	}
-	defer func() { _ = f.Close() }()
-
-	h := md5.New()
-	if _, err2 := io.Copy(h, f); err2 != nil {
-		err = fmt.Errorf("Cannot calculate hash : %v", err2)
-		return
-	}
-	fileHash := fmt.Sprintf("%x", h.Sum(nil))
 
 	// check folder is exist
 	fileFolder := env + fileHash
@@ -116,4 +107,53 @@ func CacheClang(c Clang) (out []byte, err error) {
 
 	// cache
 	return getCache()
+}
+
+func calculateFileHash(file string) (hash string, err error) {
+	f, err := os.Open(file)
+	if err != nil {
+		err = fmt.Errorf("Cannot open file : %v", file)
+		return
+	}
+	defer func() { _ = f.Close() }()
+
+	h := md5.New()
+	if _, err2 := io.Copy(h, f); err2 != nil {
+		err = fmt.Errorf("Cannot calculate hash for file %v : %v", file, err2)
+		return
+	}
+	return fmt.Sprintf("%x", h.Sum(nil)), nil
+}
+
+var sourceC string = "source.c"
+
+func checkBodyFile(file string, fileFolder string) (err error) {
+	// TODO :....
+}
+
+func saveCache(c Clang, out []byte, err error) {
+	env := os.Getenv("C2GO_CACHE_PREPROCESSOR")
+	if env == "" {
+		return
+	}
+
+	// check - cache folder is exist
+	if stat, err := os.Stat(env); err != nil || !stat.IsDir() {
+		return
+	}
+
+	// correct name of folder is like
+	// ~/cache/
+	// but not:
+	// ~/cache
+	// So, we have to add `/` if not exist
+	if env[len(env)-1] == '/' {
+		env = fmt.Sprintf("%s/", env)
+	}
+
+	if err := os.Mkdir(env, 0655); err != nil {
+		return
+	}
+
+	// TODO :....
 }
