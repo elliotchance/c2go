@@ -36,6 +36,7 @@ func CacheClang(c Clang) (out []byte, err error) {
 	return cache(c).getCache()
 }
 
+// isCacheSwitchOn - check cache is switch on
 func isCacheSwitchOn() bool {
 	env := os.Getenv("C2GO_CACHE_PREPROCESSOR")
 	if env == "" {
@@ -50,6 +51,7 @@ func isCacheSwitchOn() bool {
 	return true
 }
 
+// getCache - return output from cache
 func (c cache) getCache() (out []byte, err error) {
 
 	env := os.Getenv("C2GO_CACHE_PREPROCESSOR")
@@ -117,6 +119,7 @@ func (c cache) getCache() (out []byte, err error) {
 	}(argsFolder)
 }
 
+// checkSourceFile - compare source file
 func checkSourceFile(fileBase string, folderEnv string) (folderCacheSource string, err error) {
 	// calculate hash of files
 	var contentFileBase []byte
@@ -151,6 +154,7 @@ func checkSourceFile(fileBase string, folderEnv string) (folderCacheSource strin
 	return
 }
 
+// checkArgs - compare arguments
 func checkArgs(args []string, argsFolder string) (err error) {
 	var (
 		content1 []byte
@@ -169,6 +173,7 @@ func checkArgs(args []string, argsFolder string) (err error) {
 	return nil
 }
 
+// saveCache - save cache if acceptable
 func (c cache) saveCache(out []byte, errResult error) {
 	if !isCacheSwitchOn() {
 		return
