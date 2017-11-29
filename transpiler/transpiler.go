@@ -169,6 +169,16 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 		expr, exprType, preStmts, postStmts, err = transpileParenExpr(n, p)
 
 	case *ast.CStyleCastExpr:
+		// for right part on
+		// case : double *f = (double *) 0;
+		if n.Kind == "NullToPointer" && len(n.Children()) == 1 {
+			if v, ok := n.Children()[0].(*ast.IntegerLiteral); ok && v.Value == "0" {
+				expr = util.NewIdent("nil")
+				exprType = n.Type
+				return
+			}
+		}
+		// for all other cases
 		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children()[0], p, exprIsStmt)
 		if err == nil {
 			expr, err = types.CastExpr(p, expr, exprType, n.Type)

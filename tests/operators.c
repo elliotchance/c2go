@@ -6,7 +6,7 @@
 
 int main()
 {
-	plan(35);
+	plan(36);
 
     int i = 10;
     signed char j = 1;
@@ -119,6 +119,12 @@ int main()
 	int s1 = ({ 2; });
 	is_eq(s1, 2);
 	is_eq(({ int foo = s1 * 3; foo + 1; }), 7);
+
+	diag("Nil pointer")
+	double *NN = (double *) 0;
+	double VN = 6.0;
+	NN = &VN;
+	is_eq(*NN,6.0);
 
 	done_testing();
 }
