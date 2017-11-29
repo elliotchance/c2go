@@ -35,7 +35,7 @@ func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (
 
 	// FIXME: This is for linux to make sure the globals have the right type.
 	if n.Name == "stdout" || n.Name == "stdin" || n.Name == "stderr" {
-		theType = "FILE *"
+		theType = "FILE*"
 	}
 
 	return util.NewIdent(n.Name), theType, nil
@@ -383,7 +383,7 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 		structType = p.GetStruct("struct " + lhsType)
 	}
 	rhs := n.Name
-	rhsType := "void *"
+	rhsType := "void*"
 	if structType == nil {
 		// This case should not happen in the future. Any structs should be
 		// either parsed correctly from the source or be manually setup when the

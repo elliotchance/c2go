@@ -118,7 +118,7 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 	switch n := node.(type) {
 	case *ast.StringLiteral:
 		expr = transpileStringLiteral(n)
-		exprType = "const char *"
+		exprType = "const char*"
 
 	case *ast.FloatingLiteral:
 		expr = transpileFloatingLiteral(n)
@@ -158,6 +158,13 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 			}
 		}
 		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children()[0], p, exprIsStmt)
+		if exprType != n.Type {
+			expr, err = types.CastExpr(p, expr, exprType, n.Type)
+			if err != nil {
+				return
+			}
+			exprType = n.Type
+		}
 
 	case *ast.DeclRefExpr:
 		if n.For == "EnumConstant" {

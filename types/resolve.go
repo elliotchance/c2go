@@ -123,7 +123,7 @@ func ResolveType(p *program.Program, s string) (string, error) {
 		return "interface{}", errors.New("probably an incorrect type translation 4")
 	}
 
-	if s == "char *[]" {
+	if s == "char*[]" {
 		return "interface{}", errors.New("probably an incorrect type translation 2")
 	}
 
@@ -157,7 +157,7 @@ func ResolveType(p *program.Program, s string) (string, error) {
 		}
 
 		if s[len(s)-1] == '*' {
-			s = s[start : len(s)-2]
+			s = s[start : len(s)-1]
 
 			for _, v := range simpleResolveTypes {
 				if v == s {
@@ -329,9 +329,15 @@ func CleanCType(s string) (out string) {
 	out = strings.Replace(out, "\t", "", -1)
 	out = strings.Replace(out, "\n", "", -1)
 	out = strings.Replace(out, "\r", "", -1)
-
 	// remove space from pointer symbols
+	out = strings.Replace(out, "* ", "*", -1)
+	out = strings.Replace(out, " *", "*", -1)
 	out = strings.Replace(out, "* *", "**", -1)
+	// remove space from array
+	out = strings.Replace(out, "[ ", "[", -1)
+	out = strings.Replace(out, " [", "[", -1)
+	out = strings.Replace(out, "] ", "]", -1)
+	out = strings.Replace(out, " ]", "]", -1)
 
 	// remove addition spaces
 	out = strings.Replace(out, "  ", " ", -1)

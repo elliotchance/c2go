@@ -113,7 +113,7 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (g
 	}
 
 	// Let's assume that anything can be converted to a void pointer.
-	if toType == "void *" {
+	if toType == "void*" {
 		return expr, nil
 	}
 
@@ -197,7 +197,7 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (g
 	// - `string` -> `[]byte`
 	// - `string` -> `char *[13]`
 	match1 := util.GetRegex(`\[\]byte`).FindStringSubmatch(toType)
-	match2 := util.GetRegex(`char \*\[(\d+)\]`).FindStringSubmatch(toType)
+	match2 := util.GetRegex(`char\*\[(\d+)\]`).FindStringSubmatch(toType)
 	if fromType == "string" && (len(match1) > 0 || len(match2) > 0) {
 		// Construct a byte array from "first":
 		//
@@ -231,7 +231,7 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (g
 	// - `[7]byte` -> `string`
 	// - `char *[12]` -> `string`
 	match1 = util.GetRegex(`\[(\d+)\]byte`).FindStringSubmatch(fromType)
-	match2 = util.GetRegex(`char \*\[(\d+)\]`).FindStringSubmatch(fromType)
+	match2 = util.GetRegex(`char\*\[(\d+)\]`).FindStringSubmatch(fromType)
 	if (len(match1) > 0 || len(match2) > 0) && toType == "string" {
 		size := 0
 		if len(match1) > 0 {
