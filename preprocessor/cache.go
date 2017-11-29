@@ -7,48 +7,55 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"os/exec"
 )
 
-// Clang - parameters of clang execution
-type Clang struct {
-	Args []string
-	File string
-}
+type cache Clang
 
-// RunClang - run application clang with arguments
-func RunClang(c Clang) (_ []byte, err error) {
-	var (
-		out    bytes.Buffer
-		stderr bytes.Buffer
-	)
-
-	var a []string
-	a = append(a, c.Args...)
-	a = append(a, c.File)
-	cmd := exec.Command("clang", a...)
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
-
-	err = cmd.Run()
-
-	if err != nil {
-		err = fmt.Errorf("clang error:\nargs = %v\nfiles = %v\nerror = %v\nstderr = %v",
-			c.Args, c.File, err, stderr.String())
-	}
-	return out.Bytes(), err
-}
+// name of files
+var (
+	sourceC  = "source.c"
+	argsFile = "args.txt"
+	outFile  = "out.txt"
+	errFile  = "err.txt"
+)
 
 // CacheClang - cache of clang
 func CacheClang(c Clang) (out []byte, err error) {
+	if !isCacheSwitchOn() {
+		return RunClang(c)
+	}
+
+	// run clang if any error
+	defer func() {
+		if err != nil {
+			out, err = RunClang(c)
+			// memorization
+			cache(c).saveCache(out, err)
+		}
+	}()
+	return cache(c).getCache()
+}
+
+func isCacheSwitchOn() bool {
 	env := os.Getenv("C2GO_CACHE_PREPROCESSOR")
 	if env == "" {
-		return RunClang(c)
+		return false
 	}
 
 	// check - cache folder is exist
 	if stat, err := os.Stat(env); err != nil || !stat.IsDir() {
-		return RunClang(c)
+		return false
+	}
+
+	return true
+}
+
+func (c cache) getCache() (out []byte, err error) {
+
+	env := os.Getenv("C2GO_CACHE_PREPROCESSOR")
+	if env == "" {
+		err = fmt.Errorf("Not correct environment variable")
+		return
 	}
 
 	// correct name of folder is like
@@ -60,30 +67,8 @@ func CacheClang(c Clang) (out []byte, err error) {
 		env = fmt.Sprintf("%s/", env)
 	}
 
-	// run clang if any error
-	defer func() {
-		if err != nil {
-			out, err = RunClang(c)
-			// memorization
-			saveCache(c, out, err)
-		}
-	}()
-
-	// calculate hash of files
-	var fileHash string
-	if fileHash, err = calculateFileHash(c.File); err != nil {
-		return
-	}
-
-	// check folder is exist
-	fileFolder := env + fileHash + "/"
-	if stat, err2 := os.Stat(fileFolder); err2 != nil || !stat.IsDir() {
-		err = fmt.Errorf("Cannot check folder %v. err = %v", fileFolder, err2)
-		return
-	}
-
-	// check body of file
-	err = checkBodyFile(c.File, fileFolder)
+	var fileFolder string
+	fileFolder, err = checkSourceFile(c.File, env)
 	if err != nil {
 		return
 	}
@@ -110,48 +95,61 @@ func CacheClang(c Clang) (out []byte, err error) {
 	}
 
 	// cache
-	return getCache(argsFolder)
+	return func(folder string) (out []byte, err error) {
+		var (
+			content1 []byte
+			err1     error
+			content2 []byte
+			err2     error
+		)
+		content1, err1 = ioutil.ReadFile(folder + "/" + outFile)
+		content2, err2 = ioutil.ReadFile(folder + "/" + errFile)
+		if err1 != nil || err2 != nil {
+			err = fmt.Errorf("Error in file reading : \n%v\n%v", err1, err2)
+			return
+		}
+
+		if len(content2) != 0 {
+			err = fmt.Errorf("%v", content2)
+			return
+		}
+		return content1, nil
+	}(argsFolder)
 }
 
-func calculateFileHash(file string) (hash string, err error) {
-	f, err := os.Open(file)
+func checkSourceFile(fileBase string, folderEnv string) (folderCacheSource string, err error) {
+	// calculate hash of files
+	var contentFileBase []byte
+	contentFileBase, err = ioutil.ReadFile(fileBase)
 	if err != nil {
-		err = fmt.Errorf("Cannot open file : %v", file)
 		return
 	}
-	defer func() { _ = f.Close() }()
-
 	h := md5.New()
-	if _, err2 := io.Copy(h, f); err2 != nil {
-		err = fmt.Errorf("Cannot calculate hash for file %v : %v", file, err2)
+	_, err = h.Write(contentFileBase)
+	if err != nil {
 		return
 	}
-	return fmt.Sprintf("%x", h.Sum(nil)), nil
-}
+	hash := fmt.Sprintf("%x", h.Sum(nil))
 
-var sourceC = "source.c"
-
-func checkBodyFile(file string, fileFolder string) (err error) {
-	var (
-		content1 []byte
-		err1     error
-		content2 []byte
-		err2     error
-	)
-	content1, err1 = ioutil.ReadFile(file)
-	content2, err2 = ioutil.ReadFile(fileFolder + sourceC)
-	if err1 != nil || err2 != nil {
-		err = fmt.Errorf("Error in file reading : \n%v\n%v", err1, err2)
+	// check folder is exist
+	folderCacheSource = folderEnv + hash + "/"
+	if stat, err2 := os.Stat(folderCacheSource); err2 != nil || !stat.IsDir() {
+		err = fmt.Errorf("Cannot check folder %v. err = %v", folderCacheSource, err2)
 		return
 	}
-	if !bytes.Equal(content1, content2) {
+
+	// check body of file
+	var contentCache []byte
+	contentCache, err = ioutil.ReadFile(folderCacheSource + sourceC)
+	if err != nil {
+		return
+	}
+	if !bytes.Equal(contentFileBase, contentCache) {
 		err = fmt.Errorf("Content is not same")
 		return
 	}
-	return nil
+	return
 }
-
-var argsFile = "args.txt"
 
 func checkArgs(args []string, argsFolder string) (err error) {
 	var (
@@ -171,18 +169,15 @@ func checkArgs(args []string, argsFolder string) (err error) {
 	return nil
 }
 
-func saveCache(c Clang, out []byte, errResult error) {
+func (c cache) saveCache(out []byte, errResult error) {
+	if !isCacheSwitchOn() {
+		return
+	}
+
 	env := os.Getenv("C2GO_CACHE_PREPROCESSOR")
 	if env == "" {
 		return
 	}
-
-	// check - cache folder is exist
-	if stat, err := os.Stat(env); err != nil || !stat.IsDir() {
-		fmt.Println("env   err = ", err)
-		return
-	}
-
 	// correct name of folder is like
 	// ~/cache/
 	// but not:
@@ -197,11 +192,16 @@ func saveCache(c Clang, out []byte, errResult error) {
 	}
 
 	// calculate hash of files
-	fileHash, err := calculateFileHash(c.File)
+	contentFileBase, err := ioutil.ReadFile(c.File)
 	if err != nil {
-		fmt.Println("fileHash   err = ", err)
 		return
 	}
+	h := md5.New()
+	_, err = h.Write(contentFileBase)
+	if err != nil {
+		return
+	}
+	fileHash := fmt.Sprintf("%x", h.Sum(nil))
 
 	// check folder is exist
 	fileFolder := env + fileHash + "/"
@@ -245,43 +245,4 @@ func saveCache(c Clang, out []byte, errResult error) {
 	if err := ioutil.WriteFile(argsFolder+errFile, []byte(sErr), 0755); err != nil {
 		return
 	}
-}
-
-// Copy the src file to dst. Any existing file will be overwritten and will not
-// copy file attributes.
-func Copy(src, dst string) error {
-	content, err := ioutil.ReadFile(src)
-	if err != nil {
-		return err
-	}
-	f, err := os.Create(dst)
-	if err != nil {
-		return err
-	}
-	defer func() { _ = f.Close() }()
-	return ioutil.WriteFile(dst, []byte(content), 0755)
-}
-
-var outFile = "out.txt"
-var errFile = "err.txt"
-
-func getCache(folder string) (out []byte, err error) {
-	var (
-		content1 []byte
-		err1     error
-		content2 []byte
-		err2     error
-	)
-	content1, err1 = ioutil.ReadFile(folder + "/" + outFile)
-	content2, err2 = ioutil.ReadFile(folder + "/" + errFile)
-	if err1 != nil || err2 != nil {
-		err = fmt.Errorf("Error in file reading : \n%v\n%v", err1, err2)
-		return
-	}
-
-	if len(content2) != 0 {
-		err = fmt.Errorf("%v", content2)
-		return
-	}
-	return content1, nil
 }
