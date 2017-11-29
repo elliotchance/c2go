@@ -97,7 +97,8 @@ func Analyze(inputFiles, clangFlags []string) (pp []byte, err error) {
 func analyzeFiles(inputFiles, clangFlags []string) (items []entity, err error) {
 	// See : https://clang.llvm.org/docs/CommandGuide/clang.html
 	// clang -E <file>    Run the preprocessor stage.
-	out, err := getPreprocessSources(inputFiles, clangFlags)
+	var out bytes.Buffer
+	out, err = getPreprocessSources(inputFiles, clangFlags)
 	if err != nil {
 		return
 	}
@@ -142,9 +143,21 @@ func analyzeFiles(inputFiles, clangFlags []string) (items []entity, err error) {
 // clang -E <file>    Run the preprocessor stage.
 func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, err error) {
 	var stderr bytes.Buffer
-	for _, inputFile := range inputFiles {
+	for pos, inputFile := range inputFiles {
 		if inputFile[len(inputFile)-1] != 'c' {
 			continue
+		}
+
+		if pos > 0 {
+			var define []string
+			define, err = getDefineList(inputFiles[pos-1])
+			if err != nil {
+				return
+			}
+			for i := range define {
+				define[i] = fmt.Sprintf("-D%s", define[i])
+			}
+			clangFlags = append(clangFlags, define...)
 		}
 
 		var args []string
