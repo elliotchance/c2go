@@ -22,6 +22,7 @@ func parseDefineList(line string) (define []string, err error) {
 		split[i] = strings.Replace(split[i], "\\", " ", -1)
 		split[i] = strings.Replace(split[i], "\xFF", " ", -1)
 		split[i] = strings.Replace(split[i], "\u0100", " ", -1)
+		split[i] = strings.TrimSpace(split[i])
 
 		if len(split[i]) == 0 {
 			continue
