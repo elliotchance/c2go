@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 )
@@ -55,7 +56,7 @@ func CacheClang(c Clang) (out []byte, err error) {
 	// but not:
 	// ~/cache
 	// So, we have to add `/` if not exist
-	if env[len(env)-1] == '/' {
+	if env[len(env)-1] != '/' {
 		env = fmt.Sprintf("%s/", env)
 	}
 
@@ -75,7 +76,7 @@ func CacheClang(c Clang) (out []byte, err error) {
 	}
 
 	// check folder is exist
-	fileFolder := env + fileHash
+	fileFolder := env + fileHash + "/"
 	if stat, err2 := os.Stat(fileFolder); err2 != nil || !stat.IsDir() {
 		err = fmt.Errorf("Cannot check folder %v. err = %v", fileFolder, err2)
 		return
@@ -89,11 +90,14 @@ func CacheClang(c Clang) (out []byte, err error) {
 
 	// calculate hash of arguments
 	hh := md5.New()
-	io.WriteString(hh, fmt.Sprintf("%#v", c.Args))
+	_, err = io.WriteString(hh, fmt.Sprintf("%#v", c.Args))
+	if err != nil {
+		return
+	}
 	argsHash := fmt.Sprintf("%x", hh.Sum(nil))
 
 	// check folder is exist
-	argsFolder := fileFolder + argsHash
+	argsFolder := fileFolder + argsHash + "/"
 	if stat, err2 := os.Stat(argsFolder); err2 != nil || !stat.IsDir() {
 		err = fmt.Errorf("Cannot check folder %v. err = %v", argsFolder, err2)
 		return
@@ -106,7 +110,7 @@ func CacheClang(c Clang) (out []byte, err error) {
 	}
 
 	// cache
-	return getCache()
+	return getCache(argsFolder)
 }
 
 func calculateFileHash(file string) (hash string, err error) {
@@ -125,10 +129,46 @@ func calculateFileHash(file string) (hash string, err error) {
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 
-var sourceC string = "source.c"
+var sourceC = "source.c"
 
 func checkBodyFile(file string, fileFolder string) (err error) {
-	// TODO :....
+	var (
+		content1 []byte
+		err1     error
+		content2 []byte
+		err2     error
+	)
+	content1, err1 = ioutil.ReadFile(file)
+	content2, err2 = ioutil.ReadFile(fileFolder + sourceC)
+	if err1 != nil || err2 != nil {
+		err = fmt.Errorf("Error in file reading : \n%v\n%v", err1, err2)
+		return
+	}
+	if !bytes.Equal(content1, content2) {
+		err = fmt.Errorf("Content is not same")
+		return
+	}
+	return nil
+}
+
+var argsFile = "args.txt"
+
+func checkArgs(args []string, argsFolder string) (err error) {
+	var (
+		content1 []byte
+		content2 []byte
+	)
+	content1 = []byte(fmt.Sprintf("%#v", args))
+	content2, err = ioutil.ReadFile(argsFolder + argsFile)
+	if err != nil {
+		err = fmt.Errorf("Error in file reading : %v", err)
+		return
+	}
+	if !bytes.Equal(content1, content2) {
+		err = fmt.Errorf("Content is not same. [buffer1,buffer2] = {%v,%v}", len(content1), len(content2))
+		return
+	}
+	return nil
 }
 
 func saveCache(c Clang, out []byte, errResult error) {
@@ -139,6 +179,7 @@ func saveCache(c Clang, out []byte, errResult error) {
 
 	// check - cache folder is exist
 	if stat, err := os.Stat(env); err != nil || !stat.IsDir() {
+		fmt.Println("env   err = ", err)
 		return
 	}
 
@@ -147,13 +188,100 @@ func saveCache(c Clang, out []byte, errResult error) {
 	// but not:
 	// ~/cache
 	// So, we have to add `/` if not exist
-	if env[len(env)-1] == '/' {
+	if env[len(env)-1] != '/' {
 		env = fmt.Sprintf("%s/", env)
 	}
 
-	if err := os.Mkdir(env, 0655); err != nil {
+	if err := os.Mkdir(env, 0755); err != nil {
+		_ = err //return
+	}
+
+	// calculate hash of files
+	fileHash, err := calculateFileHash(c.File)
+	if err != nil {
+		fmt.Println("fileHash   err = ", err)
 		return
 	}
 
-	// TODO :....
+	// check folder is exist
+	fileFolder := env + fileHash + "/"
+	if err := os.Mkdir(fileFolder, 0755); err != nil {
+		_ = err
+	}
+
+	// copy file
+	if err := Copy(c.File, fileFolder+sourceC); err != nil {
+		return
+	}
+
+	// calculate hash of arguments
+	hh := md5.New()
+	_, err = io.WriteString(hh, fmt.Sprintf("%#v", c.Args))
+	if err != nil {
+		return
+	}
+	argsHash := fmt.Sprintf("%x", hh.Sum(nil))
+
+	// check folder is exist
+	argsFolder := fileFolder + argsHash + "/"
+	if err := os.Mkdir(argsFolder, 0755); err != nil {
+		return
+	}
+
+	// check arguments
+	if err := ioutil.WriteFile(argsFolder+argsFile, []byte(fmt.Sprintf("%#v", c.Args)), 0755); err != nil {
+		return
+	}
+
+	// cache
+	if err := ioutil.WriteFile(argsFolder+outFile, out, 0755); err != nil {
+		return
+	}
+
+	var sErr string
+	if errResult != nil {
+		sErr = errResult.Error()
+	}
+	if err := ioutil.WriteFile(argsFolder+errFile, []byte(sErr), 0755); err != nil {
+		return
+	}
+}
+
+// Copy the src file to dst. Any existing file will be overwritten and will not
+// copy file attributes.
+func Copy(src, dst string) error {
+	content, err := ioutil.ReadFile(src)
+	if err != nil {
+		return err
+	}
+	f, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = f.Close() }()
+	return ioutil.WriteFile(dst, []byte(content), 0755)
+}
+
+var outFile = "out.txt"
+var errFile = "err.txt"
+
+func getCache(folder string) (out []byte, err error) {
+	var (
+		content1 []byte
+		err1     error
+		content2 []byte
+		err2     error
+	)
+	content1, err1 = ioutil.ReadFile(folder + "/" + outFile)
+	content2, err2 = ioutil.ReadFile(folder + "/" + errFile)
+	if err1 != nil || err2 != nil {
+		err = fmt.Errorf("Error in file reading : \n%v\n%v", err1, err2)
+		return
+	}
+
+	if len(content2) != 0 {
+		err = fmt.Errorf("%v", content2)
+		return
+	}
+	return content1, nil
 }

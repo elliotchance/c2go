@@ -150,7 +150,7 @@ func getPreprocessSources(inputFiles, clangFlags []string) (out []byte, err erro
 		args = append(args, clangFlags...)
 
 		var outFile []byte
-		outFile, err = RunClang(Clang{Args: args, File: inputFile})
+		outFile, err = CacheClang(Clang{Args: args, File: inputFile})
 		if err != nil {
 			return
 		}
@@ -166,7 +166,7 @@ func getPreprocessSources(inputFiles, clangFlags []string) (out []byte, err erro
 // exit.o: exit.c tests.h
 func getIncludeList(inputFile string) (lines []string, err error) {
 	var out []byte
-	out, err = RunClang(Clang{Args: []string{"-MM", "-c"}, File: inputFile})
+	out, err = CacheClang(Clang{Args: []string{"-MM", "-c"}, File: inputFile})
 	if err != nil {
 		return
 	}
