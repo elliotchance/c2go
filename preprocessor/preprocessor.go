@@ -186,3 +186,23 @@ func getIncludeList(inputFile string) (lines []string, err error) {
 	}
 	return parseIncludeList(out.String())
 }
+
+// getDefineList - get list C defines of C file
+// Example:
+// clang -dM -E  1.c
+// Result:
+// #define BUFSIZ _IO_BUFSIZ
+// #define EOF (-1)
+func getDefineList(inputFile string) (define []string, err error) {
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd := exec.Command("clang", "-dM", "-E", inputFile)
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+	err = cmd.Run()
+	if err != nil {
+		err = fmt.Errorf("preprocess failed: %v\nStdErr = %v", err, stderr.String())
+		return
+	}
+	return parseDefineList(out.String())
+}
