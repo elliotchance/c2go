@@ -34,6 +34,7 @@ func parseDefineList(line string) (define []string, err error) {
 		define[counter] = split[i][len(defineString):]
 		counter++
 	}
+	define = define[0:counter]
 
 	return
 }
