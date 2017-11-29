@@ -143,6 +143,14 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 		expr, exprType, preStmts, postStmts, err = transpileMemberExpr(n, p)
 
 	case *ast.ImplicitCastExpr:
+		// for right part on
+		// case : FILE *f = NULL;
+		if n.Kind == "NullToPointer" && len(n.Children()) == 1 {
+			expr = util.NewIdent("nil")
+			exprType = n.Type
+			return
+		}
+		// for all other cases
 		if strings.Contains(n.Type, "enum") {
 			if d, ok := n.Children()[0].(*ast.DeclRefExpr); ok {
 				expr, exprType, err = util.NewIdent(d.Name), n.Type, nil
