@@ -3,6 +3,7 @@
 package transpiler
 
 import (
+	"fmt"
 	goast "go/ast"
 	"go/token"
 	"reflect"
@@ -32,6 +33,10 @@ func transpileBinaryOperatorComma(n *ast.BinaryOperator, p *program.Program) (
 	right, err := transpileToStmts(n.Children()[1], p)
 	if err != nil {
 		return nil, nil, err
+	}
+
+	if left == nil || right == nil {
+		return nil, nil, fmt.Errorf("Cannot transpile binary operator comma: right = %v , left = %v", right, left)
 	}
 
 	preStmts = append(preStmts, left...)
