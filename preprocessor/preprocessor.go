@@ -160,8 +160,13 @@ func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, er
 				return
 			}
 			for i := range define {
+				ss := strings.Split(define[i], " ")
 				fmt.Println(i, "\t", define[i])
-				flags[fmt.Sprintf("-D%s", define[i])] = true
+				if len(ss) == 1 {
+					flags[fmt.Sprintf("-D%s=1", define[i])] = true
+				} else {
+					flags[fmt.Sprintf("-D%s", define[i])] = true
+				}
 			}
 		}
 
@@ -289,20 +294,13 @@ func getDefinitionsOfFile(inputFile string) (define []string, err error) {
 	}
 
 	// calculate = (all definitions) minus (system definitions)
-	define = minus(allDefine, systemDefine)
-
-	define = minus(define, []string{
-		"_FILE_OFFSET_BITS 64",
-	})
-
-	var t []string
-	for i := range define {
-		ss := strings.Split(define[i], " ")
-		if len(ss) == 1 {
-			t = append(t, ss[0])
-		}
-	}
-	define = t
+	// define = minus(allDefine, systemDefine)
+	//
+	// define = minus(define, []string{
+	// 	"_FILE_OFFSET_BITS 64",
+	// })
+	_ = systemDefine
+	define = allDefine
 
 	return
 }
