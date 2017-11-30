@@ -34,11 +34,6 @@ before_install:
         sudo apt-get install -f -y --force-yes clang-$CLANG lldb-$CLANG
       fi
 
-  - |
-      if [ "$TRAVIS_OS_NAME" = "osx" ]; then
-        rvm get head
-      fi
-
   # gocovmerge is used to merge all the separate unit/integration test coverage
   # profiles.
   - go get -u github.com/wadey/gocovmerge

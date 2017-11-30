@@ -82,6 +82,12 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
+	if body == nil {
+		return nil, nil, nil, fmt.Errorf("Body of If cannot by nil")
+	}
+	if boolCondition == nil {
+		return nil, nil, nil, fmt.Errorf("Bool Condition in If cannot by nil")
+	}
 	r := &goast.IfStmt{
 		Cond: boolCondition,
 		Body: body,
@@ -95,16 +101,32 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
 
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-		r.Else = elseBody
+		if elseBody != nil {
+			r.Else = elseBody
+		} else {
+			return nil, nil, nil, fmt.Errorf("Body of Else in If cannot be nil")
+		}
 	}
 
 	return r, newPre, newPost, nil
 }
 
 func transpileForStmt(n *ast.ForStmt, p *program.Program) (
-	*goast.ForStmt, []goast.Stmt, []goast.Stmt, error) {
-	preStmts := []goast.Stmt{}
-	postStmts := []goast.Stmt{}
+	f *goast.ForStmt, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+
+	// This `defer` is workaround
+	// Please remove after solving all problems
+	defer func() {
+		if f == (*goast.ForStmt)(nil) {
+			p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("ForStmt cannot be nil"), n))
+			f = &goast.ForStmt{ // This is workaround
+				Body: &goast.BlockStmt{
+					Lbrace: 1,
+					List:   []goast.Stmt{&goast.BranchStmt{Tok: token.BREAK}},
+				},
+			}
+		}
+	}()
 
 	children := n.Children()
 
@@ -145,9 +167,7 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 			if err != nil {
 				return nil, nil, nil, err
 			}
-			preStmts = append(preStmts, newPre...)
-			preStmts = append(preStmts, before)
-			preStmts = append(preStmts, newPost...)
+			preStmts = append(preStmts, combineStmts(before, newPre, newPost)...)
 			children[0] = c.Children()[1]
 		}
 	case *ast.DeclStmt:
@@ -282,6 +302,9 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 	body, newPre, newPost, err := transpileToBlockStmt(children[4], p)
 	if err != nil {
 		return nil, nil, nil, err
+	}
+	if body == nil {
+		return nil, nil, nil, fmt.Errorf("Body of For cannot be nil")
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
