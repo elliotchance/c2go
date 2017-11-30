@@ -131,6 +131,10 @@ func ResolveType(p *program.Program, s string) (string, error) {
 		return "int", nil
 	}
 
+	if s == "GoBool" {
+		return "bool", nil
+	}
+
 	// The simple resolve types are the types that we know there is an exact Go
 	// equivalent. For example float, int, etc.
 	for k, v := range simpleResolveTypes {

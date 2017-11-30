@@ -29,9 +29,11 @@ var structFieldTranslations = map[string]map[string]string{
 	},
 }
 
-func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (
-	*goast.Ident, string, error) {
-	theType := n.Type
+func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (_ *goast.Ident, theType string, _ error) {
+	defer func() {
+		theType = types.CleanCType(theType)
+	}()
+	theType = n.Type
 
 	// FIXME: This is for linux to make sure the globals have the right type.
 	if n.Name == "stdout" || n.Name == "stdin" || n.Name == "stderr" {

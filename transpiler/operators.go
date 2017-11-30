@@ -54,7 +54,7 @@ func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	a, err = types.CastExpr(p, a, aType, "bool")
+	a, err = types.CastExpr(p, a, aType, "GoBool")
 	if err != nil {
 		return nil, "", nil, nil, err
 	}

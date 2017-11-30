@@ -12,9 +12,7 @@ import (
 )
 
 func transpileCompoundStmt(n *ast.CompoundStmt, p *program.Program) (
-	*goast.BlockStmt, []goast.Stmt, []goast.Stmt, error) {
-	preStmts := []goast.Stmt{}
-	postStmts := []goast.Stmt{}
+	_ *goast.BlockStmt, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 	stmts := []goast.Stmt{}
 
 	for _, x := range n.Children() {

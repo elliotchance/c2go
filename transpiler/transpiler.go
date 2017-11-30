@@ -120,6 +120,9 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 		panic(node)
 	}
 	defer func() {
+		exprType = types.CleanCType(exprType)
+	}()
+	defer func() {
 		preStmts = nilFilterStmts(preStmts)
 		postStmts = nilFilterStmts(postStmts)
 	}()
@@ -167,7 +170,7 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 			}
 		}
 		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children()[0], p, exprIsStmt)
-		if exprType != n.Type {
+		if err == nil && exprType != n.Type {
 			expr, err = types.CastExpr(p, expr, exprType, n.Type)
 			if err != nil {
 				return
@@ -190,7 +193,15 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 		expr, exprType, err = transpileIntegerLiteral(n), "int", nil
 
 	case *ast.ParenExpr:
+		//expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children()[0], p, exprIsStmt)
 		expr, exprType, preStmts, postStmts, err = transpileParenExpr(n, p)
+		if err == nil {
+			expr, err = types.CastExpr(p, expr, exprType, n.Type)
+			if err != nil {
+				return
+			}
+			exprType = n.Type
+		}
 
 	case *ast.CStyleCastExpr:
 		// for right part on
@@ -204,8 +215,12 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 		}
 		// for all other cases
 		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children()[0], p, exprIsStmt)
-		if err == nil {
+		if err == nil && exprType != n.Type {
 			expr, err = types.CastExpr(p, expr, exprType, n.Type)
+			if err != nil {
+				return
+			}
+			exprType = n.Type
 		}
 
 	case *ast.CharacterLiteral:

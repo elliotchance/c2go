@@ -18,9 +18,7 @@ import (
 )
 
 func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
-	*goast.IfStmt, []goast.Stmt, []goast.Stmt, error) {
-	preStmts := []goast.Stmt{}
-	postStmts := []goast.Stmt{}
+	_ *goast.IfStmt, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 	children := n.Children()
 
 	// There is always 4 or 5 children in an IfStmt. For example:
@@ -68,7 +66,7 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
 	}
 
 	// The condition in Go must always be a bool.
-	boolCondition, err := types.CastExpr(p, conditional, conditionalType, "bool")
+	boolCondition, err := types.CastExpr(p, conditional, conditionalType, "GoBool")
 	p.AddMessage(p.GenerateWarningOrErrorMessage(err, n, boolCondition == nil))
 
 	if boolCondition == nil {
@@ -249,10 +247,12 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 			var condition ast.IfStmt
 			condition.AddChild(nil)
 			var par ast.ParenExpr
+			par.Type = "GoBool"
 			par.AddChild(c.Children()[len(c.Children())-1])
 			var unitary ast.UnaryOperator
 			unitary.AddChild(&par)
 			unitary.Operator = "!"
+			unitary.Type = "GoBool"
 			condition.AddChild(&unitary)
 			var c ast.CompoundStmt
 			c.AddChild(&ast.BreakStmt{})
@@ -291,7 +291,7 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-		condition, err = types.CastExpr(p, condition, conditionType, "bool")
+		condition, err = types.CastExpr(p, condition, conditionType, "GoBool")
 		p.AddMessage(p.GenerateWarningOrErrorMessage(err, n, condition == nil))
 
 		if condition == nil {

@@ -13,7 +13,7 @@ func ResolveTypeForBinaryOperator(p *program.Program, operator, leftType, rightT
 		operator == ">=" ||
 		operator == "<" ||
 		operator == "<=" {
-		return "bool"
+		return "GoBool"
 	}
 
 	return leftType
