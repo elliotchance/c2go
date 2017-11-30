@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"os/exec"
 	"strings"
 )
 
@@ -103,7 +102,7 @@ func analyzeFiles(inputFiles, clangFlags []string) (items []entity, err error) {
 	}
 
 	// Parsing preprocessor file
-	r := bytes.NewReader(out.Bytes())
+	r := bytes.NewReader(out)
 	scanner := bufio.NewScanner(r)
 	scanner.Split(bufio.ScanLines)
 	// counter - get position of line
@@ -140,8 +139,7 @@ func analyzeFiles(inputFiles, clangFlags []string) (items []entity, err error) {
 
 // See : https://clang.llvm.org/docs/CommandGuide/clang.html
 // clang -E <file>    Run the preprocessor stage.
-func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, err error) {
-	var stderr bytes.Buffer
+func getPreprocessSources(inputFiles, clangFlags []string) (out []byte, err error) {
 	for _, inputFile := range inputFiles {
 		if inputFile[len(inputFile)-1] != 'c' {
 			continue
@@ -150,21 +148,14 @@ func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, er
 		var args []string
 		args = append(args, "-E")
 		args = append(args, clangFlags...)
-		args = append(args, inputFile)
 
-		var outFile bytes.Buffer
-		cmd := exec.Command("clang", args...)
-		cmd.Stdout = &outFile
-		cmd.Stderr = &stderr
-		err = cmd.Run()
-		if err != nil {
-			err = fmt.Errorf("preprocess for file: %s\nfailed: %v\nStdErr = %v", inputFile, err, stderr.String())
-			return
-		}
-		_, err = out.Write(outFile.Bytes())
+		var outFile []byte
+		outFile, err = CacheClang(Clang{Args: args, File: inputFile})
 		if err != nil {
 			return
 		}
+
+		out = append(out, outFile...)
 	}
 	return
 }
@@ -174,15 +165,10 @@ func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, er
 // $ clang  -MM -c exit.c
 // exit.o: exit.c tests.h
 func getIncludeList(inputFile string) (lines []string, err error) {
-	var out bytes.Buffer
-	var stderr bytes.Buffer
-	cmd := exec.Command("clang", "-MM", "-c", inputFile)
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
-	err = cmd.Run()
+	var out []byte
+	out, err = CacheClang(Clang{Args: []string{"-MM", "-c"}, File: inputFile})
 	if err != nil {
-		err = fmt.Errorf("preprocess failed: %v\nStdErr = %v", err, stderr.String())
 		return
 	}
-	return parseIncludeList(out.String())
+	return parseIncludeList(string(out))
 }
