@@ -47,11 +47,12 @@ func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, str
 	}, "unknown3"
 }
 
-func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
+func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.Decl, err error) {
 	name := n.Name
 
 	if name == "" || p.IsTypeAlreadyDefined(name) {
-		return nil
+		err = nil
+		return
 	}
 
 	p.DefineType(name)
@@ -68,7 +69,8 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 	if name == "__locale_struct" ||
 		name == "__sigaction" ||
 		name == "sigaction" {
-		return nil
+		err = nil
+		return
 	}
 
 	var fields []*goast.Field
@@ -81,7 +83,7 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 				fields = append(fields, f)
 			}
 		} else if field, ok := c.(*ast.RecordDecl); ok {
-			err := transpileRecordDecl(p, field)
+			decls, err = transpileRecordDecl(p, field)
 			if err != nil {
 				message := fmt.Sprintf("could not parse %v", c)
 				p.AddMessage(p.GenerateWarningMessage(errors.New(message), c))
@@ -107,10 +109,10 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 			p.AddImports("reflect", "unsafe")
 
 			// Declaration for implementing union type
-			p.File.Decls = append(p.File.Decls, transpileUnion(name, size, fields)...)
+			decls = append(decls, transpileUnion(name, size, fields)...)
 		}
 	} else {
-		p.File.Decls = append(p.File.Decls, &goast.GenDecl{
+		decls = append(decls, &goast.GenDecl{
 			Tok: token.TYPE,
 			Specs: []goast.Spec{
 				&goast.TypeSpec{
@@ -125,10 +127,10 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) error {
 		})
 	}
 
-	return nil
+	return
 }
 
-func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
+func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast.Decl, err error) {
 	name := n.Name
 
 	// added for support "typedef enum {...} dd" with empty name of struct
@@ -139,7 +141,7 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 			p.DefineType(n.Name)
 			p.EnumTypedefName[n.Name] = true
 		}
-		p.File.Decls = append(p.File.Decls, &goast.GenDecl{
+		decls = append(decls, &goast.GenDecl{
 			Tok: token.TYPE,
 			Specs: []goast.Spec{
 				&goast.TypeSpec{
@@ -148,11 +150,13 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 				},
 			},
 		})
-		return nil
+		err = nil
+		return
 	}
 
 	if p.IsTypeAlreadyDefined(name) {
-		return nil
+		err = nil
+		return
 	}
 
 	p.DefineType(name)
@@ -177,7 +181,8 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 	// Until which time that we actually need this to work I am going to
 	// suppress these.
 	if name == resolvedType {
-		return nil
+		err = nil
+		return
 	}
 
 	if name == "__darwin_ct_rune_t" {
@@ -201,7 +206,8 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 		name == "locale_t" ||
 		name == "fsid_t" ||
 		name == "sigset_t" {
-		return nil
+		err = nil
+		return
 	}
 
 	if name == "div_t" || name == "ldiv_t" || name == "lldiv_t" {
@@ -228,7 +234,7 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 		}
 	}
 
-	p.File.Decls = append(p.File.Decls, &goast.GenDecl{
+	decls = append(decls, &goast.GenDecl{
 		Tok: token.TYPE,
 		Specs: []goast.Spec{
 			&goast.TypeSpec{
@@ -247,38 +253,136 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) error {
 		p.EnumConstantToEnum["enum "+resolvedType] = v
 	}
 
-	return nil
+	err = nil
+	return
 }
 
-func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
-	[]goast.Stmt, []goast.Stmt, string) {
-	// There are cases where the same variable is defined more than once. I
-	// assume this is because they are extern or static definitions. For now, we
-	// will ignore any redefinitions.
-	if _, found := p.GlobalVariables[n.Name]; found {
-		return nil, nil, ""
+func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, theType string, err error) {
+
+	// There may be some startup code for this global variable.
+	if p.Function == nil {
+		name := n.Name
+		switch name {
+		// Below are for macOS.
+		case "__stdinp", "__stdoutp":
+			theType = "*noarch.File"
+			p.AddImport("github.com/elliotchance/c2go/noarch")
+			p.AppendStartupExpr(
+				util.NewBinaryExpr(
+					goast.NewIdent(name),
+					token.ASSIGN,
+					util.NewTypeIdent("noarch."+util.Ucfirst(name[2:len(name)-1])),
+					"*noarch.File",
+					true,
+				),
+			)
+			return []goast.Decl{&goast.GenDecl{
+				Tok: token.VAR,
+				Specs: []goast.Spec{&goast.ValueSpec{
+					Names: []*goast.Ident{&goast.Ident{Name: name}},
+					Type:  util.NewTypeIdent(theType),
+				}},
+			}}, "", nil
+
+		// Below are for linux.
+		case "stdout", "stdin", "stderr":
+			theType = "*noarch.File"
+			p.AddImport("github.com/elliotchance/c2go/noarch")
+			p.AppendStartupExpr(
+				util.NewBinaryExpr(
+					goast.NewIdent(name),
+					token.ASSIGN,
+					util.NewTypeIdent("noarch."+util.Ucfirst(name)),
+					theType,
+					true,
+				),
+			)
+			return []goast.Decl{&goast.GenDecl{
+				Tok: token.VAR,
+				Specs: []goast.Spec{&goast.ValueSpec{
+					Names: []*goast.Ident{&goast.Ident{Name: name}},
+					Type:  util.NewTypeIdent(theType),
+				}},
+			}}, "", nil
+
+		default:
+			// No init needed.
+		}
+	}
+
+	/*
+		Example of DeclStmt for C code:
+		void * a = NULL;
+		void(*t)(void) = a;
+		Example of AST:
+		`-VarDecl 0x365fea8 <col:3, col:20> col:9 used t 'void (*)(void)' cinit
+		  `-ImplicitCastExpr 0x365ff48 <col:20> 'void (*)(void)' <BitCast>
+		    `-ImplicitCastExpr 0x365ff30 <col:20> 'void *' <LValueToRValue>
+		      `-DeclRefExpr 0x365ff08 <col:20> 'void *' lvalue Var 0x365f8c8 'r' 'void *'
+	*/
+
+	if len(n.Children()) > 0 {
+		if v, ok := (n.Children()[0]).(*ast.ImplicitCastExpr); ok {
+			if len(v.Type) > 0 {
+				// Is it function ?
+				if types.IsFunction(v.Type) {
+					var fields, returns []string
+					fields, returns, err = types.ResolveFunction(p, v.Type)
+					if err != nil {
+						err = fmt.Errorf("Cannot resolve function : %v", err)
+						return
+					}
+					functionType := GenerateFuncType(fields, returns)
+					nameVar1 := n.Name
+
+					if vv, ok := v.Children()[0].(*ast.ImplicitCastExpr); ok {
+						if decl, ok := vv.Children()[0].(*ast.DeclRefExpr); ok {
+							nameVar2 := decl.Name
+
+							return []goast.Decl{&goast.GenDecl{
+								Tok: token.VAR,
+								Specs: []goast.Spec{&goast.ValueSpec{
+									Names: []*goast.Ident{&goast.Ident{Name: nameVar1}},
+									Type:  functionType,
+									Values: []goast.Expr{&goast.TypeAssertExpr{
+										X:    &goast.Ident{Name: nameVar2},
+										Type: functionType,
+									}},
+								},
+								}}}, "", nil
+						}
+					}
+				}
+			}
+		}
 	}
 
 	if types.IsFunction(n.Type) {
-		fields, returns, err := types.ResolveFunction(p, n.Type)
+		var fields, returns []string
+		fields, returns, err = types.ResolveFunction(p, n.Type)
 		if err != nil {
-			p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Cannot resolve function : %v", err), n))
-			return []goast.Stmt{}, []goast.Stmt{}, ""
+			p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Cannot resolve function : %v", err), n))
+			err = nil // Error is ignored
+			return
 		}
 		functionType := GenerateFuncType(fields, returns)
 		nameVar1 := n.Name
-		p.File.Decls = append(p.File.Decls, &goast.GenDecl{
+		decls = append(decls, &goast.GenDecl{
 			Tok: token.VAR,
 			Specs: []goast.Spec{&goast.ValueSpec{
 				Names: []*goast.Ident{&goast.Ident{Name: nameVar1}},
 				Type:  functionType,
 			},
 			}})
-		return []goast.Stmt{}, []goast.Stmt{}, ""
+		err = nil
+		return
 	}
 
-	theType, err := types.ResolveType(p, n.Type)
-	p.AddMessage(p.GenerateWarningMessage(err, n))
+	theType, err = types.ResolveType(p, n.Type)
+	if err != nil {
+		p.AddMessage(p.GenerateErrorMessage(err, n))
+		err = nil // Error is ignored
+	}
 
 	p.GlobalVariables[n.Name] = theType
 
@@ -294,7 +398,8 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 		name == "_IO_2_1_stderr_" ||
 		name == "_DefaultRuneLocale" ||
 		name == "_CurrentRuneLocale" {
-		return nil, nil, "unknown10"
+		theType = "unknown10"
+		return
 	}
 
 	// TODO: The name of a variable or field cannot be "type"
@@ -303,56 +408,54 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 		name = "type_"
 	}
 
-	// There may be some startup code for this global variable.
-	if p.Function == nil {
-		switch name {
-		// Below are for macOS.
-		case "__stdinp", "__stdoutp":
-			p.AddImport("github.com/elliotchance/c2go/noarch")
-			p.AppendStartupExpr(
-				util.NewBinaryExpr(
-					goast.NewIdent(name),
-					token.ASSIGN,
-					util.NewTypeIdent("noarch."+util.Ucfirst(name[2:len(name)-1])),
-					"*noarch.File",
-					true,
-				),
-			)
+	defaultValue, _, newPre, newPost, err := getDefaultValueForVar(p, n)
+	if err != nil {
+		p.AddMessage(p.GenerateErrorMessage(err, n))
+		err = nil // Error is ignored
+	}
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-			// Below are for linux.
-		case "stdout", "stdin", "stderr":
-			theType = "*noarch.File"
-			p.AddImport("github.com/elliotchance/c2go/noarch")
-			p.AppendStartupExpr(
-				util.NewBinaryExpr(
-					goast.NewIdent(name),
-					token.ASSIGN,
-					util.NewTypeIdent("noarch."+util.Ucfirst(name)),
-					theType,
-					true,
-				),
-			)
+	// Allocate slice so that it operates like a fixed size array.
+	arrayType, arraySize := types.GetArrayTypeAndSize(n.Type)
 
-		default:
-			// No init needed.
+	if arraySize != -1 && defaultValue == nil {
+		var goArrayType string
+		goArrayType, err = types.ResolveType(p, arrayType)
+		if err != nil {
+			p.AddMessage(p.GenerateErrorMessage(err, n))
+			err = nil // Error is ignored
+		}
+
+		defaultValue = []goast.Expr{
+			util.NewCallExpr(
+				"make",
+				&goast.ArrayType{
+					Elt: util.NewTypeIdent(goArrayType),
+				},
+				util.NewIntLit(arraySize),
+				util.NewIntLit(arraySize),
+			),
 		}
 	}
 
-	defaultValue, _, newPre, newPost, err := getDefaultValueForVar(p, n)
-	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+	t, err := types.ResolveType(p, n.Type)
+	if err != nil {
+		p.AddMessage(p.GenerateErrorMessage(err, n))
+		err = nil // Error is ignored
+	}
 
-	p.File.Decls = append(p.File.Decls, &goast.GenDecl{
+	if len(preStmts) != 0 || len(postStmts) != 0 {
+		p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Not acceptable length of Stmt : pre(%d), post(%d)", len(preStmts), len(postStmts)), n))
+	}
+
+	return []goast.Decl{&goast.GenDecl{
 		Tok: token.VAR,
 		Specs: []goast.Spec{
 			&goast.ValueSpec{
-				Names: []*goast.Ident{
-					util.NewIdent(name),
-				},
-				Type:   util.NewTypeIdent(theType),
+				Names:  []*goast.Ident{util.NewIdent(n.Name)},
+				Type:   util.NewTypeIdent(t),
 				Values: defaultValue,
 			},
 		},
-	})
-
-	return nil, nil, theType
+	}}, "", nil
 }

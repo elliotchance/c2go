@@ -60,7 +60,7 @@ struct xx {
 
 int main()
 {
-    plan(14);
+    plan(15);
 
     struct programming variable;
     char *s = "Programming in Software Development.";
@@ -108,6 +108,13 @@ int main()
     x.inner.j = 34;
     x.inner.deep.k = 56;
     is_eq(x.i + x.inner.j + x.inner.deep.k, 102);
+
+	struct u{
+		int y;
+	};
+	struct u yy;
+	yy.y = 42;
+	is_eq(yy.y,42);
 
     done_testing();
 }

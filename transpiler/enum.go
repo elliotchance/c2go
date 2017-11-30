@@ -105,7 +105,7 @@ func transpileEnumConstantDecl(p *program.Program, n *ast.EnumConstantDecl) (
 	}, preStmts, postStmts
 }
 
-func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
+func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) (decls []goast.Decl, err error) {
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 
@@ -142,7 +142,7 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 					p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Add support of continues counter for type : %T", v), n))
 				}
 
-				p.File.Decls = append(p.File.Decls, &goast.GenDecl{
+				decls = append(decls, &goast.GenDecl{
 					Tok: token.CONST,
 					Specs: []goast.Spec{
 						e,
@@ -150,7 +150,8 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 				})
 			}
 		}
-		return nil
+		err = nil
+		return
 	}
 
 	// For case `enum` with name
@@ -161,7 +162,7 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 	}
 
 	// Create alias of enum for int
-	p.File.Decls = append(p.File.Decls, &goast.GenDecl{
+	decls = append(decls, &goast.GenDecl{
 		Tok: token.TYPE,
 		Specs: []goast.Spec{
 			&goast.TypeSpec{
@@ -250,7 +251,8 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) error {
 	decl.Lparen = 1
 	decl.Rparen = 2
 
-	p.File.Decls = append(p.File.Decls, decl)
+	decls = append(decls, decl)
 
-	return nil
+	err = nil
+	return
 }
