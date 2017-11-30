@@ -143,6 +143,11 @@ func analyzeFiles(inputFiles, clangFlags []string) (items []entity, err error) {
 // clang -E <file>    Run the preprocessor stage.
 func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, err error) {
 	var stderr bytes.Buffer
+	flags := make(map[string]bool)
+	for i := range clangFlags {
+		flags[clangFlags[i]] = true
+	}
+
 	for pos, inputFile := range inputFiles {
 		if inputFile[len(inputFile)-1] != 'c' {
 			continue
@@ -150,19 +155,21 @@ func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, er
 
 		if pos > 0 {
 			var define []string
-			define, err = getDefineList(inputFiles[pos-1])
+			define, err = getDefinitionsOfFile(inputFiles[pos-1])
 			if err != nil {
 				return
 			}
 			for i := range define {
-				define[i] = fmt.Sprintf("-D%s", define[i])
+				fmt.Println(i, "\t", define[i])
+				flags[fmt.Sprintf("-D%s", define[i])] = true
 			}
-			clangFlags = append(clangFlags, define...)
 		}
 
 		var args []string
 		args = append(args, "-E")
-		args = append(args, clangFlags...)
+		for k := range flags {
+			args = append(args, k)
+		}
 		args = append(args, inputFile)
 
 		var outFile bytes.Buffer
@@ -182,14 +189,37 @@ func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, er
 	return
 }
 
-// getIncludeList - Get list of include files
+// getIncludeListWithUserSource - Get list of include files
 // Example:
 // $ clang  -MM -c exit.c
 // exit.o: exit.c tests.h
-func getIncludeList(inputFile string) (lines []string, err error) {
+func getIncludeListWithUserSource(inputFile string) (lines []string, err error) {
 	var out bytes.Buffer
 	var stderr bytes.Buffer
 	cmd := exec.Command("clang", "-MM", "-c", inputFile)
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+	err = cmd.Run()
+	if err != nil {
+		err = fmt.Errorf("preprocess failed: %v\nStdErr = %v", err, stderr.String())
+		return
+	}
+	return parseIncludeList(out.String())
+}
+
+// getIncludeFullList - Get full list of include files
+// Example:
+// $ clang -M -c triangle.c
+// triangle.o: triangle.c /usr/include/stdio.h /usr/include/features.h \
+//   /usr/include/stdc-predef.h /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+//   /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+//   /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+//   /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+//   / ........ and other
+func getIncludeFullList(inputFile string) (lines []string, err error) {
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd := exec.Command("clang", "-M", "-c", inputFile)
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
 	err = cmd.Run()
@@ -218,4 +248,93 @@ func getDefineList(inputFile string) (define []string, err error) {
 		return
 	}
 	return parseDefineList(out.String())
+}
+
+// getDefinitionsOfFile - return #define from user file
+func getDefinitionsOfFile(inputFile string) (define []string, err error) {
+	// get full list of files ( user + system includes)
+	allFiles, err := getIncludeFullList(inputFile)
+	if err != nil {
+		return
+	}
+
+	// get full list definitions from all files
+	allDefine, err := getDefineList(inputFile)
+	if err != nil {
+		return
+	}
+
+	// get list of user files
+	userFile, err := getIncludeListWithUserSource(inputFile)
+	if err != nil {
+		return
+	}
+
+	// calculate list of system include files, only
+	systemFiles := minus(allFiles, userFile)
+
+	// calculate list definitions of system include files, only
+	var systemDefine []string
+	for _, systemFile := range systemFiles {
+		var d []string
+		d, err = getDefineList(systemFile)
+		if err != nil {
+			// some system include files
+			// cannot be taked directly
+			// so, we use `continue` isteand of `return`
+			err = nil
+			continue
+		}
+		systemDefine = append(systemDefine, d...)
+	}
+
+	// calculate = (all definitions) minus (system definitions)
+	define = minus(allDefine, systemDefine)
+
+	define = minus(define, []string{
+		"_FILE_OFFSET_BITS 64",
+	})
+
+	var t []string
+	for i := range define {
+		ss := strings.Split(define[i], " ")
+		if len(ss) == 1 {
+			t = append(t, ss[0])
+		}
+	}
+	define = t
+
+	return
+}
+
+// minus - result of c = a - b
+func minus(a, b []string) (c []string) {
+	ma := toMap(a)
+	mb := toMap(b)
+
+	for kb := range mb {
+		if _, ok := ma[kb]; ok {
+			delete(ma, kb)
+		}
+	}
+	for ka := range ma {
+		c = append(c, ka)
+	}
+	return
+}
+
+func toMap(list []string) (m map[string]bool) {
+	m = make(map[string]bool)
+	for i := range list {
+		m[list[i]] = true
+	}
+	return
+}
+
+func unique(list []string) (res []string) {
+	m := toMap(list)
+	for k := range m {
+		res = append(res, k)
+	}
+	return res
 }
