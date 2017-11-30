@@ -86,7 +86,13 @@ func transpileUnaryOperatorNot(n *ast.UnaryOperator, p *program.Program) (
 		return nil, "", nil, nil, err
 	}
 
-	if eType == "bool" || eType == "_Bool" {
+	e, err = types.CastExpr(p, e, eType, "GoBool")
+	if err != nil {
+		return nil, "", nil, nil, err
+	}
+	eType = "GoBool"
+
+	if eType == "GoBool" /*eType == "bool" || eType == "_Bool"*/ {
 		return &goast.UnaryExpr{
 			X:  e,
 			Op: token.NOT,

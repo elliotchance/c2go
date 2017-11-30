@@ -120,6 +120,9 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 		panic(node)
 	}
 	defer func() {
+		exprType = types.CleanCType(exprType)
+	}()
+	defer func() {
 		preStmts = nilFilterStmts(preStmts)
 		postStmts = nilFilterStmts(postStmts)
 	}()
@@ -127,7 +130,7 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 	switch n := node.(type) {
 	case *ast.StringLiteral:
 		expr = transpileStringLiteral(n)
-		exprType = "const char *"
+		exprType = "const char*"
 
 	case *ast.FloatingLiteral:
 		expr = transpileFloatingLiteral(n)
@@ -152,6 +155,14 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 		expr, exprType, preStmts, postStmts, err = transpileMemberExpr(n, p)
 
 	case *ast.ImplicitCastExpr:
+		// for right part on
+		// case : FILE *f = NULL;
+		if n.Kind == "NullToPointer" && len(n.Children()) == 1 {
+			expr = util.NewIdent("nil")
+			exprType = n.Type
+			return
+		}
+		// for all other cases
 		if strings.Contains(n.Type, "enum") {
 			if d, ok := n.Children()[0].(*ast.DeclRefExpr); ok {
 				expr, exprType, err = util.NewIdent(d.Name), n.Type, nil
@@ -159,6 +170,13 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 			}
 		}
 		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children()[0], p, exprIsStmt)
+		if err == nil && exprType != n.Type {
+			expr, err = types.CastExpr(p, expr, exprType, n.Type)
+			if err != nil {
+				return
+			}
+			exprType = n.Type
+		}
 
 	case *ast.DeclRefExpr:
 		if n.For == "EnumConstant" {
@@ -175,12 +193,34 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 		expr, exprType, err = transpileIntegerLiteral(n), "int", nil
 
 	case *ast.ParenExpr:
+		//expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children()[0], p, exprIsStmt)
 		expr, exprType, preStmts, postStmts, err = transpileParenExpr(n, p)
-
-	case *ast.CStyleCastExpr:
-		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children()[0], p, exprIsStmt)
 		if err == nil {
 			expr, err = types.CastExpr(p, expr, exprType, n.Type)
+			if err != nil {
+				return
+			}
+			exprType = n.Type
+		}
+
+	case *ast.CStyleCastExpr:
+		// for right part on
+		// case : double *f = (double *) 0;
+		if n.Kind == "NullToPointer" && len(n.Children()) == 1 {
+			if v, ok := n.Children()[0].(*ast.IntegerLiteral); ok && v.Value == "0" {
+				expr = util.NewIdent("nil")
+				exprType = n.Type
+				return
+			}
+		}
+		// for all other cases
+		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children()[0], p, exprIsStmt)
+		if err == nil && exprType != n.Type {
+			expr, err = types.CastExpr(p, expr, exprType, n.Type)
+			if err != nil {
+				return
+			}
+			exprType = n.Type
 		}
 
 	case *ast.CharacterLiteral:

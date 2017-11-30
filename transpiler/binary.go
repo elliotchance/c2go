@@ -154,26 +154,30 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 	if err != nil {
 		return nil, "unknown52", nil, nil, err
 	}
-
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	right, rightType, newPre, newPost, err := transpileToExpr(n.Children()[1], p, false)
 	if err != nil {
 		return nil, "unknown53", nil, nil, err
 	}
-
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
+	right, err = types.CastExpr(p, right, rightType, leftType)
+	if err != nil {
+		return nil, "unknown53B", nil, nil, err
+	}
+	rightType = leftType
 
 	returnType := types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType)
 
 	if operator == token.LAND || operator == token.LOR {
-		left, err = types.CastExpr(p, left, leftType, "bool")
+		left, err = types.CastExpr(p, left, leftType, "GoBool")
 		p.AddMessage(p.GenerateWarningOrErrorMessage(err, n, left == nil))
 		if left == nil {
 			left = util.NewNil()
 		}
 
-		right, err = types.CastExpr(p, right, rightType, "bool")
+		right, err = types.CastExpr(p, right, rightType, "GoBool")
 		p.AddMessage(p.GenerateWarningOrErrorMessage(err, n, right == nil))
 		if right == nil {
 			right = util.NewNil()
@@ -186,7 +190,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 
 		expr := util.NewBinaryExpr(left, operator, right, resolvedLeftType, exprIsStmt)
 
-		return expr, "bool", preStmts, postStmts, nil
+		return expr, "GoBool", preStmts, postStmts, nil
 	}
 
 	// The right hand argument of the shift left or shift right operators

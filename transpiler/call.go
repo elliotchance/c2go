@@ -230,6 +230,10 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 		if v, ok := realArgs[0].(*goast.Ident); ok {
 			argName = v.Name
 		}
+		if v, ok := realArgs[0].(*goast.ParenExpr); ok {
+			argName = v.X.(*goast.Ident).Name
+		}
+
 		if argName != "" {
 			devNull := &goast.AssignStmt{
 				Lhs: []goast.Expr{

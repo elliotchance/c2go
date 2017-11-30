@@ -4,9 +4,19 @@
 // TODO: More comprehensive operator tests
 // https://github.com/elliotchance/c2go/issues/143
 
+double ** null_pointers(){
+	return (double **) 0;
+}
+
+void pointer_var(double **p){
+	double vv = 42.0;
+	double * nvv = &vv;
+	p = &nvv;
+}
+
 int main()
 {
-	plan(35);
+	plan(37);
 
     int i = 10;
     signed char j = 1;
@@ -119,6 +129,24 @@ int main()
 	int s1 = ({ 2; });
 	is_eq(s1, 2);
 	is_eq(({ int foo = s1 * 3; foo + 1; }), 7);
+
+	diag("Nil pointer")
+	double *NN = (double *) 0;
+	double VN = 6.0;
+	NN = &VN;
+	is_eq(*NN,6.0);
+
+	diag("Nil Nil pointer")
+	double VAR = 5.0;
+	double *NN1 = &VAR;
+	double **NN2 = null_pointers();
+	NN2 = &NN1;
+	is_eq(**NN2, 5.0);
+
+	diag("Nil Nil pointer. 2")
+	double * * pVar = (double * *) 0;
+	pointer_var(pVar);
+	is_eq(**pVar,42.0);
 
 	done_testing();
 }

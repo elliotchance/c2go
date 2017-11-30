@@ -60,12 +60,20 @@ func GetArrayTypeAndSize(s string) (string, int) {
 //    a bug. It is most useful to do this when dealing with compound types like
 //    FILE where those function probably exist (or should exist) in the noarch
 //    package.
-func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (goast.Expr, error) {
+func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (_ goast.Expr, err error) {
 	cFromType = CleanCType(cFromType)
 	cToType = CleanCType(cToType)
 
+	if cFromType == cToType {
+		return expr, nil
+	}
+
 	fromType := cFromType
 	toType := cToType
+
+	if fromType == "GoBool" {
+		return expr, nil
+	}
 
 	// Replace for specific case of fromType for darwin:
 	// Fo : union (anonymous union at sqlite3.c:619241696:3)
@@ -111,13 +119,24 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (g
 		}
 		return CastExpr(p, &in, toType, toType)
 	}
-
 	// Let's assume that anything can be converted to a void pointer.
-	if toType == "void *" {
+	if toType == "void*" {
+		return expr, nil
+	}
+	if fromType == "void*" && strings.Contains(toType, "*") {
+		// type assertion
 		return expr, nil
 	}
 
-	fromType, err := ResolveType(p, fromType)
+	// for stdout , stderr , stdin
+	if fromType == "struct _IO_FILE*" && toType == "FILE*" {
+		return expr, nil
+	}
+	if fromType == "FILE*" && toType == "struct _IO_FILE*" {
+		return expr, nil
+	}
+
+	fromType, err = ResolveType(p, fromType)
 	if err != nil {
 		return expr, err
 	}
@@ -182,7 +201,6 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (g
 				toType,
 				false,
 			)
-
 			return e, nil
 		}
 		if fromType == "bool" && toType == v {
@@ -197,7 +215,7 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (g
 	// - `string` -> `[]byte`
 	// - `string` -> `char *[13]`
 	match1 := util.GetRegex(`\[\]byte`).FindStringSubmatch(toType)
-	match2 := util.GetRegex(`char \*\[(\d+)\]`).FindStringSubmatch(toType)
+	match2 := util.GetRegex(`char\*\[(\d+)\]`).FindStringSubmatch(toType)
 	if fromType == "string" && (len(match1) > 0 || len(match2) > 0) {
 		// Construct a byte array from "first":
 		//
@@ -231,7 +249,7 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (g
 	// - `[7]byte` -> `string`
 	// - `char *[12]` -> `string`
 	match1 = util.GetRegex(`\[(\d+)\]byte`).FindStringSubmatch(fromType)
-	match2 = util.GetRegex(`char \*\[(\d+)\]`).FindStringSubmatch(fromType)
+	match2 = util.GetRegex(`char\*\[(\d+)\]`).FindStringSubmatch(fromType)
 	if (len(match1) > 0 || len(match2) > 0) && toType == "string" {
 		size := 0
 		if len(match1) > 0 {
