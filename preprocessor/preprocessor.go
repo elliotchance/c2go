@@ -4,7 +4,11 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io/ioutil"
+	"math/rand"
+	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 )
 
@@ -142,55 +146,51 @@ func analyzeFiles(inputFiles, clangFlags []string) (items []entity, err error) {
 // See : https://clang.llvm.org/docs/CommandGuide/clang.html
 // clang -E <file>    Run the preprocessor stage.
 func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, err error) {
+	// create a temp union file
+	var unionBody string
+	var unionFileName string = fmt.Sprintf("./unionFileName%d.c", rand.Intn(10000))
+	for i := range inputFiles {
+		unionBody += fmt.Sprintf("#include\"%s\"\n", inputFiles[i])
+	}
+	err = ioutil.WriteFile(unionFileName, []byte(unionBody), 0644)
+	if err != nil {
+		return
+	}
+	defer func() {
+		err2 := os.Remove(unionFileName)
+		if err != nil && err2 != nil {
+			err = fmt.Errorf("%v\n%v", err, err2)
+		}
+	}()
+
+	// Add open source defines
+	if runtime.GOOS == "darwin" {
+		clangFlags = append(clangFlags, "-D_XOPEN_SOURCE")
+	} else {
+		clangFlags = append(clangFlags, "-D_GNU_SOURCE")
+	}
+
 	var stderr bytes.Buffer
-	flags := make(map[string]bool)
-	for i := range clangFlags {
-		flags[clangFlags[i]] = true
+
+	var args []string
+	args = append(args, "-E")
+	args = append(args, clangFlags...)
+	args = append(args, unionFileName)
+
+	var outFile bytes.Buffer
+	cmd := exec.Command("clang", args...)
+	cmd.Stdout = &outFile
+	cmd.Stderr = &stderr
+	err = cmd.Run()
+	if err != nil {
+		err = fmt.Errorf("preprocess for file: %s\nfailed: %v\nStdErr = %v", unionFileName, err, stderr.String())
+		return
+	}
+	_, err = out.Write(outFile.Bytes())
+	if err != nil {
+		return
 	}
 
-	for pos, inputFile := range inputFiles {
-		if inputFile[len(inputFile)-1] != 'c' {
-			continue
-		}
-
-		if pos > 0 {
-			var define []string
-			define, err = getDefinitionsOfFile(inputFiles[pos-1])
-			if err != nil {
-				return
-			}
-			for i := range define {
-				ss := strings.Split(define[i], " ")
-				fmt.Println(i, "\t", define[i])
-				if len(ss) == 1 {
-					flags[fmt.Sprintf("-D%s=1", define[i])] = true
-				} else {
-					flags[fmt.Sprintf("-D%s", define[i])] = true
-				}
-			}
-		}
-
-		var args []string
-		args = append(args, "-E")
-		for k := range flags {
-			args = append(args, k)
-		}
-		args = append(args, inputFile)
-
-		var outFile bytes.Buffer
-		cmd := exec.Command("clang", args...)
-		cmd.Stdout = &outFile
-		cmd.Stderr = &stderr
-		err = cmd.Run()
-		if err != nil {
-			err = fmt.Errorf("preprocess for file: %s\nfailed: %v\nStdErr = %v", inputFile, err, stderr.String())
-			return
-		}
-		_, err = out.Write(outFile.Bytes())
-		if err != nil {
-			return
-		}
-	}
 	return
 }
 
@@ -254,133 +254,3 @@ func getDefineList(inputFile string) (define []string, err error) {
 	}
 	return parseDefineList(out.String())
 }
-
-// getDefinitionsOfFile - return #define from user file
-func getDefinitionsOfFile(inputFile string) (define []string, err error) {
-	// get full list of files ( user + system includes)
-	allFiles, err := getIncludeFullList(inputFile)
-	if err != nil {
-		return
-	}
-
-	// get full list definitions from all files
-	allDefine, err := getDefineList(inputFile)
-	if err != nil {
-		return
-	}
-
-	// get list of user files
-	userFile, err := getIncludeListWithUserSource(inputFile)
-	if err != nil {
-		return
-	}
-
-	// calculate list of system include files, only
-	systemFiles := minus(allFiles, userFile)
-
-	// calculate list definitions of system include files, only
-	var systemDefine []string
-	for _, systemFile := range systemFiles {
-		var d []string
-		d, err = getDefineList(systemFile)
-		if err != nil {
-			// some system include files
-			// cannot be taked directly
-			// so, we use `continue` isteand of `return`
-			err = nil
-			continue
-		}
-		systemDefine = append(systemDefine, d...)
-	}
-
-	// calculate = (all definitions) minus (system definitions)
-	// define = minus(allDefine, systemDefine)
-	//
-	// define = minus(define, []string{
-	// 	"_FILE_OFFSET_BITS 64",
-	// })
-	_ = systemDefine
-	define = allDefine
-
-	return
-}
-
-// minus - result of c = a - b
-func minus(a, b []string) (c []string) {
-	ma := toMap(a)
-	mb := toMap(b)
-
-	for kb := range mb {
-		if _, ok := ma[kb]; ok {
-			delete(ma, kb)
-		}
-	}
-	for ka := range ma {
-		c = append(c, ka)
-	}
-	return
-}
-
-func toMap(list []string) (m map[string]bool) {
-	m = make(map[string]bool)
-	for i := range list {
-		m[list[i]] = true
-	}
-	return
-}
-
-func unique(list []string) (res []string) {
-	m := toMap(list)
-	for k := range m {
-		res = append(res, k)
-	}
-	return res
-}
-
-/*
-# SQLITE
-# See https://sqlite.org/howtocompile.html
-# Step 1. Add header "sqlite3.h" into "sqlite3.c"
-echo "File sqlite.c preparing..."
-echo "#include \"sqlite3.h\""                    >  $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite.c
-cat $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite3.c  >> $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite.c
-
-# Detect the platform (similar to $OSTYPE)
-OS="`uname`"
-case $OS in
-  'Linux')
-    OS='Linux'
-    FLAG_OS="_GNU_SOURCE"
-    ;;
-  'FreeBSD')
-    OS='FreeBSD'
-	echo "Not sure"
-    FLAG_OS="_GNU_SOURCE"
-    ;;
-  'WindowsNT')
-    OS='Windows'
-	echo "Not sure"
-    FLAG_OS="_GNU_SOURCE"
-    ;;
-  'Darwin')
-    OS='Mac'
-	FLAG_OS="_XOPEN_SOURCE"
-    ;;
-  'SunOS')
-    OS='Solaris'
-	echo "Not sure"
-    ;;
-  'AIX') ;;
-  *) ;;
-esac
-
-echo "Result of OS detection: $OS, so flag is $FLAG_OS"
-
-# Step 2. Transpiling two "*.C" files
-echo "Transpiling shell.c with sqlite.c..."
-./c2go transpile -o=$SQLITE_TEMP_FOLDER/sqlite.go -clang-flag="-DSQLITE_THREADSAFE=0" -clang-flag="-DSQLITE_OMIT_LOAD_EXTENSION" -clang-flag="-D$FLAG_OS" $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/shell.c $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite.c >> $OUTFILE 2>&1
-
-# Step 3. Calculate amount of warnings
-SQLITE_WARNING_SQLITE=`cat $SQLITE_TEMP_FOLDER/sqlite.go | grep "// Warning" | wc -l`
-echo "In file sqlite.go : $SQLITE_WARNING_SQLITE warnings."
-*/

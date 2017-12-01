@@ -34,7 +34,7 @@ export PKGS_DELIM=$(echo "$PKGS" | paste -sd "," -)
 #
 # Exit code 123 will be returned if any of the tests fail.
 rm -f $OUTFILE
-go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS | xargs -I{} bash -c "{} >> $OUTFILE"
+#go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS | xargs -I{} bash -c "{} >> $OUTFILE"
 
 # Merge coverage profiles.
 COVERAGE_FILES=`ls -1 *.coverprofile 2>/dev/null | wc -l`
@@ -107,4 +107,11 @@ if [ "$TRAVIS_OS_NAME" == "osx" ]; then
 
     curl -H "Authorization: token ${GITHUB_API_TOKEN}" -H "Content-Type: application/json" https://api.github.com/repos/elliotchance/c2go/statuses/${TRAVIS_COMMIT} -d "{\"state\": \"success\",\"target_url\": \"https://travis-ci.org/elliotchance/c2go/builds/${TRAVIS_JOB_ID}\", \"description\": \"$(($SQLITE_WARNINGS)) warnings\", \"context\": \"c2go/sqlite3\"}" 
 fi
+
+# SQLITE
+c2go transpile -o="$SQLITE_TEMP_FOLDER/sqlite.go" -clang-flag="-DSQLITE_THREADSAFE=0" -clang-flag="-DSQLITE_OMIT_LOAD_EXTENSION" $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/shell.c $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite3.c
+
+# Show amount "Warning":
+SQLITE_WARNINGS=`cat $SQLITE_TEMP_FOLDER/sqlite.go | grep "// Warning" | wc -l`
+echo "After transpiling shell.c and sqlite3.c together, have summary: $SQLITE_WARNINGS warnings."
 
