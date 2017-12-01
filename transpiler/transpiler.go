@@ -119,10 +119,6 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 	if node == nil {
 		panic(node)
 	}
-	defer func() {
-		preStmts = nilFilterStmts(preStmts)
-		postStmts = nilFilterStmts(postStmts)
-	}()
 
 	switch n := node.(type) {
 	case *ast.StringLiteral:
@@ -217,9 +213,6 @@ func transpileToStmts(node ast.Node, p *program.Program) (stmts []goast.Stmt, er
 	if node == nil {
 		return nil, nil
 	}
-	defer func() {
-		stmts = nilFilterStmts(stmts)
-	}()
 
 	var (
 		stmt      goast.Stmt
@@ -256,10 +249,6 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 			p.AddMessage(p.GenerateErrorMessage(err, node))
 			err = nil // Error is ignored
 		}
-	}()
-	defer func() {
-		preStmts = nilFilterStmts(preStmts)
-		postStmts = nilFilterStmts(postStmts)
 	}()
 
 	var expr goast.Expr
