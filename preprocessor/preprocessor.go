@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"os"
 	"os/exec"
 	"runtime"
@@ -146,42 +145,49 @@ func analyzeFiles(inputFiles, clangFlags []string) (items []entity, err error) {
 // See : https://clang.llvm.org/docs/CommandGuide/clang.html
 // clang -E <file>    Run the preprocessor stage.
 func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, err error) {
-	var file string
-	if len(inputFiles) > 1 {
-		// create a temp union file
-		var unionBody string
-		var unionFileName string = fmt.Sprintf("./unionFileName%d.c", rand.Intn(10000))
-		for i := range inputFiles {
-			unionBody += fmt.Sprintf("#include\"%s\"\n", inputFiles[i])
-		}
-		err = ioutil.WriteFile(unionFileName, []byte(unionBody), 0644)
-		if err != nil {
-			return
-		}
-		defer func() {
-			err2 := os.Remove(unionFileName)
-			if err != nil && err2 != nil {
-				err = fmt.Errorf("%v\n%v", err, err2)
-			}
-		}()
-
-		// Add open source defines
-		if runtime.GOOS == "darwin" {
-			clangFlags = append(clangFlags, "-D_XOPEN_SOURCE")
-		} else {
-			clangFlags = append(clangFlags, "-D_GNU_SOURCE")
-		}
-		file = unionFileName
-	} else {
-		file = inputFiles[0]
+	// get current dir
+	var currentDir string
+	currentDir, err = os.Getwd()
+	if err != nil {
+		return
 	}
 
+	// get temp dir
+	dir, err := ioutil.TempDir("", "c2go-union")
+	if err != nil {
+		return
+	}
+	defer func() { _ = os.RemoveAll(dir) }()
+
+	// file name union file
+	var unionFileName = dir + "/" + "unionFileName.c"
+
+	// create a body for union file
+	var unionBody string
+	for i := range inputFiles {
+		unionBody += fmt.Sprintf("#include \"%s/%s\"\n", currentDir, inputFiles[i])
+	}
+
+	// write a union file
+	err = ioutil.WriteFile(unionFileName, []byte(unionBody), 0644)
+	if err != nil {
+		return
+	}
+
+	// Add open source defines
+	if runtime.GOOS == "darwin" {
+		clangFlags = append(clangFlags, "-D_XOPEN_SOURCE")
+	} else {
+		clangFlags = append(clangFlags, "-D_GNU_SOURCE")
+	}
+
+	// preprocessor clang
 	var stderr bytes.Buffer
 
 	var args []string
 	args = append(args, "-E")
 	args = append(args, clangFlags...)
-	args = append(args, file)
+	args = append(args, unionFileName)
 
 	var outFile bytes.Buffer
 	cmd := exec.Command("clang", args...)
@@ -200,11 +206,11 @@ func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, er
 	return
 }
 
-// getIncludeListWithUserSource - Get list of include files
+// GetIncludeListWithUserSource - Get list of include files
 // Example:
 // $ clang  -MM -c exit.c
 // exit.o: exit.c tests.h
-func getIncludeListWithUserSource(inputFile string) (lines []string, err error) {
+func GetIncludeListWithUserSource(inputFile string) (lines []string, err error) {
 	var out bytes.Buffer
 	var stderr bytes.Buffer
 	cmd := exec.Command("clang", "-MM", "-c", inputFile)
@@ -218,7 +224,7 @@ func getIncludeListWithUserSource(inputFile string) (lines []string, err error) 
 	return parseIncludeList(out.String())
 }
 
-// getIncludeFullList - Get full list of include files
+// GetIncludeFullList - Get full list of include files
 // Example:
 // $ clang -M -c triangle.c
 // triangle.o: triangle.c /usr/include/stdio.h /usr/include/features.h \
@@ -227,7 +233,7 @@ func getIncludeListWithUserSource(inputFile string) (lines []string, err error) 
 //   /usr/include/x86_64-linux-gnu/gnu/stubs.h \
 //   /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
 //   / ........ and other
-func getIncludeFullList(inputFile string) (lines []string, err error) {
+func GetIncludeFullList(inputFile string) (lines []string, err error) {
 	var out bytes.Buffer
 	var stderr bytes.Buffer
 	cmd := exec.Command("clang", "-M", "-c", inputFile)
@@ -239,24 +245,4 @@ func getIncludeFullList(inputFile string) (lines []string, err error) {
 		return
 	}
 	return parseIncludeList(out.String())
-}
-
-// getDefineList - get list C defines of C file
-// Example:
-// clang -dM -E  1.c
-// Result:
-// #define BUFSIZ _IO_BUFSIZ
-// #define EOF (-1)
-func getDefineList(inputFile string) (define []string, err error) {
-	var out bytes.Buffer
-	var stderr bytes.Buffer
-	cmd := exec.Command("clang", "-dM", "-E", inputFile)
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
-	err = cmd.Run()
-	if err != nil {
-		err = fmt.Errorf("preprocess failed: %v\nStdErr = %v", err, stderr.String())
-		return
-	}
-	return parseDefineList(out.String())
 }
