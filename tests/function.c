@@ -24,9 +24,13 @@ int mul(int a, int b) {
         return a * b;
 }
 
+int _(){
+	return 42;
+}
+
 int main()
 {
-    plan(11);
+    plan(12);
 
     pass("%s", "Main function.");
 
@@ -55,6 +59,8 @@ int main()
 	f = mul;
 	int j = f(3,4);
 	is_eq(j,12);
+	
+	is_eq(_(),42);
 
     done_testing();
 }
