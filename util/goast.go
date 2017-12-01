@@ -301,11 +301,19 @@ func IsGoKeyword(w string) bool {
 	case "break", "default", "func", "interface", "select", "case", "defer",
 		"go", "map", "struct", "chan", "else", "goto", "package", "switch",
 		"const", "fallthrough", "if", "range", "type", "continue", "for",
-		"import", "return", "var", "_":
+		"import", "return", "var":
 		return true
 	}
 
 	return false
+}
+
+// ConvertFunctionNameFromCtoGo - convert function name fromC to Go
+func ConvertFunctionNameFromCtoGo(name string) string {
+	if name == "_" {
+		return "__"
+	}
+	return name
 }
 
 func CreateSliceFromReference(goType string, expr goast.Expr) *goast.SliceExpr {

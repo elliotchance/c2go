@@ -55,6 +55,8 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (decls []goa
 		p.Function = nil
 	}()
 
+	n.Name = util.ConvertFunctionNameFromCtoGo(n.Name)
+
 	// Always register the new function. Only from this point onwards will
 	// we be allowed to refer to the function.
 	if program.GetFunctionDefinition(n.Name) == nil {
