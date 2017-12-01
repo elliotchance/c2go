@@ -3,6 +3,7 @@
 package transpiler
 
 import (
+	"fmt"
 	goast "go/ast"
 )
 
@@ -29,4 +30,23 @@ func combineStmts(stmt goast.Stmt, preStmts, postStmts []goast.Stmt) (stmts []go
 		stmts = append(stmts, postStmts...)
 	}
 	return
+}
+
+func removeNil(nodes []goast.Decl) {
+	var v V
+	for _, node := range nodes {
+		goast.Walk(v, node)
+	}
+}
+
+type V struct{}
+
+func (v V) Visit(node goast.Node) goast.Visitor {
+	if node == (*goast.IfStmt)(nil) {
+		fmt.Println("node  IfStmt - ", node)
+	}
+	if node == (*goast.ForStmt)(nil) {
+		fmt.Println("node  ForStmt - ", node)
+	}
+	return v
 }
