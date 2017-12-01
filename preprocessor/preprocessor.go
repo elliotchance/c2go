@@ -336,3 +336,51 @@ func unique(list []string) (res []string) {
 	}
 	return res
 }
+
+/*
+# SQLITE
+# See https://sqlite.org/howtocompile.html
+# Step 1. Add header "sqlite3.h" into "sqlite3.c"
+echo "File sqlite.c preparing..."
+echo "#include \"sqlite3.h\""                    >  $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite.c
+cat $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite3.c  >> $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite.c
+
+# Detect the platform (similar to $OSTYPE)
+OS="`uname`"
+case $OS in
+  'Linux')
+    OS='Linux'
+    FLAG_OS="_GNU_SOURCE"
+    ;;
+  'FreeBSD')
+    OS='FreeBSD'
+	echo "Not sure"
+    FLAG_OS="_GNU_SOURCE"
+    ;;
+  'WindowsNT')
+    OS='Windows'
+	echo "Not sure"
+    FLAG_OS="_GNU_SOURCE"
+    ;;
+  'Darwin')
+    OS='Mac'
+	FLAG_OS="_XOPEN_SOURCE"
+    ;;
+  'SunOS')
+    OS='Solaris'
+	echo "Not sure"
+    ;;
+  'AIX') ;;
+  *) ;;
+esac
+
+echo "Result of OS detection: $OS, so flag is $FLAG_OS"
+
+# Step 2. Transpiling two "*.C" files
+echo "Transpiling shell.c with sqlite.c..."
+./c2go transpile -o=$SQLITE_TEMP_FOLDER/sqlite.go -clang-flag="-DSQLITE_THREADSAFE=0" -clang-flag="-DSQLITE_OMIT_LOAD_EXTENSION" -clang-flag="-D$FLAG_OS" $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/shell.c $SQLITE_TEMP_FOLDER/$SQLITE3_FILE/sqlite.c >> $OUTFILE 2>&1
+
+# Step 3. Calculate amount of warnings
+SQLITE_WARNING_SQLITE=`cat $SQLITE_TEMP_FOLDER/sqlite.go | grep "// Warning" | wc -l`
+echo "In file sqlite.go : $SQLITE_WARNING_SQLITE warnings."
+*/
