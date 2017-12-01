@@ -20,9 +20,9 @@ matrix:
       os: linux
     - env: SCRIPT=test CLANG=3.8
       os: linux
-    - env: SCRIPT=lint CLANG=3.9
+    - env: SCRIPT=test CLANG=5.0
       os: linux
-    - env: SCRIPT=lint CLANG=5.0
+    - env: SCRIPT=lint CLANG=3.9
       os: linux
 
 before_install:
