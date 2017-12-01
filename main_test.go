@@ -153,6 +153,11 @@ func TestIntegrationScripts(t *testing.T) {
 			r := util.GetRegex("warning: no packages being tested depend on .+\n")
 			goProgramStderr = r.ReplaceAllString(goProgramStderr, "")
 
+			if file == "tests/assert.c" {
+				currentDir, _ := os.Getwd()
+				goProgramStderr = strings.Replace(goProgramStderr, currentDir+"/", "", -1)
+			}
+
 			if cProgramStderr != goProgramStderr {
 				t.Fatalf("Expected %s\nGot: %s", cProgramStderr, goProgramStderr)
 			}
