@@ -146,28 +146,34 @@ func analyzeFiles(inputFiles, clangFlags []string) (items []entity, err error) {
 // See : https://clang.llvm.org/docs/CommandGuide/clang.html
 // clang -E <file>    Run the preprocessor stage.
 func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, err error) {
-	// create a temp union file
-	var unionBody string
-	var unionFileName string = fmt.Sprintf("./unionFileName%d.c", rand.Intn(10000))
-	for i := range inputFiles {
-		unionBody += fmt.Sprintf("#include\"%s\"\n", inputFiles[i])
-	}
-	err = ioutil.WriteFile(unionFileName, []byte(unionBody), 0644)
-	if err != nil {
-		return
-	}
-	defer func() {
-		err2 := os.Remove(unionFileName)
-		if err != nil && err2 != nil {
-			err = fmt.Errorf("%v\n%v", err, err2)
+	var file string
+	if len(inputFiles) > 1 {
+		// create a temp union file
+		var unionBody string
+		var unionFileName string = fmt.Sprintf("./unionFileName%d.c", rand.Intn(10000))
+		for i := range inputFiles {
+			unionBody += fmt.Sprintf("#include\"%s\"\n", inputFiles[i])
 		}
-	}()
+		err = ioutil.WriteFile(unionFileName, []byte(unionBody), 0644)
+		if err != nil {
+			return
+		}
+		defer func() {
+			err2 := os.Remove(unionFileName)
+			if err != nil && err2 != nil {
+				err = fmt.Errorf("%v\n%v", err, err2)
+			}
+		}()
 
-	// Add open source defines
-	if runtime.GOOS == "darwin" {
-		clangFlags = append(clangFlags, "-D_XOPEN_SOURCE")
+		// Add open source defines
+		if runtime.GOOS == "darwin" {
+			clangFlags = append(clangFlags, "-D_XOPEN_SOURCE")
+		} else {
+			clangFlags = append(clangFlags, "-D_GNU_SOURCE")
+		}
+		file = unionFileName
 	} else {
-		clangFlags = append(clangFlags, "-D_GNU_SOURCE")
+		file = inputFiles[0]
 	}
 
 	var stderr bytes.Buffer
@@ -175,7 +181,7 @@ func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, er
 	var args []string
 	args = append(args, "-E")
 	args = append(args, clangFlags...)
-	args = append(args, unionFileName)
+	args = append(args, file)
 
 	var outFile bytes.Buffer
 	cmd := exec.Command("clang", args...)
@@ -183,7 +189,7 @@ func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, er
 	cmd.Stderr = &stderr
 	err = cmd.Run()
 	if err != nil {
-		err = fmt.Errorf("preprocess for file: %s\nfailed: %v\nStdErr = %v", unionFileName, err, stderr.String())
+		err = fmt.Errorf("preprocess for file: %v\nfailed: %v\nStdErr = %v", inputFiles, err, stderr.String())
 		return
 	}
 	_, err = out.Write(outFile.Bytes())
