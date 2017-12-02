@@ -259,7 +259,8 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 
 func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, theType string, err error) {
 	// Ignore extern as there is no analogy for Go right now.
-	if n.IsExtern && len(n.ChildNodes) == 0 {
+	// !n.IsUsed - added for avoid problem with stdout var
+	if n.IsExtern && len(n.ChildNodes) == 0 && !n.IsUsed {
 		return
 	}
 
