@@ -154,8 +154,8 @@ void test_partialarr_init()
     is_eq(b[2].c, 0);
 }
 
-extern int array[];
-int array[4] = { 1, 2, 3, 4 };
+extern int arrayEx[];
+int arrayEx[4] = { 1, 2, 3, 4 };
 
 int main()
 {
@@ -175,7 +175,7 @@ int main()
     START_TEST(stringarr_init);
     START_TEST(partialarr_init);
 
-	is_eq(array[1],2.0);
+	is_eq(arrayEx[1],2.0);
 
     done_testing();
 }
