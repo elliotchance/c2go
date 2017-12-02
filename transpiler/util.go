@@ -6,6 +6,8 @@ import (
 	"fmt"
 	goast "go/ast"
 	"reflect"
+
+	"github.com/elliotchance/c2go/program"
 )
 
 func combinePreAndPostStmts(
@@ -33,94 +35,253 @@ func combineStmts(stmt goast.Stmt, preStmts, postStmts []goast.Stmt) (stmts []go
 	return
 }
 
-func removeNil(nodes *[]goast.Decl) {
-	walkDeclList(nodes)
+func removeNil(nodes *[]goast.Decl, p *program.Program) {
+	_ = walkDeclList(nodes, p)
 }
 
 // Helper functions for common node lists. They may be empty.
 
-func walkIdentList(list *[]*goast.Ident) {
-	for i := 0; i < len(*list); i++ {
-		if reflect.ValueOf((*list)[i]).IsNil() {
-			// if value is nil, then remove from slice
-			if len(*list) == 1 {
-				*list = nil
-				break
-			} else if i < len(*list)-1 {
-				*list = append((*list)[0:i], (*list)[i+1:]...)
-			} else {
-				// remove last element of slice
-				*list = (*list)[:len(*list)-1]
-			}
-			i--
-			continue
-		}
-		Walk(((*list)[i]))
+func walkIdentList(list *[]*goast.Ident, p *program.Program) (err error) {
+	if list == nil || *list == nil {
+		return fmt.Errorf("Nil in walkIdentList")
 	}
+	for i := 0; i < len(*list); i++ {
+		if (*list)[i] == nil || reflect.ValueOf((*list)[i]).IsNil() {
+			p.AddMessage(fmt.Sprintf("// Found nil in Go AST : %T", list))
+			err = nil
+			goto Remove
+		}
+		if err = Walk((*list)[i], p); err != nil {
+			p.AddMessage(fmt.Sprintf("// Found nil in Go AST : %T. Addition err = %v", list, err))
+			err = nil
+			goto Remove
+		}
+		continue
+	Remove:
+		// if value is nil, then remove from slice
+		if len(*list) == 1 {
+			*list = nil
+			return fmt.Errorf("List have only 1 element and it is nil")
+		} else if i < len(*list)-1 {
+			*list = append((*list)[0:i], (*list)[i+1:]...)
+		} else {
+			// remove last element of slice
+			*list = (*list)[:len(*list)-1]
+		}
+		i--
+	}
+	return nil
 }
 
-func walkExprList(list *[]goast.Expr) {
-	for i := 0; i < len(*list); i++ {
-		if reflect.ValueOf((*list)[i]).IsNil() {
-			// if value is nil, then remove from slice
-			if len(*list) == 1 {
-				*list = nil
-				break
-			} else if i < len(*list)-1 {
-				*list = append((*list)[0:i], (*list)[i+1:]...)
-			} else {
-				// remove last element of slice
-				*list = (*list)[:len(*list)-1]
-			}
-			i--
-			continue
-		}
-		Walk(((*list)[i]))
+func walkExprList(list *[]goast.Expr, p *program.Program) (err error) {
+	if list == nil || *list == nil {
+		return fmt.Errorf("Nil in walkExprList")
 	}
+	for i := 0; i < len(*list); i++ {
+		if (*list)[i] == nil || reflect.ValueOf((*list)[i]).IsNil() {
+			p.AddMessage(fmt.Sprintf("// Found nil in Go AST : %T", list))
+			err = nil
+			goto Remove
+		}
+		if err = Walk((*list)[i], p); err != nil {
+			p.AddMessage(fmt.Sprintf("// Found nil in Go AST : %T. Addition err = %v", list, err))
+			err = nil
+			goto Remove
+		}
+		continue
+	Remove:
+		// if value is nil, then remove from slice
+		if len(*list) == 1 {
+			*list = nil
+			return fmt.Errorf("List have only 1 element and it is nil")
+		} else if i < len(*list)-1 {
+			*list = append((*list)[0:i], (*list)[i+1:]...)
+		} else {
+			// remove last element of slice
+			*list = (*list)[:len(*list)-1]
+		}
+		i--
+	}
+	return nil
 }
 
-func walkStmtList(list *[]goast.Stmt) {
-	for i := 0; i < len(*list); i++ {
-		if reflect.ValueOf((*list)[i]).IsNil() {
-			// if value is nil, then remove from slice
-			if len(*list) == 1 {
-				*list = nil
-				break
-			} else if i < len(*list)-1 {
-				*list = append((*list)[0:i], (*list)[i+1:]...)
-			} else {
-				// remove last element of slice
-				*list = (*list)[:len(*list)-1]
-			}
-			i--
-			continue
-		}
-		Walk(((*list)[i]))
+func walkStmtList(list *[]goast.Stmt, p *program.Program) (err error) {
+	if list == nil || *list == nil {
+		return fmt.Errorf("Nil in walkStmtList")
 	}
+	for i := 0; i < len(*list); i++ {
+		if (*list)[i] == nil || reflect.ValueOf((*list)[i]).IsNil() {
+			p.AddMessage(fmt.Sprintf("// Found nil in Go AST : %T", list))
+			err = nil
+			goto Remove
+		}
+		if err = Walk((*list)[i], p); err != nil {
+			p.AddMessage(fmt.Sprintf("// Found nil in Go AST : %T. Addition err = %v", list, err))
+			err = nil
+			goto Remove
+		}
+		continue
+	Remove:
+		// if value is nil, then remove from slice
+		if len(*list) == 1 {
+			*list = nil
+			return fmt.Errorf("List have only 1 element and it is nil")
+		} else if i < len(*list)-1 {
+			*list = append((*list)[0:i], (*list)[i+1:]...)
+		} else {
+			// remove last element of slice
+			*list = (*list)[:len(*list)-1]
+		}
+		i--
+	}
+	return nil
 }
 
-func walkDeclList(list *[]goast.Decl) {
-	for i := 0; i < len(*list); i++ {
-		if reflect.ValueOf((*list)[i]).IsNil() {
-			// if value is nil, then remove from slice
-			if len(*list) == 1 {
-				*list = nil
-				break
-			} else if i < len(*list)-1 {
-				*list = append((*list)[0:i], (*list)[i+1:]...)
-			} else {
-				// remove last element of slice
-				*list = (*list)[:len(*list)-1]
-			}
-			i--
-			continue
-		}
-		Walk(((*list)[i]))
+func walkDeclList(list *[]goast.Decl, p *program.Program) (err error) {
+	if list == nil || *list == nil {
+		return fmt.Errorf("Nil in walkDeclList")
 	}
+	for i := 0; i < len(*list); i++ {
+		if (*list)[i] == nil || reflect.ValueOf((*list)[i]).IsNil() {
+			p.AddMessage(fmt.Sprintf("// Found nil in Go AST : %T", list))
+			err = nil
+			goto Remove
+		}
+		if err = Walk((*list)[i], p); err != nil {
+			p.AddMessage(fmt.Sprintf("// Found nil in Go AST : %T. Addition err = %v", list, err))
+			err = nil
+			goto Remove
+		}
+		continue
+	Remove:
+		// if value is nil, then remove from slice
+		if len(*list) == 1 {
+			*list = nil
+			return fmt.Errorf("List have only 1 element and it is nil")
+		} else if i < len(*list)-1 {
+			*list = append((*list)[0:i], (*list)[i+1:]...)
+		} else {
+			// remove last element of slice
+			*list = (*list)[:len(*list)-1]
+		}
+		i--
+	}
+	return nil
+}
+
+func walkCommentList(list *[]*goast.Comment, p *program.Program) (err error) {
+	if list == nil || *list == nil {
+		return fmt.Errorf("Nil in walkCommentList")
+	}
+	for i := 0; i < len(*list); i++ {
+		if (*list)[i] == nil || reflect.ValueOf((*list)[i]).IsNil() {
+			p.AddMessage(fmt.Sprintf("// Found nil in Go AST : %T", list))
+			err = nil
+			goto Remove
+		}
+		if err = Walk((*list)[i], p); err != nil {
+			p.AddMessage(fmt.Sprintf("// Found nil in Go AST : %T. Addition err = %v", list, err))
+			err = nil
+			goto Remove
+		}
+		continue
+	Remove:
+		// if value is nil, then remove from slice
+		if len(*list) == 1 {
+			*list = nil
+			return fmt.Errorf("List have only 1 element and it is nil")
+		} else if i < len(*list)-1 {
+			*list = append((*list)[0:i], (*list)[i+1:]...)
+		} else {
+			// remove last element of slice
+			*list = (*list)[:len(*list)-1]
+		}
+		i--
+	}
+	return nil
+}
+
+func walkFieldList(list *[]*goast.Field, p *program.Program) (err error) {
+	if list == nil || *list == nil {
+		return fmt.Errorf("Nil in walkFieldList")
+	}
+	for i := 0; i < len(*list); i++ {
+		if (*list)[i] == nil || reflect.ValueOf((*list)[i]).IsNil() {
+			p.AddMessage(fmt.Sprintf("// Found nil in Go AST : %T", list))
+			err = nil
+			goto Remove
+		}
+		if err = Walk((*list)[i], p); err != nil {
+			p.AddMessage(fmt.Sprintf("// Found nil in Go AST : %T. Addition err = %v", list, err))
+			err = nil
+			goto Remove
+		}
+		continue
+	Remove:
+		// if value is nil, then remove from slice
+		if len(*list) == 1 {
+			*list = nil
+			return fmt.Errorf("List have only 1 element and it is nil")
+		} else if i < len(*list)-1 {
+			*list = append((*list)[0:i], (*list)[i+1:]...)
+		} else {
+			// remove last element of slice
+			*list = (*list)[:len(*list)-1]
+		}
+		i--
+	}
+	return nil
+}
+
+func walkSpecList(list *[]goast.Spec, p *program.Program) (err error) {
+	if list == nil || *list == nil {
+		return fmt.Errorf("Nil in walkSpecList")
+	}
+	for i := 0; i < len(*list); i++ {
+		if (*list)[i] == nil || reflect.ValueOf((*list)[i]).IsNil() {
+			p.AddMessage(fmt.Sprintf("// Found nil in Go AST : %T", list))
+			err = nil
+			goto Remove
+		}
+		if err = Walk((*list)[i], p); err != nil {
+			p.AddMessage(fmt.Sprintf("// Found nil in Go AST : %T. Addition err = %v", list, err))
+			err = nil
+			goto Remove
+		}
+		continue
+	Remove:
+		// if value is nil, then remove from slice
+		if len(*list) == 1 {
+			*list = nil
+			return fmt.Errorf("List have only 1 element and it is nil")
+		} else if i < len(*list)-1 {
+			*list = append((*list)[0:i], (*list)[i+1:]...)
+		} else {
+			// remove last element of slice
+			*list = (*list)[:len(*list)-1]
+		}
+		i--
+	}
+	return nil
 }
 
 // Walk - walking inside Go AST tree and remove nil's
-func Walk(node goast.Node) {
+func Walk(node goast.Node, p *program.Program) (err error) {
+	if node == nil {
+		return fmt.Errorf("Nil node in Walk function")
+	}
+
+	var errSecond error
+
+	defer func() {
+		if err != nil {
+			p.AddMessage(fmt.Sprintf("// Found nil in Go AST (Walk): %T. Addition err = %v", node, err))
+			err = nil
+		}
+		if errSecond != nil {
+			p.AddMessage(fmt.Sprintf("// Found nil in Go AST (Walk) |Second priority|: %T. Addition err = %v", node, errSecond))
+		}
+	}()
 	// walk children
 	// (the order of the cases matches the order
 	// of the corresponding node types in ast.go)
@@ -130,42 +291,27 @@ func Walk(node goast.Node) {
 		// nothing to do
 
 	case *goast.CommentGroup:
-		for _, c := range n.List {
-			Walk(c)
-		}
+		err = walkCommentList(&n.List, p)
 
 	case *goast.Field:
 		if n.Doc != nil {
-			Walk(n.Doc)
+			errSecond = Walk(n.Doc, p)
 		}
-		walkIdentList(&n.Names)
-		Walk(n.Type)
+		if err = walkIdentList(&n.Names, p); err != nil {
+			return fmt.Errorf("Names")
+		}
+		if err = Walk(n.Type, p); err != nil {
+			return fmt.Errorf("Type")
+		}
 		if n.Tag != nil {
-			Walk(n.Tag)
+			errSecond = Walk(n.Tag, p)
 		}
 		if n.Comment != nil {
-			Walk(n.Comment)
+			errSecond = Walk(n.Comment, p)
 		}
 
 	case *goast.FieldList:
-		list := &n.List
-		for i := 0; i < len(*list); i++ {
-			if reflect.ValueOf((*list)[i]).IsNil() {
-				// if value is nil, then remove from slice
-				if len(*list) == 1 {
-					*list = nil
-					break
-				} else if i < len(*list)-1 {
-					*list = append((*list)[0:i], (*list)[i+1:]...)
-				} else {
-					// remove last element of slice
-					*list = (*list)[:len(*list)-1]
-				}
-				i--
-				continue
-			}
-			Walk(((*list)[i]))
-		}
+		err = walkFieldList(&n.List, p)
 
 	// Expressions
 	case *goast.BadExpr, *goast.Ident, *goast.BasicLit:
@@ -173,234 +319,312 @@ func Walk(node goast.Node) {
 
 	case *goast.Ellipsis:
 		if n.Elt != nil {
-			Walk(n.Elt)
+			errSecond = Walk(n.Elt, p)
 		}
 
 	case *goast.FuncLit:
-		Walk(n.Type)
-		Walk(n.Body)
+		if err = Walk(n.Type, p); err != nil {
+			return fmt.Errorf("Type")
+		}
+		if err = Walk(n.Body, p); err != nil {
+			return fmt.Errorf("Body")
+		}
 
 	case *goast.CompositeLit:
 		if n.Type != nil {
-			Walk(n.Type)
+			errSecond = Walk(n.Type, p)
 		}
-		walkExprList(&n.Elts)
+		if err = walkExprList(&n.Elts, p); err != nil {
+			return fmt.Errorf("Elts")
+		}
 
 	case *goast.ParenExpr:
-		Walk(n.X)
+		err = Walk(n.X, p)
 
 	case *goast.SelectorExpr:
-		Walk(n.X)
-		Walk(n.Sel)
+		if err = Walk(n.X, p); err != nil {
+			return fmt.Errorf("X")
+		}
+		if err = Walk(n.Sel, p); err != nil {
+			return fmt.Errorf("Sel")
+		}
 
 	case *goast.IndexExpr:
-		Walk(n.X)
-		Walk(n.Index)
+		if err = Walk(n.X, p); err != nil {
+			return fmt.Errorf("X")
+		}
+		if err = Walk(n.Index, p); err != nil {
+			return fmt.Errorf("Index")
+		}
 
 	case *goast.SliceExpr:
-		Walk(n.X)
+		if err = Walk(n.X, p); err != nil {
+			return fmt.Errorf("X")
+		}
 		if n.Low != nil {
-			Walk(n.Low)
+			errSecond = Walk(n.Low, p)
 		}
 		if n.High != nil {
-			Walk(n.High)
+			errSecond = Walk(n.High, p)
 		}
 		if n.Max != nil {
-			Walk(n.Max)
+			errSecond = Walk(n.Max, p)
 		}
 
 	case *goast.TypeAssertExpr:
-		Walk(n.X)
+		if err = Walk(n.X, p); err != nil {
+			return fmt.Errorf("X")
+		}
 		if n.Type != nil {
-			Walk(n.Type)
+			errSecond = Walk(n.Type, p)
 		}
 
 	case *goast.CallExpr:
-		Walk(n.Fun)
-		walkExprList(&n.Args)
+		if err = Walk(n.Fun, p); err != nil {
+			return fmt.Errorf("Fun")
+		}
+		errSecond = walkExprList(&n.Args, p)
 
 	case *goast.StarExpr:
-		Walk(n.X)
+		err = Walk(n.X, p)
 
 	case *goast.UnaryExpr:
-		Walk(n.X)
+		err = Walk(n.X, p)
 
 	case *goast.BinaryExpr:
-		Walk(n.X)
-		Walk(n.Y)
+		if err = Walk(n.X, p); err != nil {
+			return fmt.Errorf("X")
+		}
+		if err = Walk(n.Y, p); err != nil {
+			return fmt.Errorf("Y")
+		}
 
 	case *goast.KeyValueExpr:
-		Walk(n.Key)
-		Walk(n.Value)
+		if err = Walk(n.Key, p); err != nil {
+			return fmt.Errorf("Key")
+		}
+		if err = Walk(n.Value, p); err != nil {
+			return fmt.Errorf("Value")
+		}
 
 	// Types
 	case *goast.ArrayType:
 		if n.Len != nil {
-			Walk(n.Len)
+			errSecond = Walk(n.Len, p)
 		}
-		Walk(n.Elt)
+		if err = Walk(n.Elt, p); err != nil {
+			return fmt.Errorf("Elt")
+		}
 
 	case *goast.StructType:
-		Walk(n.Fields)
+		err = Walk(n.Fields, p)
 
 	case *goast.FuncType:
 		if n.Params != nil {
-			Walk(n.Params)
+			errSecond = Walk(n.Params, p)
 		}
 		if n.Results != nil {
-			Walk(n.Results)
+			errSecond = Walk(n.Results, p)
 		}
 
 	case *goast.InterfaceType:
-		Walk(n.Methods)
+		err = Walk(n.Methods, p)
 
 	case *goast.MapType:
-		Walk(n.Key)
-		Walk(n.Value)
+		if err = Walk(n.Key, p); err != nil {
+			return fmt.Errorf("Key")
+		}
+		if err = Walk(n.Value, p); err != nil {
+			return fmt.Errorf("Value")
+		}
 
 	case *goast.ChanType:
-		Walk(n.Value)
+		err = Walk(n.Value, p)
 
 	// Statements
 	case *goast.BadStmt:
 		// nothing to do
 
 	case *goast.DeclStmt:
-		Walk(n.Decl)
+		err = Walk(n.Decl, p)
 
 	case *goast.EmptyStmt:
 		// nothing to do
 
 	case *goast.LabeledStmt:
-		Walk(n.Label)
-		Walk(n.Stmt)
+		if err = Walk(n.Label, p); err != nil {
+			return fmt.Errorf("Label")
+		}
+		if err = Walk(n.Stmt, p); err != nil {
+			return fmt.Errorf("Stmt")
+		}
 
 	case *goast.ExprStmt:
-		Walk(n.X)
+		err = Walk(n.X, p)
 
 	case *goast.SendStmt:
-		Walk(n.Chan)
-		Walk(n.Value)
+		if err = Walk(n.Chan, p); err != nil {
+			return fmt.Errorf("Chan")
+		}
+		if err = Walk(n.Value, p); err != nil {
+			return fmt.Errorf("Value")
+		}
 
 	case *goast.IncDecStmt:
-		Walk(n.X)
+		err = Walk(n.X, p)
 
 	case *goast.AssignStmt:
-		walkExprList(&n.Lhs)
-		walkExprList(&n.Rhs)
+		if err = walkExprList(&n.Lhs, p); err != nil {
+			return fmt.Errorf("Lhs")
+		}
+		if err = walkExprList(&n.Rhs, p); err != nil {
+			return fmt.Errorf("Rhs")
+		}
 
 	case *goast.GoStmt:
-		Walk(n.Call)
+		err = Walk(n.Call, p)
 
 	case *goast.DeferStmt:
-		Walk(n.Call)
+		err = Walk(n.Call, p)
 
 	case *goast.ReturnStmt:
-		walkExprList(&n.Results)
+		err = walkExprList(&n.Results, p)
 
 	case *goast.BranchStmt:
 		if n.Label != nil {
-			Walk(n.Label)
+			errSecond = Walk(n.Label, p)
 		}
 
 	case *goast.BlockStmt:
-		walkStmtList(&n.List)
+		if err = walkStmtList(&n.List, p); err != nil {
+			return fmt.Errorf("List")
+		}
 
 	case *goast.IfStmt:
 		if n.Init != nil {
-			Walk(n.Init)
+			errSecond = Walk(n.Init, p)
 		}
-		Walk(n.Cond)
-		Walk(n.Body)
+		if err = Walk(n.Cond, p); err != nil {
+			return fmt.Errorf("Cond")
+		}
+		if err = Walk(n.Body, p); err != nil {
+			return fmt.Errorf("Body")
+		}
 		if n.Else != nil {
-			Walk(n.Else)
+			errSecond = Walk(n.Else, p)
 		}
 
 	case *goast.CaseClause:
-		walkExprList(&n.List)
-		walkStmtList(&n.Body)
+		if err = walkExprList(&n.List, p); err != nil {
+			return fmt.Errorf("List")
+		}
+		if err = walkStmtList(&n.Body, p); err != nil {
+			return fmt.Errorf("Body")
+		}
 
 	case *goast.SwitchStmt:
 		if n.Init != nil {
-			Walk(n.Init)
+			errSecond = Walk(n.Init, p)
 		}
 		if n.Tag != nil {
-			Walk(n.Tag)
+			errSecond = Walk(n.Tag, p)
 		}
-		Walk(n.Body)
+		err = Walk(n.Body, p)
 
 	case *goast.TypeSwitchStmt:
 		if n.Init != nil {
-			Walk(n.Init)
+			errSecond = Walk(n.Init, p)
 		}
-		Walk(n.Assign)
-		Walk(n.Body)
+		if err = Walk(n.Assign, p); err != nil {
+			return fmt.Errorf("Assign")
+		}
+		if err = Walk(n.Body, p); err != nil {
+			return fmt.Errorf("Body")
+		}
 
 	case *goast.CommClause:
 		if n.Comm != nil {
-			Walk(n.Comm)
+			errSecond = Walk(n.Comm, p)
 		}
-		walkStmtList(&n.Body)
+		if err = walkStmtList(&n.Body, p); err != nil {
+			return fmt.Errorf("Body")
+		}
 
 	case *goast.SelectStmt:
-		Walk(n.Body)
+		err = Walk(n.Body, p)
 
 	case *goast.ForStmt:
 		if n.Init != nil {
-			Walk(n.Init)
+			errSecond = Walk(n.Init, p)
 		}
 		if n.Cond != nil {
-			Walk(n.Cond)
+			errSecond = Walk(n.Cond, p)
 		}
 		if n.Post != nil {
-			Walk(n.Post)
+			errSecond = Walk(n.Post, p)
 		}
-		Walk(n.Body)
+		if err = Walk(n.Body, p); err != nil {
+			return fmt.Errorf("Body")
+		}
 
 	case *goast.RangeStmt:
 		if n.Key != nil {
-			Walk(n.Key)
+			errSecond = Walk(n.Key, p)
 		}
 		if n.Value != nil {
-			Walk(n.Value)
+			errSecond = Walk(n.Value, p)
 		}
-		Walk(n.X)
-		Walk(n.Body)
+		if err = Walk(n.X, p); err != nil {
+			return fmt.Errorf("X")
+		}
+		if err = Walk(n.Body, p); err != nil {
+			return fmt.Errorf("Body")
+		}
 
 	// Declarations
 	case *goast.ImportSpec:
 		if n.Doc != nil {
-			Walk(n.Doc)
+			errSecond = Walk(n.Doc, p)
 		}
 		if n.Name != nil {
-			Walk(n.Name)
+			errSecond = Walk(n.Name, p)
 		}
-		Walk(n.Path)
+		if err = Walk(n.Path, p); err != nil {
+			return fmt.Errorf("Path")
+		}
 		if n.Comment != nil {
-			Walk(n.Comment)
+			errSecond = Walk(n.Comment, p)
 		}
 
 	case *goast.ValueSpec:
 		if n.Doc != nil {
-			Walk(n.Doc)
+			errSecond = Walk(n.Doc, p)
 		}
-		walkIdentList(&n.Names)
+		if err = walkIdentList(&n.Names, p); err != nil {
+			return fmt.Errorf("Names")
+		}
 		if n.Type != nil {
-			Walk(n.Type)
+			errSecond = Walk(n.Type, p)
 		}
-		walkExprList(&n.Values)
+		if err = walkExprList(&n.Values, p); err != nil {
+			return fmt.Errorf("Values")
+		}
 		if n.Comment != nil {
-			Walk(n.Comment)
+			errSecond = Walk(n.Comment, p)
 		}
 
 	case *goast.TypeSpec:
 		if n.Doc != nil {
-			Walk(n.Doc)
+			errSecond = Walk(n.Doc, p)
 		}
-		Walk(n.Name)
-		Walk(n.Type)
+		if err = Walk(n.Name, p); err != nil {
+			return fmt.Errorf("Name")
+		}
+		if err = Walk(n.Type, p); err != nil {
+			return fmt.Errorf("Type")
+		}
 		if n.Comment != nil {
-			Walk(n.Comment)
+			errSecond = Walk(n.Comment, p)
 		}
 
 	case *goast.BadDecl:
@@ -408,58 +632,53 @@ func Walk(node goast.Node) {
 
 	case *goast.GenDecl:
 		if n.Doc != nil {
-			Walk(n.Doc)
+			errSecond = Walk(n.Doc, p)
 		}
-		list := &n.Specs
-		for i := 0; i < len(*list); i++ {
-			if reflect.ValueOf((*list)[i]).IsNil() {
-				// if value is nil, then remove from slice
-				if len(*list) == 1 {
-					*list = nil
-					break
-				} else if i < len(*list)-1 {
-					*list = append((*list)[0:i], (*list)[i+1:]...)
-				} else {
-					// remove last element of slice
-					*list = (*list)[:len(*list)-1]
-				}
-				i--
-				continue
-			}
-			Walk(((*list)[i]))
+		// err = walkSpecList(&n.Specs, p)
+		for i := 0; i < len(n.Specs); i++ {
+			_ = Walk(n.Specs[i], p)
 		}
 
 	case *goast.FuncDecl:
 		if n.Doc != nil {
-			Walk(n.Doc)
+			errSecond = Walk(n.Doc, p)
 		}
 		if n.Recv != nil {
-			Walk(n.Recv)
+			errSecond = Walk(n.Recv, p)
 		}
-		Walk(n.Name)
-		Walk(n.Type)
+		if err = Walk(n.Name, p); err != nil {
+			return fmt.Errorf("Name")
+		}
+		if err = Walk(n.Type, p); err != nil {
+			return fmt.Errorf("Type")
+		}
 		if n.Body != nil {
-			Walk(n.Body)
+			errSecond = Walk(n.Body, p)
 		}
 
 	// Files and packages
 	case *goast.File:
 		if n.Doc != nil {
-			Walk(n.Doc)
+			errSecond = Walk(n.Doc, p)
 		}
-		Walk(n.Name)
-		walkDeclList(&n.Decls)
+		if err = Walk(n.Name, p); err != nil {
+			return fmt.Errorf("Name")
+		}
+		if err = walkDeclList(&n.Decls, p); err != nil {
+			return fmt.Errorf("Decls")
+		}
 		// don't walk n.Comments - they have been
 		// visited already through the individual
 		// nodes
 
 	case *goast.Package:
 		for _, f := range n.Files {
-			Walk(f)
+			_ = Walk(f, p)
 		}
 
 	default:
 		panic(fmt.Sprintf("ast.Walk: unexpected node type %T", n))
 	}
 
+	return nil
 }
