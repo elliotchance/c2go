@@ -129,7 +129,7 @@ func TestIntegrationScripts(t *testing.T) {
 				testName := strings.Split(file, ".")[0][6:]
 				args = append(
 					args,
-					////"-race",
+					"-race",
 					"-covermode=atomic",
 					"-coverprofile="+testName+".coverprofile",
 					"-coverpkg=./noarch,./linux,./darwin",
