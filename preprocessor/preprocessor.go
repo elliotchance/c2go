@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 )
@@ -145,13 +146,6 @@ func analyzeFiles(inputFiles, clangFlags []string) (items []entity, err error) {
 // See : https://clang.llvm.org/docs/CommandGuide/clang.html
 // clang -E <file>    Run the preprocessor stage.
 func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, err error) {
-	// get current dir
-	var currentDir string
-	currentDir, err = os.Getwd()
-	if err != nil {
-		return
-	}
-
 	// get temp dir
 	dir, err := ioutil.TempDir("", "c2go-union")
 	if err != nil {
@@ -165,7 +159,12 @@ func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, er
 	// create a body for union file
 	var unionBody string
 	for i := range inputFiles {
-		unionBody += fmt.Sprintf("#include \"%s/%s\"\n", currentDir, inputFiles[i])
+		var absPath string
+		absPath, err = filepath.Abs(inputFiles[i])
+		if err != nil {
+			return
+		}
+		unionBody += fmt.Sprintf("#include \"%s\"\n", absPath)
 	}
 
 	// write a union file
