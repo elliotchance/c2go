@@ -34,7 +34,7 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 		p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Error of transpiling: err = %v", err), root))
 		err = nil // Error is ignored
 	}
-	removeNil(decls)
+	removeNil(&decls)
 	p.File.Decls = append(p.File.Decls, decls...)
 
 	if p.OutputAsTest {
