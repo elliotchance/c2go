@@ -93,6 +93,7 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 						if decl, ok := vv.Children()[0].(*ast.DeclRefExpr); ok {
 							nameVar2 := decl.Name
 
+							groupComments := p.GetMessageComments()
 							return &goast.DeclStmt{Decl: &goast.GenDecl{
 								Tok: token.VAR,
 								Specs: []goast.Spec{&goast.ValueSpec{
@@ -102,6 +103,7 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 										X:    &goast.Ident{Name: nameVar2},
 										Type: functionType,
 									}},
+									Doc: &groupComments,
 								},
 								}}}, preStmts, postStmts, nil
 						}
@@ -137,6 +139,7 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 	t, err := types.ResolveType(p, a.Type)
 	p.AddMessage(p.GenerateWarningMessage(err, a))
 
+	groupComments := p.GetMessageComments()
 	return &goast.DeclStmt{
 		Decl: &goast.GenDecl{
 			Tok: token.VAR,
@@ -145,6 +148,7 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 					Names:  []*goast.Ident{util.NewIdent(a.Name)},
 					Type:   util.NewTypeIdent(t),
 					Values: defaultValue,
+					Doc:    &groupComments,
 				},
 			},
 		},
