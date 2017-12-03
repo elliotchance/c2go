@@ -131,6 +131,10 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 }
 
 func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast.Decl, err error) {
+	// implicit code from clang at the head of each clang AST tree
+	if n.IsImplicit && n.Pos.File == ast.PositionBuiltIn {
+		return
+	}
 	name := n.Name
 
 	// added for support "typedef enum {...} dd" with empty name of struct
