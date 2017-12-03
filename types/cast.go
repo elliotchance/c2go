@@ -67,6 +67,11 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (g
 	fromType := cFromType
 	toType := cToType
 
+	// C null pointer can cast to any pointer
+	if cFromType == NullPointer && cToType[len(cToType)-1] == '*' {
+		return expr, nil
+	}
+
 	// Replace for specific case of fromType for darwin:
 	// Fo : union (anonymous union at sqlite3.c:619241696:3)
 	if strings.Contains(fromType, "anonymous union") {
