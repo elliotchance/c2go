@@ -3,7 +3,7 @@
 
 int main()
 {
-    plan(48);
+    plan(49);
 
     int i = 0;
 
@@ -101,6 +101,15 @@ int main()
 			pass("%d",eg);
 		}
 	}
+
+	diag("NULL in for");
+	int nn = 0;
+	for (; NULL ; nn ++){
+		if (nn > 2) {
+			break;
+		}
+	}
+	is_eq( nn , 0 );
 
     done_testing();
 }

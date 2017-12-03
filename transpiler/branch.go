@@ -293,6 +293,11 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 		if err != nil {
 			return nil, nil, nil, err
 		}
+		// null in C is false
+		if conditionType == types.NullPointer {
+			condition = util.NewIdent("false")
+			conditionType = "bool"
+		}
 
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
