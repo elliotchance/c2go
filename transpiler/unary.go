@@ -85,6 +85,14 @@ func transpileUnaryOperatorNot(n *ast.UnaryOperator, p *program.Program) (
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
+	// null in C is zero
+	if eType == types.NullPointer {
+		e = &goast.BasicLit{
+			Kind:  token.INT,
+			Value: "0",
+		}
+		eType = "int"
+	}
 
 	if eType == "bool" || eType == "_Bool" {
 		return &goast.UnaryExpr{

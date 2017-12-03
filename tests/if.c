@@ -3,7 +3,7 @@
 
 int main()
 {
-    plan(4);
+    plan(5);
 
     int x = 1;
 
@@ -26,6 +26,12 @@ int main()
 		pass("%s", "NULL is zero");
 	} else {
 		pass("%s", "NULL is not zero");
+	}
+
+	if ( ! NULL) {
+		pass("%s", "Invert : ! NULL is zero");
+	} else {
+		pass("%s", "Invert : ! NULL is not zero");
 	}
 
     done_testing();
