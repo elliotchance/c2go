@@ -3,7 +3,7 @@
 
 int main()
 {
-    plan(3);
+    plan(4);
 
     int x = 1;
 
@@ -20,6 +20,12 @@ int main()
         fail("%s", "x is not equal to one");
 	} else {
         pass("%s", "x is equal to one");
+	}
+
+	if ( NULL) {
+		pass("%s", "NULL is zero");
+	} else {
+		pass("%s", "NULL is not zero");
 	}
 
     done_testing();
