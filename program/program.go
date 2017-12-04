@@ -149,12 +149,14 @@ func (p *Program) AddMessage(message string) bool {
 // Location of comments only NEAR of error or warning and
 // don't show directly location
 func (p *Program) GetMessageComments() (group goast.CommentGroup) {
-	for i := p.messagePosition; i < len(p.messages); i++ {
-		group.List = append(group.List, &goast.Comment{
-			Text: p.messages[i],
-		})
+	if p.messagePosition < len(p.messages) {
+		for i := p.messagePosition; i < len(p.messages); i++ {
+			group.List = append(group.List, &goast.Comment{
+				Text: p.messages[i],
+			})
+		}
+		p.messagePosition = len(p.messages) - 1
 	}
-	p.messagePosition = len(p.messages) - 1
 	return
 }
 
