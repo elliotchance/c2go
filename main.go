@@ -35,7 +35,7 @@ import (
 //     c2go -v
 //
 // See https://github.com/elliotchance/c2go/wiki/Release-Process
-const Version = "v0.17.8 Samarium 2017-12-03"
+const Version = "v0.18.0 Tantalum 2017-12-04"
 
 var stderr io.Writer = os.Stderr
 
