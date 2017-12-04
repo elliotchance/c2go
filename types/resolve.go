@@ -81,6 +81,10 @@ var simpleResolveTypes = map[string]string{
 	"FILE":                         "github.com/elliotchance/c2go/noarch.File",
 }
 
+// NullPointer - is look : (double *)(nil) or (FILE *)(nil)
+// created only for transpiler.CStyleCastExpr
+var NullPointer = "NullPointerType *"
+
 // ResolveType determines the Go type from a C type.
 //
 // Some basic examples are obvious, such as "float" in C would be "float32" in

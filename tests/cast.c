@@ -27,10 +27,19 @@ void test_castbool()
 
 int main()
 {
-    plan(3);
+    plan(7);
 
     START_TEST(cast)
     START_TEST(castbool)
+
+	double *d = (double *) 0;
+	is_true(d == NULL);
+	int    *i = (int    *) 0;
+	is_true(i == NULL);
+	float  *f = (float  *) 0;
+	is_true(f == NULL);
+	char   *c = (char   *) 0;
+	is_true(c == NULL);
 
     done_testing();
 }

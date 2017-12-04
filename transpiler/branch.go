@@ -66,6 +66,11 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
 	if err != nil {
 		return nil, nil, nil, err
 	}
+	// null in C is false
+	if conditionalType == types.NullPointer {
+		conditional = util.NewIdent("false")
+		conditionalType = "bool"
+	}
 
 	// The condition in Go must always be a bool.
 	boolCondition, err := types.CastExpr(p, conditional, conditionalType, "bool")
@@ -287,6 +292,11 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 		condition, conditionType, newPre, newPost, err = transpileToExpr(children[2], p, false)
 		if err != nil {
 			return nil, nil, nil, err
+		}
+		// null in C is false
+		if conditionType == types.NullPointer {
+			condition = util.NewIdent("false")
+			conditionType = "bool"
 		}
 
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
