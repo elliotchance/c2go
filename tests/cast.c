@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <assert.h>
 #include "tests.h"
 
 #define START_TEST(t) \
@@ -28,19 +27,19 @@ void test_castbool()
 
 int main()
 {
-    plan(3);
+    plan(7);
 
     START_TEST(cast)
     START_TEST(castbool)
 
 	double *d = (double *) 0;
-	assert(d == NULL);
+	is_true(d == NULL);
 	int    *i = (int    *) 0;
-	assert(i == NULL);
+	is_true(i == NULL);
 	float  *f = (float  *) 0;
-	assert(f == NULL);
+	is_true(f == NULL);
 	char   *c = (char   *) 0;
-	assert(c == NULL);
+	is_true(c == NULL);
 
     done_testing();
 }

@@ -23,7 +23,7 @@ int main()
 	}
 
 	if ( NULL) {
-		pass("%s", "NULL is zero");
+		fail("%s", "NULL is zero");
 	} else {
 		pass("%s", "NULL is not zero");
 	}
@@ -31,7 +31,7 @@ int main()
 	if ( ! NULL) {
 		pass("%s", "Invert : ! NULL is zero");
 	} else {
-		pass("%s", "Invert : ! NULL is not zero");
+		fail("%s", "Invert : ! NULL is not zero");
 	}
 
     done_testing();
