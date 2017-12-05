@@ -410,12 +410,6 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 		return
 	}
 
-	// TODO: The name of a variable or field cannot be "type"
-	// https://github.com/elliotchance/c2go/issues/83
-	if name == "type" {
-		name = "type_"
-	}
-
 	defaultValue, _, newPre, newPost, err := getDefaultValueForVar(p, n)
 	if err != nil {
 		p.AddMessage(p.GenerateErrorMessage(err, n))
