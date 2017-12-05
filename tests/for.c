@@ -3,7 +3,7 @@
 
 int main()
 {
-    plan(48);
+    plan(50);
 
     int i = 0;
 
@@ -102,5 +102,23 @@ int main()
 		}
 	}
 
-    done_testing();
+	diag("NULL in for");
+	int nn = 0;
+	for (; NULL ; nn ++){
+		if (nn > 2) {
+			break;
+		}
+	}
+	is_eq( nn , 0 );
+
+	diag("! NULL in for");
+	int nn2 = 0;
+	for (; !NULL ; nn2 ++){
+		if (nn2 > 2) {
+			break;
+		}
+	}
+	is_eq( nn2 , 3 );
+    
+	done_testing();
 }

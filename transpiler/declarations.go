@@ -131,6 +131,10 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 }
 
 func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast.Decl, err error) {
+	// implicit code from clang at the head of each clang AST tree
+	if n.IsImplicit && n.Pos.File == ast.PositionBuiltIn {
+		return
+	}
 	name := n.Name
 
 	// added for support "typedef enum {...} dd" with empty name of struct
@@ -258,7 +262,6 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 }
 
 func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, theType string, err error) {
-
 	// There may be some startup code for this global variable.
 	if p.Function == nil {
 		name := n.Name
@@ -308,6 +311,11 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 		default:
 			// No init needed.
 		}
+	}
+
+	// Ignore extern as there is no analogy for Go right now.
+	if n.IsExtern && len(n.ChildNodes) == 0 {
+		return
 	}
 
 	/*
