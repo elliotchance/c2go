@@ -96,7 +96,7 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 							return &goast.DeclStmt{Decl: &goast.GenDecl{
 								Tok: token.VAR,
 								Specs: []goast.Spec{&goast.ValueSpec{
-									Names: []*goast.Ident{&goast.Ident{Name: nameVar1}},
+									Names: []*goast.Ident{{Name: nameVar1}},
 									Type:  functionType,
 									Values: []goast.Expr{&goast.TypeAssertExpr{
 										X:    &goast.Ident{Name: nameVar2},
