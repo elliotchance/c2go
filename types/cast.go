@@ -60,7 +60,7 @@ func GetArrayTypeAndSize(s string) (string, int) {
 //    a bug. It is most useful to do this when dealing with compound types like
 //    FILE where those function probably exist (or should exist) in the noarch
 //    package.
-func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (_ goast.Expr, err error) {
+func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (goast.Expr, error) {
 	cFromType = CleanCType(cFromType)
 	cToType = CleanCType(cToType)
 
@@ -70,7 +70,7 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (_
 	// Checking registated typedef types in program
 	if v, ok := p.TypedefType[toType]; ok {
 		if fromType == v {
-			toType, err = ResolveType(p, toType)
+			toType, err := ResolveType(p, toType)
 			if err != nil {
 				return expr, err
 			}
@@ -89,17 +89,15 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (_
 				},
 				Rparen: 2,
 			}, nil
-		} else {
-			e, err := CastExpr(p, expr, fromType, v)
-			if err != nil {
-				return nil, err
-			}
-			return CastExpr(p, e, v, toType)
 		}
+		e, err := CastExpr(p, expr, fromType, v)
+		if err != nil {
+			return nil, err
+		}
+		return CastExpr(p, e, v, toType)
 	}
 	if v, ok := p.TypedefType[fromType]; ok {
-		var t string
-		t, err = ResolveType(p, v)
+		t, err := ResolveType(p, v)
 		if err != nil {
 			return expr, err
 		}
@@ -180,7 +178,7 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (_
 		return expr, nil
 	}
 
-	fromType, err = ResolveType(p, fromType)
+	fromType, err := ResolveType(p, fromType)
 	if err != nil {
 		return expr, err
 	}
