@@ -374,14 +374,14 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 		//   1. Types need to be stripped of their pointer, 'FILE *' -> 'FILE'.
 		//   2. Types may refer to one or more other types in a chain that have
 		//      to be resolved before the real field type can be determined.
-		err = fmt.Errorf("cannot determine type for LHS '"+lhsType+
-			"', will use 'void *' for all fields. Is lvalue = %v", n.IsLvalue)
+		err = fmt.Errorf("cannot determine type for LHS '%v'"+
+			", will use 'void *' for all fields. Is lvalue = %v", lhsType, n.IsLvalue)
 		p.AddMessage(p.GenerateWarningMessage(err, n))
 	} else {
 		if s, ok := structType.Fields[rhs].(string); ok {
 			rhsType = s
 		} else {
-			err = fmt.Errorf("cannot determine type '%v' for RHS, will use"+
+			err = fmt.Errorf("cannot determine type for RHS '%v', will use"+
 				" 'void *' for all fields. Is lvalue = %v", rhs, n.IsLvalue)
 			p.AddMessage(p.GenerateWarningMessage(err, n))
 		}
