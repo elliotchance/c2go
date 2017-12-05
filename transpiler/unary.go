@@ -152,6 +152,9 @@ func transpileUnaryOperatorMul(n *ast.UnaryOperator, p *program.Program) (
 	// pointers to slices, so we have to be careful when dereference a slice
 	// that it actually takes the first element instead.
 	resolvedType, err := types.ResolveType(p, eType)
+	if err != nil {
+		return nil, "", preStmts, postStmts, err
+	}
 	if strings.HasPrefix(resolvedType, "[]") {
 		return &goast.IndexExpr{
 			X:     e,
