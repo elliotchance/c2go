@@ -60,16 +60,74 @@ func GetArrayTypeAndSize(s string) (string, int) {
 //    a bug. It is most useful to do this when dealing with compound types like
 //    FILE where those function probably exist (or should exist) in the noarch
 //    package.
-func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (goast.Expr, error) {
+func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (_ goast.Expr, err error) {
 	cFromType = CleanCType(cFromType)
 	cToType = CleanCType(cToType)
 
 	fromType := cFromType
 	toType := cToType
 
+	// Checking registated typedef types in program
+	if v, ok := p.TypedefType[toType]; ok {
+		if fromType == v {
+			toType, err = ResolveType(p, toType)
+			if err != nil {
+				return expr, err
+			}
+
+			return &goast.CallExpr{
+				Fun: &goast.Ident{
+					Name: toType,
+				},
+				Lparen: 1,
+				Args: []goast.Expr{
+					&goast.ParenExpr{
+						Lparen: 1,
+						X:      expr,
+						Rparen: 2,
+					},
+				},
+				Rparen: 2,
+			}, nil
+		} else {
+			e, err := CastExpr(p, expr, fromType, v)
+			if err != nil {
+				return nil, err
+			}
+			return CastExpr(p, e, v, toType)
+		}
+	}
+	if v, ok := p.TypedefType[fromType]; ok {
+		var t string
+		t, err = ResolveType(p, v)
+		if err != nil {
+			return expr, err
+		}
+		expr = &goast.CallExpr{
+			Fun: &goast.Ident{
+				Name: t,
+			},
+			Lparen: 1,
+			Args: []goast.Expr{
+				&goast.ParenExpr{
+					Lparen: 1,
+					X:      expr,
+					Rparen: 2,
+				},
+			},
+			Rparen: 2,
+		}
+		if toType == v {
+			return expr, nil
+		}
+		return CastExpr(p, expr, v, toType)
+	}
+
 	// C null pointer can cast to any pointer
-	if cFromType == NullPointer && cToType[len(cToType)-1] == '*' {
-		return expr, nil
+	if cFromType == NullPointer && len(cToType) > 0 {
+		if cToType[len(cToType)-1] == '*' {
+			return expr, nil
+		}
 	}
 
 	// Replace for specific case of fromType for darwin:
@@ -122,7 +180,7 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (g
 		return expr, nil
 	}
 
-	fromType, err := ResolveType(p, fromType)
+	fromType, err = ResolveType(p, fromType)
 	if err != nil {
 		return expr, err
 	}

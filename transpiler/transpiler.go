@@ -132,6 +132,7 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 	case *ast.FloatingLiteral:
 		expr = transpileFloatingLiteral(n)
 		exprType = "double"
+		err = nil
 
 	case *ast.PredefinedExpr:
 		expr, exprType, err = transpilePredefinedExpr(n, p)
@@ -159,6 +160,9 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 			}
 		}
 		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children()[0], p, exprIsStmt)
+		if err != nil {
+			return nil, "", nil, nil, err
+		}
 
 	case *ast.DeclRefExpr:
 		if n.For == "EnumConstant" {
