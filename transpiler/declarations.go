@@ -282,7 +282,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 			return []goast.Decl{&goast.GenDecl{
 				Tok: token.VAR,
 				Specs: []goast.Spec{&goast.ValueSpec{
-					Names: []*goast.Ident{&goast.Ident{Name: name}},
+					Names: []*goast.Ident{{Name: name}},
 					Type:  util.NewTypeIdent(theType),
 				}},
 			}}, "", nil
@@ -303,7 +303,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 			return []goast.Decl{&goast.GenDecl{
 				Tok: token.VAR,
 				Specs: []goast.Spec{&goast.ValueSpec{
-					Names: []*goast.Ident{&goast.Ident{Name: name}},
+					Names: []*goast.Ident{{Name: name}},
 					Type:  util.NewTypeIdent(theType),
 				}},
 			}}, "", nil
@@ -350,7 +350,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 							return []goast.Decl{&goast.GenDecl{
 								Tok: token.VAR,
 								Specs: []goast.Spec{&goast.ValueSpec{
-									Names: []*goast.Ident{&goast.Ident{Name: nameVar1}},
+									Names: []*goast.Ident{{Name: nameVar1}},
 									Type:  functionType,
 									Values: []goast.Expr{&goast.TypeAssertExpr{
 										X:    &goast.Ident{Name: nameVar2},
@@ -378,7 +378,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 		decls = append(decls, &goast.GenDecl{
 			Tok: token.VAR,
 			Specs: []goast.Spec{&goast.ValueSpec{
-				Names: []*goast.Ident{&goast.Ident{Name: nameVar1}},
+				Names: []*goast.Ident{{Name: nameVar1}},
 				Type:  functionType,
 			},
 			}})
