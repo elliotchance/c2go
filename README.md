@@ -4,6 +4,7 @@
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/elliotchance/c2go/master/LICENSE)
 [![Join the chat at https://gitter.im/c2goproject](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/c2goproject?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Twitter](https://img.shields.io/twitter/url/https/github.com/elliotchance/c2go.svg?style=social)](https://twitter.com/intent/tweet?text=Wow:&url=%5Bobject%20Object%5D)
+[![GoDoc](https://godoc.org/github.com/elliotchance/c2go?status.svg)](https://godoc.org/github.com/elliotchance/c2go)
 
 A tool for converting C to Go.
 
