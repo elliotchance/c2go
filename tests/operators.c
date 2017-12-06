@@ -6,7 +6,7 @@
 
 int main()
 {
-	plan(35);
+	plan(36);
 
     int i = 10;
     signed char j = 1;
@@ -119,6 +119,10 @@ int main()
 	int s1 = ({ 2; });
 	is_eq(s1, 2);
 	is_eq(({ int foo = s1 * 3; foo + 1; }), 7);
+
+	diag("Not allowable var name for Go")
+	int type = 42;
+	is_eq(type,42);
 
 	done_testing();
 }

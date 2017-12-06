@@ -24,16 +24,16 @@ func setupTest(args []string) (*bytes.Buffer, func()) {
 
 var cliTests = map[string][]string{
 	// Test that help is printed if no files are given
-	"TranspileNoFilesHelp": []string{"test", "transpile"},
+	"TranspileNoFilesHelp": {"test", "transpile"},
 
 	// Test that help is printed if help flag is set, even if file is given
-	"TranspileHelpFlag": []string{"test", "transpile", "-h", "foo.c"},
+	"TranspileHelpFlag": {"test", "transpile", "-h", "foo.c"},
 
 	// Test that help is printed if no files are given
-	"AstNoFilesHelp": []string{"test", "ast"},
+	"AstNoFilesHelp": {"test", "ast"},
 
 	// Test that help is printed if help flag is set, even if file is given
-	"AstHelpFlag": []string{"test", "ast", "-h", "foo.c"},
+	"AstHelpFlag": {"test", "ast", "-h", "foo.c"},
 }
 
 func TestCLI(t *testing.T) {
