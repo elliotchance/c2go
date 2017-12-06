@@ -48,7 +48,7 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 			Type: &goast.FuncType{
 				Params: &goast.FieldList{
 					List: []*goast.Field{
-						&goast.Field{
+						{
 							Names: []*goast.Ident{util.NewIdent("t")},
 							Type:  util.NewTypeIdent("*testing.T"),
 						},
@@ -152,6 +152,11 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 		expr, exprType, preStmts, postStmts, err = transpileMemberExpr(n, p)
 
 	case *ast.ImplicitCastExpr:
+		if n.Kind == "NullToPointer" {
+			expr = util.NewIdent("nil")
+			exprType = types.NullPointer
+			return
+		}
 		if strings.Contains(n.Type, "enum") {
 			if d, ok := n.Children()[0].(*ast.DeclRefExpr); ok {
 				expr, exprType, err = util.NewIdent(d.Name), n.Type, nil

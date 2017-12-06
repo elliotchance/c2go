@@ -113,7 +113,7 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
 		}
 	}
 
-	return r, newPre, newPost, nil
+	return r, preStmts, postStmts, nil
 }
 
 func transpileForStmt(n *ast.ForStmt, p *program.Program) (

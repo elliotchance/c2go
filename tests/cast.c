@@ -27,7 +27,7 @@ void test_castbool()
 
 int main()
 {
-    plan(7);
+    plan(11);
 
     START_TEST(cast)
     START_TEST(castbool)
@@ -40,6 +40,15 @@ int main()
 	is_true(f == NULL);
 	char   *c = (char   *) 0;
 	is_true(c == NULL);
+
+	double *d2 = 0;
+	is_true(d2 == NULL);
+	int    *i2 = 0;
+	is_true(i2 == NULL);
+	float  *f2 = 0;
+	is_true(f2 == NULL);
+	char   *c2 = 0;
+	is_true(c2 == NULL);
 
     done_testing();
 }
