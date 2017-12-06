@@ -6,84 +6,84 @@ import (
 
 func TestNewPositionFromString(t *testing.T) {
 	tests := map[string]Position{
-		`col:30`: Position{
+		`col:30`: {
 			File:      "",
 			Line:      0,
 			Column:    30,
 			LineEnd:   0,
 			ColumnEnd: 0,
 		},
-		`col:47, col:57`: Position{
+		`col:47, col:57`: {
 			File:      "",
 			Line:      0,
 			Column:    47,
 			LineEnd:   0,
 			ColumnEnd: 57,
 		},
-		`/usr/include/sys/cdefs.h:313:68`: Position{
+		`/usr/include/sys/cdefs.h:313:68`: {
 			File:      "/usr/include/sys/cdefs.h",
 			Line:      313,
 			Column:    68,
 			LineEnd:   0,
 			ColumnEnd: 0,
 		},
-		`/usr/include/AvailabilityInternal.h:21697:88, col:124`: Position{
+		`/usr/include/AvailabilityInternal.h:21697:88, col:124`: {
 			File:      "/usr/include/AvailabilityInternal.h",
 			Line:      21697,
 			Column:    88,
 			LineEnd:   0,
 			ColumnEnd: 124,
 		},
-		`line:275:50, col:99`: Position{
+		`line:275:50, col:99`: {
 			File:      "",
 			Line:      275,
 			Column:    50,
 			LineEnd:   0,
 			ColumnEnd: 99,
 		},
-		`line:11:5, line:12:21`: Position{
+		`line:11:5, line:12:21`: {
 			File:      "",
 			Line:      11,
 			Column:    5,
 			LineEnd:   12,
 			ColumnEnd: 21,
 		},
-		`col:54, line:358:1`: Position{
+		`col:54, line:358:1`: {
 			File:      "",
 			Line:      0,
 			Column:    54,
 			LineEnd:   358,
 			ColumnEnd: 1,
 		},
-		`/usr/include/secure/_stdio.h:42:1, line:43:32`: Position{
+		`/usr/include/secure/_stdio.h:42:1, line:43:32`: {
 			File:      "/usr/include/secure/_stdio.h",
 			Line:      42,
 			Column:    1,
 			LineEnd:   43,
 			ColumnEnd: 32,
 		},
-		`line:244:5`: Position{
+		`line:244:5`: {
 			File:      "",
 			Line:      244,
 			Column:    5,
 			LineEnd:   0,
 			ColumnEnd: 0,
 		},
-		`<invalid sloc>`: Position{
+		`<invalid sloc>`: {
 			File:      "",
 			Line:      0,
 			Column:    0,
 			LineEnd:   0,
 			ColumnEnd: 0,
 		},
-		`/usr/include/sys/stdio.h:39:1, /usr/include/AvailabilityInternal.h:21697:126`: Position{
+		`/usr/include/sys/stdio.h:39:1, /usr/include/AvailabilityInternal.h:21697:126`: {
 			File:      "/usr/include/sys/stdio.h",
 			Line:      39,
 			Column:    1,
 			LineEnd:   0,
 			ColumnEnd: 0,
 		},
-		`col:1, /usr/include/sys/cdefs.h:351:63`: Position{
+		`col:1, /usr/include/sys/cdefs.h:351:63`: {
 			File:      "",
 			Line:      0,
 			Column:    1,

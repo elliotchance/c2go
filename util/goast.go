@@ -308,6 +308,14 @@ func IsGoKeyword(w string) bool {
 	return false
 }
 
+// ConvertFunctionNameFromCtoGo - convert function name fromC to Go
+func ConvertFunctionNameFromCtoGo(name string) string {
+	if name == "_" {
+		return "__"
+	}
+	return name
+}
+
 func CreateSliceFromReference(goType string, expr goast.Expr) *goast.SliceExpr {
 	// If the Go type is blank it means that the C type is 'void'.
 	if goType == "" {

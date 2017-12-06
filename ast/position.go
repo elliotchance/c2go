@@ -198,8 +198,11 @@ func mergePositions(p1, p2 Position) Position {
 
 var pos Position
 
+// PositionBuiltIn - default value for fix position
+var PositionBuiltIn = "<built-in>"
+
 func FixPositions(nodes []Node) {
-	pos = Position{File: "<built-in>"}
+	pos = Position{File: PositionBuiltIn}
 	fixPositions(nodes)
 }
 

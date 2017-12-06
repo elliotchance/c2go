@@ -131,6 +131,10 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 }
 
 func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast.Decl, err error) {
+	// implicit code from clang at the head of each clang AST tree
+	if n.IsImplicit && n.Pos.File == ast.PositionBuiltIn {
+		return
+	}
 	name := n.Name
 
 	// added for support "typedef enum {...} dd" with empty name of struct
@@ -258,7 +262,6 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 }
 
 func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, theType string, err error) {
-
 	// There may be some startup code for this global variable.
 	if p.Function == nil {
 		name := n.Name
@@ -279,7 +282,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 			return []goast.Decl{&goast.GenDecl{
 				Tok: token.VAR,
 				Specs: []goast.Spec{&goast.ValueSpec{
-					Names: []*goast.Ident{&goast.Ident{Name: name}},
+					Names: []*goast.Ident{{Name: name}},
 					Type:  util.NewTypeIdent(theType),
 				}},
 			}}, "", nil
@@ -300,7 +303,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 			return []goast.Decl{&goast.GenDecl{
 				Tok: token.VAR,
 				Specs: []goast.Spec{&goast.ValueSpec{
-					Names: []*goast.Ident{&goast.Ident{Name: name}},
+					Names: []*goast.Ident{{Name: name}},
 					Type:  util.NewTypeIdent(theType),
 				}},
 			}}, "", nil
@@ -308,6 +311,11 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 		default:
 			// No init needed.
 		}
+	}
+
+	// Ignore extern as there is no analogy for Go right now.
+	if n.IsExtern && len(n.ChildNodes) == 0 {
+		return
 	}
 
 	/*
@@ -342,7 +350,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 							return []goast.Decl{&goast.GenDecl{
 								Tok: token.VAR,
 								Specs: []goast.Spec{&goast.ValueSpec{
-									Names: []*goast.Ident{&goast.Ident{Name: nameVar1}},
+									Names: []*goast.Ident{{Name: nameVar1}},
 									Type:  functionType,
 									Values: []goast.Expr{&goast.TypeAssertExpr{
 										X:    &goast.Ident{Name: nameVar2},
@@ -370,7 +378,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 		decls = append(decls, &goast.GenDecl{
 			Tok: token.VAR,
 			Specs: []goast.Spec{&goast.ValueSpec{
-				Names: []*goast.Ident{&goast.Ident{Name: nameVar1}},
+				Names: []*goast.Ident{{Name: nameVar1}},
 				Type:  functionType,
 			},
 			}})
@@ -400,12 +408,6 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 		name == "_CurrentRuneLocale" {
 		theType = "unknown10"
 		return
-	}
-
-	// TODO: The name of a variable or field cannot be "type"
-	// https://github.com/elliotchance/c2go/issues/83
-	if name == "type" {
-		name = "type_"
 	}
 
 	defaultValue, _, newPre, newPost, err := getDefaultValueForVar(p, n)
