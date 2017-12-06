@@ -92,20 +92,19 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 
 	// Add the imports after everything else so we can ensure that they are all
 	// placed at the top.
-	for _, quotedImportPath := range p.Imports() {
-		importSpec := &goast.ImportSpec{
-			Path: &goast.BasicLit{
-				Kind:  token.IMPORT,
-				Value: quotedImportPath,
-			},
-		}
-		importDecl := &goast.GenDecl{
-			Tok: token.IMPORT,
-		}
-
-		importDecl.Specs = append(importDecl.Specs, importSpec)
-		p.File.Decls = append([]goast.Decl{importDecl}, p.File.Decls...)
+	importGroup := goast.GenDecl{
+		Tok:    token.IMPORT,
+		Lparen: 1,
 	}
+	for _, imp := range p.Imports() {
+		importGroup.Specs = append(importGroup.Specs, &goast.ImportSpec{
+			Path: &goast.BasicLit{
+				Kind:  token.STRING,
+				Value: imp,
+			},
+		})
+	}
+	p.File.Decls = append([]goast.Decl{&importGroup}, p.File.Decls...)
 
 	return err
 }
