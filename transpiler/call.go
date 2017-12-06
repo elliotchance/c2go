@@ -68,6 +68,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
+	functionName = util.ConvertFunctionNameFromCtoGo(functionName)
 
 	// Get the function definition from it's name. The case where it is not
 	// defined is handled below (we haven't seen the prototype yet).

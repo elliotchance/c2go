@@ -60,7 +60,7 @@ struct xx {
 
 int main()
 {
-    plan(15);
+    plan(16);
 
     struct programming variable;
     char *s = "Programming in Software Development.";
@@ -115,6 +115,14 @@ int main()
 	struct u yy;
 	yy.y = 42;
 	is_eq(yy.y,42);
+
+	diag("Not allowable var name for Go")
+	struct type{
+		int type;
+	};
+	struct type t;
+	t.type = 42;
+	is_eq(t.type, 42);
 
     done_testing();
 }

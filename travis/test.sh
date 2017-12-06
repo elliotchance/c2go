@@ -70,7 +70,7 @@ if [ $($C2GO ast $C2GO_DIR/examples/prime.c | wc -l) -eq 0 ]; then exit 1; fi
 echo "----------------------"
 # This will have to be updated every so often to the latest version. You can
 # find the latest version here: https://sqlite.org/download.html
-export SQLITE3_FILE=sqlite-amalgamation-3190300
+export SQLITE3_FILE=sqlite-amalgamation-3210000
 
 # Variable for location of temp sqlite files
 SQLITE_TEMP_FOLDER="/tmp/SQLITE"
