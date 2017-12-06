@@ -37,6 +37,14 @@ func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
+	// null in C is zero
+	if aType == types.NullPointer {
+		a = &goast.BasicLit{
+			Kind:  token.INT,
+			Value: "0",
+		}
+		aType = "int"
+	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 

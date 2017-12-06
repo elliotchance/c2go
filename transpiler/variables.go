@@ -97,7 +97,7 @@ func newDeclStmt(a *ast.VarDecl, p *program.Program) (
 							return &goast.DeclStmt{Decl: &goast.GenDecl{
 								Tok: token.VAR,
 								Specs: []goast.Spec{&goast.ValueSpec{
-									Names: []*goast.Ident{&goast.Ident{Name: nameVar1}},
+									Names: []*goast.Ident{{Name: nameVar1}},
 									Type:  functionType,
 									Values: []goast.Expr{&goast.TypeAssertExpr{
 										X:    &goast.Ident{Name: nameVar2},
@@ -378,15 +378,15 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 		//   1. Types need to be stripped of their pointer, 'FILE *' -> 'FILE'.
 		//   2. Types may refer to one or more other types in a chain that have
 		//      to be resolved before the real field type can be determined.
-		err = errors.New("cannot determine type for LHS '" + lhsType +
-			"', will use 'void *' for all fields")
+		err = fmt.Errorf("cannot determine type for LHS '%v'"+
+			", will use 'void *' for all fields. Is lvalue = %v", lhsType, n.IsLvalue)
 		p.AddMessage(p.GenerateWarningMessage(err, n))
 	} else {
 		if s, ok := structType.Fields[rhs].(string); ok {
 			rhsType = s
 		} else {
-			err = errors.New("cannot determine type for RHS, will use" +
-				" 'void *' for all fields")
+			err = fmt.Errorf("cannot determine type for RHS '%v', will use"+
+				" 'void *' for all fields. Is lvalue = %v", rhs, n.IsLvalue)
 			p.AddMessage(p.GenerateWarningMessage(err, n))
 		}
 	}

@@ -135,7 +135,7 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) (decls []goast.Decl,
 				case *goast.Ident:
 					groupComments := p.GetMessageComments()
 					e = &goast.ValueSpec{
-						Names:  []*goast.Ident{&goast.Ident{Name: c.Name}},
+						Names:  []*goast.Ident{{Name: c.Name}},
 						Values: []goast.Expr{&goast.BasicLit{Kind: token.INT, Value: strconv.Itoa(counter)}},
 						Type:   val.Type,
 						Doc:    &groupComments,
