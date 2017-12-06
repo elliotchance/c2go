@@ -42,8 +42,6 @@ int main()
 	int ii = 5;
 	if ((ii = d(ii)) != (-1)){
 		is_eq(ii,10)
-	} else {
-		is_eq(ii,10)
 	}
 
     done_testing();
