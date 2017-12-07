@@ -6,7 +6,7 @@
 
 int main()
 {
-	plan(36);
+	plan(49);
 
     int i = 10;
     signed char j = 1;
@@ -124,5 +124,59 @@ int main()
 	int type = 42;
 	is_eq(type,42);
 
+	diag("Go keywords inside C code")
+	{
+		int chan = 42;
+		is_eq(chan ,42);
+	}
+	{
+		int defer = 42;
+		is_eq(defer ,42);
+	}
+	{
+		int fallthrough = 42;
+		is_eq(fallthrough ,42);
+	}
+	{
+		int func = 42;
+		is_eq(func ,42);
+	}
+	{
+		int go = 42;
+		is_eq(go ,42);
+	}
+	{
+		int import = 42;
+		is_eq(import ,42);
+	}
+	{
+		int interface = 42;
+		is_eq(interface ,42);
+	}
+	{
+		int map = 42;
+		is_eq(map ,42);
+	}
+	{
+		int package = 42;
+		is_eq(package ,42);
+	}
+	{
+		int range = 42;
+		is_eq(range ,42);
+	}
+	{
+		int select = 42;
+		is_eq(select ,42);
+	}
+	{
+		int type = 42;
+		is_eq(type ,42);
+	}
+	{
+		int var = 42;
+		is_eq(var ,42);
+	}
+	
 	done_testing();
 }
