@@ -1,9 +1,13 @@
 #include <stdio.h>
 #include "tests.h"
 
+int d(int v){
+	return 2*v;
+}
+
 int main()
 {
-    plan(5);
+    plan(6);
 
     int x = 1;
 
@@ -32,6 +36,12 @@ int main()
 		pass("%s", "Invert : ! NULL is zero");
 	} else {
 		fail("%s", "Invert : ! NULL is not zero");
+	}
+
+	diag("Operation inside function")
+	int ii = 5;
+	if ((ii = d(ii)) != (-1)){
+		is_eq(ii,10)
 	}
 
     done_testing();
