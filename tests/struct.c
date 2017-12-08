@@ -60,7 +60,7 @@ struct xx {
 
 int main()
 {
-    plan(16);
+    plan(18);
 
     struct programming variable;
     char *s = "Programming in Software Development.";
@@ -123,6 +123,16 @@ int main()
 	struct type t;
 	t.type = 42;
 	is_eq(t.type, 42);
+
+	diag("Initialization of struct")
+	struct Point {
+		int x;
+		int y;
+	};
+	struct Point p = { .y = 2, .x = 3 };
+	is_eq(p.x, 3);
+	is_eq(p.y, 2);
+
 
     done_testing();
 }

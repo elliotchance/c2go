@@ -60,6 +60,7 @@ int main()
 	int j = f(3,4);
 	is_eq(j,12);
 	
+	diag("Not allowable function name for Go")
 	is_eq(_(),42);
 
     done_testing();
