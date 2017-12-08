@@ -250,12 +250,6 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 		}
 	}
 
-	// Need fix in program function definition for
-	// correct convertion of return type
-	if functionName == "noarch.Strlen" {
-		functionDef.ReturnType = "int"
-	}
-
 	return util.NewCallExpr(functionName, realArgs...),
 		functionDef.ReturnType, preStmts, postStmts, nil
 }
