@@ -9,6 +9,12 @@ type CStyleCastExpr struct {
 	ChildNodes []Node
 }
 
+// CStyleCastExprNullToPointer - string of kind NullToPointer
+var CStyleCastExprNullToPointer = "NullToPointer"
+
+// CStyleCastExprToVoid - string of kind ToVoid
+var CStyleCastExprToVoid = "ToVoid"
+
 func parseCStyleCastExpr(line string) *CStyleCastExpr {
 	groups := groupsFromRegex(
 		"<(?P<position>.*)> '(?P<type1>.*?)'(:'(?P<type2>.*?)')? <(?P<kind>.*)>",
