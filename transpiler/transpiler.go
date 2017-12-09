@@ -132,6 +132,7 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 	case *ast.FloatingLiteral:
 		expr = transpileFloatingLiteral(n)
 		exprType = "double"
+		err = nil
 
 	case *ast.PredefinedExpr:
 		expr, exprType, err = transpilePredefinedExpr(n, p)
@@ -152,7 +153,7 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 		expr, exprType, preStmts, postStmts, err = transpileMemberExpr(n, p)
 
 	case *ast.ImplicitCastExpr:
-		if n.Kind == "NullToPointer" {
+		if n.Kind == ast.CStyleCastExprNullToPointer {
 			expr = util.NewIdent("nil")
 			exprType = types.NullPointer
 			return
@@ -164,6 +165,9 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 			}
 		}
 		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children()[0], p, exprIsStmt)
+		if err != nil {
+			return nil, "", nil, nil, err
+		}
 
 	case *ast.DeclRefExpr:
 		if n.For == "EnumConstant" {
@@ -183,7 +187,7 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 		expr, exprType, preStmts, postStmts, err = transpileParenExpr(n, p)
 
 	case *ast.CStyleCastExpr:
-		if n.Kind == "NullToPointer" {
+		if n.Kind == ast.CStyleCastExprNullToPointer {
 			expr = util.NewIdent("nil")
 			exprType = types.NullPointer
 			return
@@ -231,11 +235,6 @@ func transpileToStmts(node ast.Node, p *program.Program) (stmts []goast.Stmt, er
 		stmts = nilFilterStmts(stmts)
 	}()
 
-	var (
-		stmt      goast.Stmt
-		preStmts  []goast.Stmt
-		postStmts []goast.Stmt
-	)
 	switch n := node.(type) {
 	case *ast.DeclStmt:
 		stmts, err = transpileDeclStmt(n, p)
@@ -245,13 +244,18 @@ func transpileToStmts(node ast.Node, p *program.Program) (stmts []goast.Stmt, er
 		}
 		return
 	default:
+		var (
+			stmt      goast.Stmt
+			preStmts  []goast.Stmt
+			postStmts []goast.Stmt
+		)
 		stmt, preStmts, postStmts, err = transpileToStmt(node, p)
 		if err != nil {
 			p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Error in DeclStmt: %v", err), n))
 			err = nil // Error is ignored
 		}
+		return combineStmts(stmt, preStmts, postStmts), err
 	}
-	stmts = append(stmts, combineStmts(stmt, preStmts, postStmts)...)
 	return
 }
 
@@ -349,9 +353,31 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 
 	// nil is happen, when we remove function `free` of <stdlib.h>
 	// see function CallExpr in transpiler
-	if expr != (*goast.CallExpr)(nil) {
-		stmt = util.NewExprStmt(expr)
+	if expr == (*goast.CallExpr)(nil) {
+		return
 	}
+
+	// CStyleCastExpr.Kind == ToVoid
+	var foundToVoid bool
+	if v, ok := node.(*ast.CStyleCastExpr); ok && v.Kind == ast.CStyleCastExprToVoid {
+		foundToVoid = true
+	}
+	if len(node.Children()) > 0 {
+		if v, ok := node.Children()[0].(*ast.CStyleCastExpr); ok && v.Kind == ast.CStyleCastExprToVoid {
+			foundToVoid = true
+		}
+	}
+	if foundToVoid {
+		stmt = &goast.AssignStmt{
+			Lhs: []goast.Expr{util.NewIdent("_")},
+			Tok: token.ASSIGN,
+			Rhs: []goast.Expr{expr},
+		}
+		return
+	}
+
+	// For all other cases
+	stmt = util.NewExprStmt(expr)
 
 	return
 }

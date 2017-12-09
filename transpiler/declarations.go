@@ -238,6 +238,7 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 		}
 	}
 
+	err = nil
 	decls = append(decls, &goast.GenDecl{
 		Tok: token.TYPE,
 		Specs: []goast.Spec{
@@ -248,16 +249,17 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 		},
 	})
 
-	// added for support "struct typedef" with non-empty name of struct
 	if v, ok := p.Structs["struct "+resolvedType]; ok {
+		// Registration "typedef struct" with non-empty name of struct
 		p.Structs["struct "+name] = v
-	}
-
-	if v, ok := p.EnumConstantToEnum["enum "+resolvedType]; ok {
+	} else if v, ok := p.EnumConstantToEnum["enum "+resolvedType]; ok {
+		// Registration "enum constants"
 		p.EnumConstantToEnum["enum "+resolvedType] = v
+	} else {
+		// Registration "typedef type type2"
+		p.TypedefType[n.Name] = n.Type
 	}
 
-	err = nil
 	return
 }
 

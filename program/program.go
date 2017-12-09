@@ -87,6 +87,12 @@ type Program struct {
 	// EnumTypedefName - a map with key="Name of typedef enum" and
 	// value="exist ot not"
 	EnumTypedefName map[string]bool
+
+	// TypedefType - map for type alias, for example:
+	// C  : typedef int INT;
+	// Map: key = INT, value = int
+	// Important: key and value are C types
+	TypedefType map[string]string
 }
 
 // NewProgram creates a new blank program.
@@ -123,6 +129,7 @@ func NewProgram() *Program {
 		GlobalVariables:    map[string]string{},
 		EnumConstantToEnum: map[string]string{},
 		EnumTypedefName:    map[string]bool{},
+		TypedefType:        map[string]string{},
 	}
 }
 

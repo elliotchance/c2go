@@ -27,10 +27,39 @@ void test_castbool()
 
 int main()
 {
-    plan(11);
+    plan(17);
 
     START_TEST(cast)
     START_TEST(castbool)
+
+	{
+	typedef unsigned int u32;
+	u32 x = 42;
+	is_eq(x , 42);
+    u32 a[10];
+    a[0] = x;
+	is_eq(a[0],42);
+	}
+
+	{
+	typedef double u32d;
+	u32d x = 42.0;
+	is_eq(x , 42.0);
+    u32d a[10];
+    a[0] = x;
+	is_eq(a[0],42.0);
+	}
+
+	{
+	typedef int integer;
+	typedef int INTEGER;
+    integer i = 123;
+    INTEGER j = 567;
+    j = i;
+    i = j;
+	is_eq(i , 123);
+	is_eq(j , 123);
+	}
 
 	double *d = (double *) 0;
 	is_true(d == NULL);
