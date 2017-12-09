@@ -6,7 +6,7 @@
 
 int main()
 {
-	plan(49);
+	plan(50);
 
     int i = 10;
     signed char j = 1;
