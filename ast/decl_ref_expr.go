@@ -43,6 +43,9 @@ func parseDeclRefExpr(line string) *DeclRefExpr {
 	}
 }
 
+// FunctionDeclRefExpr - value of DeclRefExpr.For for function
+var FunctionDeclRefExpr = "Function"
+
 // AddChild adds a new child node. Child nodes can then be accessed with the
 // Children attribute.
 func (n *DeclRefExpr) AddChild(node Node) {

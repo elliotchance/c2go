@@ -57,6 +57,7 @@ func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
 		t, err := types.CastExpr(p, defaultValue, defaultValueType, a.Type)
 		if !p.AddMessage(p.GenerateWarningMessage(err, a)) {
 			values = append(values, t)
+			defaultValueType = a.Type
 		}
 	}
 
