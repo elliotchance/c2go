@@ -398,8 +398,7 @@ func transpileToNode(node ast.Node, p *program.Program) (decls []goast.Decl, err
 		decls, err = transpileFunctionDecl(n, p)
 		if len(decls) > 0 {
 			if _, ok := decls[0].(*goast.FuncDecl); ok {
-				groupComments := p.GetMessageComments()
-				decls[0].(*goast.FuncDecl).Doc = &groupComments
+				decls[0].(*goast.FuncDecl).Doc = p.GetMessageComments()
 			}
 		}
 

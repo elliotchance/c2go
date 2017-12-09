@@ -155,7 +155,8 @@ func (p *Program) AddMessage(message string) bool {
 // GetMessageComments - get messages "Warnings", "Error" like a comment
 // Location of comments only NEAR of error or warning and
 // don't show directly location
-func (p *Program) GetMessageComments() (group goast.CommentGroup) {
+func (p *Program) GetMessageComments() (_ *goast.CommentGroup) {
+	var group goast.CommentGroup
 	if p.messagePosition < len(p.messages) {
 		for i := p.messagePosition; i < len(p.messages); i++ {
 			group.List = append(group.List, &goast.Comment{
@@ -164,7 +165,7 @@ func (p *Program) GetMessageComments() (group goast.CommentGroup) {
 		}
 		p.messagePosition = len(p.messages) - 1
 	}
-	return
+	return &group
 }
 
 // GetStruct returns a struct object (representing struct type or union type) or

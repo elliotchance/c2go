@@ -281,13 +281,12 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 					true,
 				),
 			)
-			groupComments := p.GetMessageComments()
 			return []goast.Decl{&goast.GenDecl{
 				Tok: token.VAR,
 				Specs: []goast.Spec{&goast.ValueSpec{
 					Names: []*goast.Ident{{Name: name}},
 					Type:  util.NewTypeIdent(theType),
-					Doc:   &groupComments,
+					Doc:   p.GetMessageComments(),
 				}},
 			}}, "", nil
 
@@ -304,14 +303,13 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 					true,
 				),
 			)
-			groupComments := p.GetMessageComments()
 			return []goast.Decl{&goast.GenDecl{
 				Tok: token.VAR,
 				Specs: []goast.Spec{&goast.ValueSpec{
 					Names: []*goast.Ident{{Name: name}},
 					Type:  util.NewTypeIdent(theType),
 				}},
-				Doc: &groupComments,
+				Doc: p.GetMessageComments(),
 			}}, "", nil
 
 		default:
@@ -353,7 +351,6 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 						if decl, ok := vv.Children()[0].(*ast.DeclRefExpr); ok {
 							nameVar2 := decl.Name
 
-							groupComments := p.GetMessageComments()
 							return []goast.Decl{&goast.GenDecl{
 								Tok: token.VAR,
 								Specs: []goast.Spec{&goast.ValueSpec{
@@ -363,7 +360,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 										X:    &goast.Ident{Name: nameVar2},
 										Type: functionType,
 									}},
-									Doc: &groupComments,
+									Doc: p.GetMessageComments(),
 								},
 								}}}, "", nil
 						}
@@ -383,13 +380,12 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 		}
 		functionType := GenerateFuncType(fields, returns)
 		nameVar1 := n.Name
-		groupComments := p.GetMessageComments()
 		decls = append(decls, &goast.GenDecl{
 			Tok: token.VAR,
 			Specs: []goast.Spec{&goast.ValueSpec{
 				Names: []*goast.Ident{{Name: nameVar1}},
 				Type:  functionType,
-				Doc:   &groupComments,
+				Doc:   p.GetMessageComments(),
 			},
 			}})
 		err = nil
@@ -460,7 +456,6 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 		p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Not acceptable length of Stmt : pre(%d), post(%d)", len(preStmts), len(postStmts)), n))
 	}
 
-	groupComments := p.GetMessageComments()
 	return []goast.Decl{&goast.GenDecl{
 		Tok: token.VAR,
 		Specs: []goast.Spec{
@@ -468,7 +463,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 				Names:  []*goast.Ident{util.NewIdent(n.Name)},
 				Type:   util.NewTypeIdent(t),
 				Values: defaultValue,
-				Doc:    &groupComments,
+				Doc:    p.GetMessageComments(),
 			},
 		},
 	}}, "", nil
