@@ -1,5 +1,6 @@
 package ast
 
+// OffsetOfExpr is expression.
 type OffsetOfExpr struct {
 	Addr       Address
 	Pos        Position

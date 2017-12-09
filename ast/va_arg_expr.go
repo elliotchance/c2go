@@ -1,5 +1,6 @@
 package ast
 
+// VAArgExpr is expression.
 type VAArgExpr struct {
 	Addr       Address
 	Pos        Position

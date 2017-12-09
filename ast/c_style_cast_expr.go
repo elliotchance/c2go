@@ -1,5 +1,6 @@
 package ast
 
+// CStyleCastExpr is expression.
 type CStyleCastExpr struct {
 	Addr       Address
 	Pos        Position

@@ -1,5 +1,6 @@
 package ast
 
+// StmtExpr is expression.
 type StmtExpr struct {
 	Addr       Address
 	Pos        Position
