@@ -344,18 +344,11 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 		stmt = &goast.EmptyStmt{}
 		return
 	case *ast.DeclStmt:
-		if len(n.Children()) != 1 {
-			p.AddMessage(p.GenerateWarningMessage(
-				fmt.Errorf("Have not support amount of children. len = %d", len(n.Children())), n))
-			return
-		}
-		var decls []goast.Decl
-		decls, err = transpileToNode(n.Children()[0], p)
+		var stmts []goast.Stmt
+		stmts, err = transpileDeclStmt(n, p)
 		if err != nil {
 			return
 		}
-		// convert Decl to Stmt
-		stmts := convertDeclToStmt(decls)
 		stmt = stmts[len(stmts)-1]
 		if len(stmts) > 1 {
 			preStmts = stmts[0 : len(stmts)-2]
