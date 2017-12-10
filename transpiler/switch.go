@@ -66,10 +66,7 @@ func transpileSwitchStmt(n *ast.SwitchStmt, p *program.Program) (
 }
 
 func normalizeSwitchCases(body *ast.CompoundStmt, p *program.Program) (
-	[]*goast.CaseClause, []goast.Stmt, []goast.Stmt, error) {
-	preStmts := []goast.Stmt{}
-	postStmts := []goast.Stmt{}
-
+	_ []*goast.CaseClause, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 	// The body of a switch has a non uniform structure. For example:
 	//
 	//     switch a {
@@ -116,35 +113,33 @@ func normalizeSwitchCases(body *ast.CompoundStmt, p *program.Program) (
 
 	cases := []*goast.CaseClause{}
 	caseEndedWithBreak := false
-	var err error
-	var newPre, newPost []goast.Stmt
 
 	for _, x := range body.Children() {
 		switch c := x.(type) {
 		case *ast.CaseStmt, *ast.DefaultStmt:
+			var newPre, newPost []goast.Stmt
 			cases, newPre, newPost, err = appendCaseOrDefaultToNormalizedCases(cases, c, caseEndedWithBreak, p)
 			if err != nil {
 				return []*goast.CaseClause{}, nil, nil, err
 			}
 			caseEndedWithBreak = false
 
+			preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 		case *ast.BreakStmt:
 			caseEndedWithBreak = true
 
 		default:
 			var stmt goast.Stmt
+			var newPre, newPost []goast.Stmt
 			stmt, newPre, newPost, err = transpileToStmt(x, p)
 			if err != nil {
 				return []*goast.CaseClause{}, nil, nil, err
 			}
-
-			if stmt != nil && len(cases) > 0 {
-				cases[len(cases)-1].Body = append(cases[len(cases)-1].Body, stmt)
-			}
+			preStmts = append(preStmts, newPre...)
+			preStmts = append(preStmts, stmt)
+			preStmts = append(preStmts, newPost...)
 		}
 	}
-
-	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	return cases, preStmts, postStmts, nil
 }
