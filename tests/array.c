@@ -157,9 +157,11 @@ void test_partialarr_init()
 extern int arrayEx[];
 int arrayEx[4] = { 1, 2, 3, 4 };
 
+int ff(){ return 3;}
+
 int main()
 {
-    plan(48);
+    plan(56);
 
     START_TEST(intarr);
     START_TEST(doublearr);
@@ -177,5 +179,30 @@ int main()
 
 	is_eq(arrayEx[1],2.0);
 
+	diag("Array arithmetic")
+    float a[5];
+    a[0] = 42.;
+       is_eq(a[0],42.);
+    a[0+1] = 42.;
+       is_eq(a[1],42);
+    a[2]   = 42.;
+       is_eq(a[2],42);
+       
+       diag("Pointer arithmetic")
+    float *b;
+    b = (float *)calloc(5,sizeof(float));
+    
+       *b   = 42.;
+       is_eq(*(b+0),42.);
+    
+       *(b+1) = 42.;
+       is_eq(*(b+1),42.);
+    *(2+b) = 42.;
+       is_eq(*(b+2),42.);
+
+    *(b+ff()) = 45.;
+       is_eq(*(b + 3), 45.);
+    *(ff()+b+1) = 46.;
+       is_eq(*(b + 4), 46.);
     done_testing();
 }

@@ -244,7 +244,7 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program) 
 	newType, err := types.GetDereferenceType(expressionType)
 	if err != nil {
 		message := fmt.Sprintf(
-			"Cannot dereference type '%s' for the expression '%s'",
+			"Cannot dereference type '%s' for the expression '%#v'",
 			expressionType, expression)
 		return nil, newType, nil, nil, errors.New(message)
 	}

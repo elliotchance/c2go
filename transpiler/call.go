@@ -70,6 +70,28 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 	}
 	functionName = util.ConvertFunctionNameFromCtoGo(functionName)
 
+	// function stdlib.c
+	if functionName == "calloc" && len(n.Children()) == 3 {
+		var allocType string
+		size, _, preStmts, postStmts, err := transpileToExpr(n.Children()[1], p, false)
+		if err != nil {
+			return nil, "", nil, nil, err
+		}
+		if v, ok := n.Children()[2].(*ast.UnaryExprOrTypeTraitExpr); ok {
+			allocType = v.Type2
+		} else {
+			return nil, "", nil, nil,
+				fmt.Errorf("Unsupport type '%T' in function calloc", n.Children()[2])
+		}
+		return &goast.CallExpr{
+			Fun: util.NewIdent("make"),
+			Args: []goast.Expr{
+				&goast.ArrayType{Elt: util.NewIdent(allocType)},
+				size,
+			},
+		}, n.Type, preStmts, postStmts, nil
+	}
+
 	// Get the function definition from it's name. The case where it is not
 	// defined is handled below (we haven't seen the prototype yet).
 	functionDef := program.GetFunctionDefinition(functionName)
