@@ -194,8 +194,8 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 						err = fmt.Errorf("Not acceptable : change counter is more then 1")
 						return
 					}
-					lastAstValue = vv
-					lastAstNode = v
+					lastAstValue = n.Children()[i].Children()[0]
+					lastAstNode = n.Children()[i]
 				} else {
 					err = fmt.Errorf("Not support type for pointer founder: %T", v)
 					return
@@ -216,9 +216,17 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 		}
 	}
 	f(n)
-	if err != nil || pointerName == "" {
-		//return replaced node
-		lastAstNode = lastAstValue
+	defer func() {
+		if counter > 0 {
+			//return replaced node
+			lastAstNode.(*ast.ImplicitCastExpr).ChildNodes[0] = lastAstValue
+		}
+	}()
+	if err != nil {
+		return
+	}
+	if pointerName == "" {
+		err = fmt.Errorf("pointer without name")
 		return
 	}
 
