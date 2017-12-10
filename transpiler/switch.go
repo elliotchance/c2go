@@ -129,8 +129,15 @@ func normalizeSwitchCases(body *ast.CompoundStmt, p *program.Program) (
 			caseEndedWithBreak = true
 
 		default:
-			p.AddMessage(p.GenerateWarningMessage(
-				fmt.Errorf("initialization part of switch - ignored"), c))
+			var stmt goast.Stmt
+			var newPre, newPost []goast.Stmt
+			stmt, newPre, newPost, err = transpileToStmt(x, p)
+			if err != nil {
+				return []*goast.CaseClause{}, nil, nil, err
+			}
+			preStmts = append(preStmts, newPre...)
+			preStmts = append(preStmts, stmt)
+			preStmts = append(preStmts, newPost...)
 		}
 	}
 

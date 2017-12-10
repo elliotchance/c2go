@@ -8,7 +8,7 @@ void empty(){;}
 
 int main()
 {
-	plan(50);
+	plan(51);
 
     int i = 10;
     signed char j = 1;
@@ -188,18 +188,22 @@ int main()
 	{ int             **az; (void)(az); }
 	{ float   *volatile*az; (void)(az); }
 
-	diag("switch with ignored initialization")
+	diag("switch with initialization")
 	int expr = 0;
-	int ii   = 0;
 	switch(expr)
 	{
-		ii = 42;
+		int ii;
 		case 0:
 		{
-			break;
+			ii = 42;
+			is_eq(ii,42);
+		}
+		case 1:
+		{
+			ii = 5;
+			is_eq(ii,5);
 		}
 	}
-	is_eq(ii,0);
 
 	done_testing();
 }
