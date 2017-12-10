@@ -6,7 +6,7 @@
 
 int main()
 {
-	plan(49);
+	plan(50);
 
     int i = 10;
     signed char j = 1;
@@ -177,6 +177,18 @@ int main()
 		int var = 42;
 		is_eq(var ,42);
 	}
-	
+	{
+		int _ = 42;
+		is_eq(_ ,42);
+	}
+
+	// checking is_eq is no need, because if "(void)(az)" not transpile,
+	// then go build return fail - value is not used
+	diag("CStyleCast <ToVoid>")
+	{ char            **az; (void)(az); }
+	{ double     *const*az; (void)(az); }
+	{ int             **az; (void)(az); }
+	{ float   *volatile*az; (void)(az); }
+
 	done_testing();
 }

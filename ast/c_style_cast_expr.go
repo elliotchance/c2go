@@ -1,5 +1,6 @@
 package ast
 
+// CStyleCastExpr is expression.
 type CStyleCastExpr struct {
 	Addr       Address
 	Pos        Position
@@ -8,6 +9,12 @@ type CStyleCastExpr struct {
 	Kind       string
 	ChildNodes []Node
 }
+
+// CStyleCastExprNullToPointer - string of kind NullToPointer
+var CStyleCastExprNullToPointer = "NullToPointer"
+
+// CStyleCastExprToVoid - string of kind ToVoid
+var CStyleCastExprToVoid = "ToVoid"
 
 func parseCStyleCastExpr(line string) *CStyleCastExpr {
 	groups := groupsFromRegex(

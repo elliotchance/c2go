@@ -238,6 +238,7 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 		}
 	}
 
+	err = nil
 	decls = append(decls, &goast.GenDecl{
 		Tok: token.TYPE,
 		Specs: []goast.Spec{
@@ -248,16 +249,17 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 		},
 	})
 
-	// added for support "struct typedef" with non-empty name of struct
 	if v, ok := p.Structs["struct "+resolvedType]; ok {
+		// Registration "typedef struct" with non-empty name of struct
 		p.Structs["struct "+name] = v
-	}
-
-	if v, ok := p.EnumConstantToEnum["enum "+resolvedType]; ok {
+	} else if v, ok := p.EnumConstantToEnum["enum "+resolvedType]; ok {
+		// Registration "enum constants"
 		p.EnumConstantToEnum["enum "+resolvedType] = v
+	} else {
+		// Registration "typedef type type2"
+		p.TypedefType[n.Name] = n.Type
 	}
 
-	err = nil
 	return
 }
 
@@ -284,6 +286,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 				Specs: []goast.Spec{&goast.ValueSpec{
 					Names: []*goast.Ident{{Name: name}},
 					Type:  util.NewTypeIdent(theType),
+					Doc:   p.GetMessageComments(),
 				}},
 			}}, "", nil
 
@@ -306,6 +309,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 					Names: []*goast.Ident{{Name: name}},
 					Type:  util.NewTypeIdent(theType),
 				}},
+				Doc: p.GetMessageComments(),
 			}}, "", nil
 
 		default:
@@ -356,6 +360,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 										X:    &goast.Ident{Name: nameVar2},
 										Type: functionType,
 									}},
+									Doc: p.GetMessageComments(),
 								},
 								}}}, "", nil
 						}
@@ -380,6 +385,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 			Specs: []goast.Spec{&goast.ValueSpec{
 				Names: []*goast.Ident{{Name: nameVar1}},
 				Type:  functionType,
+				Doc:   p.GetMessageComments(),
 			},
 			}})
 		err = nil
@@ -457,6 +463,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 				Names:  []*goast.Ident{util.NewIdent(n.Name)},
 				Type:   util.NewTypeIdent(t),
 				Values: defaultValue,
+				Doc:    p.GetMessageComments(),
 			},
 		},
 	}}, "", nil

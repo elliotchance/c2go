@@ -319,6 +319,18 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 		}
 	}
 
+	if left == nil {
+		err = fmt.Errorf("left part of binary operation is nil. left : %#v", n.Children()[0])
+		p.AddMessage(p.GenerateWarningMessage(err, n))
+		return nil, "", nil, nil, err
+	}
+
+	if right == nil {
+		err = fmt.Errorf("right part of binary operation is nil. right : %#v", n.Children()[1])
+		p.AddMessage(p.GenerateWarningMessage(err, n))
+		return nil, "", nil, nil, err
+	}
+
 	return util.NewBinaryExpr(left, operator, right, resolvedLeftType, exprIsStmt),
 		types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType),
 		preStmts, postStmts, nil
