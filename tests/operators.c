@@ -6,7 +6,7 @@
 
 int main()
 {
-	plan(49);
+	plan(50);
 
     int i = 10;
     signed char j = 1;
@@ -176,6 +176,10 @@ int main()
 	{
 		int var = 42;
 		is_eq(var ,42);
+	}
+	{
+		int _ = 42;
+		is_eq(_ ,42);
 	}
 
 	// checking is_eq is no need, because if "(void)(az)" not transpile,

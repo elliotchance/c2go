@@ -369,7 +369,7 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 	}
 	if foundToVoid {
 		stmt = &goast.AssignStmt{
-			Lhs: []goast.Expr{util.NewIdent("_")},
+			Lhs: []goast.Expr{goast.NewIdent("_")},
 			Tok: token.ASSIGN,
 			Rhs: []goast.Expr{expr},
 		}
