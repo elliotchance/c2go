@@ -1,5 +1,6 @@
 package ast
 
+// PredefinedExpr is expression.
 type PredefinedExpr struct {
 	Addr       Address
 	Pos        Position
