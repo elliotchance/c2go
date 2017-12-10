@@ -102,6 +102,7 @@ func transpileEnumConstantDecl(p *program.Program, n *ast.EnumConstantDecl) (
 		Names:  []*goast.Ident{util.NewIdent(n.Name)},
 		Type:   util.NewTypeIdent(valueType),
 		Values: []goast.Expr{value},
+		Doc:    p.GetMessageComments(),
 	}, preStmts, postStmts
 }
 
@@ -135,6 +136,7 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) (decls []goast.Decl,
 						Names:  []*goast.Ident{{Name: c.Name}},
 						Values: []goast.Expr{&goast.BasicLit{Kind: token.INT, Value: strconv.Itoa(counter)}},
 						Type:   val.Type,
+						Doc:    p.GetMessageComments(),
 					}
 					counter++
 				default:

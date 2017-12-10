@@ -24,13 +24,25 @@ int mul(int a, int b) {
         return a * b;
 }
 
-int _(){
-	return 42;
-}
+// Go keywords in C function
+int chan()       {return 42;}
+int defer()      {return 42;}
+int fallthrough(){return 42;}
+int func()       {return 42;}
+int go()         {return 42;}
+int import()     {return 42;}
+int interface()  {return 42;}
+int map()        {return 42;}
+int package()    {return 42;}
+int range()      {return 42;}
+int select()     {return 42;}
+int type()       {return 42;}
+int var()        {return 42;}
+int _()          {return 42;}
 
 int main()
 {
-    plan(12);
+    plan(25);
 
     pass("%s", "Main function.");
 
@@ -61,7 +73,20 @@ int main()
 	is_eq(j,12);
 	
 	diag("Not allowable function name for Go")
-	is_eq(_(),42);
+	is_eq( chan()       , 42);
+	is_eq( defer()      , 42);
+	is_eq( fallthrough(), 42);
+	is_eq( func()       , 42);
+	is_eq( go()         , 42);
+	is_eq( import()     , 42);
+	is_eq( interface()  , 42);
+	is_eq( map()        , 42);
+	is_eq( package()    , 42);
+	is_eq( range()      , 42);
+	is_eq( select()     , 42);
+	is_eq( type()       , 42);
+	is_eq( var()        , 42);
+	is_eq( _()          , 42);
 
     done_testing();
 }

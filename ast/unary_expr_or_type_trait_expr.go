@@ -1,5 +1,6 @@
 package ast
 
+// UnaryExprOrTypeTraitExpr is expression.
 type UnaryExprOrTypeTraitExpr struct {
 	Addr       Address
 	Pos        Position

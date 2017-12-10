@@ -66,6 +66,10 @@ type Program struct {
 	// appended to the very top of the output file. See AddMessage().
 	messages []string
 
+	// messagePosition - position of slice messages, added like a comment
+	// in output Go code
+	messagePosition int
+
 	// A map of all the global variables (variables that exist outside of a
 	// function) and their types.
 	GlobalVariables map[string]string
@@ -146,6 +150,22 @@ func (p *Program) AddMessage(message string) bool {
 
 	p.messages = append(p.messages, message)
 	return true
+}
+
+// GetMessageComments - get messages "Warnings", "Error" like a comment
+// Location of comments only NEAR of error or warning and
+// don't show directly location
+func (p *Program) GetMessageComments() (_ *goast.CommentGroup) {
+	var group goast.CommentGroup
+	if p.messagePosition < len(p.messages) {
+		for i := p.messagePosition; i < len(p.messages); i++ {
+			group.List = append(group.List, &goast.Comment{
+				Text: p.messages[i],
+			})
+		}
+		p.messagePosition = len(p.messages) - 1
+	}
+	return &group
 }
 
 // GetStruct returns a struct object (representing struct type or union type) or

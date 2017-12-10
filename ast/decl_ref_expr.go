@@ -1,5 +1,6 @@
 package ast
 
+// DeclRefExpr is expression.
 type DeclRefExpr struct {
 	Addr       Address
 	Pos        Position

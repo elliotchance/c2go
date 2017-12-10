@@ -8,7 +8,7 @@ void empty(){;}
 
 int main()
 {
-	plan(51);
+	plan(53);
 
     int i = 10;
     signed char j = 1;
@@ -179,6 +179,10 @@ int main()
 		int var = 42;
 		is_eq(var ,42);
 	}
+	{
+		int _ = 42;
+		is_eq(_ ,42);
+	}
 
 	// checking is_eq is no need, because if "(void)(az)" not transpile,
 	// then go build return fail - value is not used
@@ -189,20 +193,17 @@ int main()
 	{ float   *volatile*az; (void)(az); }
 
 	diag("switch with initialization")
-	int expr = 0;
-	switch(expr)
+	switch(0)
 	{
 		int ii;
-		case 0:
-		{
-			ii = 42;
-			is_eq(ii,42);
-		}
-		case 1:
-		{
-			ii = 5;
-			is_eq(ii,5);
-		}
+		case 0: { ii = 42; is_eq(ii,42); }
+		case 1:	{ ii = 50; is_eq(ii,50); }
+	}
+	switch(1)
+	{
+		int ia;
+		case 0: { ia = 42; is_eq(ia,42); }
+		case 1:	{ ia = 60; is_eq(ia,60); }
 	}
 
 	done_testing();

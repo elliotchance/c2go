@@ -1,5 +1,6 @@
 package ast
 
+// ImplicitCastExpr is expression.
 type ImplicitCastExpr struct {
 	Addr       Address
 	Pos        Position

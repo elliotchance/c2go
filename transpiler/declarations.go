@@ -286,6 +286,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 				Specs: []goast.Spec{&goast.ValueSpec{
 					Names: []*goast.Ident{{Name: name}},
 					Type:  util.NewTypeIdent(theType),
+					Doc:   p.GetMessageComments(),
 				}},
 			}}, "", nil
 
@@ -308,6 +309,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 					Names: []*goast.Ident{{Name: name}},
 					Type:  util.NewTypeIdent(theType),
 				}},
+				Doc: p.GetMessageComments(),
 			}}, "", nil
 
 		default:
@@ -358,6 +360,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 										X:    &goast.Ident{Name: nameVar2},
 										Type: functionType,
 									}},
+									Doc: p.GetMessageComments(),
 								},
 								}}}, "", nil
 						}
@@ -382,6 +385,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 			Specs: []goast.Spec{&goast.ValueSpec{
 				Names: []*goast.Ident{{Name: nameVar1}},
 				Type:  functionType,
+				Doc:   p.GetMessageComments(),
 			},
 			}})
 		err = nil
@@ -459,6 +463,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 				Names:  []*goast.Ident{util.NewIdent(n.Name)},
 				Type:   util.NewTypeIdent(t),
 				Values: defaultValue,
+				Doc:    p.GetMessageComments(),
 			},
 		},
 	}}, "", nil

@@ -1,5 +1,6 @@
 package ast
 
+// MemberExpr is expression.
 type MemberExpr struct {
 	Addr       Address
 	Pos        Position
