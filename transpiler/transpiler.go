@@ -396,6 +396,11 @@ func transpileToNode(node ast.Node, p *program.Program) (decls []goast.Decl, err
 
 	case *ast.FunctionDecl:
 		decls, err = transpileFunctionDecl(n, p)
+		if len(decls) > 0 {
+			if _, ok := decls[0].(*goast.FuncDecl); ok {
+				decls[0].(*goast.FuncDecl).Doc = p.GetMessageComments()
+			}
+		}
 
 	case *ast.TypedefDecl:
 		decls, err = transpileTypedefDecl(p, n)
