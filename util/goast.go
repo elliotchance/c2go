@@ -216,6 +216,7 @@ func NewBinaryExpr(left goast.Expr, operator token.Token, right goast.Expr,
 	return b
 }
 
+// NewIdent - create a new Go ast Ident
 func NewIdent(name string) *goast.Ident {
 	// TODO: The name of a variable or field cannot be a reserved word
 	// https://github.com/elliotchance/c2go/issues/83
@@ -257,6 +258,7 @@ func NewStringLit(value string) *goast.BasicLit {
 	}
 }
 
+// NewIntLit - create a Go ast BasicLit for `INT` value
 func NewIntLit(value int) *goast.BasicLit {
 	return &goast.BasicLit{
 		Kind:  token.INT,
