@@ -1,12 +1,10 @@
-([]string) (len=10) {
-  (string) (len=64) "Usage: test transpile [-V] [-o file.go] [-p package] file1.c ...",
-  (string) (len=31) "  -V\tprint progress as comments",
-  (string) (len=19) "  -clang-flag value",
-  (string) (len=73) "    \tPass arguments to clang. You may provide multiple -clang-flag items.",
-  (string) (len=27) "  -h\tprint help information",
-  (string) (len=11) "  -o string",
-  (string) (len=51) "    \toutput Go generated code to the specified file",
-  (string) (len=11) "  -p string",
-  (string) (len=59) "    \tset the name of the generated package (default \"main\")",
-  (string) ""
-}
+(*bytes.Buffer)(Usage: test transpile [-V] [-o file.go] [-p package] file1.c ...
+  -V	print progress as comments
+  -clang-flag value
+    	Pass arguments to clang. You may provide multiple -clang-flag items.
+  -h	print help information
+  -o string
+    	output Go generated code to the specified file
+  -p string
+    	set the name of the generated package (default "main")
+)
