@@ -6,6 +6,15 @@ import (
 	goast "go/ast"
 )
 
+func convertDeclToStmt(decls []goast.Decl) (stmts []goast.Stmt) {
+	for i := range decls {
+		if decls[i] != nil {
+			stmts = append(stmts, &goast.DeclStmt{Decl: decls[i]})
+		}
+	}
+	return
+}
+
 func combinePreAndPostStmts(
 	pre []goast.Stmt,
 	post []goast.Stmt,

@@ -4,9 +4,11 @@
 // TODO: More comprehensive operator tests
 // https://github.com/elliotchance/c2go/issues/143
 
+void empty(){;}
+
 int main()
 {
-	plan(36);
+	plan(53);
 
     int i = 10;
     signed char j = 1;
@@ -123,6 +125,86 @@ int main()
 	diag("Not allowable var name for Go")
 	int type = 42;
 	is_eq(type,42);
+
+	diag("Go keywords inside C code")
+	{
+		int chan = 42;
+		is_eq(chan ,42);
+	}
+	{
+		int defer = 42;
+		is_eq(defer ,42);
+	}
+	{
+		int fallthrough = 42;
+		is_eq(fallthrough ,42);
+	}
+	{
+		int func = 42;
+		is_eq(func ,42);
+	}
+	{
+		int go = 42;
+		is_eq(go ,42);
+	}
+	{
+		int import = 42;
+		is_eq(import ,42);
+	}
+	{
+		int interface = 42;
+		is_eq(interface ,42);
+	}
+	{
+		int map = 42;
+		is_eq(map ,42);
+	}
+	{
+		int package = 42;
+		is_eq(package ,42);
+	}
+	{
+		int range = 42;
+		is_eq(range ,42);
+	}
+	{
+		int select = 42;
+		is_eq(select ,42);
+	}
+	{
+		int type = 42;
+		is_eq(type ,42);
+	}
+	{
+		int var = 42;
+		is_eq(var ,42);
+	}
+	{
+		int _ = 42;
+		is_eq(_ ,42);
+	}
+
+	// checking is_eq is no need, because if "(void)(az)" not transpile,
+	// then go build return fail - value is not used
+	diag("CStyleCast <ToVoid>")
+	{ char            **az; (void)(az); }
+	{ double     *const*az; (void)(az); }
+	{ int             **az; (void)(az); }
+	{ float   *volatile*az; (void)(az); }
+
+	diag("switch with initialization")
+	switch(0)
+	{
+		int ii;
+		case 0: { ii = 42; is_eq(ii,42); }
+		case 1:	{ ii = 50; is_eq(ii,50); }
+	}
+	switch(1)
+	{
+		int ia;
+		case 0: { ia = 42; is_eq(ia,42); }
+		case 1:	{ ia = 60; is_eq(ia,60); }
+	}
 
 	done_testing();
 }

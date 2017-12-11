@@ -164,7 +164,7 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (decls []goa
 						Rhs: []goast.Expr{&goast.CompositeLit{Type: util.NewTypeIdent("[][]byte")}},
 					},
 					&goast.RangeStmt{
-						Key:   util.NewIdent("_"),
+						Key:   goast.NewIdent("_"),
 						Value: util.NewIdent("argvSingle"),
 						Tok:   token.DEFINE,
 						X:     util.NewTypeIdent("os.Args"),

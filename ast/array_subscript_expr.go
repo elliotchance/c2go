@@ -1,5 +1,6 @@
 package ast
 
+// ArraySubscriptExpr is expression.
 type ArraySubscriptExpr struct {
 	Addr       Address
 	Pos        Position

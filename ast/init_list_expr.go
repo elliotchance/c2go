@@ -1,5 +1,6 @@
 package ast
 
+// InitListExpr is expression.
 type InitListExpr struct {
 	Addr       Address
 	Pos        Position
