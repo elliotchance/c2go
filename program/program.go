@@ -163,7 +163,7 @@ func (p *Program) GetMessageComments() (_ *goast.CommentGroup) {
 				Text: p.messages[i],
 			})
 		}
-		p.messagePosition = len(p.messages) - 1
+		p.messagePosition = len(p.messages)
 	}
 	return &group
 }

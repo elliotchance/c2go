@@ -140,7 +140,7 @@ void test_calloc()
     // 10 ints, should be 5 doubles. Also use a bad cast to make sure that it
     // doesn't interfere with the types.
     double *d;
-    d = (char *)calloc(sizeof(int), 10);
+    d = (char *)calloc(10,sizeof(int));
     is_not_null(d) or_return();
 
     // We can't test how much memory has been allocated by Go, but we can test

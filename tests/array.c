@@ -157,9 +157,11 @@ void test_partialarr_init()
 extern int arrayEx[];
 int arrayEx[4] = { 1, 2, 3, 4 };
 
+int ff(){ return 3;}
+
 int main()
 {
-    plan(48);
+    plan(60);
 
     START_TEST(intarr);
     START_TEST(doublearr);
@@ -176,6 +178,58 @@ int main()
     START_TEST(partialarr_init);
 
 	is_eq(arrayEx[1],2.0);
+
+	diag("Array arithmetic")
+    float a[5];
+    a[0] = 42.;
+       is_eq(a[0],42.);
+    a[0+1] = 42.;
+       is_eq(a[1],42);
+    a[2]   = 42.;
+       is_eq(a[2],42);
+       
+       diag("Pointer arithmetic")
+    float *b;
+    b = (float *)calloc(5,sizeof(float));
+    
+       *b   = 42.;
+       is_eq(*(b+0),42.);
+    
+       *(b+1) = 42.;
+       is_eq(*(b+1),42.);
+    *(2+b) = 42.;
+       is_eq(*(b+2),42.);
+
+    *(b+ff()) = 45.;
+       is_eq(*(b + 3), 45.);
+    *(ff()+b+1) = 46.;
+       is_eq(*(b + 4), 46.);
+
+	diag("Pointer arithmetic")
+	{
+		float *arr; 
+		arr = (float*)calloc(1+1,sizeof(float)); 
+		is_true(arr != NULL);
+		(void)(arr);
+	}
+	{
+		float *arr;
+		arr = (float *) calloc(1+ff(),sizeof(float));
+		is_true(arr != NULL);
+		(void)(arr);
+	}
+	{
+		float *arr;
+		arr = (float *) calloc(ff()+ff(),sizeof(float));
+		is_true(arr != NULL);
+		(void)(arr);
+	}
+	{
+		float *arr;
+		arr = (float *) calloc(ff()+1+0+0+1*0,sizeof(float));
+		is_true(arr != NULL);
+		(void)(arr);
+	}
 
     done_testing();
 }

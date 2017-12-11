@@ -220,12 +220,14 @@ func ResolveType(p *program.Program, s string) (string, error) {
 	// properly.
 	search := util.GetRegex("[\\w ]+\\(\\*.*?\\)\\(.*\\)").MatchString(s)
 	if search {
-		return "interface{}", errors.New("function pointers are not supported")
+		return "interface{}",
+			fmt.Errorf("function pointers are not supported : '%s'", s)
 	}
 
 	search = util.GetRegex("[\\w ]+ \\(.*\\)").MatchString(s)
 	if search {
-		return "interface{}", errors.New("function pointers are not supported")
+		return "interface{}",
+			fmt.Errorf("function pointers are not supported : '%s'", s)
 	}
 
 	// It could be an array of fixed length. These needs to be converted to
