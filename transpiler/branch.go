@@ -405,6 +405,11 @@ func transpileWhileStmt(n *ast.WhileStmt, p *program.Program) (
 	forOperator.AddChild(nil)
 	forOperator.AddChild(n.Children()[1])
 	forOperator.AddChild(nil)
+	if n.Children()[2] == nil {
+		// added for case if WHILE haven't body, for example:
+		// while(0);
+		n.Children()[2] = &ast.CompoundStmt{}
+	}
 	forOperator.AddChild(n.Children()[2])
 
 	return transpileForStmt(&forOperator, p)
