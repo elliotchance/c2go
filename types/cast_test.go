@@ -45,7 +45,7 @@ func TestCast(t *testing.T) {
 		// String types
 		// {args{"foo", "[3]char", "const char*"}, "1 != 0"},
 
-		{args{util.NewIdent("false"), "_Bool", "bool"}, util.NewIdent("false")},
+		// {args{util.NewIdent("false"), "_Bool", "int"}, util.NewIdent("false")},
 	}
 
 	for _, tt := range tests {
