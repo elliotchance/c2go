@@ -4,7 +4,7 @@
 
 int main()
 {
-    plan(6);
+    plan(9);
 
     bool trueBool = true;
     bool falseBool = false;
@@ -47,6 +47,36 @@ int main()
     {
         fail("%s", "should not reach here")
     }
+
+	_Bool var = true;
+	if(var)
+	{
+        pass("%s", "ok")
+	}
+    else
+    {
+        fail("%s", "should not reach here")
+    }
+
+	var = true;
+	if(var-var)
+	{
+        fail("%s", "should not reach here")
+	}
+	else
+	{
+        pass("%s", "ok")
+	}
+
+	var = true;
+	if(var - var == false)
+	{
+        pass("%s", "ok")
+	}
+	else
+	{
+        fail("%s", "should not reach here")
+	}
 
     done_testing();
 }
