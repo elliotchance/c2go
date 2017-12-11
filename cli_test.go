@@ -2,10 +2,10 @@ package main
 
 import (
 	"bytes"
-	"github.com/bradleyjkemp/cupaloy"
 	"os"
-	"strings"
 	"testing"
+
+	"github.com/bradleyjkemp/cupaloy"
 )
 
 func setupTest(args []string) (*bytes.Buffer, func()) {
@@ -43,8 +43,8 @@ func TestCLI(t *testing.T) {
 			defer teardown()
 
 			runCommand()
-			outputLines := strings.Split(output.String(), "\n")
-			err := cupaloy.SnapshotMulti(testName, outputLines)
+
+			err := cupaloy.SnapshotMulti(testName, output)
 			if err != nil {
 				t.Fatalf("error: %s", err)
 			}
