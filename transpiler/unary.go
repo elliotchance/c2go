@@ -94,7 +94,7 @@ func transpileUnaryOperatorNot(n *ast.UnaryOperator, p *program.Program) (
 		eType = "int"
 	}
 
-	if eType == "bool" || eType == "_Bool" {
+	if eType == "bool" {
 		return &goast.UnaryExpr{
 			X:  e,
 			Op: token.NOT,
