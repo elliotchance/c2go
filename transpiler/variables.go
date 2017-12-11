@@ -212,11 +212,7 @@ func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) (stmts []goast.Stmt,
 		p.AddMessage(p.GenerateErrorMessage(err, n))
 		err = nil
 	}
-	for i := range decls {
-		if decls[i] != nil {
-			stmts = append(stmts, &goast.DeclStmt{Decl: decls[i]})
-		}
-	}
+	stmts = convertDeclToStmt(decls)
 
 	return
 }

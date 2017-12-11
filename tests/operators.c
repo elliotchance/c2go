@@ -4,9 +4,11 @@
 // TODO: More comprehensive operator tests
 // https://github.com/elliotchance/c2go/issues/143
 
+void empty(){;}
+
 int main()
 {
-	plan(50);
+	plan(53);
 
     int i = 10;
     signed char j = 1;
@@ -189,6 +191,20 @@ int main()
 	{ double     *const*az; (void)(az); }
 	{ int             **az; (void)(az); }
 	{ float   *volatile*az; (void)(az); }
+
+	diag("switch with initialization")
+	switch(0)
+	{
+		int ii;
+		case 0: { ii = 42; is_eq(ii,42); }
+		case 1:	{ ii = 50; is_eq(ii,50); }
+	}
+	switch(1)
+	{
+		int ia;
+		case 0: { ia = 42; is_eq(ia,42); }
+		case 1:	{ ia = 60; is_eq(ia,60); }
+	}
 
 	done_testing();
 }

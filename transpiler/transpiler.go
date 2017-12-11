@@ -343,6 +343,17 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 
 		stmt = &goast.EmptyStmt{}
 		return
+	case *ast.DeclStmt:
+		var stmts []goast.Stmt
+		stmts, err = transpileDeclStmt(n, p)
+		if err != nil {
+			return
+		}
+		stmt = stmts[len(stmts)-1]
+		if len(stmts) > 1 {
+			preStmts = stmts[0 : len(stmts)-2]
+		}
+		return
 	}
 
 	// We do not care about the return type.
