@@ -161,7 +161,7 @@ int ff(){ return 3;}
 
 int main()
 {
-    plan(56);
+    plan(60);
 
     START_TEST(intarr);
     START_TEST(doublearr);
@@ -204,5 +204,32 @@ int main()
        is_eq(*(b + 3), 45.);
     *(ff()+b+1) = 46.;
        is_eq(*(b + 4), 46.);
+
+	diag("Pointer arithmetic")
+	{
+		float *arr; 
+		arr = (float*)calloc(1+1,sizeof(float)); 
+		is_true(arr != NULL);
+		(void)(arr);
+	}
+	{
+		float *arr;
+		arr = (float *) calloc(1+ff(),sizeof(float));
+		is_true(arr != NULL);
+		(void)(arr);
+	}
+	{
+		float *arr;
+		arr = (float *) calloc(ff()+ff(),sizeof(float));
+		is_true(arr != NULL);
+		(void)(arr);
+	}
+	{
+		float *arr;
+		arr = (float *) calloc(ff()+1+0+0+1*0,sizeof(float));
+		is_true(arr != NULL);
+		(void)(arr);
+	}
+
     done_testing();
 }
