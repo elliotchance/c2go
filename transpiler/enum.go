@@ -130,6 +130,20 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) (decls []goast.Decl,
 
 				preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
+				parseEnumBasicLit := func(b *goast.BasicLit) (_ goast.Spec, counter int, err error) {
+					value, err := strconv.Atoi(b.Value)
+					if err != nil {
+						err = fmt.Errorf("Cannot parse '%s' in BasicLit", b.Value)
+						return
+					}
+					return &goast.ValueSpec{
+						Names:  []*goast.Ident{{Name: c.Name}},
+						Values: []goast.Expr{&goast.BasicLit{Kind: token.INT, Value: b.Value}},
+						Type:   val.Type,
+						Doc:    p.GetMessageComments(),
+					}, value, nil
+				}
+
 				switch v := val.Values[0].(type) {
 				case *goast.Ident:
 					e = &goast.ValueSpec{
@@ -139,6 +153,42 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) (decls []goast.Decl,
 						Doc:    p.GetMessageComments(),
 					}
 					counter++
+
+				case *goast.BasicLit:
+					var value int
+					e, value, err = parseEnumBasicLit(v)
+					if err != nil {
+						e = val
+						counter++
+						p.AddMessage(p.GenerateWarningMessage(
+							fmt.Errorf("Cannot parse '%s' in BasicLit", v.Value), n))
+						break
+					}
+					counter = value
+					counter++
+
+				case *goast.UnaryExpr:
+					if _, ok := v.X.(*goast.BasicLit); !ok {
+						e = val
+						counter++
+						p.AddMessage(p.GenerateWarningMessage(
+							fmt.Errorf("Not support expression in UnaryExpr : %T", v.X), n))
+						break
+					}
+
+					basicLit := v.X.(*goast.BasicLit)
+					var value int
+					e, value, err = parseEnumBasicLit(basicLit)
+					if err != nil {
+						e = val
+						counter++
+						p.AddMessage(p.GenerateWarningMessage(
+							fmt.Errorf("Cannot parse '%s' in BasicLit", basicLit.Value), n))
+						break
+					}
+					counter = value
+					counter++
+
 				default:
 					e = val
 					p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Add support of continues counter for type : %T", v), n))
