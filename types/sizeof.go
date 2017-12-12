@@ -37,6 +37,16 @@ func SizeOf(p *program.Program, cType string) (int, error) {
 	// should find out the correct size at runtime.
 	pointerSize := 8
 
+	// Enum with name
+	if strings.HasPrefix(cType, "enum") {
+		return SizeOf(p, "int")
+	}
+
+	// typedef Enum
+	if _, ok := p.EnumTypedefName[cType]; ok {
+		return SizeOf(p, "int")
+	}
+
 	// A structure will be the sum of its parts.
 	if strings.HasPrefix(cType, "struct ") {
 		totalBytes := 0
