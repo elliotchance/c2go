@@ -16,14 +16,14 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 			if len(v.Children()) == 0 {
 				strF := v.Name
 				if i+1 < len(n.Children()) {
-					i++
-					if vv, ok := n.Children()[i].(*ast.TypedefDecl); ok {
+					if vv, ok := n.Children()[i+1].(*ast.TypedefDecl); ok {
 						if len(vv.Name)+7 == len(vv.Type) {
 							if "struct "+vv.Name == vv.Type && strF == vv.Name {
 								if vvv, ok := vv.Children()[0].(*ast.ElaboratedType); ok {
 									if vvv, ok := vvv.Children()[0].(*ast.RecordType); ok {
 										if vvv, ok := vvv.Children()[0].(*ast.Record); ok {
 											if vv.Name == vvv.Type {
+												i++
 												break
 											}
 										}
@@ -31,8 +31,6 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 								}
 							}
 						}
-					} else {
-						i--
 					}
 				}
 			}
