@@ -60,7 +60,7 @@ struct xx {
 
 int main()
 {
-    plan(19);
+    plan(20);
 
     struct programming variable;
     char *s = "Programming in Software Development.";
@@ -136,16 +136,33 @@ int main()
 	diag("ImplicitValueInitExpr")
 	{
 		typedef struct {
-		    int x;
-		    int y;
-		} coord;
+		    int x2;
+		    int y2;
+		} coord2;
 
 		typedef struct {
-		    coord position;
-		    int possibleSteps;
-		} extCoord;
+		    coord2 position2;
+		    int possibleSteps2;
+		} extCoord2;
 
-		extCoord followingSteps[2] =
+		extCoord2 followingSteps[2] =
+	    {
+	        {.possibleSteps2 = 1}, {.possibleSteps2 = 1},
+	    };
+		is_eq(followingSteps[0].possibleSteps2, 1);
+	}
+	{
+		struct coord{
+		    int x;
+		    int y;
+		};
+
+		struct extCoord{
+		    struct coord position;
+		    int possibleSteps;
+		};
+
+		struct extCoord followingSteps[2] =
 	    {
 	        {.possibleSteps = 1}, {.possibleSteps = 1},
 	    };

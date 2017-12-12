@@ -227,7 +227,7 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 				return nil, "", nil, nil, fmt.Errorf("cannot found struct with name: `%s`", cType)
 			}
 			expr = &goast.CompositeLit{
-				Type:   util.NewIdent(cType),
+				Type:   util.NewIdent(cType[len("struct "):]),
 				Lbrace: 1,
 			}
 			return
