@@ -60,7 +60,7 @@ struct xx {
 
 int main()
 {
-    plan(18);
+    plan(19);
 
     struct programming variable;
     char *s = "Programming in Software Development.";
@@ -133,6 +133,24 @@ int main()
 	is_eq(p.x, 3);
 	is_eq(p.y, 2);
 
+	diag("ImplicitValueInitExpr")
+	{
+		typedef struct {
+		    int x;
+		    int y;
+		} coord;
+
+		typedef struct {
+		    coord position;
+		    int possibleSteps;
+		} extCoord;
+
+		extCoord followingSteps[2] =
+	    {
+	        {.possibleSteps = 1}, {.possibleSteps = 1},
+	    };
+		is_eq(followingSteps[0].possibleSteps, 1);
+	}
 
     done_testing();
 }
