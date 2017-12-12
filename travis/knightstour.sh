@@ -16,7 +16,7 @@ fi
 
 OUTFILE="$1"
 
-if [[ $OUTFILE -eq 0 ]] ; then
+if [[ -z $OUTFILE ]] ; then
     OUTFILE="$TEMP_FOLDER/out.txt"
 fi
 
