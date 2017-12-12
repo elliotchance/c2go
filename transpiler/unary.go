@@ -167,11 +167,102 @@ func transpileUnaryOperatorMul(n *ast.UnaryOperator, p *program.Program) (
 	}, t, preStmts, postStmts, nil
 }
 
+// transpilePointerArith - transpile pointer aripthmetic
+// Example of using:
+// *(t + 1) = ...
+func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
+	expr goast.Expr, eType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+	// found name of pointer and replace to zero value
+	var pointerName string
+	var lastAstNode ast.Node
+	var lastAstValue ast.Node
+
+	var f func(ast.Node)
+
+	// counter - count of amount of changes in AST tree
+	var counter int
+
+	f = func(n ast.Node) {
+		for i := range n.Children() {
+			switch v := n.Children()[i].(type) {
+			case *ast.ImplicitCastExpr:
+				if vv, ok := v.Children()[0].(*ast.DeclRefExpr); ok {
+					// found pointer
+					pointerName = vv.Name
+					counter++
+					if counter > 1 {
+						err = fmt.Errorf("Not acceptable : change counter is more then 1")
+						return
+					}
+					lastAstValue = n.Children()[i].Children()[0]
+					lastAstNode = n.Children()[i]
+				} else {
+					err = fmt.Errorf("Not support type for pointer founder: %T", v)
+					return
+				}
+				// Replace pointer to zero
+				var zero ast.IntegerLiteral
+				zero.Type = "int"
+				zero.Value = "0"
+				n.Children()[i] = &zero
+				return
+			case *ast.CallExpr:
+				continue
+			default:
+				if len(n.Children()[i].Children()) > 0 {
+					f(n.Children()[i])
+				}
+			}
+		}
+	}
+	f(n)
+	defer func() {
+		if counter > 0 {
+			//return replaced node
+			lastAstNode.(*ast.ImplicitCastExpr).ChildNodes[0] = lastAstValue
+		}
+	}()
+	if err != nil {
+		return
+	}
+	if pointerName == "" {
+		err = fmt.Errorf("pointer without name")
+		return
+	}
+
+	e, eType, newPre, newPost, err := transpileToExpr(n.Children()[0], p, false)
+	if err != nil {
+		return
+	}
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
+	eType = n.Type
+
+	return &goast.IndexExpr{
+		X:     util.NewIdent(pointerName),
+		Index: e,
+	}, eType, preStmts, postStmts, err
+}
 func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 	goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 	operator := getTokenForOperator(n.Operator)
+
+	// Prefix "*" is not a multiplication.
+	// Prefix "*" used for pointer ariphmetic
+	// Example of using:
+	// *(t + 1) = ...
+	if n.IsPrefix && n.IsLvalue && n.Operator == "*" {
+		expr, eType, preStmts, postStmts, err := transpilePointerArith(n, p)
+		if err != nil {
+			err = nil
+			goto OtherCases
+		}
+		return expr, eType, preStmts, postStmts, nil
+	}
+
+OtherCases:
 
 	switch operator {
 	case token.INC, token.DEC:

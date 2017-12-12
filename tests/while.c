@@ -3,7 +3,7 @@
 
 int main()
 {
-    plan(4);
+    plan(6);
 
     int value = 1;
 
@@ -22,6 +22,14 @@ int main()
             continue;
         pass("%d", value);
     }
+
+	diag("while without body")
+	while(0);
+	pass("%s","while without body");
+
+	value = 1;
+	while((value--,value));
+	is_eq(value , 0);
 
     done_testing();
 }
