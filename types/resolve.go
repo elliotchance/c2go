@@ -39,7 +39,7 @@ var simpleResolveTypes = map[string]string{
 	"unsigned short":         "uint16",
 	"unsigned short int":     "uint16",
 	"void":                   "",
-	"_Bool":                  "bool",
+	"_Bool":                  "int",
 
 	// void*
 	"void*":  "interface{}",
@@ -116,6 +116,10 @@ var NullPointer = "NullPointerType *"
 //    until a more suitable solution is found for those cases.
 func ResolveType(p *program.Program, s string) (string, error) {
 	s = CleanCType(s)
+
+	if s == "_Bool" {
+		p.TypedefType[s] = "int"
+	}
 
 	// FIXME: This is a hack to avoid casting in some situations.
 	if s == "" {
@@ -220,12 +224,14 @@ func ResolveType(p *program.Program, s string) (string, error) {
 	// properly.
 	search := util.GetRegex("[\\w ]+\\(\\*.*?\\)\\(.*\\)").MatchString(s)
 	if search {
-		return "interface{}", errors.New("function pointers are not supported")
+		return "interface{}",
+			fmt.Errorf("function pointers are not supported : '%s'", s)
 	}
 
 	search = util.GetRegex("[\\w ]+ \\(.*\\)").MatchString(s)
 	if search {
-		return "interface{}", errors.New("function pointers are not supported")
+		return "interface{}",
+			fmt.Errorf("function pointers are not supported : '%s'", s)
 	}
 
 	// It could be an array of fixed length. These needs to be converted to
