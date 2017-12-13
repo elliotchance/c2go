@@ -34,6 +34,7 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 		p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Error of transpiling: err = %v", err), root))
 		err = nil // Error is ignored
 	}
+	removeNil(&decls, p)
 	p.File.Decls = append(p.File.Decls, decls...)
 
 	if p.OutputAsTest {
@@ -119,10 +120,6 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 	if node == nil {
 		panic(node)
 	}
-	defer func() {
-		preStmts = nilFilterStmts(preStmts)
-		postStmts = nilFilterStmts(postStmts)
-	}()
 
 	switch n := node.(type) {
 	case *ast.StringLiteral:
@@ -255,9 +252,6 @@ func transpileToStmts(node ast.Node, p *program.Program) (stmts []goast.Stmt, er
 	if node == nil {
 		return nil, nil
 	}
-	defer func() {
-		stmts = nilFilterStmts(stmts)
-	}()
 
 	switch n := node.(type) {
 	case *ast.DeclStmt:
@@ -294,10 +288,6 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 			p.AddMessage(p.GenerateErrorMessage(err, node))
 			err = nil // Error is ignored
 		}
-	}()
-	defer func() {
-		preStmts = nilFilterStmts(preStmts)
-		postStmts = nilFilterStmts(postStmts)
 	}()
 
 	var expr goast.Expr
