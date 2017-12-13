@@ -218,6 +218,30 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 	case *ast.StmtExpr:
 		return transpileStmtExpr(n, p)
 
+	case *ast.ImplicitValueInitExpr:
+		cType := n.Type1
+
+		if strings.HasPrefix(cType, "struct ") {
+			s := p.Structs[cType]
+			if s == nil {
+				return nil, "", nil, nil, fmt.Errorf("cannot found struct with name: `%s`", cType)
+			}
+			expr = &goast.CompositeLit{
+				Type:   util.NewIdent(cType[len("struct "):]),
+				Lbrace: 1,
+			}
+			return
+		}
+
+		s := p.Structs["struct "+cType]
+		if s == nil {
+			return nil, "", nil, nil, fmt.Errorf("cannot found struct with name: `%s`", cType)
+		}
+		expr = &goast.CompositeLit{
+			Type:   util.NewIdent(cType),
+			Lbrace: 1,
+		}
+
 	default:
 		p.AddMessage(p.GenerateWarningMessage(errors.New("cannot transpile to expr"), node))
 		expr = util.NewNil()

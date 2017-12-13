@@ -39,7 +39,7 @@ var simpleResolveTypes = map[string]string{
 	"unsigned short":         "uint16",
 	"unsigned short int":     "uint16",
 	"void":                   "",
-	"_Bool":                  "bool",
+	"_Bool":                  "int",
 
 	// void*
 	"void*":  "interface{}",
@@ -116,6 +116,10 @@ var NullPointer = "NullPointerType *"
 //    until a more suitable solution is found for those cases.
 func ResolveType(p *program.Program, s string) (string, error) {
 	s = CleanCType(s)
+
+	if s == "_Bool" {
+		p.TypedefType[s] = "int"
+	}
 
 	// FIXME: This is a hack to avoid casting in some situations.
 	if s == "" {
