@@ -41,11 +41,6 @@ func TestCast(t *testing.T) {
 
 		// Casting to bool
 		{args{util.NewIntLit(1), "int", "bool"}, util.NewBinaryExpr(util.NewIntLit(1), token.NEQ, util.NewIntLit(0), "bool", false)},
-
-		// String types
-		// {args{"foo", "[3]char", "const char*"}, "1 != 0"},
-
-		{args{util.NewIdent("false"), "_Bool", "bool"}, util.NewIdent("false")},
 	}
 
 	for _, tt := range tests {
