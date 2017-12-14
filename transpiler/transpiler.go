@@ -208,6 +208,18 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 		if err == nil {
 			expr, err = types.CastExpr(p, expr, exprType, n.Type)
 		}
+		if exprType == types.NullPointer {
+			exprType = n.Type
+			return
+		}
+
+		if !types.IsFunction(exprType) && n.Kind != ast.ImplicitCastExprArrayToPointerDecay {
+			expr, err = types.CastExpr(p, expr, exprType, n.Type)
+			if err != nil {
+				return nil, "", nil, nil, err
+			}
+			exprType = n.Type
+		}
 
 	case *ast.CharacterLiteral:
 		expr, exprType, err = transpileCharacterLiteral(n), "char", nil

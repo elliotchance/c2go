@@ -207,7 +207,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 			leftType, preStmts, postStmts, nil
 	}
 
-	if operator == token.NEQ || operator == token.EQL || operator == token.LSS || operator == token.GTR {
+	if operator == token.NEQ || operator == token.EQL || operator == token.LSS || operator == token.GTR || operator == token.AND {
 		// Convert "(0)" to "nil" when we are dealing with equality.
 		if types.IsNullExpr(right) {
 			right = util.NewNil()
