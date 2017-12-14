@@ -213,6 +213,11 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 			return
 		}
 
+		if n.Kind == ast.CStyleCastExprToVoid {
+			exprType = types.ToVoid
+			return
+		}
+
 		if !types.IsFunction(exprType) && n.Kind != ast.ImplicitCastExprArrayToPointerDecay {
 			expr, err = types.CastExpr(p, expr, exprType, n.Type)
 			if err != nil {
@@ -405,7 +410,8 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 	}
 
 	// We do not care about the return type.
-	expr, _, preStmts, postStmts, err = transpileToExpr(node, p, true)
+	var theType string
+	expr, theType, preStmts, postStmts, err = transpileToExpr(node, p, true)
 	if err != nil {
 		return
 	}
@@ -418,6 +424,9 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 
 	// CStyleCastExpr.Kind == ToVoid
 	var foundToVoid bool
+	if theType == types.ToVoid {
+		foundToVoid = true
+	}
 	if v, ok := node.(*ast.CStyleCastExpr); ok && v.Kind == ast.CStyleCastExprToVoid {
 		foundToVoid = true
 	}

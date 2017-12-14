@@ -29,78 +29,100 @@ import (
 // It is also important to note that C only evaulates the "b" or "c" condition
 // based on the result of "a" (from the above example).
 func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program) (
-	*goast.CallExpr, string, []goast.Stmt, []goast.Stmt, error) {
-	preStmts := []goast.Stmt{}
-	postStmts := []goast.Stmt{}
+	_ *goast.CallExpr, theType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot transpile ConditionalOperator : err = %v", err)
+		}
+	}()
 
+	// a - condition
 	a, aType, newPre, newPost, err := transpileToExpr(n.Children()[0], p, false)
 	if err != nil {
-		return nil, "", nil, nil, err
+		return
 	}
-	// null in C is zero
-	if aType == types.NullPointer {
-		a = &goast.BasicLit{
-			Kind:  token.INT,
-			Value: "0",
-		}
-		aType = "int"
-	}
-
-	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
-
-	b, bType, newPre, newPost, err := transpileToExpr(n.Children()[1], p, false)
-	if err != nil {
-		return nil, "", nil, nil, err
-	}
-
-	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
-
-	c, cType, newPre, newPost, err := transpileToExpr(n.Children()[2], p, false)
-	if err != nil {
-		return nil, "", nil, nil, err
-	}
-
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	a, err = types.CastExpr(p, a, aType, "bool")
 	if err != nil {
-		return nil, "", nil, nil, err
+		return
 	}
 
-	// TODO: Here it is being assumed that the return type of the
-	// conditional operator is the type of the 'false' result. Things
-	// are a bit more complicated then that in C.
+	// b - body
+	b, bType, newPre, newPost, err := transpileToExpr(n.Children()[1], p, false)
+	if err != nil {
+		return
+	}
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	b, err = types.CastExpr(p, b, bType, cType)
+	if n.Type != "void" {
+		b, err = types.CastExpr(p, b, bType, n.Type)
+		if err != nil {
+			return
+		}
+		bType = n.Type
+	}
+
+	// c - else body
+	c, cType, newPre, newPost, err := transpileToExpr(n.Children()[2], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	returnType, err := types.ResolveType(p, cType)
-	if err != nil {
-		return nil, "", nil, nil, err
+	if n.Type != "void" {
+		c, err = types.CastExpr(p, c, cType, n.Type)
+		if err != nil {
+			return
+		}
+		cType = n.Type
+	}
+
+	// rightType - generate return type
+	var returnType string
+	if n.Type != "void" {
+		returnType, err = types.ResolveType(p, n.Type)
+		if err != nil {
+			return
+		}
+	}
+
+	var bod, els goast.BlockStmt
+
+	bod.Lbrace = 1
+	if bType != types.ToVoid {
+		if n.Type != "void" {
+			bod.List = []goast.Stmt{
+				&goast.ReturnStmt{
+					Results: []goast.Expr{b},
+				},
+			}
+		} else {
+			bod.List = []goast.Stmt{&goast.ExprStmt{b}}
+		}
+	}
+
+	els.Lbrace = 1
+	if cType != types.ToVoid {
+		if n.Type != "void" {
+			els.List = []goast.Stmt{
+				&goast.ReturnStmt{
+					Results: []goast.Expr{c},
+				},
+			}
+		} else {
+			els.List = []goast.Stmt{&goast.ExprStmt{c}}
+		}
 	}
 
 	return util.NewFuncClosure(
 		returnType,
 		&goast.IfStmt{
 			Cond: a,
-			Body: &goast.BlockStmt{
-				List: []goast.Stmt{
-					&goast.ReturnStmt{
-						Results: []goast.Expr{b},
-					},
-				},
-			},
-			Else: &goast.BlockStmt{
-				List: []goast.Stmt{
-					&goast.ReturnStmt{
-						Results: []goast.Expr{c},
-					},
-				},
-			},
+			Body: &bod,
+			Else: &els,
 		},
-	), cType, preStmts, postStmts, nil
+	), returnType, preStmts, postStmts, nil
 }
 
 // transpileParenExpr transpiles an expression that is wrapped in parentheses.

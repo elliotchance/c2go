@@ -85,6 +85,9 @@ var simpleResolveTypes = map[string]string{
 // created only for transpiler.CStyleCastExpr
 var NullPointer = "NullPointerType *"
 
+// ToVoid - specific type for ignore the cast
+var ToVoid = "ToVoid"
+
 // ResolveType determines the Go type from a C type.
 //
 // Some basic examples are obvious, such as "float" in C would be "float32" in
