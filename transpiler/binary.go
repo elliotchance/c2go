@@ -24,6 +24,12 @@ import (
 //               logical operators like "==", "!=", ...
 func transpileBinaryOperatorComma(n *ast.BinaryOperator, p *program.Program) (
 	stmt goast.Stmt, preStmts []goast.Stmt, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot transpile operator comma : err = %v", err)
+			p.AddMessage(p.GenerateWarningMessage(err, n))
+		}
+	}()
 
 	left, err := transpileToStmts(n.Children()[0], p)
 	if err != nil {

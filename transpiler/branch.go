@@ -131,6 +131,10 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 				},
 			}
 		}
+		if err != nil {
+			err = fmt.Errorf("Cannot tranpile ForStmt: err = %v", err)
+			p.AddMessage(p.GenerateWarningMessage(err, n))
+		}
 	}()
 
 	children := n.Children()
@@ -254,8 +258,10 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 			var condition ast.IfStmt
 			condition.AddChild(nil)
 			var par ast.ParenExpr
+			par.Type = "bool"
 			par.AddChild(c.Children()[len(c.Children())-1])
 			var unitary ast.UnaryOperator
+			unitary.Type = "bool"
 			unitary.AddChild(&par)
 			unitary.Operator = "!"
 			condition.AddChild(&unitary)
