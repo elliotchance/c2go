@@ -10,6 +10,9 @@ type ImplicitCastExpr struct {
 	ChildNodes []Node
 }
 
+// ImplicitCastExprArrayToPointerDecay - constant
+const ImplicitCastExprArrayToPointerDecay = "ArrayToPointerDecay"
+
 func parseImplicitCastExpr(line string) *ImplicitCastExpr {
 	groups := groupsFromRegex(
 		`<(?P<position>.*)>

@@ -330,6 +330,8 @@ func CleanCType(s string) (out string) {
 	// add space for simplification redactoring
 	out = strings.Replace(out, "*", " *", -1)
 
+	out = strings.Replace(out, "( *)", "(*)", -1)
+
 	// Remove any whitespace or attributes that are not relevant to Go.
 	out = strings.Replace(out, "const", "", -1)
 	out = strings.Replace(out, "volatile", "", -1)

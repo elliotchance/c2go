@@ -173,7 +173,7 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 			return
 		}
 
-		if !types.IsFunction(exprType) {
+		if !types.IsFunction(exprType) && n.Kind != ast.ImplicitCastExprArrayToPointerDecay {
 			expr, err = types.CastExpr(p, expr, exprType, n.Type)
 			if err != nil {
 				return nil, "", nil, nil, err

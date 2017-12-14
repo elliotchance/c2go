@@ -10,7 +10,16 @@ func TestArraySubscriptExpr(t *testing.T) {
 			Addr:       0x7fe35b85d180,
 			Pos:        NewPositionFromString("col:63, col:69"),
 			Type:       "char *",
-			Kind:       "lvalue",
+			Type2:      "",
+			IsLvalue:   true,
+			ChildNodes: []Node{},
+		},
+		`0x2416660 <col:2, col:5> 'u32':'unsigned int' lvalue`: &ArraySubscriptExpr{
+			Addr:       0x2416660,
+			Pos:        NewPositionFromString("col:2, col:5"),
+			Type:       "u32",
+			Type2:      "unsigned int",
+			IsLvalue:   true,
 			ChildNodes: []Node{},
 		},
 	}
