@@ -324,6 +324,9 @@ func ParseFunction(s string) (f []string, r []string, err error) {
 func CleanCType(s string) (out string) {
 	out = s
 
+	// remove space from pointer symbols
+	out = strings.Replace(out, "* *", "**", -1)
+
 	// add space for simplification redactoring
 	out = strings.Replace(out, "*", " *", -1)
 

@@ -218,9 +218,7 @@ func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) (stmts []goast.Stmt,
 }
 
 func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program) (
-	*goast.IndexExpr, string, []goast.Stmt, []goast.Stmt, error) {
-	preStmts := []goast.Stmt{}
-	postStmts := []goast.Stmt{}
+	_ *goast.IndexExpr, _ string, preStmts []goast.Stmt, postStmts []goast.Stmt, _ error) {
 
 	children := n.Children()
 	expression, expressionType, newPre, newPost, err := transpileToExpr(children[0], p, false)
@@ -248,7 +246,7 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program) 
 	return &goast.IndexExpr{
 		X:     expression,
 		Index: index,
-	}, newType, preStmts, postStmts, nil
+	}, n.Type, preStmts, postStmts, nil
 }
 
 func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
