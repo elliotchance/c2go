@@ -43,6 +43,15 @@ func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program
 	}
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
+	// null in C is zero
+	if aType == types.NullPointer {
+		a = &goast.BasicLit{
+			Kind:  token.INT,
+			Value: "0",
+		}
+		aType = "int"
+	}
+
 	a, err = types.CastExpr(p, a, aType, "bool")
 	if err != nil {
 		return
