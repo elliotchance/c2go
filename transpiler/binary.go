@@ -208,14 +208,11 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 	}
 
 	if operator == token.NEQ || operator == token.EQL || operator == token.LSS || operator == token.GTR || operator == token.AND {
-		// Convert "(0)" to "nil" when we are dealing with equality.
-		if types.IsNullExpr(right) {
-			right = util.NewNil()
-		} else {
-			// We may have to cast the right side to the same type as the left
-			// side. This is a bit crude because we should make a better
-			// decision of which type to cast to instead of only using the type
-			// of the left side.
+		// We may have to cast the right side to the same type as the left
+		// side. This is a bit crude because we should make a better
+		// decision of which type to cast to instead of only using the type
+		// of the left side.
+		if rightType != types.NullPointer {
 			right, err = types.CastExpr(p, right, rightType, leftType)
 			rightType = leftType
 			p.AddMessage(p.GenerateWarningOrErrorMessage(err, n, right == nil))

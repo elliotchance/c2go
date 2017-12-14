@@ -169,7 +169,6 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 			return nil, "", nil, nil, err
 		}
 		if exprType == types.NullPointer {
-			exprType = n.Type
 			return
 		}
 
@@ -205,11 +204,11 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 			return
 		}
 		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children()[0], p, exprIsStmt)
-		if err == nil {
-			expr, err = types.CastExpr(p, expr, exprType, n.Type)
+		if err != nil {
+			return nil, "", nil, nil, err
 		}
+
 		if exprType == types.NullPointer {
-			exprType = n.Type
 			return
 		}
 

@@ -122,7 +122,7 @@ func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program
 			Body: &bod,
 			Else: &els,
 		},
-	), returnType, preStmts, postStmts, nil
+	), n.Type, preStmts, postStmts, nil
 }
 
 // transpileParenExpr transpiles an expression that is wrapped in parentheses.
@@ -130,25 +130,35 @@ func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program
 // the macro expands to). We have to return the type as "null" since we don't
 // know at this point what the NULL expression will be used in conjunction with.
 func transpileParenExpr(n *ast.ParenExpr, p *program.Program) (
-	*goast.ParenExpr, string, []goast.Stmt, []goast.Stmt, error) {
-	preStmts := []goast.Stmt{}
-	postStmts := []goast.Stmt{}
+	r *goast.ParenExpr, exprType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot transpile ParenExpr. err = %v", err)
+			p.AddMessage(p.GenerateWarningMessage(err, n))
+		}
+	}()
 
-	e, eType, newPre, newPost, err := transpileToExpr(n.Children()[0], p, false)
+	expr, exprType, preStmts, postStmts, err := transpileToExpr(n.Children()[0], p, false)
 	if err != nil {
-		return nil, "", nil, nil, err
+		return
 	}
 
-	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
-
-	r := &goast.ParenExpr{
-		X: e,
-	}
-	if types.IsNullExpr(r) {
-		eType = "null"
+	if exprType == types.NullPointer {
+		r = &goast.ParenExpr{X: expr}
+		return
 	}
 
-	return r, eType, preStmts, postStmts, nil
+	if !types.IsFunction(exprType) && exprType != "void" {
+		expr, err = types.CastExpr(p, expr, exprType, n.Type)
+		if err != nil {
+			return
+		}
+		exprType = n.Type
+	}
+
+	r = &goast.ParenExpr{X: expr}
+
+	return
 }
 
 func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.Program, exprIsStmt bool) (
