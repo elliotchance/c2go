@@ -168,6 +168,18 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 		if err != nil {
 			return nil, "", nil, nil, err
 		}
+		if exprType == types.NullPointer {
+			exprType = n.Type
+			return
+		}
+
+		if !types.IsFunction(exprType) {
+			expr, err = types.CastExpr(p, expr, exprType, n.Type)
+			if err != nil {
+				return nil, "", nil, nil, err
+			}
+			exprType = n.Type
+		}
 
 	case *ast.DeclRefExpr:
 		if n.For == "EnumConstant" {

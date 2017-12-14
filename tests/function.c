@@ -24,6 +24,16 @@ int mul(int a, int b) {
         return a * b;
 }
 
+double (*f2)(int, float, double);
+
+double add2 (int a, float b, double c) {
+    return c+a+b;
+}
+
+double mul2 (int a, float b, double c) {
+    return a*b*c;
+}
+
 // Go keywords in C function
 int chan()       {return 42;}
 int defer()      {return 42;}
@@ -42,7 +52,7 @@ int _()          {return 42;}
 
 int main()
 {
-    plan(25);
+    plan(30);
 
     pass("%s", "Main function.");
 
@@ -50,7 +60,7 @@ int main()
 
     pass("%s", "Back in function main.");
 
-	// pointer on function
+	diag("pointer on function. Part 1")
 	void * a = NULL;
 	is_null(a);
 	a = function;
@@ -64,13 +74,31 @@ int main()
 	t();
 	is_eq(i,50);
 
-	// pointer on function
+	diag("pointer on function. Part 2")
 	f = add;
 	int i = f(3,4);
 	is_eq(i,7);
 	f = mul;
 	int j = f(3,4);
 	is_eq(j,12);
+	if( f(2,3) == 6 ){
+		pass("Ok")
+	}
+
+	diag("pointer on function. Part 3")
+	{
+		f2 = add2;
+		double temp_data;
+		temp_data = f2(4,2,3);
+		is_eq(temp_data,9);
+		f2 = mul2;
+		is_eq(f2(4,2,3),24);
+		double ttt = f2(1,1,1);
+		is_eq(ttt,1);
+		if(add2(2,3,1) == 6.0){
+			pass("Ok")
+		}
+	}
 	
 	diag("Not allowable function name for Go")
 	is_eq( chan()       , 42);

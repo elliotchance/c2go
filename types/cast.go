@@ -67,6 +67,17 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (g
 	fromType := cFromType
 	toType := cToType
 
+	// Exceptions for stdout, stdin, stderr
+	if fromType == "FILE *" && toType == "struct _IO_FILE *" {
+		return expr, nil
+	}
+	if fromType == "struct _IO_FILE *" && toType == "FILE *" {
+		return expr, nil
+	}
+	if fromType == "FILE *" && toType == "FILE *" {
+		return expr, nil
+	}
+
 	// registration type _Bool in program
 	if cFromType == "_Bool" {
 		p.TypedefType["_Bool"] = "int"
