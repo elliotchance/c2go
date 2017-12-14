@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include "tests.h"
 
-void f(){;};
+void f(){
+	return;
+};
 
 int main()
 {
