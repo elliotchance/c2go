@@ -48,7 +48,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 	_ goast.Expr, resultType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 	defer func() {
 		if err != nil {
-			err = fmt.Errorf("Type{%s}. Error: %v", resultType, err)
+			err = fmt.Errorf("Cannot transpile BinaryOperator : result type = {%s}. Error: %v", resultType, err)
 		}
 	}()
 
