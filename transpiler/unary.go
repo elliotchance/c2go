@@ -230,6 +230,26 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 		return
 	}
 
+	/*
+		f = func(n ast.Node) {
+		        for i := range n.Children() {
+		                switch v := n.Children()[i].(type) {
+		                case *ast.ImplicitCastExpr:
+		                        v.Type = "int"
+		                case *ast.BinaryOperator:
+		                        v.Type = "int"
+		                case *ast.ParenExpr:
+		                        v.Type = "int"
+		                default:
+		                        continue
+		                }
+		                if len(n.Children()[i].Children()) > 0 {
+		                        f(n.Children()[i])
+		                }
+		        }
+		}
+		f(n)
+	*/
 	e, eType, newPre, newPost, err := transpileToExpr(n.Children()[0], p, false)
 	if err != nil {
 		return
