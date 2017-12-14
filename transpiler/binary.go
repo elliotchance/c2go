@@ -214,6 +214,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 			// decision of which type to cast to instead of only using the type
 			// of the left side.
 			right, err = types.CastExpr(p, right, rightType, leftType)
+			rightType = leftType
 			p.AddMessage(p.GenerateWarningOrErrorMessage(err, n, right == nil))
 		}
 	}

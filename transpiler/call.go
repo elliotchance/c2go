@@ -242,6 +242,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 	// _ = buffer
 	if functionDef.Substitution == "_" {
 		var argName string
+		// TODO : add searcher for easy founding a goast.Ident
 		if v, ok := realArgs[0].(*goast.CallExpr); ok && len(realArgs) == 1 {
 			if vv, ok := v.Args[0].(*goast.Ident); ok && len(v.Args) == 1 {
 				argName = vv.Name
@@ -253,13 +254,15 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 		if v, ok := realArgs[0].(*goast.Ident); ok {
 			argName = v.Name
 		}
+		if v, ok := realArgs[0].(*goast.ParenExpr); ok {
+			if vv, ok := v.X.(*goast.Ident); ok {
+				argName = vv.Name
+			}
+		}
+
 		if argName != "" {
 			devNull := &goast.AssignStmt{
-				Lhs: []goast.Expr{
-					&goast.Ident{
-						Name: "_",
-					},
-				},
+				Lhs: []goast.Expr{goast.NewIdent("_")},
 				Tok: token.ASSIGN,
 				Rhs: []goast.Expr{
 					&goast.Ident{
@@ -270,6 +273,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 			preStmts = append(preStmts, devNull)
 			return nil, "", preStmts, postStmts, nil
 		}
+		// TODO : Add error in program if argName is empty
 	}
 
 	return util.NewCallExpr(functionName, realArgs...),
