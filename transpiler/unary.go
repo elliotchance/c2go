@@ -246,7 +246,23 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 				return
 
 			case *ast.CallExpr:
-				continue
+				if v.Type == "int" {
+					continue
+				}
+				counter++
+				if counter > 1 {
+					err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %v,%v", pointer, v)
+					return
+				}
+				// found pointer
+				pointer = v
+				// Replace pointer to zero
+				var zero ast.IntegerLiteral
+				zero.Type = "int"
+				zero.Value = "0"
+				n.Children()[i] = &zero
+				found = true
+				return
 
 			default:
 				if found {
@@ -273,6 +289,7 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 		return
 	}
 	if pointer == nil {
+		fmt.Println(ast.Atos(n))
 		err = fmt.Errorf("pointer of array is nil")
 		return
 	}
