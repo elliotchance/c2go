@@ -62,7 +62,11 @@ func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program
 	if err != nil {
 		return
 	}
-	// TODO: combine b, newPre, newPost
+	// Theorephly, lenght is must be zero
+	if len(newPre) > 0 || len(newPost) > 0 {
+		p.AddMessage(p.GenerateWarningMessage(
+			fmt.Errorf("lenght of pre or post in body must be zero. {%d,%d}", len(newPre), len(newPost)), n))
+	}
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	if n.Type != "void" {

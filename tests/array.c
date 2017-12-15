@@ -221,9 +221,7 @@ int main()
 
 	is_eq((*(b + 1 + 3 + 1 - 5*1 + ff() - 3 + 1) = -48.0,*(b+1)), -48.0);
 	{int rrr;(void)(rrr);}
-	/* double *ddd = (double *)calloc(2,sizeof(double)); */
-	/* (void)(ddd); */
-
+	
 	diag("Pointer arithmetic. Part 2")
 	{
 		float *arr; 

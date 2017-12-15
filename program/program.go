@@ -149,7 +149,6 @@ func (p *Program) AddMessage(message string) bool {
 	}
 
 	p.messages = append(p.messages, message)
-
 	return true
 }
 
