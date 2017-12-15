@@ -236,6 +236,7 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 		}
 	}
 	f(n)
+	fmt.Println(ast.Atos(n))
 	fmt.Printf("%#v\n", parents)
 	// defer func() {
 	// 	if counter > 0 {
