@@ -8,6 +8,7 @@ type FunctionDecl struct {
 	Addr         Address
 	Pos          Position
 	Prev         string
+	Parent       string
 	Position2    string
 	Name         string
 	Type         string
@@ -23,7 +24,8 @@ type FunctionDecl struct {
 
 func parseFunctionDecl(line string) *FunctionDecl {
 	groups := groupsFromRegex(
-		`(?:prev (?P<prev>0x[0-9a-f]+) )?
+		`(?:parent (?P<parent>0x[0-9a-f]+) )?
+		(?:prev (?P<prev>0x[0-9a-f]+) )?
 		<(?P<position1>.*?)>
 		(?P<position2> <scratch space>[^ ]+| [^ ]+)?
 		(?P<implicit> implicit)?
@@ -42,6 +44,7 @@ func parseFunctionDecl(line string) *FunctionDecl {
 	return &FunctionDecl{
 		Addr:         ParseAddress(groups["address"]),
 		Pos:          NewPositionFromString(groups["position1"]),
+		Parent:       groups["parent"],
 		Prev:         groups["prev"],
 		Position2:    strings.TrimSpace(groups["position2"]),
 		Name:         groups["name"],
