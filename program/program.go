@@ -148,15 +148,7 @@ func (p *Program) AddMessage(message string) bool {
 		return false
 	}
 
-	if len(p.messages) > 0 {
-		if strings.HasSuffix(message, p.messages[len(p.messages)-1]) {
-			p.messages[len(p.messages)-1] = message
-		} else {
-			p.messages = append(p.messages, message)
-		}
-	} else {
-		p.messages = append(p.messages, message)
-	}
+	p.messages = append(p.messages, message)
 
 	return true
 }
