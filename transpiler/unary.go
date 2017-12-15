@@ -186,13 +186,13 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 		for i := range n.Children() {
 			switch v := n.Children()[i].(type) {
 			case *ast.ArraySubscriptExpr:
-				// found pointer
-				pointer = v
 				counter++
 				if counter > 1 {
-					err = fmt.Errorf("Not acceptable : change counter is more then 1")
+					err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %v,%v", pointer, v)
 					return
 				}
+				// found pointer
+				pointer = v
 				// Replace pointer to zero
 				var zero ast.IntegerLiteral
 				zero.Type = "int"
@@ -203,21 +203,21 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 
 			case *ast.ImplicitCastExpr:
 				if vv, ok := v.Children()[0].(*ast.DeclRefExpr); ok {
-					// found pointer
-					pointer = vv
 					counter++
 					if counter > 1 {
-						err = fmt.Errorf("Not acceptable : change counter is more then 1")
+						err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %v,%v", pointer, v)
 						return
 					}
+					// found pointer
+					pointer = vv
 				} else if vv, ok := v.Children()[0].(*ast.ArraySubscriptExpr); ok {
-					// found pointer
-					pointer = vv
 					counter++
 					if counter > 1 {
-						err = fmt.Errorf("Not acceptable : change counter is more then 1")
+						err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %v,%v", pointer, v)
 						return
 					}
+					// found pointer
+					pointer = vv
 				} else {
 					if len(v.Children()) > 0 {
 						if found {
