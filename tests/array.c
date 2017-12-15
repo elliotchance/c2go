@@ -161,7 +161,7 @@ int ff(){ return 3;}
 
 int main()
 {
-    plan(60);
+    plan(61);
 
     START_TEST(intarr);
     START_TEST(doublearr);
@@ -204,6 +204,9 @@ int main()
        is_eq(*(b + 3), 45.);
     *(ff()+b+1) = 46.;
        is_eq(*(b + 4), 46.);
+
+	*(b+ (0 ? 1:2)) = -1.;
+	is_eq(*(b+2),-1);
 
 	diag("Pointer arithmetic")
 	{

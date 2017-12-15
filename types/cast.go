@@ -375,6 +375,10 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (g
 		rightName = parts[len(parts)-1]
 	}
 
+	if cFromType == "void *" && cToType == "char *" {
+		return expr, nil
+	}
+
 	functionName := fmt.Sprintf("noarch.%sTo%s",
 		util.GetExportedName(leftName), util.GetExportedName(rightName))
 

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "tests.h"
 
-void f(){
+void f_empty(){
 	return;
 };
 
@@ -36,9 +36,9 @@ int main()
 
 	diag("CStyleCast <ToVoid>")
 	{double a, b; 0 ? (void)(a) : (void)(b); (void)(a),(void)(b); }
-	{double a   ; 0 ? (void)(a) : f()      ; (void)(a);}
-	{double    b; 0 ? f()       : (void)(b); (void)(b);}
-	{           ; 0 ? f()       : f()      ; }
+	{double a   ; 0 ? (void)(a) : f_empty(); (void)(a);}
+	{double    b; 0 ? f_empty() : (void)(b); (void)(b);}
+	{           ; 0 ? f_empty() : f_empty(); }
 	pass("Ok - ToVoid");
 
     done_testing();
