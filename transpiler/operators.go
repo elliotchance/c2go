@@ -62,6 +62,7 @@ func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program
 	if err != nil {
 		return
 	}
+	// TODO: combine b, newPre, newPost
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	if n.Type != "void" {
