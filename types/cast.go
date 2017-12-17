@@ -67,6 +67,9 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (g
 	fromType := cFromType
 	toType := cToType
 
+	if cFromType == cToType {
+		return expr, nil
+	}
 	// Exceptions for stdout, stdin, stderr
 	if fromType == "FILE *" && toType == "struct _IO_FILE *" {
 		return expr, nil

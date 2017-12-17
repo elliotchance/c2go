@@ -165,10 +165,6 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 
 	p.DefineType(name)
 
-	if n.Type == "size_t" {
-		n.Type = "int"
-	}
-
 	resolvedType, err := types.ResolveType(p, n.Type)
 	if err != nil {
 		p.AddMessage(p.GenerateWarningMessage(err, n))

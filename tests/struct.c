@@ -60,7 +60,7 @@ struct xx {
 
 int main()
 {
-    plan(22);
+    plan(23);
 
     struct programming variable;
     char *s = "Programming in Software Development.";
@@ -180,6 +180,9 @@ int main()
 	{
 		typedef size_t size2;
 		is_eq(((size2)((size_t)(56))),56.0)
+	}
+	{
+		is_eq((size_t)(43),43);
 	}
 
     done_testing();
