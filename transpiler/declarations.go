@@ -239,14 +239,6 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 	}
 
 	err = nil
-
-	////////////////////////
-	// DEBUG INFORMATION  //
-	if name == "size_t" {
-		fmt.Println("resolved Type for size_t is :", resolvedType)
-	}
-	////////////////////////
-
 	decls = append(decls, &goast.GenDecl{
 		Tok: token.TYPE,
 		Specs: []goast.Spec{
