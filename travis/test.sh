@@ -8,9 +8,9 @@ function cleanup {
     EXIT_STATUS=$?
 
     if [ $EXIT_STATUS != 0 ]; then
+		sed -n '1600,1690p;1691q' ./build/tests/struct/main_test.go >> $OUTFILE
         [ ! -f $OUTFILE ] || cat $OUTFILE
 		# DEBUG
-		sed -n '1600,1690p;1691q' ./build/tests/struct/main_test.go
     fi
 
     exit $EXIT_STATUS
