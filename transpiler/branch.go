@@ -215,7 +215,12 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 			var compound *ast.CompoundStmt
 			if children[4] != nil {
 				// if body is exist
-				compound = children[4].(*ast.CompoundStmt)
+				if _, ok := children[4].(*ast.CompoundStmt); !ok {
+					compound = new(ast.CompoundStmt)
+					compound.AddChild(children[4])
+				} else {
+					compound = children[4].(*ast.CompoundStmt)
+				}
 			} else {
 				// if body is not exist
 				compound = new(ast.CompoundStmt)
