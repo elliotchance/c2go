@@ -45,10 +45,12 @@ func transpileBinaryOperatorComma(n *ast.BinaryOperator, p *program.Program) (
 }
 
 func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsStmt bool) (
-	goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
-	preStmts := []goast.Stmt{}
-	postStmts := []goast.Stmt{}
-	var err error
+	_ goast.Expr, resultType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot transpile BinaryOperator : result type = {%s}. Error: %v", resultType, err)
+		}
+	}()
 
 	operator := getTokenForOperator(n.Operator)
 
