@@ -34,11 +34,7 @@ func IsCInteger(p *program.Program, cType string) bool {
 		}
 	}
 	if rt, ok := p.TypedefType[cType]; ok {
-		for i := range cIntegerType {
-			if rt == cIntegerType[i] {
-				return true
-			}
-		}
+		return IsCInteger(p, rt)
 	}
 	return false
 }
