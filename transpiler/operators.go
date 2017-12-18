@@ -162,7 +162,7 @@ func transpileParenExpr(n *ast.ParenExpr, p *program.Program) (
 		return
 	}
 
-	if !types.IsFunction(exprType) && exprType != "void" {
+	if !types.IsFunction(exprType) && exprType != "void" && exprType != types.ToVoid {
 		expr, err = types.CastExpr(p, expr, exprType, n.Type)
 		if err != nil {
 			return
