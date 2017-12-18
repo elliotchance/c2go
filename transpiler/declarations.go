@@ -200,26 +200,6 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 		resolvedType = p.ImportType("github.com/elliotchance/c2go/darwin.CtRuneT")
 	}
 
-	// TODO: Some platform structs are ignored.
-	// https://github.com/elliotchance/c2go/issues/85
-	// if name == "__builtin_va_list" ||
-	// 	name == "__qaddr_t" ||
-	// 	name == "definition" ||
-	// 	name == "_IO_lock_t" ||
-	// 	name == "va_list" ||
-	// 	name == "fpos_t" ||
-	// 	name == "__NSConstantString" ||
-	// 	name == "__darwin_va_list" ||
-	// 	name == "__fsid_t" ||
-	// 	name == "_G_fpos_t" ||
-	// 	name == "_G_fpos64_t" ||
-	// 	name == "__locale_t" ||
-	// 	name == "locale_t" ||
-	// 	name == "fsid_t" {
-	// 	err = nil
-	// 	return
-	// }
-
 	if name == "div_t" || name == "ldiv_t" || name == "lldiv_t" {
 		intType := "int"
 		if name == "ldiv_t" {
