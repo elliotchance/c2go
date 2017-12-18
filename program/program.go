@@ -163,7 +163,6 @@ func (p *Program) AddMessage(message string) bool {
 			if strings.HasSuffix(p.messages[new], l) {
 				p.messages[last] = p.messages[new]
 				p.messages = p.messages[0:new]
-				fmt.Printf(".")
 			}
 		}
 	}
