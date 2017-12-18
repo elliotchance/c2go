@@ -194,6 +194,8 @@ func Parse(fullline string) Node {
 		return parseReturnStmt(line)
 	case "ReturnsTwiceAttr":
 		return parseReturnsTwiceAttr(line)
+	case "SentinelAttr":
+		return parseSentinelAttr(line)
 	case "StmtExpr":
 		return parseStmtExpr(line)
 	case "StringLiteral":
