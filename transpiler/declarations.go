@@ -135,6 +135,11 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 	if n.IsImplicit && n.Pos.File == ast.PositionBuiltIn {
 		return
 	}
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot transpile Typedef Decl : err = %v", err)
+		}
+	}()
 	name := n.Name
 
 	// added for support "typedef enum {...} dd" with empty name of struct
@@ -210,8 +215,7 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 		name == "_G_fpos64_t" ||
 		name == "__locale_t" ||
 		name == "locale_t" ||
-		name == "fsid_t" ||
-		name == "sigset_t" {
+		name == "fsid_t" {
 		err = nil
 		return
 	}
