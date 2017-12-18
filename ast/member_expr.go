@@ -19,7 +19,7 @@ func parseMemberExpr(line string) *MemberExpr {
 		`<(?P<position>.*)>
 		 '(?P<type>.*?)'
 		(?P<type2>:'.*?')?
-		 lvalue
+		(?P<lvalue> lvalue)?
 		(?P<bitfield> bitfield)?
 		 (?P<pointer>[->.]+)
 		(?P<name>\w+)?
@@ -39,7 +39,7 @@ func parseMemberExpr(line string) *MemberExpr {
 		Type2:      type2,
 		IsPointer:  groups["pointer"] == "->",
 		Name:       groups["name"],
-		IsLvalue:   true,
+		IsLvalue:   len(groups["lvalue"]) > 0,
 		IsBitfield: len(groups["bitfield"]) > 0,
 		Address2:   groups["address2"],
 		ChildNodes: []Node{},
