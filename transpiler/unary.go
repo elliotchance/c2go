@@ -289,7 +289,6 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 		return
 	}
 	if pointer == nil {
-		fmt.Println(ast.Atos(n))
 		err = fmt.Errorf("pointer of array is nil")
 		return
 	}
