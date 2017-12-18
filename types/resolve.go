@@ -228,13 +228,13 @@ func ResolveType(p *program.Program, s string) (string, error) {
 	search := util.GetRegex("[\\w ]+\\(\\*.*?\\)\\(.*\\)").MatchString(s)
 	if search {
 		return "interface{}",
-			fmt.Errorf("function pointers are not supported : '%s'", s)
+			fmt.Errorf("function pointers are not supported [1] : '%s'", s)
 	}
 
 	search = util.GetRegex("[\\w ]+ \\(.*\\)").MatchString(s)
 	if search {
 		return "interface{}",
-			fmt.Errorf("function pointers are not supported : '%s'", s)
+			fmt.Errorf("function pointers are not supported [2] : '%s'", s)
 	}
 
 	// It could be an array of fixed length. These needs to be converted to
@@ -258,6 +258,11 @@ func ResolveType(p *program.Program, s string) (string, error) {
 
 // ResolveFunction determines the Go type from a C type.
 func ResolveFunction(p *program.Program, s string) (fields []string, returns []string, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot resolve function '%s' : %v", s, err)
+		}
+	}()
 	f, r, err := ParseFunction(s)
 	if err != nil {
 		return
@@ -291,6 +296,12 @@ func IsFunction(s string) bool {
 
 // ParseFunction - parsing elements of C function
 func ParseFunction(s string) (f []string, r []string, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot parse function '%s' : %v", s, err)
+		}
+	}()
+
 	if !IsFunction(s) {
 		err = fmt.Errorf("Is not function : %s", s)
 		return

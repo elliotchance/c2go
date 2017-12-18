@@ -60,9 +60,7 @@ func getNameOfFunctionFromCallExpr(n *ast.CallExpr) (string, error) {
 // returned by the function) and any error. If there is an error returned you
 // can assume the first two arguments will not contain any useful information.
 func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
-	*goast.CallExpr, string, []goast.Stmt, []goast.Stmt, error) {
-	preStmts := []goast.Stmt{}
-	postStmts := []goast.Stmt{}
+	_ *goast.CallExpr, resultType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 
 	functionName, err := getNameOfFunctionFromCallExpr(n)
 	if err != nil {
