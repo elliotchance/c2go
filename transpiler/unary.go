@@ -172,62 +172,135 @@ func transpileUnaryOperatorMul(n *ast.UnaryOperator, p *program.Program) (
 // *(t + 1) = ...
 func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 	expr goast.Expr, eType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
-	// found name of pointer and replace to zero value
-	var pointerName string
-	var lastAstNode ast.Node
-	var lastAstValue ast.Node
-
-	var f func(ast.Node)
+	// pointer - expression with name of array pointer
+	var pointer interface{}
 
 	// counter - count of amount of changes in AST tree
 	var counter int
 
+	var parents []ast.Node
+	var found bool
+
+	var f func(ast.Node)
 	f = func(n ast.Node) {
 		for i := range n.Children() {
 			switch v := n.Children()[i].(type) {
+			case *ast.ArraySubscriptExpr:
+				counter++
+				if counter > 1 {
+					err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %v,%v", pointer, v)
+					return
+				}
+				// found pointer
+				pointer = v
+				// Replace pointer to zero
+				var zero ast.IntegerLiteral
+				zero.Type = "int"
+				zero.Value = "0"
+				n.Children()[i] = &zero
+				found = true
+				return
+
 			case *ast.ImplicitCastExpr:
 				if vv, ok := v.Children()[0].(*ast.DeclRefExpr); ok {
-					// found pointer
-					pointerName = vv.Name
 					counter++
 					if counter > 1 {
-						err = fmt.Errorf("Not acceptable : change counter is more then 1")
+						err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %v,%v", pointer, v)
 						return
 					}
-					lastAstValue = n.Children()[i].Children()[0]
-					lastAstNode = n.Children()[i]
+					// found pointer
+					pointer = vv
+				} else if vv, ok := v.Children()[0].(*ast.ArraySubscriptExpr); ok {
+					counter++
+					if counter > 1 {
+						err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %v,%v", pointer, v)
+						return
+					}
+					// found pointer
+					pointer = vv
 				} else {
-					err = fmt.Errorf("Not support type for pointer founder: %T", v)
-					return
+					if len(v.Children()) > 0 {
+						if found {
+							break
+						}
+						parents = append(parents, v)
+						for _, d := range v.Children() {
+							parents = append(parents, d)
+							f(d)
+							if !found {
+								parents = parents[:len(parents)-1]
+							}
+						}
+						if !found {
+							parents = parents[:len(parents)-1]
+						}
+					}
+					continue
 				}
 				// Replace pointer to zero
 				var zero ast.IntegerLiteral
 				zero.Type = "int"
 				zero.Value = "0"
 				n.Children()[i] = &zero
+				found = true
 				return
+
 			case *ast.CallExpr:
-				continue
+				if v.Type == "int" {
+					continue
+				}
+				counter++
+				if counter > 1 {
+					err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %v,%v", pointer, v)
+					return
+				}
+				// found pointer
+				pointer = v
+				// Replace pointer to zero
+				var zero ast.IntegerLiteral
+				zero.Type = "int"
+				zero.Value = "0"
+				n.Children()[i] = &zero
+				found = true
+				return
+
 			default:
+				if found {
+					break
+				}
+				if !found {
+					parents = append(parents, n.Children()[i])
+				}
 				if len(n.Children()[i].Children()) > 0 {
+					if found {
+						break
+					}
 					f(n.Children()[i])
+					if !found {
+						parents = parents[:len(parents)-1]
+					}
 				}
 			}
 		}
 	}
 	f(n)
-	defer func() {
-		if counter > 0 {
-			//return replaced node
-			lastAstNode.(*ast.ImplicitCastExpr).ChildNodes[0] = lastAstValue
-		}
-	}()
+
 	if err != nil {
 		return
 	}
-	if pointerName == "" {
-		err = fmt.Errorf("pointer without name")
+	if pointer == nil {
+		err = fmt.Errorf("pointer of array is nil")
 		return
+	}
+	for i := range parents {
+		switch v := parents[i].(type) {
+		case *ast.ParenExpr:
+			v.Type = "int"
+		case *ast.BinaryOperator:
+			v.Type = "int"
+		case *ast.ImplicitCastExpr:
+			v.Type = "int"
+		}
 	}
 
 	e, eType, newPre, newPost, err := transpileToExpr(n.Children()[0], p, false)
@@ -235,18 +308,52 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 		return
 	}
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
-
 	eType = n.Type
 
-	return &goast.IndexExpr{
-		X:     util.NewIdent(pointerName),
-		Index: e,
-	}, eType, preStmts, postStmts, err
+	switch v := pointer.(type) {
+	case *ast.DeclRefExpr:
+		return &goast.IndexExpr{
+			X:     util.NewIdent(v.Name),
+			Index: e,
+		}, eType, preStmts, postStmts, err
+	case *ast.ArraySubscriptExpr:
+		arr, _, newPre, newPost, err2 := transpileToExpr(v, p, false)
+		if err2 != nil {
+			return
+		}
+		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+		return &goast.IndexExpr{
+			X: &goast.ParenExpr{
+				Lparen: 1,
+				X:      arr,
+			},
+			Index: e,
+		}, eType, preStmts, postStmts, err
+	case *ast.CallExpr:
+		arr, _, newPre, newPost, err2 := transpileToExpr(v, p, false)
+		if err2 != nil {
+			return
+		}
+		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+		return &goast.IndexExpr{
+			X: &goast.ParenExpr{
+				Lparen: 1,
+				X:      arr,
+			},
+			Index: e,
+		}, eType, preStmts, postStmts, err
+	}
+	return nil, "", nil, nil, fmt.Errorf("Cannot found : %#v", pointer)
 }
 func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
-	goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
-	preStmts := []goast.Stmt{}
-	postStmts := []goast.Stmt{}
+	_ goast.Expr, theType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot transpile UnaryOperator: err = %v", err)
+			p.AddMessage(p.GenerateWarningMessage(err, n))
+		}
+	}()
+
 	operator := getTokenForOperator(n.Operator)
 
 	// Prefix "*" is not a multiplication.
@@ -256,13 +363,10 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 	if n.IsPrefix && n.IsLvalue && n.Operator == "*" {
 		expr, eType, preStmts, postStmts, err := transpilePointerArith(n, p)
 		if err != nil {
-			err = nil
-			goto OtherCases
+			return nil, "", nil, nil, err
 		}
 		return expr, eType, preStmts, postStmts, nil
 	}
-
-OtherCases:
 
 	switch operator {
 	case token.INC, token.DEC:

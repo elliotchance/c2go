@@ -67,6 +67,20 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (g
 	fromType := cFromType
 	toType := cToType
 
+	if cFromType == cToType {
+		return expr, nil
+	}
+	// Exceptions for stdout, stdin, stderr
+	if fromType == "FILE *" && toType == "struct _IO_FILE *" {
+		return expr, nil
+	}
+	if fromType == "struct _IO_FILE *" && toType == "FILE *" {
+		return expr, nil
+	}
+	if fromType == "FILE *" && toType == "FILE *" {
+		return expr, nil
+	}
+
 	// registration type _Bool in program
 	if cFromType == "_Bool" {
 		p.TypedefType["_Bool"] = "int"
@@ -362,6 +376,10 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (g
 	if strings.Index(rightName, ".") != -1 {
 		parts := strings.Split(rightName, ".")
 		rightName = parts[len(parts)-1]
+	}
+
+	if cFromType == "void *" && cToType == "char *" {
+		return expr, nil
 	}
 
 	functionName := fmt.Sprintf("noarch.%sTo%s",

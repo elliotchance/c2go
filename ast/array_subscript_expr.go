@@ -5,13 +5,15 @@ type ArraySubscriptExpr struct {
 	Addr       Address
 	Pos        Position
 	Type       string
-	Kind       string
+	Type2      string
+	IsLvalue   bool
 	ChildNodes []Node
 }
 
 func parseArraySubscriptExpr(line string) *ArraySubscriptExpr {
 	groups := groupsFromRegex(
-		"<(?P<position>.*)> '(?P<type>.*?)' (?P<kind>.*)",
+		`<(?P<position>.*)> '(?P<type>.*?)'(:'(?P<type2>.*?)')?
+		(?P<lvalue> lvalue)?`,
 		line,
 	)
 
@@ -19,7 +21,8 @@ func parseArraySubscriptExpr(line string) *ArraySubscriptExpr {
 		Addr:       ParseAddress(groups["address"]),
 		Pos:        NewPositionFromString(groups["position"]),
 		Type:       groups["type"],
-		Kind:       groups["kind"],
+		Type2:      groups["type2"],
+		IsLvalue:   len(groups["lvalue"]) > 0,
 		ChildNodes: []Node{},
 	}
 }

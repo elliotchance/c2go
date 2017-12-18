@@ -60,7 +60,7 @@ struct xx {
 
 int main()
 {
-    plan(20);
+    plan(23);
 
     struct programming variable;
     char *s = "Programming in Software Development.";
@@ -167,6 +167,22 @@ int main()
 	        {.possibleSteps = 1}, {.possibleSteps = 1},
 	    };
 		is_eq(followingSteps[0].possibleSteps, 1);
+	}
+
+	diag("Double typedef type")
+	{
+		typedef int  int2;
+		typedef int2 int3;
+		typedef int3 int4;
+
+		is_eq((int)((int4)((int3)((int2)(42)))),42);
+	}
+	{
+		typedef size_t size2;
+		is_eq(((size2)((size_t)(56))),56.0)
+	}
+	{
+		is_eq((size_t)(43),43);
 	}
 
     done_testing();
