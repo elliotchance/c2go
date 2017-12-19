@@ -60,7 +60,7 @@ struct xx {
 
 int main()
 {
-    plan(25);
+    plan(24);
 
     struct programming variable;
     char *s = "Programming in Software Development.";
