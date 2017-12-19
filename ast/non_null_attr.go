@@ -9,6 +9,7 @@ import (
 type NonNullAttr struct {
 	Addr       Address
 	Pos        Position
+	Inherited  bool
 	A          int
 	B          int
 	C          int
@@ -18,7 +19,9 @@ type NonNullAttr struct {
 
 func parseNonNullAttr(line string) *NonNullAttr {
 	groups := groupsFromRegex(
-		`<(?P<position>.*)>(?P<a> \d+)(?P<b> \d+)?(?P<c> \d+)?(?P<d> \d+)?`,
+		`<(?P<position>.*)>
+		(?P<inherited> Inherited)?
+		(?P<a> \d+)(?P<b> \d+)?(?P<c> \d+)?(?P<d> \d+)?`,
 		line,
 	)
 
@@ -40,6 +43,7 @@ func parseNonNullAttr(line string) *NonNullAttr {
 	return &NonNullAttr{
 		Addr:       ParseAddress(groups["address"]),
 		Pos:        NewPositionFromString(groups["position"]),
+		Inherited:  len(groups["inherited"]) > 0,
 		A:          util.Atoi(strings.TrimSpace(groups["a"])),
 		B:          b,
 		C:          c,

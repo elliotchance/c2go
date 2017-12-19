@@ -161,7 +161,7 @@ int ff(){ return 3;}
 
 int main()
 {
-    plan(60);
+    plan(66);
 
     START_TEST(intarr);
     START_TEST(doublearr);
@@ -188,24 +188,41 @@ int main()
     a[2]   = 42.;
        is_eq(a[2],42);
        
-       diag("Pointer arithmetic")
+    diag("Pointer arithmetic. Part 1");
     float *b;
     b = (float *)calloc(5,sizeof(float));
     
-       *b   = 42.;
-       is_eq(*(b+0),42.);
+    *b   = 42.;
+    is_eq(*(b+0),42.);
     
-       *(b+1) = 42.;
-       is_eq(*(b+1),42.);
+    *(b+1) = 42.;
+    is_eq(*(b+1),42.);
     *(2+b) = 42.;
-       is_eq(*(b+2),42.);
+    is_eq(*(b+2),42.);
 
     *(b+ff()) = 45.;
-       is_eq(*(b + 3), 45.);
+    is_eq(*(b + 3), 45.);
     *(ff()+b+1) = 46.;
-       is_eq(*(b + 4), 46.);
+    is_eq(*(b + 4), 46.);
 
-	diag("Pointer arithmetic")
+	*(b+ (0 ? 1 : 2)) = -1.;
+	is_eq(*(b+2),-1);
+
+	*(b + 0) = 1 ;
+	*(b + (int)(*(b + 0)) - 1) = 35;
+	is_eq(*(b+0),35);
+
+	*(b + (int)((float)(2))) = -45;
+	is_eq(*(b+2),-45);
+
+	*(b + 1 + 3 + 1 - 5*1 + ff() - 3) = -4.0;
+	is_eq(*(b+0), -4.0);
+	is_eq(*b    , -4.0);
+
+	is_eq((*(b + 1 + 3 + 1 - 5*1 + ff() - 3 + 1) = -48.0,*(b+1)), -48.0);
+	{int rrr;(void)(rrr);}
+	
+	diag("Pointer arithmetic. Part 2")
 	{
 		float *arr; 
 		arr = (float*)calloc(1+1,sizeof(float)); 

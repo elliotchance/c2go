@@ -29,14 +29,20 @@ import (
 // It is also important to note that C only evaulates the "b" or "c" condition
 // based on the result of "a" (from the above example).
 func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program) (
-	*goast.CallExpr, string, []goast.Stmt, []goast.Stmt, error) {
-	preStmts := []goast.Stmt{}
-	postStmts := []goast.Stmt{}
+	_ *goast.CallExpr, theType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot transpile ConditionalOperator : err = %v", err)
+		}
+	}()
 
+	// a - condition
 	a, aType, newPre, newPost, err := transpileToExpr(n.Children()[0], p, false)
 	if err != nil {
-		return nil, "", nil, nil, err
+		return
 	}
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
 	// null in C is zero
 	if aType == types.NullPointer {
 		a = &goast.BasicLit{
@@ -46,61 +52,91 @@ func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program
 		aType = "int"
 	}
 
-	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
-
-	b, bType, newPre, newPost, err := transpileToExpr(n.Children()[1], p, false)
+	a, err = types.CastExpr(p, a, aType, "bool")
 	if err != nil {
-		return nil, "", nil, nil, err
+		return
 	}
 
+	// b - body
+	b, bType, newPre, newPost, err := transpileToExpr(n.Children()[1], p, false)
+	if err != nil {
+		return
+	}
+	// Theorephly, lenght is must be zero
+	if len(newPre) > 0 || len(newPost) > 0 {
+		p.AddMessage(p.GenerateWarningMessage(
+			fmt.Errorf("lenght of pre or post in body must be zero. {%d,%d}", len(newPre), len(newPost)), n))
+	}
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
+	if n.Type != "void" {
+		b, err = types.CastExpr(p, b, bType, n.Type)
+		if err != nil {
+			return
+		}
+		bType = n.Type
+	}
+
+	// c - else body
 	c, cType, newPre, newPost, err := transpileToExpr(n.Children()[2], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
-
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	a, err = types.CastExpr(p, a, aType, "bool")
-	if err != nil {
-		return nil, "", nil, nil, err
+	if n.Type != "void" {
+		c, err = types.CastExpr(p, c, cType, n.Type)
+		if err != nil {
+			return
+		}
+		cType = n.Type
 	}
 
-	// TODO: Here it is being assumed that the return type of the
-	// conditional operator is the type of the 'false' result. Things
-	// are a bit more complicated then that in C.
-
-	b, err = types.CastExpr(p, b, bType, cType)
-	if err != nil {
-		return nil, "", nil, nil, err
+	// rightType - generate return type
+	var returnType string
+	if n.Type != "void" {
+		returnType, err = types.ResolveType(p, n.Type)
+		if err != nil {
+			return
+		}
 	}
 
-	returnType, err := types.ResolveType(p, cType)
-	if err != nil {
-		return nil, "", nil, nil, err
+	var bod, els goast.BlockStmt
+
+	bod.Lbrace = 1
+	if bType != types.ToVoid {
+		if n.Type != "void" {
+			bod.List = []goast.Stmt{
+				&goast.ReturnStmt{
+					Results: []goast.Expr{b},
+				},
+			}
+		} else {
+			bod.List = []goast.Stmt{&goast.ExprStmt{b}}
+		}
+	}
+
+	els.Lbrace = 1
+	if cType != types.ToVoid {
+		if n.Type != "void" {
+			els.List = []goast.Stmt{
+				&goast.ReturnStmt{
+					Results: []goast.Expr{c},
+				},
+			}
+		} else {
+			els.List = []goast.Stmt{&goast.ExprStmt{c}}
+		}
 	}
 
 	return util.NewFuncClosure(
 		returnType,
 		&goast.IfStmt{
 			Cond: a,
-			Body: &goast.BlockStmt{
-				List: []goast.Stmt{
-					&goast.ReturnStmt{
-						Results: []goast.Expr{b},
-					},
-				},
-			},
-			Else: &goast.BlockStmt{
-				List: []goast.Stmt{
-					&goast.ReturnStmt{
-						Results: []goast.Expr{c},
-					},
-				},
-			},
+			Body: &bod,
+			Else: &els,
 		},
-	), cType, preStmts, postStmts, nil
+	), n.Type, preStmts, postStmts, nil
 }
 
 // transpileParenExpr transpiles an expression that is wrapped in parentheses.
@@ -108,25 +144,35 @@ func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program
 // the macro expands to). We have to return the type as "null" since we don't
 // know at this point what the NULL expression will be used in conjunction with.
 func transpileParenExpr(n *ast.ParenExpr, p *program.Program) (
-	*goast.ParenExpr, string, []goast.Stmt, []goast.Stmt, error) {
-	preStmts := []goast.Stmt{}
-	postStmts := []goast.Stmt{}
+	r *goast.ParenExpr, exprType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot transpile ParenExpr. err = %v", err)
+			p.AddMessage(p.GenerateWarningMessage(err, n))
+		}
+	}()
 
-	e, eType, newPre, newPost, err := transpileToExpr(n.Children()[0], p, false)
+	expr, exprType, preStmts, postStmts, err := transpileToExpr(n.Children()[0], p, false)
 	if err != nil {
-		return nil, "", nil, nil, err
+		return
 	}
 
-	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
-
-	r := &goast.ParenExpr{
-		X: e,
-	}
-	if types.IsNullExpr(r) {
-		eType = "null"
+	if exprType == types.NullPointer {
+		r = &goast.ParenExpr{X: expr}
+		return
 	}
 
-	return r, eType, preStmts, postStmts, nil
+	if !types.IsFunction(exprType) && exprType != "void" && exprType != types.ToVoid {
+		expr, err = types.CastExpr(p, expr, exprType, n.Type)
+		if err != nil {
+			return
+		}
+		exprType = n.Type
+	}
+
+	r = &goast.ParenExpr{X: expr}
+
+	return
 }
 
 func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.Program, exprIsStmt bool) (

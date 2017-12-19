@@ -108,7 +108,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 		}
 		if len(n.Children()) > 0 {
 			if v, ok := n.Children()[0].(*ast.ImplicitCastExpr); ok && types.IsFunction(v.Type) {
-				fields, returns, err := types.ResolveFunction(p, v.Type)
+				fields, returns, err := types.ParseFunction(v.Type)
 				if err != nil {
 					p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Cannot resolve function : %v", err), n))
 					return nil, "", nil, nil, err
@@ -240,34 +240,43 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 	// _ = buffer
 	if functionDef.Substitution == "_" {
 		var argName string
-		if v, ok := realArgs[0].(*goast.CallExpr); ok && len(realArgs) == 1 {
-			if vv, ok := v.Args[0].(*goast.Ident); ok && len(v.Args) == 1 {
-				argName = vv.Name
-			}
-			if vv, ok := v.Args[0].(*goast.ParenExpr); ok && len(v.Args) == 1 {
-				argName = vv.X.(*goast.Ident).Name
+
+		// search goast.Ident
+		var f func(ge goast.Expr)
+
+		f = func(ge goast.Expr) {
+			switch v := ge.(type) {
+			case *goast.CallExpr:
+				for _, arg := range v.Args {
+					f(arg)
+				}
+			case *goast.ParenExpr:
+				f(v.X)
+			case *goast.Ident:
+				argName = v.Name
 			}
 		}
-		if v, ok := realArgs[0].(*goast.Ident); ok {
-			argName = v.Name
+
+		for i := range realArgs {
+			f(realArgs[i])
 		}
-		if argName != "" {
-			devNull := &goast.AssignStmt{
-				Lhs: []goast.Expr{
-					&goast.Ident{
-						Name: "_",
-					},
+
+		if argName == "" {
+			return nil, "", nil, nil,
+				fmt.Errorf("Cannot found goast.Ident in operation <ToVoid> or function free")
+		}
+
+		devNull := &goast.AssignStmt{
+			Lhs: []goast.Expr{goast.NewIdent("_")},
+			Tok: token.ASSIGN,
+			Rhs: []goast.Expr{
+				&goast.Ident{
+					Name: argName,
 				},
-				Tok: token.ASSIGN,
-				Rhs: []goast.Expr{
-					&goast.Ident{
-						Name: argName,
-					},
-				},
-			}
-			preStmts = append(preStmts, devNull)
-			return nil, "", preStmts, postStmts, nil
+			},
 		}
+		preStmts = append(preStmts, devNull)
+		return nil, "", preStmts, postStmts, nil
 	}
 
 	return util.NewCallExpr(functionName, realArgs...),

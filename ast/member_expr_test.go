@@ -78,6 +78,18 @@ func TestMemberExpr(t *testing.T) {
 			IsPointer:  false,
 			ChildNodes: []Node{},
 		},
+		`0x3180ef0 <col:32, col:48> 'int' .n 0x317f450`: &MemberExpr{
+			Addr:       0x3180ef0,
+			Pos:        NewPositionFromString("col:32, col:48"),
+			Type:       "int",
+			Type2:      "",
+			IsLvalue:   false,
+			IsBitfield: false,
+			Name:       "n",
+			Address2:   "0x317f450",
+			IsPointer:  false,
+			ChildNodes: []Node{},
+		},
 	}
 
 	runNodeTests(t, nodes)

@@ -85,6 +85,9 @@ var simpleResolveTypes = map[string]string{
 // created only for transpiler.CStyleCastExpr
 var NullPointer = "NullPointerType *"
 
+// ToVoid - specific type for ignore the cast
+var ToVoid = "ToVoid"
+
 // ResolveType determines the Go type from a C type.
 //
 // Some basic examples are obvious, such as "float" in C would be "float32" in
@@ -285,15 +288,10 @@ func ResolveFunction(p *program.Program, s string) (fields []string, returns []s
 
 // IsFunction - return true if string is function like "void (*)(void)"
 func IsFunction(s string) bool {
-	parts := strings.Split(s, "(*)")
-	if len(parts) != 2 {
-		return false
+	if strings.Contains(s, "(") && strings.Contains(s, ")") {
+		return true
 	}
-	inside := strings.TrimSpace(parts[1])
-	if inside[0] != '(' || inside[len(inside)-1] != ')' {
-		return false
-	}
-	return true
+	return false
 }
 
 // ParseFunction - parsing elements of C function
@@ -339,8 +337,14 @@ func ParseFunction(s string) (f []string, r []string, err error) {
 // CleanCType - remove from C type not Go type
 func CleanCType(s string) (out string) {
 	out = s
-	out = strings.Replace(out, "()", "", -1)
-	out = strings.Replace(out, "(*)", "", -1)
+
+	// remove space from pointer symbols
+	out = strings.Replace(out, "* *", "**", -1)
+
+	// add space for simplification redactoring
+	out = strings.Replace(out, "*", " *", -1)
+
+	out = strings.Replace(out, "( *)", "(*)", -1)
 
 	// Remove any whitespace or attributes that are not relevant to Go.
 	out = strings.Replace(out, "const", "", -1)

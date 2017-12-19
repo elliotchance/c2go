@@ -1,9 +1,13 @@
 #include <stdio.h>
 #include "tests.h"
 
+void f_empty(){
+	return;
+};
+
 int main()
 {
-    plan(8);
+    plan(9);
 
     int a = 'a' == 65 ? 10 : 100;
     float b = 10 == 10 ? 1.0 : 2.0;
@@ -29,6 +33,13 @@ int main()
     {
 	pass(__func__);
     }
+
+	diag("CStyleCast <ToVoid>")
+	{double a, b; 0 ? (void)(a) : (void)(b); (void)(a),(void)(b); }
+	{double a   ; 0 ? (void)(a) : f_empty(); (void)(a);}
+	{double    b; 0 ? f_empty() : (void)(b); (void)(b);}
+	{           ; 0 ? f_empty() : f_empty(); }
+	pass("Ok - ToVoid");
 
     done_testing();
 }

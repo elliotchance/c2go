@@ -42,6 +42,11 @@ func SizeOf(p *program.Program, cType string) (int, error) {
 		return SizeOf(p, "int")
 	}
 
+	// typedef int Integer;
+	if v, ok := p.TypedefType[cType]; ok {
+		return SizeOf(p, v)
+	}
+
 	// typedef Enum
 	if _, ok := p.EnumTypedefName[cType]; ok {
 		return SizeOf(p, "int")
@@ -144,7 +149,7 @@ func SizeOf(p *program.Program, cType string) (int, error) {
 	case "long", "double":
 		return 8, nil
 
-	case "long double":
+	case "long double", "long long", "long long int", "long long unsigned int":
 		return 16, nil
 	}
 

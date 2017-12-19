@@ -60,6 +60,7 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 					} else {
 						decls = append(decls, d...)
 					}
+					break
 				} else {
 					counter--
 					i = i + counter

@@ -135,6 +135,11 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 	if n.IsImplicit && n.Pos.File == ast.PositionBuiltIn {
 		return
 	}
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot transpile Typedef Decl : err = %v", err)
+		}
+	}()
 	name := n.Name
 
 	// added for support "typedef enum {...} dd" with empty name of struct
@@ -166,7 +171,9 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 	p.DefineType(name)
 
 	resolvedType, err := types.ResolveType(p, n.Type)
-	p.AddMessage(p.GenerateWarningMessage(err, n))
+	if err != nil {
+		p.AddMessage(p.GenerateWarningMessage(err, n))
+	}
 
 	// There is a case where the name of the type is also the definition,
 	// like:
@@ -191,27 +198,6 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 
 	if name == "__darwin_ct_rune_t" {
 		resolvedType = p.ImportType("github.com/elliotchance/c2go/darwin.CtRuneT")
-	}
-
-	// TODO: Some platform structs are ignored.
-	// https://github.com/elliotchance/c2go/issues/85
-	if name == "__builtin_va_list" ||
-		name == "__qaddr_t" ||
-		name == "definition" ||
-		name == "_IO_lock_t" ||
-		name == "va_list" ||
-		name == "fpos_t" ||
-		name == "__NSConstantString" ||
-		name == "__darwin_va_list" ||
-		name == "__fsid_t" ||
-		name == "_G_fpos_t" ||
-		name == "_G_fpos64_t" ||
-		name == "__locale_t" ||
-		name == "locale_t" ||
-		name == "fsid_t" ||
-		name == "sigset_t" {
-		err = nil
-		return
 	}
 
 	if name == "div_t" || name == "ldiv_t" || name == "lldiv_t" {
