@@ -85,6 +85,9 @@ var simpleResolveTypes = map[string]string{
 // created only for transpiler.CStyleCastExpr
 var NullPointer = "NullPointerType *"
 
+// ToVoid - specific type for ignore the cast
+var ToVoid = "ToVoid"
+
 // ResolveType determines the Go type from a C type.
 //
 // Some basic examples are obvious, such as "float" in C would be "float32" in
@@ -225,13 +228,13 @@ func ResolveType(p *program.Program, s string) (string, error) {
 	search := util.GetRegex("[\\w ]+\\(\\*.*?\\)\\(.*\\)").MatchString(s)
 	if search {
 		return "interface{}",
-			fmt.Errorf("function pointers are not supported : '%s'", s)
+			fmt.Errorf("function pointers are not supported [1] : '%s'", s)
 	}
 
 	search = util.GetRegex("[\\w ]+ \\(.*\\)").MatchString(s)
 	if search {
 		return "interface{}",
-			fmt.Errorf("function pointers are not supported : '%s'", s)
+			fmt.Errorf("function pointers are not supported [2] : '%s'", s)
 	}
 
 	// It could be an array of fixed length. These needs to be converted to
@@ -255,6 +258,11 @@ func ResolveType(p *program.Program, s string) (string, error) {
 
 // ResolveFunction determines the Go type from a C type.
 func ResolveFunction(p *program.Program, s string) (fields []string, returns []string, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot resolve function '%s' : %v", s, err)
+		}
+	}()
 	f, r, err := ParseFunction(s)
 	if err != nil {
 		return
@@ -280,19 +288,20 @@ func ResolveFunction(p *program.Program, s string) (fields []string, returns []s
 
 // IsFunction - return true if string is function like "void (*)(void)"
 func IsFunction(s string) bool {
-	parts := strings.Split(s, "(*)")
-	if len(parts) != 2 {
-		return false
+	if strings.Contains(s, "(") && strings.Contains(s, ")") {
+		return true
 	}
-	inside := strings.TrimSpace(parts[1])
-	if inside[0] != '(' || inside[len(inside)-1] != ')' {
-		return false
-	}
-	return true
+	return false
 }
 
 // ParseFunction - parsing elements of C function
 func ParseFunction(s string) (f []string, r []string, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot parse function '%s' : %v", s, err)
+		}
+	}()
+
 	if !IsFunction(s) {
 		err = fmt.Errorf("Is not function : %s", s)
 		return
@@ -328,8 +337,14 @@ func ParseFunction(s string) (f []string, r []string, err error) {
 // CleanCType - remove from C type not Go type
 func CleanCType(s string) (out string) {
 	out = s
-	out = strings.Replace(out, "()", "", -1)
-	out = strings.Replace(out, "(*)", "", -1)
+
+	// remove space from pointer symbols
+	out = strings.Replace(out, "* *", "**", -1)
+
+	// add space for simplification redactoring
+	out = strings.Replace(out, "*", " *", -1)
+
+	out = strings.Replace(out, "( *)", "(*)", -1)
 
 	// Remove any whitespace or attributes that are not relevant to Go.
 	out = strings.Replace(out, "const", "", -1)

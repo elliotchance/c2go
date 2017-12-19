@@ -8,7 +8,7 @@ void empty(){;}
 
 int main()
 {
-	plan(53);
+	plan(54);
 
     int i = 10;
     signed char j = 1;
@@ -191,6 +191,15 @@ int main()
 	{ double     *const*az; (void)(az); }
 	{ int             **az; (void)(az); }
 	{ float   *volatile*az; (void)(az); }
+	
+	diag("CStyleCast <ToVoid> with comma")
+	{ unsigned int *ui; (void)(empty(),ui);}
+	{ 
+		long int *li;
+		int counter_li = 0;
+		(void)(counter_li++,empty(),li);
+		is_eq(counter_li,1);
+	}
 
 	diag("switch with initialization")
 	switch(0)

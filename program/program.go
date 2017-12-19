@@ -149,6 +149,24 @@ func (p *Program) AddMessage(message string) bool {
 	}
 
 	p.messages = append(p.messages, message)
+
+	// Compactizarion warnings stack
+	if len(p.messages) > 1 {
+		var (
+			new  = len(p.messages) - 1
+			last = len(p.messages) - 2
+		)
+		// Warning collapsing for minimaze warnings
+		warning := "// Warning"
+		if strings.HasPrefix(p.messages[last], warning) {
+			l := string(p.messages[last][len(warning):])
+			if strings.HasSuffix(p.messages[new], l) {
+				p.messages[last] = p.messages[new]
+				p.messages = p.messages[0:new]
+			}
+		}
+	}
+
 	return true
 }
 
