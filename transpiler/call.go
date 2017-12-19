@@ -81,13 +81,17 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 			return nil, "", nil, nil,
 				fmt.Errorf("Unsupport type '%T' in function calloc", n.Children()[2])
 		}
+		goType, err := types.ResolveType(p, allocType)
+		if err != nil {
+			return nil, "", nil, nil, err
+		}
 		return &goast.CallExpr{
 			Fun: util.NewIdent("make"),
 			Args: []goast.Expr{
-				&goast.ArrayType{Elt: util.NewIdent(allocType)},
+				&goast.ArrayType{Elt: goast.NewIdent(goType)},
 				size,
 			},
-		}, n.Type, preStmts, postStmts, nil
+		}, allocType + " *", preStmts, postStmts, nil
 	}
 
 	// Get the function definition from it's name. The case where it is not
