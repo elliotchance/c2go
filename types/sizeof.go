@@ -7,22 +7,6 @@ import (
 	"github.com/elliotchance/c2go/program"
 )
 
-func removePrefix(s, prefix string) string {
-	if strings.HasPrefix(s, prefix) {
-		s = s[len(prefix):]
-	}
-
-	return s
-}
-
-func removeSuffix(s, suffix string) string {
-	if strings.HasSuffix(s, suffix) {
-		s = s[:len(suffix)+1]
-	}
-
-	return s
-}
-
 // SizeOf returns the number of bytes for a type. This the same as using the
 // sizeof operator/function in C.
 func SizeOf(p *program.Program, cType string) (size int, err error) {
@@ -33,11 +17,9 @@ func SizeOf(p *program.Program, cType string) (size int, err error) {
 	}()
 
 	// Remove keywords that do not effect the size.
-	cType = removePrefix(cType, "signed ")
-	cType = removePrefix(cType, "unsigned ")
-	cType = removePrefix(cType, "const ")
-	cType = removePrefix(cType, "volatile ")
-	cType = removeSuffix(cType, "const")
+	cType = CleanCType(cType)
+	cType = strings.Replace(cType, "unsigned ", "", -1)
+	cType = strings.Replace(cType, "signed ", "", -1)
 
 	// FIXME: The pointer size will be different on different platforms. We
 	// should find out the correct size at runtime.
