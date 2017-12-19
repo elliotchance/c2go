@@ -27,7 +27,7 @@ void test_castbool()
 
 int main()
 {
-    plan(18);
+    plan(19);
 
     START_TEST(cast)
     START_TEST(castbool)
@@ -80,9 +80,17 @@ int main()
 	is_true(c2 == NULL);
 
 	diag("Calloc with type")
-	double *ddd = (double *)calloc(2,sizeof(double));
-	is_not_null(ddd);
-	(void)(ddd);
+	{
+		double *ddd = (double *)calloc(2,sizeof(double));
+		is_not_null(ddd);
+		(void)(ddd);
+	}
+	{
+		double *ddd;
+		ddd = (double *)calloc(2,sizeof(double));
+		is_not_null(ddd);
+		(void)(ddd);
+	}
 
     done_testing();
 }
