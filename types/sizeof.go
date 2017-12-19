@@ -63,8 +63,7 @@ func SizeOf(p *program.Program, cType string) (size int, err error) {
 	var s *program.Struct
 	if s, ok = p.Structs[cType]; ok {
 		isStruct = true
-	}
-	if s, ok = p.Structs["struct "+cType]; ok {
+	} else if s, ok = p.Structs["struct "+cType]; ok {
 		isStruct = true
 	}
 	if isStruct {
