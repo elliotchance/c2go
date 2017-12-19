@@ -117,6 +117,21 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 				functionDef.ArgumentTypes = fields
 			}
 		}
+	} else {
+		// type correction for definition function in
+		// package program
+		var ok bool
+		for pos, arg := range n.Children() {
+			if pos == 0 {
+				continue
+			}
+			if pos >= len(functionDef.ArgumentTypes) {
+				continue
+			}
+			if arg, ok = arg.(*ast.ImplicitCastExpr); ok {
+				arg.(*ast.ImplicitCastExpr).Type = functionDef.ArgumentTypes[pos-1]
+			}
+		}
 	}
 
 	if functionDef.Substitution != "" {

@@ -22,6 +22,14 @@ func TestArraySubscriptExpr(t *testing.T) {
 			IsLvalue:   true,
 			ChildNodes: []Node{},
 		},
+		`0x3f147c0 <col:39, col:55> 'extCoord':'extCoord' lvalue`: &ArraySubscriptExpr{
+			Addr:       0x3f147c0,
+			Pos:        NewPositionFromString("col:39, col:55"),
+			Type:       "extCoord",
+			Type2:      "extCoord",
+			IsLvalue:   true,
+			ChildNodes: []Node{},
+		},
 	}
 
 	runNodeTests(t, nodes)

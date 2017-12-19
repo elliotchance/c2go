@@ -25,7 +25,13 @@ func removeSuffix(s, suffix string) string {
 
 // SizeOf returns the number of bytes for a type. This the same as using the
 // sizeof operator/function in C.
-func SizeOf(p *program.Program, cType string) (int, error) {
+func SizeOf(p *program.Program, cType string) (size int, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot determine sizeof : |%s|. err = %v", cType, err)
+		}
+	}()
+
 	// Remove keywords that do not effect the size.
 	cType = removePrefix(cType, "signed ")
 	cType = removePrefix(cType, "unsigned ")
@@ -53,13 +59,15 @@ func SizeOf(p *program.Program, cType string) (int, error) {
 	}
 
 	// A structure will be the sum of its parts.
-	if strings.HasPrefix(cType, "struct ") {
+	var isStruct, ok bool
+	var s *program.Struct
+	if s, ok = p.Structs[cType]; ok {
+		isStruct = true
+	} else if s, ok = p.Structs["struct "+cType]; ok {
+		isStruct = true
+	}
+	if isStruct {
 		totalBytes := 0
-
-		s := p.Structs[cType]
-		if s == nil {
-			return 0, fmt.Errorf("cannot determine size of: `%s`", cType)
-		}
 
 		for _, t := range s.Fields {
 			var bytes int
@@ -94,7 +102,7 @@ func SizeOf(p *program.Program, cType string) (int, error) {
 
 		s := p.Unions[cType]
 		if s == nil {
-			return 0, fmt.Errorf("cannot determine size of: `%s`", cType)
+			return 0, fmt.Errorf("error in union")
 		}
 
 		for _, t := range s.Fields {
@@ -157,7 +165,7 @@ func SizeOf(p *program.Program, cType string) (int, error) {
 	totalArraySize := 1
 	arrayType, arraySize := GetArrayTypeAndSize(cType)
 	if arraySize <= 0 {
-		return 0, fmt.Errorf("cannot determine size of: `%s`", cType)
+		return 0, fmt.Errorf("error in array size")
 	}
 
 	for arraySize != -1 {
@@ -167,7 +175,7 @@ func SizeOf(p *program.Program, cType string) (int, error) {
 
 	baseSize, err := SizeOf(p, arrayType)
 	if err != nil {
-		return 0, fmt.Errorf("cannot determine size of: `%s`", cType)
+		return 0, fmt.Errorf("error in sizeof baseSize")
 	}
 
 	return baseSize * totalArraySize, nil
