@@ -218,7 +218,8 @@ func getFieldList(f *ast.FunctionDecl, p *program.Program) (_ *goast.FieldList, 
 						util.NewIdent(v.Name),
 					},
 				}
-				arg, ret, err := types.ResolveFunction(p, v.Type)
+				var arg, ret []string
+				arg, ret, err = types.ResolveFunction(p, v.Type)
 				if err != nil {
 					continue
 				}
@@ -226,7 +227,7 @@ func getFieldList(f *ast.FunctionDecl, p *program.Program) (_ *goast.FieldList, 
 				argFieldList := []*goast.Field{}
 				for _, aa := range arg {
 					argFieldList = append(argFieldList, &goast.Field{
-						Type: util.NewIdent(aa),
+						Type: goast.NewIdent(aa),
 					})
 				}
 				funcType.Params = &goast.FieldList{
@@ -235,7 +236,7 @@ func getFieldList(f *ast.FunctionDecl, p *program.Program) (_ *goast.FieldList, 
 				funcType.Results = &goast.FieldList{
 					List: []*goast.Field{
 						&goast.Field{
-							Type: util.NewIdent(ret[0]),
+							Type: goast.NewIdent(ret[0]),
 						},
 					},
 				}
