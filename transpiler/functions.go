@@ -203,10 +203,47 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (decls []goa
 }
 
 // getFieldList returns the parameters of a C function as a Go AST FieldList.
-func getFieldList(f *ast.FunctionDecl, p *program.Program) (*goast.FieldList, error) {
+func getFieldList(f *ast.FunctionDecl, p *program.Program) (_ *goast.FieldList, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Error in function field list. err = %v", err)
+		}
+	}()
 	r := []*goast.Field{}
 	for _, n := range f.Children() {
 		if v, ok := n.(*ast.ParmVarDecl); ok {
+			if types.IsFunction(v.Type) {
+				field := &goast.Field{
+					Names: []*goast.Ident{
+						util.NewIdent(v.Name),
+					},
+				}
+				var arg, ret []string
+				arg, ret, err = types.ResolveFunction(p, v.Type)
+				if err != nil {
+					continue
+				}
+				funcType := &goast.FuncType{}
+				argFieldList := []*goast.Field{}
+				for _, aa := range arg {
+					argFieldList = append(argFieldList, &goast.Field{
+						Type: goast.NewIdent(aa),
+					})
+				}
+				funcType.Params = &goast.FieldList{
+					List: argFieldList,
+				}
+				funcType.Results = &goast.FieldList{
+					List: []*goast.Field{
+						&goast.Field{
+							Type: goast.NewIdent(ret[0]),
+						},
+					},
+				}
+				field.Type = funcType
+				r = append(r, field)
+				continue
+			}
 			t, err := types.ResolveType(p, v.Type)
 			p.AddMessage(p.GenerateWarningMessage(err, f))
 

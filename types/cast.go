@@ -70,6 +70,15 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (g
 	if cFromType == cToType {
 		return expr, nil
 	}
+
+	// Function casting
+	// Example :
+	// cFromType  : double (int, float, double)
+	// cToType    : double (*)(int, float, double)
+	if IsFunction(cFromType) {
+		return expr, nil
+	}
+
 	// Exceptions for stdout, stdin, stderr
 	if fromType == "FILE *" && toType == "struct _IO_FILE *" {
 		return expr, nil
