@@ -303,7 +303,7 @@ func IsGoKeyword(w string) bool {
 	case "break", "default", "func", "interface", "select", "case", "defer",
 		"go", "map", "struct", "chan", "else", "goto", "package", "switch",
 		"const", "fallthrough", "if", "range", "type", "continue", "for",
-		"import", "return", "var", "_":
+		"import", "return", "var", "_", "init":
 		return true
 	}
 

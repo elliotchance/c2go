@@ -131,13 +131,6 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (decls []goa
 			// (before any other code) in main().
 			prependStmtsInMain := []goast.Stmt{}
 
-			// We also need to append a setup function that will instantiate
-			// some things that are expected to be available at runtime.
-			prependStmtsInMain = append(
-				prependStmtsInMain,
-				util.NewExprStmt(util.NewCallExpr("__init")),
-			)
-
 			// In Go, the main() function does not take the system arguments.
 			// Instead they are accessed through the os package. We create new
 			// variables in the main() function (if needed), immediately after

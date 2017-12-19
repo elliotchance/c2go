@@ -49,10 +49,11 @@ int select()     {return 42;}
 int type()       {return 42;}
 int var()        {return 42;}
 int _()          {return 42;}
+int init()       {return 42;}
 
 int main()
 {
-    plan(30);
+    plan(31);
 
     pass("%s", "Main function.");
 
@@ -115,6 +116,7 @@ int main()
 	is_eq( type()       , 42);
 	is_eq( var()        , 42);
 	is_eq( _()          , 42);
+	is_eq( init()       , 42);
 
     done_testing();
 }
