@@ -33,6 +33,15 @@ func TestUnaryExprOrTypeTraitExpr(t *testing.T) {
 			Type3:      "union MyUnion",
 			ChildNodes: []Node{},
 		},
+		`0x3f142d8 <col:30, col:45> 'unsigned long' sizeof 'extCoord':'extCoord'`: &UnaryExprOrTypeTraitExpr{
+			Addr:       0x3f142d8,
+			Pos:        NewPositionFromString("col:30, col:45"),
+			Type1:      "unsigned long",
+			Function:   "sizeof",
+			Type2:      "extCoord",
+			Type3:      "extCoord",
+			ChildNodes: []Node{},
+		},
 	}
 
 	runNodeTests(t, nodes)
