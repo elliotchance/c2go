@@ -12,8 +12,8 @@ import (
 func SizeOf(p *program.Program, cType string) (int, error) {
 	// Remove keywords that do not effect the size.
 	cType = CleanCType(cType)
-	cType = strings.Replace(cType, "signed ", "", -1)
 	cType = strings.Replace(cType, "unsigned ", "", -1)
+	cType = strings.Replace(cType, "signed ", "", -1)
 
 	// FIXME: The pointer size will be different on different platforms. We
 	// should find out the correct size at runtime.
