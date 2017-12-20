@@ -16,39 +16,53 @@ import (
 	"github.com/elliotchance/c2go/util"
 )
 
-func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (_ *goast.Field, err error) {
-	if types.IsFunction(n.Type) {
-		v := n
-		field := &goast.Field{
-			Names: []*goast.Ident{
-				util.NewIdent(v.Name),
+func NewFunctionField(p *program.Program, name, cType string) (_ *goast.Field, err error) {
+	if name == "" {
+		err = fmt.Errorf("Name of function field cannot be empty")
+		return
+	}
+	if !types.IsFunction(cType) {
+		err = fmt.Errorf("Cannot create function field for type : %s", cType)
+		return
+	}
+
+	field := &goast.Field{
+		Names: []*goast.Ident{
+			util.NewIdent(name),
+		},
+	}
+	var arg, ret []string
+	arg, ret, err = types.ResolveFunction(p, cType)
+	if err != nil {
+		return
+	}
+	funcType := &goast.FuncType{}
+	argFieldList := []*goast.Field{}
+	for _, aa := range arg {
+		argFieldList = append(argFieldList, &goast.Field{
+			Type: goast.NewIdent(aa),
+		})
+	}
+	funcType.Params = &goast.FieldList{
+		List: argFieldList,
+	}
+	funcType.Results = &goast.FieldList{
+		List: []*goast.Field{
+			&goast.Field{
+				Type: goast.NewIdent(ret[0]),
 			},
-		}
-		var arg, ret []string
-		arg, ret, err = types.ResolveFunction(p, v.Type)
-		if err != nil {
+		},
+	}
+	field.Type = funcType
+
+	return field, nil
+}
+func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (field *goast.Field, err error) {
+	if types.IsFunction(n.Type) {
+		field, err = NewFunctionField(p, n.Name, n.Type)
+		if err == nil {
 			return
 		}
-		funcType := &goast.FuncType{}
-		argFieldList := []*goast.Field{}
-		for _, aa := range arg {
-			argFieldList = append(argFieldList, &goast.Field{
-				Type: goast.NewIdent(aa),
-			})
-		}
-		funcType.Params = &goast.FieldList{
-			List: argFieldList,
-		}
-		funcType.Results = &goast.FieldList{
-			List: []*goast.Field{
-				&goast.Field{
-					Type: goast.NewIdent(ret[0]),
-				},
-			},
-		}
-		field.Type = funcType
-
-		return field, nil
 	}
 
 	name := n.Name
