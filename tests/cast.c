@@ -27,7 +27,7 @@ void test_castbool()
 
 int main()
 {
-    plan(17);
+    plan(21);
 
     START_TEST(cast)
     START_TEST(castbool)
@@ -78,6 +78,25 @@ int main()
 	is_true(f2 == NULL);
 	char   *c2 = 0;
 	is_true(c2 == NULL);
+
+	diag("Type convertion from void* to ...")
+	{
+		void * ptr2;
+		int tInt = 55;
+		ptr2 = &tInt;
+		is_eq(*(int*)ptr2, 55);
+		double tDouble = -13;
+		ptr2 = &tDouble;
+		is_eq(*(double*)ptr2,-13);
+		float tFloat = 67;
+		is_eq(*(float *)(&tFloat),67);
+	}
+	diag("Type convertion from void* to ... in initialization")
+	{
+		long tLong = 556;
+		void * ptr3 = &tLong;
+		is_eq(*(long *) ptr3, 556);
+	}
 
     done_testing();
 }

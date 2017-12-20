@@ -28,6 +28,14 @@ func TestImplicitCastExpr(t *testing.T) {
 			Kind:       "IntegralCast",
 			ChildNodes: []Node{},
 		},
+		`0x26fd2d8 <col:20, col:32> 'extCoord':'extCoord' <LValueToRValue>`: &ImplicitCastExpr{
+			Addr:       0x26fd2d8,
+			Pos:        NewPositionFromString("col:20, col:32"),
+			Type:       "extCoord",
+			Type2:      "extCoord",
+			Kind:       "LValueToRValue",
+			ChildNodes: []Node{},
+		},
 	}
 
 	runNodeTests(t, nodes)

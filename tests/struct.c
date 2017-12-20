@@ -60,7 +60,7 @@ struct xx {
 
 int main()
 {
-    plan(23);
+    plan(24);
 
     struct programming variable;
     char *s = "Programming in Software Development.";
@@ -123,6 +123,17 @@ int main()
 	struct type t;
 	t.type = 42;
 	is_eq(t.type, 42);
+	
+	diag("Typedef struct with same name")
+	{
+		typedef struct Uq Uq;
+		struct Uq{
+			int uq;
+		};
+		Uq uu;
+		uu.uq = 42;
+		is_eq(uu.uq,42);
+	}
 
 	diag("Initialization of struct")
 	struct Point {
