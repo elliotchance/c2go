@@ -194,6 +194,29 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 	}()
 	name := n.Name
 
+	if types.IsFunction(n.Type) {
+		var field *goast.Field
+		field, err = NewFunctionField(p, n.Name, n.Type)
+		if err != nil {
+			p.AddMessage(p.GenerateWarningMessage(err, n))
+		} else {
+			// registration type
+			p.TypedefType[n.Name] = n.Type
+
+			decls = append(decls, &goast.GenDecl{
+				Tok: token.TYPE,
+				Specs: []goast.Spec{
+					&goast.TypeSpec{
+						Name: util.NewIdent(name),
+						Type: field.Type,
+					},
+				},
+			})
+			err = nil
+			return
+		}
+	}
+
 	// added for support "typedef enum {...} dd" with empty name of struct
 	// Result in Go: "type dd int"
 	if strings.Contains(n.Type, "enum") {
@@ -430,10 +453,15 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 		return
 	}
 
-	theType, err = types.ResolveType(p, n.Type)
-	if err != nil {
-		p.AddMessage(p.GenerateErrorMessage(err, n))
-		err = nil // Error is ignored
+	var t string = n.Type[0 : len(n.Type)-len(" *")]
+	_, isTypedefType := p.TypedefType[t]
+
+	if !isTypedefType {
+		theType, err = types.ResolveType(p, n.Type)
+		if err != nil {
+			p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Cannot resolve type %s : %v", n.Type, err), n))
+			err = nil // Error is ignored
+		}
 	}
 
 	p.GlobalVariables[n.Name] = theType
@@ -484,14 +512,23 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 		}
 	}
 
-	t, err := types.ResolveType(p, n.Type)
-	if err != nil {
-		p.AddMessage(p.GenerateErrorMessage(err, n))
-		err = nil // Error is ignored
+	if !isTypedefType {
+		t, err = types.ResolveType(p, n.Type)
+		if err != nil {
+			p.AddMessage(p.GenerateErrorMessage(err, n))
+			err = nil // Error is ignored
+		}
 	}
 
 	if len(preStmts) != 0 || len(postStmts) != 0 {
 		p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Not acceptable length of Stmt : pre(%d), post(%d)", len(preStmts), len(postStmts)), n))
+	}
+
+	var typeResult goast.Expr
+	if isTypedefType {
+		typeResult = goast.NewIdent(t)
+	} else {
+		typeResult = util.NewTypeIdent(t)
 	}
 
 	return []goast.Decl{&goast.GenDecl{
@@ -499,7 +536,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 		Specs: []goast.Spec{
 			&goast.ValueSpec{
 				Names:  []*goast.Ident{util.NewIdent(n.Name)},
-				Type:   util.NewTypeIdent(t),
+				Type:   typeResult,
 				Values: defaultValue,
 				Doc:    p.GetMessageComments(),
 			},

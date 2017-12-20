@@ -313,7 +313,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 	}
 
 	var resolvedLeftType = n.Type
-	if !types.IsFunction(n.Type) {
+	if !types.IsFunction(n.Type) && !types.IsTypedefFunction(p, n.Type) {
 		resolvedLeftType, err = types.ResolveType(p, leftType)
 		if err != nil {
 			p.AddMessage(p.GenerateWarningMessage(err, n))

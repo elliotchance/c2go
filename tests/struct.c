@@ -64,7 +64,7 @@ int summator(int i, float f){
 
 int main()
 {
-    plan(28);
+    plan(30);
 
     struct programming variable;
     char *s = "Programming in Software Development.";
@@ -222,6 +222,19 @@ int main()
 		f2.f = summator;
 		is_eq(f2.x,42);
 		is_eq(f2.f(3,5),8);
+	}
+
+	diag("typedef function")
+	{
+		typedef int ALIAS (int, float);
+		ALIAS * f = summator;
+		is_eq(f(3,5),8);
+	}
+	{
+		typedef int ALIAS2 (int, float);
+		ALIAS2 * f;
+		f = summator;
+		is_eq(f(3,5),8);
 	}
 
     done_testing();

@@ -112,8 +112,13 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 			Name: functionName,
 		}
 		if len(n.Children()) > 0 {
-			if v, ok := n.Children()[0].(*ast.ImplicitCastExpr); ok && types.IsFunction(v.Type) {
-				fields, returns, err := types.ParseFunction(v.Type)
+			if v, ok := n.Children()[0].(*ast.ImplicitCastExpr); ok && (types.IsFunction(v.Type) || types.IsTypedefFunction(p, v.Type)) {
+				t := v.Type
+				if types.IsTypedefFunction(p, t) {
+					t = t[0 : len(t)-len(" *")]
+					t, _ = p.TypedefType[t]
+				}
+				fields, returns, err := types.ParseFunction(t)
 				if err != nil {
 					p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Cannot resolve function : %v", err), n))
 					return nil, "", nil, nil, err
