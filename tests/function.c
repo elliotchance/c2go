@@ -34,6 +34,10 @@ double mul2 (int a, float b, double c) {
     return a*b*c;
 }
 
+double action(double (*F)(int,float,double)){
+	return F(2,3,4);
+}
+
 // Go keywords in C function
 int chan()       {return 42;}
 int defer()      {return 42;}
@@ -52,7 +56,7 @@ int _()          {return 42;}
 
 int main()
 {
-    plan(30);
+    plan(32);
 
     pass("%s", "Main function.");
 
@@ -115,6 +119,10 @@ int main()
 	is_eq( type()       , 42);
 	is_eq( var()        , 42);
 	is_eq( _()          , 42);
+	
+	diag("Function pointer inside function")
+	is_eq(action(add2), add2(2,3,4));
+	is_eq(action(mul2), mul2(2,3,4));
 
     done_testing();
 }

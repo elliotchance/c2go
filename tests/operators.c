@@ -6,9 +6,29 @@
 
 void empty(){;}
 
+int sAdd(char *opt) {
+    int l = strlen(opt) + 12;
+    return l;
+}
+
+int sMul(char *opt) {
+    int l = strlen(opt) * 12;
+    return l;
+}
+
+int sMin(char *opt) {
+    int l = strlen(opt) - 12;
+    return l;
+}
+
+int sDiv(char *opt) {
+    int l = strlen(opt) / 12;
+    return l;
+}
+
 int main()
 {
-	plan(54);
+	plan(58);
 
     int i = 10;
     signed char j = 1;
@@ -215,5 +235,11 @@ int main()
 		case 1:	{ ia = 60; is_eq(ia,60); }
 	}
 
+	diag("Binary operators for definition function")
+	is_eq(sAdd("rrr"),15);
+	is_eq(sMul("rrr"),36);
+	is_eq(sMin("rrrrrrrrrrrrr"),1);
+	is_eq(sDiv("rrrrrrrrrrrr"),1);
+	
 	done_testing();
 }

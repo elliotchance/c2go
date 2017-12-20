@@ -83,6 +83,17 @@ func TestTypedefDecl(t *testing.T) {
 			IsReferenced: false,
 			ChildNodes:   []Node{},
 		},
+		`0x3f0b9b0 <line:12:1, line:15:3> col:3 referenced extCoord 'struct extCoord':'extCoord'`: &TypedefDecl{
+			Addr:         0x3f0b9b0,
+			Pos:          NewPositionFromString("line:12:1, line:15:3"),
+			Position2:    "col:3",
+			Name:         "extCoord",
+			Type:         "struct extCoord",
+			Type2:        "extCoord",
+			IsImplicit:   false,
+			IsReferenced: true,
+			ChildNodes:   []Node{},
+		},
 	}
 
 	runNodeTests(t, nodes)
