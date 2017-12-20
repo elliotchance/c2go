@@ -21,6 +21,11 @@ func getName(firstChild ast.Node) string {
 		return fc.Name
 
 	case *ast.MemberExpr:
+		if types.IsFunction(fc.Type) {
+			if decl, ok := fc.Children()[0].(*ast.DeclRefExpr); ok {
+				return decl.Name + "." + fc.Name
+			}
+		}
 		return fc.Name
 
 	case *ast.ParenExpr:

@@ -16,19 +16,53 @@ import (
 	"github.com/elliotchance/c2go/util"
 )
 
-func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, string) {
+func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (_ *goast.Field, err error) {
+	if types.IsFunction(n.Type) {
+		v := n
+		field := &goast.Field{
+			Names: []*goast.Ident{
+				util.NewIdent(v.Name),
+			},
+		}
+		var arg, ret []string
+		arg, ret, err = types.ResolveFunction(p, v.Type)
+		if err != nil {
+			return
+		}
+		funcType := &goast.FuncType{}
+		argFieldList := []*goast.Field{}
+		for _, aa := range arg {
+			argFieldList = append(argFieldList, &goast.Field{
+				Type: goast.NewIdent(aa),
+			})
+		}
+		funcType.Params = &goast.FieldList{
+			List: argFieldList,
+		}
+		funcType.Results = &goast.FieldList{
+			List: []*goast.Field{
+				&goast.Field{
+					Type: goast.NewIdent(ret[0]),
+				},
+			},
+		}
+		field.Type = funcType
+
+		return field, nil
+	}
+
 	name := n.Name
 
 	// FIXME: What causes this? See __darwin_fp_control for example.
 	if name == "" {
-		return nil, ""
+		return nil, fmt.Errorf("Error : name of FieldDecl is empty")
 	}
 
 	// Add for fix bug in "stdlib.h"
 	// build/tests/exit/main_test.go:90:11: undefined: wait
 	// it is "union" with some anonymous struct
 	if n.Type == "union wait *" {
-		return nil, ""
+		return nil, fmt.Errorf("Avoid struct `union wait *` in FieldDecl")
 	}
 
 	fieldType, err := types.ResolveType(p, n.Type)
@@ -44,7 +78,7 @@ func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, str
 	return &goast.Field{
 		Names: []*goast.Ident{util.NewIdent(name)},
 		Type:  util.NewTypeIdent(fieldType),
-	}, "unknown3"
+	}, nil
 }
 
 func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.Decl, err error) {
@@ -76,19 +110,23 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 	var fields []*goast.Field
 
 	for _, c := range n.Children() {
-		if field, ok := c.(*ast.FieldDecl); ok {
-			f, _ := transpileFieldDecl(p, field)
-
-			if f != nil {
+		switch field := c.(type) {
+		case *ast.FieldDecl:
+			f, err := transpileFieldDecl(p, field)
+			if err != nil {
+				p.AddMessage(p.GenerateWarningMessage(err, field))
+			} else {
 				fields = append(fields, f)
 			}
-		} else if field, ok := c.(*ast.RecordDecl); ok {
+
+		case *ast.RecordDecl:
 			decls, err = transpileRecordDecl(p, field)
 			if err != nil {
 				message := fmt.Sprintf("could not parse %v", c)
 				p.AddMessage(p.GenerateWarningMessage(errors.New(message), c))
 			}
-		} else {
+
+		default:
 			message := fmt.Sprintf("could not parse %v", c)
 			p.AddMessage(p.GenerateWarningMessage(errors.New(message), c))
 		}

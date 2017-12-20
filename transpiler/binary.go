@@ -57,7 +57,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 	_ goast.Expr, resultType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 	defer func() {
 		if err != nil {
-			err = fmt.Errorf("Cannot transpile BinaryOperator : result type = {%s}. Error: %v", resultType, err)
+			err = fmt.Errorf("Cannot transpile BinaryOperator with type '%s' : result type = {%s}. Error: %v", n.Type, resultType, err)
 			p.AddMessage(p.GenerateWarningMessage(err, n))
 		}
 	}()
@@ -299,9 +299,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 					union := p.GetStruct(ref.Type)
 					if union != nil && union.IsUnion {
 						attrType, err := types.ResolveType(p, ref.Type)
-						if err != nil {
-							p.AddMessage(p.GenerateWarningMessage(err, memberExpr))
-						}
+						p.AddMessage(p.GenerateWarningMessage(err, memberExpr))
 
 						funcName := getFunctionNameForUnionSetter(ref.Name, attrType, memberExpr.Name)
 						resExpr := util.NewCallExpr(funcName, right)
@@ -314,9 +312,12 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 		}
 	}
 
-	resolvedLeftType, err := types.ResolveType(p, leftType)
-	if err != nil {
-		p.AddMessage(p.GenerateWarningMessage(err, n))
+	var resolvedLeftType = n.Type
+	if !types.IsFunction(n.Type) {
+		resolvedLeftType, err = types.ResolveType(p, leftType)
+		if err != nil {
+			p.AddMessage(p.GenerateWarningMessage(err, n))
+		}
 	}
 
 	// Enum casting
