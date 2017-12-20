@@ -2,10 +2,16 @@ package types
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/elliotchance/c2go/util"
 )
+
+// IsDereferenceType - check is that type dereference
+func IsDereferenceType(cType string) bool {
+	return strings.ContainsAny(cType, "[]*")
+}
 
 // GetDereferenceType returns the C type that would be the result of
 // dereferencing (unary "*" operator or accessing a single array element on a
@@ -16,7 +22,13 @@ import (
 //
 // If the dereferenced type cannot be determined or is impossible ("char" cannot
 // be dereferenced, for example) then an error is returned.
-func GetDereferenceType(cType string) (string, error) {
+func GetDereferenceType(cType string) (_ string, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Error in GetDereferenceType : %v", err)
+		}
+	}()
+
 	// In the form of: "int [2][3][4]" -> "int [3][4]"
 	search := util.GetRegex(`([\w\* ]+)\s*\[\d+\]((\[\d+\])+)`).FindStringSubmatch(cType)
 	if len(search) > 0 {
