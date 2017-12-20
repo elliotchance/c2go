@@ -4,6 +4,7 @@ type UnaryOperator struct {
 	Addr       Address
 	Pos        Position
 	Type       string
+	Type2      string
 	IsLvalue   bool
 	IsPrefix   bool
 	Operator   string
@@ -13,7 +14,7 @@ type UnaryOperator struct {
 func parseUnaryOperator(line string) *UnaryOperator {
 	groups := groupsFromRegex(
 		`<(?P<position>.*)>
-		 '(?P<type>.*?)'
+		 '(?P<type>.*?)'(:'(?P<type2>.*)')?
 		(?P<lvalue> lvalue)?
 		(?P<prefix> prefix)?
 		(?P<postfix> postfix)?
@@ -25,6 +26,7 @@ func parseUnaryOperator(line string) *UnaryOperator {
 		Addr:       ParseAddress(groups["address"]),
 		Pos:        NewPositionFromString(groups["position"]),
 		Type:       groups["type"],
+		Type2:      groups["type2"],
 		IsLvalue:   len(groups["lvalue"]) > 0,
 		IsPrefix:   len(groups["prefix"]) > 0,
 		Operator:   groups["operator"],

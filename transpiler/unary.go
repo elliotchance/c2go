@@ -264,6 +264,22 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 				found = true
 				return
 
+			case *ast.CStyleCastExpr:
+				counter++
+				if counter > 1 {
+					err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %v,%v", pointer, v)
+					return
+				}
+				// found pointer
+				pointer = v
+				// Replace pointer to zero
+				var zero ast.IntegerLiteral
+				zero.Type = "int"
+				zero.Value = "0"
+				n.Children()[i] = &zero
+				found = true
+				return
+
 			default:
 				if found {
 					break
@@ -330,6 +346,19 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 			Index: e,
 		}, eType, preStmts, postStmts, err
 	case *ast.CallExpr:
+		arr, _, newPre, newPost, err2 := transpileToExpr(v, p, false)
+		if err2 != nil {
+			return
+		}
+		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+		return &goast.IndexExpr{
+			X: &goast.ParenExpr{
+				Lparen: 1,
+				X:      arr,
+			},
+			Index: e,
+		}, eType, preStmts, postStmts, err
+	case *ast.CStyleCastExpr:
 		arr, _, newPre, newPost, err2 := transpileToExpr(v, p, false)
 		if err2 != nil {
 			return

@@ -70,6 +70,15 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (g
 	if cFromType == cToType {
 		return expr, nil
 	}
+
+	// Function casting
+	// Example :
+	// cFromType  : double (int, float, double)
+	// cToType    : double (*)(int, float, double)
+	if IsFunction(cFromType) {
+		return expr, nil
+	}
+
 	// Exceptions for stdout, stdin, stderr
 	if fromType == "FILE *" && toType == "struct _IO_FILE *" {
 		return expr, nil
@@ -77,8 +86,21 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (g
 	if fromType == "struct _IO_FILE *" && toType == "FILE *" {
 		return expr, nil
 	}
-	if fromType == "FILE *" && toType == "FILE *" {
-		return expr, nil
+
+	// casting
+	if fromType == "void *" && toType[len(toType)-1] == '*' && !strings.Contains(toType, "FILE") && toType[len(toType)-2] != '*' {
+		toType = strings.Replace(toType, "*", " ", -1)
+		t, err := ResolveType(p, toType)
+		if err != nil {
+			return nil, err
+		}
+		return &goast.TypeAssertExpr{
+			X:      expr,
+			Lparen: 1,
+			Type: &goast.ArrayType{
+				Lbrack: 1,
+				Elt:    util.NewIdent(t),
+			}}, nil
 	}
 
 	// registration type _Bool in program
