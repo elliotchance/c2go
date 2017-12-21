@@ -5,6 +5,7 @@ import (
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/types"
 )
 
 func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl) (decls []goast.Decl, err error) {
@@ -44,7 +45,7 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 				decls = append(decls, d...)
 			}
 			for counter := 1; i+counter < len(n.Children()); counter++ {
-				if vv, ok := n.Children()[i+counter].(*ast.TypedefDecl); ok {
+				if vv, ok := n.Children()[i+counter].(*ast.TypedefDecl); ok && !types.IsFunction(vv.Type) {
 					nameTypedefStruct := vv.Name
 					fields := v.Children()
 					// create a struct in according to
