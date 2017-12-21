@@ -268,41 +268,10 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 	// i += 4
 	// _ = buffer
 	if functionDef.Substitution == "_" {
-		var argName string
-
-		// search goast.Ident
-		var f func(ge goast.Expr)
-
-		f = func(ge goast.Expr) {
-			switch v := ge.(type) {
-			case *goast.CallExpr:
-				for _, arg := range v.Args {
-					f(arg)
-				}
-			case *goast.ParenExpr:
-				f(v.X)
-			case *goast.Ident:
-				argName = v.Name
-			}
-		}
-
-		for i := range realArgs {
-			f(realArgs[i])
-		}
-
-		if argName == "" {
-			return nil, "", nil, nil,
-				fmt.Errorf("Cannot found goast.Ident in operation <ToVoid> or function free")
-		}
-
 		devNull := &goast.AssignStmt{
 			Lhs: []goast.Expr{goast.NewIdent("_")},
 			Tok: token.ASSIGN,
-			Rhs: []goast.Expr{
-				&goast.Ident{
-					Name: argName,
-				},
-			},
+			Rhs: []goast.Expr{realArgs[0]},
 		}
 		preStmts = append(preStmts, devNull)
 		return nil, "", preStmts, postStmts, nil
