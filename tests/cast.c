@@ -27,7 +27,7 @@ void test_castbool()
 
 int main()
 {
-    plan(21);
+    plan(23);
 
     START_TEST(cast)
     START_TEST(castbool)
@@ -79,6 +79,19 @@ int main()
 	char   *c2 = 0;
 	is_true(c2 == NULL);
 
+	diag("Calloc with type")
+	{
+		double *ddd = (double *)calloc(2,sizeof(double));
+		is_not_null(ddd);
+		(void)(ddd);
+	}
+	{
+		double *ddd;
+		ddd = (double *)calloc(2,sizeof(double));
+		is_not_null(ddd);
+		(void)(ddd);
+	}
+	
 	diag("Type convertion from void* to ...")
 	{
 		void * ptr2;

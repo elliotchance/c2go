@@ -83,7 +83,7 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 	// Now we need to build the __init() function. This sets up certain state
 	// and variables that the runtime expects to be ready.
 	p.File.Decls = append(p.File.Decls, &goast.FuncDecl{
-		Name: util.NewIdent("__init"),
+		Name: goast.NewIdent("init"),
 		Type: util.NewFuncType(&goast.FieldList{}, ""),
 		Body: &goast.BlockStmt{
 			List: p.StartupStatements(),

@@ -53,10 +53,11 @@ int select()     {return 42;}
 int type()       {return 42;}
 int var()        {return 42;}
 int _()          {return 42;}
+int init()       {return 42;}
 
 int main()
 {
-    plan(32);
+    plan(33);
 
     pass("%s", "Main function.");
 
@@ -119,6 +120,7 @@ int main()
 	is_eq( type()       , 42);
 	is_eq( var()        , 42);
 	is_eq( _()          , 42);
+	is_eq( init()       , 42);
 	
 	diag("Function pointer inside function")
 	is_eq(action(add2), add2(2,3,4));
