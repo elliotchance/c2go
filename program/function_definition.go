@@ -169,6 +169,8 @@ var builtInFunctionDefinitions = []string{
 
 	// string.h
 	"char* strcpy(const char*, char*) -> noarch.Strcpy",
+	"char* strncpy(const char*, char*, size_t) -> noarch.Strncpy",
+
 	// real return type is "size_t", but it is changed to "int"
 	// in according to noarch.Strlen
 	"int strlen(const char*) -> noarch.Strlen",
@@ -176,6 +178,9 @@ var builtInFunctionDefinitions = []string{
 	// darwin/string.h
 	// should be: const char*, char*, size_t
 	"char* __builtin___strcpy_chk(const char*, char*, int) -> darwin.BuiltinStrcpy",
+	// should be: const char*, char*, size_t, size_t
+	"char* __builtin___strncpy_chk(const char*, char*, int, int) -> darwin.BuiltinStrncpy",
+
 	// should be: size_t __builtin_object_size(const void*, int)
 	"int __builtin_object_size(const char*, int) -> darwin.BuiltinObjectSize",
 
