@@ -128,45 +128,6 @@ func transpileUnaryOperatorNot(n *ast.UnaryOperator, p *program.Program) (
 		eType, preStmts, postStmts, nil
 }
 
-// Dereferencing.
-func transpileUnaryOperatorMul(n *ast.UnaryOperator, p *program.Program) (
-	goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
-	e, eType, preStmts, postStmts, err := transpileToExpr(n.Children()[0], p, false)
-	if err != nil {
-		return nil, "", nil, nil, err
-	}
-
-	if eType == "const char *" {
-		return &goast.IndexExpr{
-			X:     e,
-			Index: util.NewIntLit(0),
-		}, "char", preStmts, postStmts, nil
-	}
-
-	t, err := types.GetDereferenceType(eType)
-	if err != nil {
-		return nil, "", preStmts, postStmts, err
-	}
-
-	// C is more relaxed with this syntax. In Go we convert all of the
-	// pointers to slices, so we have to be careful when dereference a slice
-	// that it actually takes the first element instead.
-	resolvedType, err := types.ResolveType(p, eType)
-	if err != nil {
-		return nil, "", preStmts, postStmts, err
-	}
-	if strings.HasPrefix(resolvedType, "[]") {
-		return &goast.IndexExpr{
-			X:     e,
-			Index: util.NewIntLit(0),
-		}, t, preStmts, postStmts, nil
-	}
-
-	return &goast.StarExpr{
-		X: e,
-	}, t, preStmts, postStmts, nil
-}
-
 // transpilePointerArith - transpile pointer aripthmetic
 // Example of using:
 // *(t + 1) = ...
@@ -402,8 +363,6 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 		return transpileUnaryOperatorInc(n, p, operator)
 	case token.NOT:
 		return transpileUnaryOperatorNot(n, p)
-	case token.MUL:
-		return transpileUnaryOperatorMul(n, p)
 	}
 
 	// Otherwise handle like a unary operator.
