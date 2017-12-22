@@ -161,7 +161,7 @@ int ff(){ return 3;}
 
 int main()
 {
-    plan(66);
+    plan(77);
 
     START_TEST(intarr);
     START_TEST(doublearr);
@@ -246,6 +246,63 @@ int main()
 		arr = (float *) calloc(ff()+1+0+0+1*0,sizeof(float));
 		is_true(arr != NULL);
 		(void)(arr);
+	}
+
+	diag("Pointer to Pointer. 1")
+	{
+		double Var = 42;
+		double **PPptr1;
+		double * PPptr2;
+		PPptr2 = &Var;
+		PPptr1 = &PPptr2;
+		is_eq(**PPptr1,Var)
+		Var = 43;
+		is_eq(**PPptr1,Var)
+		(void)(PPptr1);
+		(void)(PPptr2);
+	}
+	diag("Pointer to Pointer. 2")
+	{
+		double Var = 42.0, **PPptr1, * PPptr2;
+		PPptr2 = &Var;
+		PPptr1 = &PPptr2;
+		is_eq(**PPptr1,Var)
+		Var = 43.0;
+		is_eq(**PPptr1,Var)
+		(void)(PPptr1);
+		(void)(PPptr2);
+	}
+	diag("Pointer to Pointer. 3")
+	{
+		char *arr[4] = {"C","C++","Go","VBA"};
+		char *(*ptr)[4] = &arr;
+
+		if((*ptr)[2][0] == 'G'){
+			pass("ok")
+		}
+	}
+	diag("Pointer to Pointer. 4.1")
+	{
+		int arr[5] = {10,20,30,40,50};
+		int *ptr ;
+		ptr = &arr;
+		is_eq(arr[1], *++ptr);
+		is_eq(arr[2], *++ptr);
+	}
+	diag("Pointer to Pointer. 4.2")
+	{
+		int arr[5] = {10,20,30,40,50};
+		int *ptr = &arr;
+		is_eq(arr[1], *++ptr);
+		is_eq(arr[2], *++ptr);
+	}
+	diag("Pointer to Pointer. 5")
+	{
+		int ar_var = 10;
+		int *ptr ;
+		ptr = &ar_var;
+		is_eq( ++*ptr , 11 );
+		is_eq( ++*ptr , 12 );
 	}
 
     done_testing();
