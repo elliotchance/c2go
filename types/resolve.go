@@ -247,17 +247,9 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 	// int [2][3]     -> [][]int
 	// int [2][3][4]  -> [][][]int
 	// double (*)[4]  -> [][]float64
-	// char *(*)[4]   -> [][]byte    // ATTENTION: char
+	// char *(*)[4]   -> [][]byte
 	{
-		copy := s
-		copy = CleanCType(copy)
-		if strings.Contains(copy, "char") {
-			copy = strings.Replace(copy, " *(", " (", 1)
-		}
-		copy = strings.Replace(copy, "(*)", "[0]", -1)
-		copy = CleanCType(copy)
-		fmt.Println("s ->", s, "\t", copy)
-		search2 := util.GetRegex(`([\w\* ]+)((\[\d+\])+)`).FindStringSubmatch(copy)
+		search2 := util.GetRegex(`([\w\* ]+)((\[\d+\])+)`).FindStringSubmatch(s)
 		if len(search2) > 2 {
 			t, err := ResolveType(p, search2[1])
 
@@ -361,6 +353,17 @@ func ParseFunction(s string) (f []string, r []string, err error) {
 func CleanCType(s string) (out string) {
 	out = s
 
+	// Remove any whitespace or attributes that are not relevant to Go.
+	out = strings.Replace(out, "const", "", -1)
+	out = strings.Replace(out, "volatile", "", -1)
+	out = strings.Replace(out, "__restrict", "", -1)
+	out = strings.Replace(out, "restrict", "", -1)
+	out = strings.Replace(out, "\t", "", -1)
+	out = strings.Replace(out, "\n", "", -1)
+	out = strings.Replace(out, "\r", "", -1)
+
+	out = strings.Replace(out, "(*)", "*", -1)
+
 	// remove space from pointer symbols
 	out = strings.Replace(out, "* *", "**", -1)
 
@@ -371,15 +374,6 @@ func CleanCType(s string) (out string) {
 
 	out = strings.Replace(out, "[", " [", -1)
 	out = strings.Replace(out, "] [", "][", -1)
-
-	// Remove any whitespace or attributes that are not relevant to Go.
-	out = strings.Replace(out, "const", "", -1)
-	out = strings.Replace(out, "volatile", "", -1)
-	out = strings.Replace(out, "__restrict", "", -1)
-	out = strings.Replace(out, "restrict", "", -1)
-	out = strings.Replace(out, "\t", "", -1)
-	out = strings.Replace(out, "\n", "", -1)
-	out = strings.Replace(out, "\r", "", -1)
 
 	// remove space from pointer symbols
 	out = strings.Replace(out, "* *", "**", -1)

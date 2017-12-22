@@ -172,7 +172,29 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 			return
 		}
 
-		if !types.IsFunction(exprType) && n.Kind != ast.ImplicitCastExprArrayToPointerDecay {
+		var isUnaryAmpersant bool
+		if v, ok := n.Children()[0].(*ast.UnaryOperator); ok {
+			if v.Operator == "&" {
+				// TODO need simplification
+				// TODO may by add in CStyleCastExpr same
+				isUnaryAmpersant = true
+				exprType = n.Type
+				expr = &goast.IndexExpr{
+					X: &goast.ParenExpr{
+						Lparen: 1,
+						X:      expr,
+					},
+					Index: &goast.BasicLit{
+						Kind:  token.INT,
+						Value: "0",
+					},
+				}
+			}
+		}
+
+		if !types.IsFunction(exprType) &&
+			n.Kind != ast.ImplicitCastExprArrayToPointerDecay &&
+			!isUnaryAmpersant {
 			expr, err = types.CastExpr(p, expr, exprType, n.Type)
 			if err != nil {
 				return nil, "", nil, nil, err
