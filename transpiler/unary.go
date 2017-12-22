@@ -66,11 +66,17 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program,
 		binaryOperator = "-="
 	}
 
-	return transpileBinaryOperator(&ast.BinaryOperator{
-		Type:     n.Type,
-		Operator: binaryOperator,
+	// |-CompoundAssignOperator 0x32c86f8 <line:307:3, col:10> 'int *' '+=' ComputeLHSTy='int *' ComputeResultTy='int *'
+	// | |-DeclRefExpr 0x32c86b0 <col:3> 'int *' lvalue Var 0x32c41f0 'ptr' 'int *'
+	// | `-IntegerLiteral 0x32c86d8 <col:10> 'int' 1
+	return transpileCompoundAssignOperator(&ast.CompoundAssignOperator{
+		Type:                  n.Type,
+		Opcode:                binaryOperator,
+		ComputationLHSType:    n.Type,
+		ComputationResultType: n.Type,
 		ChildNodes: []ast.Node{
-			n.Children()[0], &ast.IntegerLiteral{
+			n.Children()[0],
+			&ast.IntegerLiteral{
 				Type:       "int",
 				Value:      "1",
 				ChildNodes: []ast.Node{},

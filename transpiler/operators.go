@@ -240,6 +240,12 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
 		if right == nil {
 			right = util.NewNil()
 		}
+	} else {
+		right, err = types.CastExpr(p, right, rightType, leftType)
+		if err != nil {
+			return nil, "", nil, nil, err
+		}
+		rightType = leftType
 	}
 
 	resolvedLeftType, err := types.ResolveType(p, leftType)
