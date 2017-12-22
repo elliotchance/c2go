@@ -248,16 +248,14 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 	// int [2][3][4]  -> [][][]int
 	// double (*)[4]  -> [][]float64
 	// char *(*)[4]   -> [][]byte
-	{
-		search2 := util.GetRegex(`([\w\* ]+)((\[\d+\])+)`).FindStringSubmatch(s)
-		if len(search2) > 2 {
-			t, err := ResolveType(p, search2[1])
+	search2 := util.GetRegex(`([\w\* ]+)((\[\d+\])+)`).FindStringSubmatch(s)
+	if len(search2) > 2 {
+		t, err := ResolveType(p, search2[1])
 
-			var re = util.GetRegex(`[0-9]+`)
-			arraysNoSize := re.ReplaceAllString(search2[2], "")
+		var re = util.GetRegex(`[0-9]+`)
+		arraysNoSize := re.ReplaceAllString(search2[2], "")
 
-			return fmt.Sprintf("%s%s", arraysNoSize, t), err
-		}
+		return fmt.Sprintf("%s%s", arraysNoSize, t), err
 	}
 
 	errMsg := fmt.Sprintf(

@@ -161,7 +161,7 @@ int ff(){ return 3;}
 
 int main()
 {
-    plan(86);
+    plan(87);
 
     START_TEST(intarr);
     START_TEST(doublearr);
@@ -299,6 +299,9 @@ int main()
 		ptr = &arr;
 		is_eq(arr[1], *++ptr);
 		is_eq(arr[2], *++ptr);
+		ptr = &arr;
+		ptr = ptr + 1;
+		is_eq(arr[1], *ptr);
 	}
 	diag("Pointer to Pointer. 4.2")
 	{
