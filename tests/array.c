@@ -161,7 +161,7 @@ int ff(){ return 3;}
 
 int main()
 {
-    plan(77);
+    plan(78);
 
     START_TEST(intarr);
     START_TEST(doublearr);
@@ -272,10 +272,21 @@ int main()
 		(void)(PPptr1);
 		(void)(PPptr2);
 	}
-	diag("Pointer to Pointer. 3")
+	diag("Pointer to Pointer. 3.1")
+	{
+		double arr2[4] = {8,7,6,5};
+		double (*ptr2)[4] = &arr2;
+		{int yy;(void)(yy);}
+
+		if((*ptr2)[2] == arr2[2]){
+			pass("ok")
+		}
+	}
+	diag("Pointer to Pointer. 3.2")
 	{
 		char *arr[4] = {"C","C++","Go","VBA"};
 		char *(*ptr)[4] = &arr;
+		{int yy;(void)(yy);}
 
 		if((*ptr)[2][0] == 'G'){
 			pass("ok")
