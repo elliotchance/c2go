@@ -305,6 +305,14 @@ func IsFunction(s string) bool {
 	return false
 }
 
+// IsPointer - check type is pointer
+func IsPointer(s string) bool {
+	if strings.ContainsAny(s, "*[]") {
+		return true
+	}
+	return false
+}
+
 // ParseFunction - parsing elements of C function
 func ParseFunction(s string) (f []string, r []string, err error) {
 	defer func() {
