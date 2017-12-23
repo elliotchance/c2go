@@ -240,6 +240,21 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
 		if right == nil {
 			right = util.NewNil()
 		}
+	} else {
+		if types.IsPointer(leftType) && !types.IsPointer(rightType) {
+			// pointer arithmetic
+			// typically CompoundAssignOperator have unary operator
+			// so for isolate operation we can use anonymous
+			// function
+			p.AddMessage(p.GenerateErrorMessage(
+				fmt.Errorf("Pointer arithmetic is not suport"), n))
+		} else {
+			right, err = types.CastExpr(p, right, rightType, leftType)
+			if err != nil {
+				return nil, "", nil, nil, err
+			}
+			rightType = leftType
+		}
 	}
 
 	resolvedLeftType, err := types.ResolveType(p, leftType)

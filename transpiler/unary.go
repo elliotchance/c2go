@@ -66,11 +66,17 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program,
 		binaryOperator = "-="
 	}
 
-	return transpileBinaryOperator(&ast.BinaryOperator{
-		Type:     n.Type,
-		Operator: binaryOperator,
+	// |-CompoundAssignOperator 0x32c86f8 <line:307:3, col:10> 'int *' '+=' ComputeLHSTy='int *' ComputeResultTy='int *'
+	// | |-DeclRefExpr 0x32c86b0 <col:3> 'int *' lvalue Var 0x32c41f0 'ptr' 'int *'
+	// | `-IntegerLiteral 0x32c86d8 <col:10> 'int' 1
+	return transpileCompoundAssignOperator(&ast.CompoundAssignOperator{
+		Type:                  n.Type,
+		Opcode:                binaryOperator,
+		ComputationLHSType:    n.Type,
+		ComputationResultType: n.Type,
 		ChildNodes: []ast.Node{
-			n.Children()[0], &ast.IntegerLiteral{
+			n.Children()[0],
+			&ast.IntegerLiteral{
 				Type:       "int",
 				Value:      "1",
 				ChildNodes: []ast.Node{},
@@ -179,6 +185,14 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 					}
 					// found pointer
 					pointer = vv
+				} else if vv, ok := v.Children()[0].(*ast.UnaryOperator); ok {
+					counter++
+					if counter > 1 {
+						err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %v,%v", pointer, v)
+						return
+					}
+					// found pointer
+					pointer = vv
 				} else {
 					if len(v.Children()) > 0 {
 						if found {
@@ -226,6 +240,22 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 				return
 
 			case *ast.CStyleCastExpr:
+				counter++
+				if counter > 1 {
+					err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %v,%v", pointer, v)
+					return
+				}
+				// found pointer
+				pointer = v
+				// Replace pointer to zero
+				var zero ast.IntegerLiteral
+				zero.Type = "int"
+				zero.Value = "0"
+				n.Children()[i] = &zero
+				found = true
+				return
+
+			case *ast.UnaryOperator:
 				counter++
 				if counter > 1 {
 					err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %v,%v", pointer, v)
@@ -320,6 +350,19 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 			Index: e,
 		}, eType, preStmts, postStmts, err
 	case *ast.CStyleCastExpr:
+		arr, _, newPre, newPost, err2 := transpileToExpr(v, p, false)
+		if err2 != nil {
+			return
+		}
+		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+		return &goast.IndexExpr{
+			X: &goast.ParenExpr{
+				Lparen: 1,
+				X:      arr,
+			},
+			Index: e,
+		}, eType, preStmts, postStmts, err
+	case *ast.UnaryOperator:
 		arr, _, newPre, newPost, err2 := transpileToExpr(v, p, false)
 		if err2 != nil {
 			return

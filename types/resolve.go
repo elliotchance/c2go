@@ -117,7 +117,12 @@ var ToVoid = "ToVoid"
 //    certainly incorrect) "interface{}" is also returned. This is to allow the
 //    transpiler to step over type errors and put something as a placeholder
 //    until a more suitable solution is found for those cases.
-func ResolveType(p *program.Program, s string) (string, error) {
+func ResolveType(p *program.Program, s string) (_ string, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Error in resolve type : %v", err)
+		}
+	}()
 	s = CleanCType(s)
 
 	if s == "_Bool" {
@@ -132,10 +137,6 @@ func ResolveType(p *program.Program, s string) (string, error) {
 	// FIXME: I have no idea what this is.
 	if s == "const" {
 		return "interface{}", errors.New("probably an incorrect type translation 4")
-	}
-
-	if s == "char *[]" {
-		return "interface{}", errors.New("probably an incorrect type translation 2")
 	}
 
 	if s == "fpos_t" {
@@ -243,8 +244,8 @@ func ResolveType(p *program.Program, s string) (string, error) {
 
 	// It could be an array of fixed length. These needs to be converted to
 	// slices.
-	// int [2][3] -> [][]int
-	// int [2][3][4] -> [][][]int
+	// int [2][3]     -> [][]int
+	// int [2][3][4]  -> [][][]int
 	search2 := util.GetRegex(`([\w\* ]+)((\[\d+\])+)`).FindStringSubmatch(s)
 	if len(search2) > 2 {
 		t, err := ResolveType(p, search2[1])
@@ -292,7 +293,21 @@ func ResolveFunction(p *program.Program, s string) (fields []string, returns []s
 
 // IsFunction - return true if string is function like "void (*)(void)"
 func IsFunction(s string) bool {
-	if strings.Contains(s, "(") && strings.Contains(s, ")") {
+	var counter int
+	for i := range []byte(s) {
+		if s[i] == '(' {
+			counter++
+		}
+	}
+	if counter > 1 {
+		return true
+	}
+	return false
+}
+
+// IsPointer - check type is pointer
+func IsPointer(s string) bool {
+	if strings.ContainsAny(s, "*[]") {
 		return true
 	}
 	return false
@@ -360,14 +375,6 @@ func ParseFunction(s string) (f []string, r []string, err error) {
 func CleanCType(s string) (out string) {
 	out = s
 
-	// remove space from pointer symbols
-	out = strings.Replace(out, "* *", "**", -1)
-
-	// add space for simplification redactoring
-	out = strings.Replace(out, "*", " *", -1)
-
-	out = strings.Replace(out, "( *)", "(*)", -1)
-
 	// Remove any whitespace or attributes that are not relevant to Go.
 	out = strings.Replace(out, "const", "", -1)
 	out = strings.Replace(out, "volatile", "", -1)
@@ -376,6 +383,19 @@ func CleanCType(s string) (out string) {
 	out = strings.Replace(out, "\t", "", -1)
 	out = strings.Replace(out, "\n", "", -1)
 	out = strings.Replace(out, "\r", "", -1)
+
+	out = strings.Replace(out, "(*)", "*", -1)
+
+	// remove space from pointer symbols
+	out = strings.Replace(out, "* *", "**", -1)
+
+	// add space for simplification redactoring
+	out = strings.Replace(out, "*", " *", -1)
+
+	out = strings.Replace(out, "( *)", "(*)", -1)
+
+	out = strings.Replace(out, "[", " [", -1)
+	out = strings.Replace(out, "] [", "][", -1)
 
 	// remove space from pointer symbols
 	out = strings.Replace(out, "* *", "**", -1)

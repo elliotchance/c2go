@@ -161,7 +161,7 @@ int ff(){ return 3;}
 
 int main()
 {
-    plan(66);
+    plan(70);
 
     START_TEST(intarr);
     START_TEST(doublearr);
@@ -247,6 +247,101 @@ int main()
 		is_true(arr != NULL);
 		(void)(arr);
 	}
+
+	diag("Pointer to Pointer. 1")
+	{
+		double Var = 42;
+		double **PPptr1;
+		double * PPptr2;
+		PPptr2 = &Var;
+		PPptr1 = &PPptr2;
+		is_eq(**PPptr1,Var)
+		Var = 43;
+		is_eq(**PPptr1,Var)
+		(void)(PPptr1);
+		(void)(PPptr2);
+	}
+	diag("Pointer to Pointer. 2")
+	{
+		double Var = 42.0, **PPptr1, * PPptr2;
+		PPptr2 = &Var;
+		PPptr1 = &PPptr2;
+		is_eq(**PPptr1,Var)
+		Var = 43.0;
+		is_eq(**PPptr1,Var)
+		(void)(PPptr1);
+		(void)(PPptr2);
+	}
+	/*
+	diag("Pointer to Pointer. 3.1")
+	{
+		double arr2[4] = {8,7,6,5};
+		double (*ptr2)[4] = &arr2;
+		{int yy;(void)(yy);}
+
+		if((*ptr2)[2] == arr2[2]){
+			pass("ok")
+		}
+	}
+	diag("Pointer to Pointer. 3.2")
+	{
+		char *arr[4] = {"C","C++","Go","VBA"};
+		char *(*ptr)[4] = &arr;
+		{int yy;(void)(yy);}
+
+		if((*ptr)[2][0] == 'G'){
+			pass("ok")
+		}
+	}
+	diag("Pointer to Pointer. 4.1")
+	{
+		int arr[5] = {10,20,30,40,50};
+		int *ptr ;
+		ptr = &arr;
+		is_eq(arr[1], *++ptr);
+		is_eq(arr[2], *++ptr);
+		ptr = &arr;
+		ptr = ptr + 1;
+		is_eq(arr[1], *ptr);
+		ptr = ptr - 1;
+		is_eq(arr[0], *ptr);
+		ptr += 1;
+		is_eq(arr[1], *ptr);
+	}
+	diag("Pointer to Pointer. 4.2")
+	{
+		int arr[5] = {10,20,30,40,50};
+		int *ptr = &arr;
+		is_eq(arr[1], *++ptr);
+		is_eq(arr[2], *++ptr);
+		is_eq(arr[1], *--ptr);
+	}
+	diag("Pointer to Pointer. 4.3")
+	{
+		int arr[5] = {10,20,30,40,50};
+		int *ptr = &arr;
+		is_eq(arr[0], *ptr++);
+		is_eq(arr[1], *ptr++);
+	}
+	diag("Pointer to Pointer. 4.4")
+	{
+		int arr[5] = {10,20,30,40,50};
+		int *ptr = &arr;
+		is_eq(arr[0], *ptr++);
+		is_eq(arr[1], *ptr++);
+		is_eq(arr[2], *ptr--);
+		is_eq(arr[1], *ptr);
+	}
+	diag("Pointer to Pointer. 5")
+	{
+		int ar_var = 10;
+		int *ptr ;
+		ptr = &ar_var;
+		is_eq( ++*ptr , 11 );
+		is_eq( ++*ptr , 12 );
+		is_eq( --*ptr , 11 );
+	}
+	*/
 
     done_testing();
 }
