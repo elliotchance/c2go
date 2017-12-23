@@ -58,9 +58,13 @@ struct xx {
     } inner;
 };
 
+int summator(int i, float f){
+	return i+(int)(f);
+}
+
 int main()
 {
-    plan(24);
+    plan(30);
 
     struct programming variable;
     char *s = "Programming in Software Development.";
@@ -194,6 +198,43 @@ int main()
 	}
 	{
 		is_eq((size_t)(43),43);
+	}
+
+	diag("Function pointer inside struct")
+	{
+		struct F1{
+			  int x;
+			  int (*f)(int, float);
+		};
+		struct F1 f1;
+		f1.x = 42;
+		f1.f = summator;
+		is_eq(f1.x,42);
+		is_eq(f1.f(3,5),8);
+	}
+	{
+		typedef struct {
+			  int x;
+			  int (*f)(int, float);
+		} F2;
+		F2 f2;
+		f2.x = 42;
+		f2.f = summator;
+		is_eq(f2.x,42);
+		is_eq(f2.f(3,5),8);
+	}
+
+	diag("typedef function")
+	{
+		typedef int ALIAS (int, float);
+		ALIAS * f = summator;
+		is_eq(f(3,5),8);
+	}
+	{
+		typedef int ALIAS2 (int, float);
+		ALIAS2 * f;
+		f = summator;
+		is_eq(f(3,5),8);
 	}
 
     done_testing();
