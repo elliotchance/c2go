@@ -292,7 +292,21 @@ func ResolveFunction(p *program.Program, s string) (fields []string, returns []s
 
 // IsFunction - return true if string is function like "void (*)(void)"
 func IsFunction(s string) bool {
-	if strings.Contains(s, "(") && strings.Contains(s, ")") {
+	var counter int
+	for i := range []byte(s) {
+		if s[i] == '(' {
+			counter++
+		}
+	}
+	if counter > 1 {
+		return true
+	}
+	return false
+}
+
+// IsPointer - check type is pointer
+func IsPointer(s string) bool {
+	if strings.ContainsAny(s, "*[]") {
 		return true
 	}
 	return false
@@ -379,6 +393,8 @@ func CleanCType(s string) (out string) {
 
 	// remove space from pointer symbols
 	out = strings.Replace(out, "* *", "**", -1)
+	out = strings.Replace(out, "[", " [", -1)
+	out = strings.Replace(out, "] [", "][", -1)
 
 	// remove addition spaces
 	out = strings.Replace(out, "  ", " ", -1)
