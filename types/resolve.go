@@ -298,6 +298,14 @@ func IsFunction(s string) bool {
 	return false
 }
 
+func IsTypedefFunction(p *program.Program, s string) bool {
+	s = string(s[0 : len(s)-len(" *")])
+	if v, ok := p.TypedefType[s]; ok && IsFunction(v) {
+		return true
+	}
+	return false
+}
+
 // ParseFunction - parsing elements of C function
 func ParseFunction(s string) (f []string, r []string, err error) {
 	defer func() {
@@ -316,12 +324,22 @@ func ParseFunction(s string) (f []string, r []string, err error) {
 		return
 	}
 	r = append(r, s[0:i])
-	parts := strings.Split(s, "(*)")
-	if len(parts) != 2 {
-		err = fmt.Errorf("Cannot parse (separation on parts) : %v", s)
-		return
+	var part string
+	{
+		parts := strings.Split(s, "(*)")
+		if len(parts) != 2 {
+			parts := strings.Split(s, " (")
+			if len(parts) != 2 {
+				err = fmt.Errorf("Cannot parse (separation on parts) : %v", s)
+				return
+			} else {
+				part = "(" + parts[1]
+			}
+		} else {
+			part = parts[1]
+		}
 	}
-	inside := strings.TrimSpace(parts[1])
+	inside := strings.TrimSpace(part)
 	if inside == "" {
 		err = fmt.Errorf("Cannot parse (right part is nil) : %v", s)
 		return
