@@ -60,7 +60,12 @@ func GetArrayTypeAndSize(s string) (string, int) {
 //    a bug. It is most useful to do this when dealing with compound types like
 //    FILE where those function probably exist (or should exist) in the noarch
 //    package.
-func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (goast.Expr, error) {
+func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (_ goast.Expr, err2 error) {
+	defer func() {
+		if err2 != nil {
+			err2 = fmt.Errorf("Cannot casting {%s -> %s}. err = %v", cFromType, cToType, err2)
+		}
+	}()
 	cFromType = CleanCType(cFromType)
 	cToType = CleanCType(cToType)
 

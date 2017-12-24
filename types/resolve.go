@@ -117,7 +117,12 @@ var ToVoid = "ToVoid"
 //    certainly incorrect) "interface{}" is also returned. This is to allow the
 //    transpiler to step over type errors and put something as a placeholder
 //    until a more suitable solution is found for those cases.
-func ResolveType(p *program.Program, s string) (string, error) {
+func ResolveType(p *program.Program, s string) (_ string, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot resolve type '%s' : %v", s, err)
+		}
+	}()
 	s = CleanCType(s)
 
 	if s == "_Bool" {
@@ -298,7 +303,7 @@ func IsFunction(s string) bool {
 			counter++
 		}
 	}
-	if counter > 1 {
+	if counter > 0 {
 		return true
 	}
 	return false
