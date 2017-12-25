@@ -416,6 +416,7 @@ func GenerateCorrectType(name string) string {
 	inside = strings.Replace(inside, " ", "S", -1)
 	inside = strings.Replace(inside, ":", "D", -1)
 	inside = strings.Replace(inside, "/", "S", -1)
+	inside = strings.Replace(inside, "-", "T", -1)
 	inside = strings.Replace(inside, "\\", "S", -1)
 	inside = strings.Replace(inside, ".", "P", -1)
 	return string(([]byte(name))[0:index]) + inside + string(([]byte(name))[last+1:])
