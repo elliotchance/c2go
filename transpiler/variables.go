@@ -258,8 +258,6 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program) 
 func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	_ goast.Expr, _ string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 
-	fmt.Println("mem name = ", n.Name)
-
 	lhs, lhsType, newPre, newPost, err := transpileToExpr(n.Children()[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
@@ -272,8 +270,6 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 
 	// lhsType will be something like "struct foo"
 	structType := p.GetStruct(lhsType)
-
-	fmt.Println("str = ", structType)
 
 	// added for support "struct typedef"
 	if structType == nil {
@@ -313,21 +309,18 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	if structType != nil && structType.IsUnion {
 		var resExpr goast.Expr
 
-		fmt.Println("name - > ", n.Name)
-
 		switch t := lhs.(type) {
 		case *goast.Ident:
-			fmt.Println("func")
 			funcName := getFunctionNameForUnionGetter(t.Name, lhsResolvedType, n.Name)
 			resExpr = util.NewCallExpr(funcName)
 		case *goast.SelectorExpr:
-			fmt.Println("selec")
-			//resExpr = t
-			funcName := getFunctionNameForUnionGetter(t.X.(*goast.Ident).Name, lhsResolvedType, n.Name)
-			resExpr = util.NewCallExpr(funcName)
+			funcName := getFunctionNameForUnionGetter("", lhsResolvedType, n.Name)
+			funcName = t.X.(*goast.Ident).Name + "." + t.Sel.Name + funcName
+			resExpr = &goast.CallExpr{
+				Fun:  goast.NewIdent(funcName),
+				Args: nil,
+			}
 		}
-
-		fmt.Printf("%#v\n", lhs)
 
 		return resExpr, rhsType, preStmts, postStmts, nil
 	}
