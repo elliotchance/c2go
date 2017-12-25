@@ -319,7 +319,9 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 			resExpr = util.NewCallExpr(funcName)
 		case *goast.SelectorExpr:
 			funcName := getFunctionNameForUnionGetter("", lhsResolvedType, n.Name)
-			funcName = t.X.(*goast.Ident).Name + "." + t.Sel.Name + funcName
+			if id, ok := t.X.(*goast.Ident); ok {
+				funcName = id.Name + "." + t.Sel.Name + funcName
+			}
 			resExpr = &goast.CallExpr{
 				Fun:  goast.NewIdent(funcName),
 				Args: nil,
