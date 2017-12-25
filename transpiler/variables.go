@@ -258,10 +258,15 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program) 
 func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	_ goast.Expr, _ string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 
+	n.Type = types.GenerateCorrectType(n.Type)
+	n.Type2 = types.GenerateCorrectType(n.Type2)
+
 	lhs, lhsType, newPre, newPost, err := transpileToExpr(n.Children()[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
+
+	lhsType = types.GenerateCorrectType(lhsType)
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
@@ -270,7 +275,6 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 
 	// lhsType will be something like "struct foo"
 	structType := p.GetStruct(lhsType)
-
 	// added for support "struct typedef"
 	if structType == nil {
 		structType = p.GetStruct("struct " + lhsType)

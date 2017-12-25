@@ -311,6 +311,8 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 				}
 				// union inside struct
 				if un, ok := memberExpr.Children()[0].(*ast.MemberExpr); ok {
+					un.Type = types.GenerateCorrectType(un.Type)
+					un.Type2 = types.GenerateCorrectType(un.Type2)
 					union := p.GetStruct(un.Type)
 					if union != nil && union.IsUnion {
 						if str, ok := un.Children()[0].(*ast.DeclRefExpr); ok {
