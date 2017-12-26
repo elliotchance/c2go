@@ -169,7 +169,8 @@ var builtInFunctionDefinitions = []string{
 
 	// string.h
 	"char* strcpy(const char*, char*) -> noarch.Strcpy",
-	"char* strncpy(const char*, char*, size_t) -> noarch.Strncpy",
+	// should be: "char* strncpy(const char*, char*, size_t) -> noarch.Strncpy",
+	"char* strncpy(const char*, char*, int) -> noarch.Strncpy",
 
 	// real return type is "size_t", but it is changed to "int"
 	// in according to noarch.Strlen
