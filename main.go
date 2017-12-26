@@ -35,7 +35,7 @@ import (
 //     c2go -v
 //
 // See https://github.com/elliotchance/c2go/wiki/Release-Process
-const Version = "v0.19.2 Uranium 2017-12-21"
+const Version = "v0.19.3 Uranium 2017-12-26"
 
 var stderr io.Writer = os.Stderr
 
