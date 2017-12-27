@@ -64,7 +64,7 @@ int summator(int i, float f){
 
 int main()
 {
-    plan(30);
+    plan(44);
 
     struct programming variable;
     char *s = "Programming in Software Development.";
@@ -119,14 +119,6 @@ int main()
 	struct u yy;
 	yy.y = 42;
 	is_eq(yy.y,42);
-
-	diag("Not allowable var name for Go")
-	struct type{
-		int type;
-	};
-	struct type t;
-	t.type = 42;
-	is_eq(t.type, 42);
 	
 	diag("Typedef struct with same name")
 	{
@@ -236,6 +228,44 @@ int main()
 		f = summator;
 		is_eq(f(3,5),8);
 	}
+
+	diag("struct name from Go keyword")
+	{ struct chan        {int i;}; struct chan        UU;  UU.i = 5; is_eq(UU.i,5);}
+	{ struct defer       {int i;}; struct defer       UU;  UU.i = 5; is_eq(UU.i,5);}
+	{ struct fallthrough {int i;}; struct fallthrough UU;  UU.i = 5; is_eq(UU.i,5);}
+	{ struct func        {int i;}; struct func        UU;  UU.i = 5; is_eq(UU.i,5);}
+	{ struct go          {int i;}; struct go          UU;  UU.i = 5; is_eq(UU.i,5);}
+	{ struct import      {int i;}; struct import      UU;  UU.i = 5; is_eq(UU.i,5);}
+	{ struct interface   {int i;}; struct interface   UU;  UU.i = 5; is_eq(UU.i,5);}
+	{ struct map         {int i;}; struct map         UU;  UU.i = 5; is_eq(UU.i,5);}
+	{ struct package     {int i;}; struct package     UU;  UU.i = 5; is_eq(UU.i,5);}
+	{ struct range       {int i;}; struct range       UU;  UU.i = 5; is_eq(UU.i,5);}
+	{ struct select      {int i;}; struct select      UU;  UU.i = 5; is_eq(UU.i,5);}
+	{ struct type        {int i;}; struct type        UU;  UU.i = 5; is_eq(UU.i,5);}
+	{ struct var         {int i;}; struct var         UU;  UU.i = 5; is_eq(UU.i,5);}
+	{ struct _           {int i;}; struct _           UU;  UU.i = 5; is_eq(UU.i,5);}
+	{ struct init        {int i;}; struct init        UU;  UU.i = 5; is_eq(UU.i,5);}
+
+	// uncomment after success implementation of struct scope
+	// https://github.com/elliotchance/c2go/issues/368
+/*
+	diag("Typedef struct name from Go keyword")
+	{ typedef struct {int i;} chan        ;	chan        UU; UU.i = 5; is_eq(UU.i,5);}
+	{ typedef struct {int i;} defer       ;	defer       UU; UU.i = 5; is_eq(UU.i,5);}
+	{ typedef struct {int i;} fallthrough ;	fallthrough UU; UU.i = 5; is_eq(UU.i,5);}
+	{ typedef struct {int i;} func        ;	func        UU; UU.i = 5; is_eq(UU.i,5);}
+	{ typedef struct {int i;} go          ;	go          UU; UU.i = 5; is_eq(UU.i,5);}
+	{ typedef struct {int i;} import      ;	import      UU; UU.i = 5; is_eq(UU.i,5);}
+	{ typedef struct {int i;} interface   ;	interface   UU; UU.i = 5; is_eq(UU.i,5);}
+	{ typedef struct {int i;} map         ;	map         UU; UU.i = 5; is_eq(UU.i,5);}
+	{ typedef struct {int i;} package     ;	package     UU; UU.i = 5; is_eq(UU.i,5);}
+	{ typedef struct {int i;} range       ;	range       UU; UU.i = 5; is_eq(UU.i,5);}
+	{ typedef struct {int i;} select      ;	select      UU; UU.i = 5; is_eq(UU.i,5);}
+	{ typedef struct {int i;} type        ;	type        UU; UU.i = 5; is_eq(UU.i,5);}
+	{ typedef struct {int i;} var         ;	var         UU; UU.i = 5; is_eq(UU.i,5);}
+	{ typedef struct {int i;} _           ;	_           UU; UU.i = 5; is_eq(UU.i,5);}
+	{ typedef struct {int i;} init        ;	init        UU; UU.i = 5; is_eq(UU.i,5);}
+*/
 
     done_testing();
 }

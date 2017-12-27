@@ -453,7 +453,10 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 		return
 	}
 
-	var t string = n.Type[0 : len(n.Type)-len(" *")]
+	var t string = n.Type
+	if len(t) > 1 {
+		t = n.Type[0 : len(n.Type)-len(" *")]
+	}
 	_, isTypedefType := p.TypedefType[t]
 
 	if !isTypedefType {
