@@ -195,14 +195,15 @@ static int last_test_was_ok = 1;
 // (based on strlen) and each of their characters (actually bytes) are exactly
 // the same value. This is nor to be used with strings that are mixed case or
 // contain multibyte characters (eg. UTF-16, etc).
-#define is_streq(actual, expected)                                \
-    if (streq(actual, expected))                                  \
-    {                                                             \
-        pass("%s == %s", #actual, #expected)                      \
-    }                                                             \
-    else                                                          \
-    {                                                             \
-        fail("%s == %s # got \"%s\"", #actual, #expected, actual) \
+#define is_streq(actual, expected)                                 \
+    if (streq(actual, expected))                                   \
+    {                                                              \
+        pass("%s == %s", #actual, #expected)                       \
+    }                                                              \
+    else                                                           \
+    {                                                              \
+        fail("%s (%d b) == %s (%d b) # got \"%s\"", #actual,       \
+            strlen(#actual), #expected, strlen(#expected), actual) \
     }
 
 // Check that a floating-point value is Not A Number. Passing a value that is

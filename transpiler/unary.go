@@ -146,7 +146,9 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 	f = func(n ast.Node) {
 		for i := range n.Children() {
 			switch v := n.Children()[i].(type) {
-			case *ast.ArraySubscriptExpr:
+			case *ast.ArraySubscriptExpr,
+				*ast.UnaryOperator,
+				*ast.DeclRefExpr:
 				counter++
 				if counter > 1 {
 					err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %v,%v", pointer, v)
@@ -162,42 +164,17 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 				found = true
 				return
 
-			case *ast.ImplicitCastExpr:
-				if vv, ok := v.Children()[0].(*ast.DeclRefExpr); ok {
-					counter++
-					if counter > 1 {
-						err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %v,%v", pointer, v)
-						return
-					}
-					// found pointer
-					pointer = vv
-				} else if vv, ok := v.Children()[0].(*ast.ArraySubscriptExpr); ok {
-					counter++
-					if counter > 1 {
-						err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %v,%v", pointer, v)
-						return
-					}
-					// found pointer
-					pointer = vv
-				} else {
-					if len(v.Children()) > 0 {
-						if found {
-							break
-						}
-						parents = append(parents, v)
-						for _, d := range v.Children() {
-							parents = append(parents, d)
-							f(d)
-							if !found {
-								parents = parents[:len(parents)-1]
-							}
-						}
-						if !found {
-							parents = parents[:len(parents)-1]
-						}
-					}
+			case *ast.CStyleCastExpr:
+				if v.Type == "int" {
 					continue
 				}
+				counter++
+				if counter > 1 {
+					err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %v,%v", pointer, v)
+					return
+				}
+				// found pointer
+				pointer = v
 				// Replace pointer to zero
 				var zero ast.IntegerLiteral
 				zero.Type = "int"
@@ -225,34 +202,25 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 				found = true
 				return
 
-			case *ast.CStyleCastExpr:
-				counter++
-				if counter > 1 {
-					err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %v,%v", pointer, v)
-					return
-				}
-				// found pointer
-				pointer = v
-				// Replace pointer to zero
-				var zero ast.IntegerLiteral
-				zero.Type = "int"
-				zero.Value = "0"
-				n.Children()[i] = &zero
-				found = true
-				return
-
 			default:
 				if found {
 					break
 				}
-				if !found {
-					parents = append(parents, n.Children()[i])
-				}
-				if len(n.Children()[i].Children()) > 0 {
+				if len(v.Children()) > 0 {
 					if found {
 						break
 					}
-					f(n.Children()[i])
+					parents = append(parents, v)
+					var deep bool = true
+					if vv, ok := v.(*ast.ImplicitCastExpr); ok && vv.Type == "int" {
+						deep = false
+					}
+					if vv, ok := v.(*ast.CStyleCastExpr); ok && vv.Type == "int" {
+						deep = false
+					}
+					if deep {
+						f(v)
+					}
 					if !found {
 						parents = parents[:len(parents)-1]
 					}
@@ -277,6 +245,14 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 			v.Type = "int"
 		case *ast.ImplicitCastExpr:
 			v.Type = "int"
+		case *ast.CStyleCastExpr:
+			v.Type = "int"
+		case *ast.VAArgExpr:
+			v.Type = "int"
+		case *ast.MemberExpr:
+			v.Type = "int"
+		default:
+			panic(fmt.Errorf("Not support parent type %T in pointer seaching", v))
 		}
 	}
 
@@ -320,6 +296,19 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 			Index: e,
 		}, eType, preStmts, postStmts, err
 	case *ast.CStyleCastExpr:
+		arr, _, newPre, newPost, err2 := transpileToExpr(v, p, false)
+		if err2 != nil {
+			return
+		}
+		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+		return &goast.IndexExpr{
+			X: &goast.ParenExpr{
+				Lparen: 1,
+				X:      arr,
+			},
+			Index: e,
+		}, eType, preStmts, postStmts, err
+	case *ast.UnaryOperator:
 		arr, _, newPre, newPost, err2 := transpileToExpr(v, p, false)
 		if err2 != nil {
 			return
