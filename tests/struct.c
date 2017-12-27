@@ -247,6 +247,7 @@ int main()
 	{ struct init        {int i;}; struct init        UU;  UU.i = 5; is_eq(UU.i,5);(void)(UU);}
 
 	// uncomment after success implementation of struct scope
+	// https://github.com/elliotchance/c2go/issues/368
 /*
 	diag("Typedef struct name from Go keyword")
 	{ typedef struct {int i;} chan        ;	chan        UU; UU.i = 5; is_eq(UU.i,5);(void)(UU);}
