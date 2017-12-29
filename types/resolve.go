@@ -431,7 +431,13 @@ func GenerateCorrectType(name string) string {
 			break
 		}
 	}
+
+	// Create a string, for example:
+	// Input (name)   : 'union (anonymous union at tests/union.c:46:3)'
+	// Output(inside) : '(anonymous union at tests/union.c:46:3)'
 	inside := string(([]byte(name))[index : last+1])
+
+	// change unacceptable C name letters
 	inside = strings.Replace(inside, "(", "B", -1)
 	inside = strings.Replace(inside, ")", "E", -1)
 	inside = strings.Replace(inside, " ", "S", -1)
