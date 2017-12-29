@@ -117,7 +117,12 @@ var ToVoid = "ToVoid"
 //    certainly incorrect) "interface{}" is also returned. This is to allow the
 //    transpiler to step over type errors and put something as a placeholder
 //    until a more suitable solution is found for those cases.
-func ResolveType(p *program.Program, s string) (string, error) {
+func ResolveType(p *program.Program, s string) (_ string, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot resolve type '%s' : %v", s, err)
+		}
+	}()
 	s = CleanCType(s)
 
 	if s == "_Bool" {
@@ -292,7 +297,21 @@ func ResolveFunction(p *program.Program, s string) (fields []string, returns []s
 
 // IsFunction - return true if string is function like "void (*)(void)"
 func IsFunction(s string) bool {
-	if strings.Contains(s, "(") && strings.Contains(s, ")") {
+	var counter int
+	for i := range []byte(s) {
+		if s[i] == '(' {
+			counter++
+		}
+	}
+	if counter > 0 {
+		return true
+	}
+	return false
+}
+
+// IsPointer - check type is pointer
+func IsPointer(s string) bool {
+	if strings.ContainsAny(s, "*[]") {
 		return true
 	}
 	return false
@@ -379,6 +398,8 @@ func CleanCType(s string) (out string) {
 
 	// remove space from pointer symbols
 	out = strings.Replace(out, "* *", "**", -1)
+	out = strings.Replace(out, "[", " [", -1)
+	out = strings.Replace(out, "] [", "][", -1)
 
 	// remove addition spaces
 	out = strings.Replace(out, "  ", " ", -1)
