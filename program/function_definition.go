@@ -169,10 +169,6 @@ var builtInFunctionDefinitions = []string{
 
 	// string.h
 	"char* strcat(char *, const char *) -> noarch.Strcat",
-	// For darwin : see apple open souce
-	// https://opensource.apple.com/source/Libc/Libc-763.12/include/secure/_string.h.auto.html
-	"char* __builtin___strcat_chk(char *, const char *) -> noarch.Strcat",
-	"char* __inline_strcat_chk(char *, const char *) -> noarch.Strcat",
 
 	"char* strcpy(const char*, char*) -> noarch.Strcpy",
 	// should be: "char* strncpy(const char*, char*, size_t) -> noarch.Strncpy",
@@ -190,6 +186,10 @@ var builtInFunctionDefinitions = []string{
 
 	// should be: size_t __builtin_object_size(const void*, int)
 	"int __builtin_object_size(const char*, int) -> darwin.BuiltinObjectSize",
+
+	// see https://opensource.apple.com/source/Libc/Libc-763.12/include/secure/_string.h.auto.html
+	"char* __builtin___strcat_chk(char *, const char *, int) -> darwin.BuiltinStrcat",
+	"char* __inline_strcat_chk(char *, const char *) -> noarch.Strcat",
 
 	// stdlib.h
 	"int abs(int) -> noarch.Abs",
