@@ -168,6 +168,7 @@ var builtInFunctionDefinitions = []string{
 	"int fsetpos(FILE*, int*) -> noarch.Fsetpos",
 
 	// string.h
+	"char* strcat(char *, const char *) -> noarch.Strcat",
 	"char* strcpy(const char*, char*) -> noarch.Strcpy",
 	// should be: "char* strncpy(const char*, char*, size_t) -> noarch.Strncpy",
 	"char* strncpy(const char*, char*, int) -> noarch.Strncpy",
