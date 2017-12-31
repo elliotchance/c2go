@@ -184,9 +184,20 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (decls []goa
 			fieldList = &goast.FieldList{}
 		}
 
+		// Each function MUST have "ReturnStmt",
+		// except function without return type
+		var addReturnName bool
+		if len(body.List) > 0 {
+			last := body.List[len(body.List)-1]
+			if _, ok := last.(*goast.ReturnStmt); !ok && t != "" {
+				body.List = append(body.List, &goast.ReturnStmt{})
+				addReturnName = true
+			}
+		}
+
 		decls = append(decls, &goast.FuncDecl{
 			Name: util.NewIdent(n.Name),
-			Type: util.NewFuncType(fieldList, t),
+			Type: util.NewFuncType(fieldList, t, addReturnName),
 			Body: body,
 		})
 	}
