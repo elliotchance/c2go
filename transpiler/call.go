@@ -170,8 +170,10 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 		fset := token.NewFileSet() // positions are relative to fset
 		f, err := parser.ParseFile(fset, "", src, 0)
 		if err != nil {
-			panic(err)
+			return nil, "", nil, nil, err
 		}
+
+		// AST tree part of code after "var temp = ..."
 		convertExpr := f.Decls[1].(*goast.GenDecl).Specs[0].(*goast.ValueSpec).Values[0]
 
 		return &goast.CallExpr{
