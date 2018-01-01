@@ -171,9 +171,26 @@ void test_free()
 	is_eq(i,3);
 }
 
+int values[] = { 40, 10, 100, 90, 20, 25 };
+int compare (const void * a, const void * b)
+{
+  return ( *(int*)a - *(int*)b );
+}
+
+void q_sort(){
+	diag("qsort")
+	qsort (values, 6, sizeof(int), compare);
+	is_eq(values[0], 10  );
+	is_eq(values[1], 20  );
+	is_eq(values[2], 25  );
+	is_eq(values[3], 40  );
+	is_eq(values[4], 90  );
+	is_eq(values[5], 100 );
+}
+
 int main()
 {
-    plan(742);
+    plan(748);
 
     char *endptr;
 
@@ -429,6 +446,8 @@ int main()
     test_strtol("123", 8, 83, "");
     test_strtol("123abc", 16, 1194684, "");
     test_strtol("123abc", 8, 83, "abc");
+
+	q_sort();
 
     done_testing();
 }
