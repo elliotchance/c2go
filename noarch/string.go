@@ -26,7 +26,7 @@ func Strcpy(dest, src []byte) []byte {
 
 		// We only need to copy until the first NULL byte. Make sure we also
 		// include that NULL byte on the end.
-		if c == 0 {
+		if c == '\x00' {
 			break
 		}
 	}
@@ -57,5 +57,15 @@ func Strncpy(dest, src []byte, len int) []byte {
 		dest[i] = 0
 	}
 
+	return dest
+}
+
+// Strcat - concatenate strings
+// Appends a copy of the source string to the destination string.
+// The terminating null character in destination is overwritten by the first
+// character of source, and a null-character is included at the end
+// of the new string formed by the concatenation of both in destination.
+func Strcat(dest, src []byte) []byte {
+	Strcpy(dest[Strlen(dest):], src)
 	return dest
 }
