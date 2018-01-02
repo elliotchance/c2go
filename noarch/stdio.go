@@ -685,3 +685,32 @@ func Scanf(format []byte, args ...interface{}) int {
 func Putchar(character int) {
 	fmt.Printf("%c", character)
 }
+
+// Sprintf handles sprintf().
+//
+// Writes the C string pointed by format to the standard output (stdout). If
+// format includes format specifiers (subsequences beginning with %), the
+// additional arguments following format are formatted and inserted in the
+// resulting string replacing their respective specifiers.
+func Sprintf(buffer, format []byte, args ...interface{}) int {
+	realArgs := []interface{}{}
+
+	// Convert any C strings into Go strings.
+	typeOfByteSlice := reflect.TypeOf([]byte(nil))
+	for _, arg := range args {
+		if reflect.TypeOf(arg) == typeOfByteSlice {
+			realArgs = append(realArgs, CStringToString(arg.([]byte)))
+		} else {
+			realArgs = append(realArgs, arg)
+		}
+	}
+
+	result := fmt.Sprintf(CStringToString(format), realArgs...)
+	for i := range []byte(result) {
+		buffer[i] = result[i]
+	}
+	buffer[len(result)] = '\x00'
+
+	n := len(result)
+	return n
+}

@@ -10,6 +10,9 @@
     diag(#t);         \
     test_##t();
 
+// size of that file
+int filesize = 8831;
+
 void test_putchar()
 {
     putchar('#');
@@ -297,7 +300,7 @@ void test_ftell()
     size = ftell(pFile);
     fclose(pFile);
 
-    is_eq(size, 8592);
+    is_eq(size, filesize);
 }
 
 void test_fread()
@@ -413,7 +416,7 @@ void test_feof()
     if (feof(pFile))
     {
         pass("%s", "End-of-File reached.");
-        is_eq(n, 8592);
+        is_eq(n, filesize);
     }
     else
     {
@@ -423,9 +426,18 @@ void test_feof()
     fclose(pFile);
 }
 
+void test_sprintf()
+{
+	char buffer [50];
+	int n, a=5, b=3;
+	n = sprintf (buffer, "%d plus %d is %d", a, b, a+b);
+	is_streq(buffer, "5 plus 3 is 8")
+	is_eq(n,13)
+}
+
 int main()
 {
-    plan(44);
+    plan(46);
 
     START_TEST(putchar)
     START_TEST(puts)
@@ -454,6 +466,7 @@ int main()
     START_TEST(fsetpos)
     START_TEST(rewind)
     START_TEST(feof)
+    START_TEST(sprintf)
 
     done_testing();
 }

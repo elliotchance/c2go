@@ -166,6 +166,7 @@ var builtInFunctionDefinitions = []string{
 	"int fwrite(char*, int, int, FILE*) -> noarch.Fwrite",
 	"int fgetpos(FILE*, int*) -> noarch.Fgetpos",
 	"int fsetpos(FILE*, int*) -> noarch.Fsetpos",
+	"int sprintf(char*, const char *) -> noarch.Sprintf",
 
 	// string.h
 	"char* strcat(char *, const char *) -> noarch.Strcat",
