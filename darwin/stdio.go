@@ -7,6 +7,11 @@ func BuiltinVsprintfChk(buffer []byte, _ int, n int, format []byte, args ...inte
 	return noarch.Snprintf(buffer, n, format, args)
 }
 
+// BuiltinVsnprintfChk - implementation __builtin___vsnprintf_chk
+func BuiltinVsnprintfChk(buffer []byte, n int, _ int, _ int, format []byte, args ...interface{}) int {
+	return noarch.Snprintf(buffer, n, format, args)
+}
+
 // BuiltinSprintfChk - implementation __builtin___sprintf_chk
 func BuiltinSprintfChk(buffer []byte, _ int, n int, format []byte, args ...interface{}) int {
 	return noarch.Snprintf(buffer, n, format, args)

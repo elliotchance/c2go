@@ -175,6 +175,7 @@ var builtInFunctionDefinitions = []string{
 	"int __builtin___sprintf_chk(char*, int, int, char*) -> darwin.BuiltinSprintfChk",
 	"int __builtin___snprintf_chk(char*, int, int, int, char*) -> darwin.BuiltinSnprintfChk",
 	"int __builtin___vsprintf_chk(char*, int, int, char*) -> darwin.BuiltinVsprintfChk",
+	"int __builtin___vsnprintf_chk(char*, int, int, int, char*) -> darwin.BuiltinVsnprintfChk",
 
 	// string.h
 	"char* strcat(char *, const char *) -> noarch.Strcat",
