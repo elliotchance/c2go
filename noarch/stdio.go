@@ -724,9 +724,6 @@ func Sprintf(buffer, format []byte, args ...interface{}) int {
 func Vsprintf(buffer, format []byte, varList ...interface{}) int {
 	realArgs := []interface{}{}
 
-	// Convert any C strings into Go strings.
-	typeOfByteSlice := reflect.TypeOf([]byte(nil))
-
 	if len(varList) > 1 {
 		// TODO : I don`t found the situation with more 1 size
 		return 0
@@ -778,8 +775,6 @@ func convertVaList(arg interface{}) (result []interface{}) {
 // resulting string replacing their respective specifiers.
 func Vsnprintf(buffer []byte, n int, format []byte, varList ...interface{}) int {
 	realArgs := []interface{}{}
-
-	// Convert any C strings into Go strings.
 
 	if len(varList) > 1 {
 		// TODO : I don`t found the situation with more 1 size
