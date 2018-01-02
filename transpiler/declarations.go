@@ -103,6 +103,7 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 		return
 	}
 
+	name = types.GenerateCorrectType(name)
 	p.DefineType(name)
 
 	s := program.NewStruct(n)
@@ -123,9 +124,12 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 
 	var fields []*goast.Field
 
-	for _, c := range n.Children() {
+	for pos := range n.Children() {
+		c := n.Children()[pos]
 		switch field := c.(type) {
 		case *ast.FieldDecl:
+			field.Type = types.GenerateCorrectType(field.Type)
+			field.Type2 = types.GenerateCorrectType(field.Type2)
 			f, err := transpileFieldDecl(p, field)
 			if err != nil {
 				p.AddMessage(p.GenerateWarningMessage(err, field))
@@ -134,10 +138,24 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 			}
 
 		case *ast.RecordDecl:
-			decls, err = transpileRecordDecl(p, field)
-			if err != nil {
-				message := fmt.Sprintf("could not parse %v", c)
-				p.AddMessage(p.GenerateWarningMessage(errors.New(message), c))
+			if field.Kind == "union" && pos+2 <= len(n.Children()) {
+				if inField, ok := n.Children()[pos+1].(*ast.FieldDecl); ok {
+					inField.Type = types.GenerateCorrectType(inField.Type)
+					inField.Type2 = types.GenerateCorrectType(inField.Type2)
+					field.Name = string(([]byte(inField.Type))[len("union "):])
+					declUnion, err := transpileRecordDecl(p, field)
+					if err != nil {
+						p.AddMessage(p.GenerateWarningMessage(err, field))
+					}
+					pos++
+					decls = append(decls, declUnion...)
+				}
+			} else {
+				decls, err = transpileRecordDecl(p, field)
+				if err != nil {
+					message := fmt.Sprintf("could not parse %v", c)
+					p.AddMessage(p.GenerateWarningMessage(errors.New(message), c))
+				}
 			}
 
 		default:

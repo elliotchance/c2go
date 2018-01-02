@@ -256,14 +256,17 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program) 
 }
 
 func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
-	goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
-	preStmts := []goast.Stmt{}
-	postStmts := []goast.Stmt{}
+	_ goast.Expr, _ string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+
+	n.Type = types.GenerateCorrectType(n.Type)
+	n.Type2 = types.GenerateCorrectType(n.Type2)
 
 	lhs, lhsType, newPre, newPost, err := transpileToExpr(n.Children()[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
+
+	lhsType = types.GenerateCorrectType(lhsType)
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
@@ -315,7 +318,14 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 			funcName := getFunctionNameForUnionGetter(t.Name, lhsResolvedType, n.Name)
 			resExpr = util.NewCallExpr(funcName)
 		case *goast.SelectorExpr:
-			resExpr = t
+			funcName := getFunctionNameForUnionGetter("", lhsResolvedType, n.Name)
+			if id, ok := t.X.(*goast.Ident); ok {
+				funcName = id.Name + "." + t.Sel.Name + funcName
+			}
+			resExpr = &goast.CallExpr{
+				Fun:  goast.NewIdent(funcName),
+				Args: nil,
+			}
 		}
 
 		return resExpr, rhsType, preStmts, postStmts, nil

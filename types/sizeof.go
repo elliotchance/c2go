@@ -43,6 +43,7 @@ func SizeOf(p *program.Program, cType string) (size int, err error) {
 	// A structure will be the sum of its parts.
 	var isStruct, ok bool
 	var s *program.Struct
+	cType = GenerateCorrectType(cType)
 	if s, ok = p.Structs[cType]; ok {
 		isStruct = true
 	} else if s, ok = p.Structs["struct "+cType]; ok {
