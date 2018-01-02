@@ -235,6 +235,23 @@ func getFieldList(f *ast.FunctionDecl, p *program.Program) (_ *goast.FieldList, 
 		}
 	}
 
+	// for function argument: ...
+	if strings.Contains(f.Type, "...") {
+		r = append(r, &goast.Field{
+			Names: []*goast.Ident{util.NewIdent("c2goArgs")},
+			Type: &goast.Ellipsis{
+				Ellipsis: 1,
+				Elt: &goast.InterfaceType{
+					Interface: 1,
+					Methods: &goast.FieldList{
+						Opening: 1,
+					},
+					Incomplete: false,
+				},
+			},
+		})
+	}
+
 	return &goast.FieldList{
 		List: r,
 	}, nil

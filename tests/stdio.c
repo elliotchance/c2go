@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
 #include <assert.h>
 #include "tests.h"
 
@@ -11,7 +12,7 @@
     test_##t();
 
 // size of that file
-int filesize = 8831;
+int filesize = 9169;
 
 void test_putchar()
 {
@@ -435,9 +436,25 @@ void test_sprintf()
 	is_eq(n,13)
 }
 
+int PrintFError(const char * format, ... )
+{
+	char buffer[256];
+	va_list args;
+	va_start (args, format);
+	int s = vsprintf (buffer,format, args);
+	va_end (args);
+	return s;
+}
+
+void test_vsprintf()
+{
+	int s = PrintFError("Success function '%s' %.2f","vsprintf",3.1415926);
+	is_eq(s,19+8+5);
+}
+
 int main()
 {
-    plan(46);
+    plan(47);
 
     START_TEST(putchar)
     START_TEST(puts)
@@ -467,6 +484,7 @@ int main()
     START_TEST(rewind)
     START_TEST(feof)
     START_TEST(sprintf)
+    START_TEST(vsprintf)
 
     done_testing();
 }
