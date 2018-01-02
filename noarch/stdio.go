@@ -695,15 +695,7 @@ func Putchar(character int) {
 func Sprintf(buffer, format []byte, args ...interface{}) int {
 	realArgs := []interface{}{}
 
-	// Convert any C strings into Go strings.
-	typeOfByteSlice := reflect.TypeOf([]byte(nil))
-	for _, arg := range args {
-		if reflect.TypeOf(arg) == typeOfByteSlice {
-			realArgs = append(realArgs, CStringToString(arg.([]byte)))
-		} else {
-			realArgs = append(realArgs, arg)
-		}
-	}
+	realArgs = append(realArgs, convert(args)...)
 
 	result := fmt.Sprintf(CStringToString(format), realArgs...)
 	for i := range []byte(result) {
@@ -729,7 +721,7 @@ func Vsprintf(buffer, format []byte, varList ...interface{}) int {
 		return 0
 	}
 
-	realArgs = append(realArgs, convertVaList(varList)...)
+	realArgs = append(realArgs, convert(varList)...)
 
 	result := fmt.Sprintf(CStringToString(format), realArgs...)
 	for i := range []byte(result) {
@@ -751,8 +743,8 @@ func Snprintf(buffer []byte, n int, format []byte, args ...interface{}) int {
 	return Vsnprintf(buffer, n, format, args)
 }
 
-// convertVaList - convert va_list
-func convertVaList(arg interface{}) (result []interface{}) {
+// convert - convert va_list
+func convert(arg interface{}) (result []interface{}) {
 	typeOfByteSlice := reflect.TypeOf([]byte(nil))
 	if reflect.TypeOf(arg) == typeOfByteSlice {
 		return []interface{}{CStringToString(arg.([]byte))}
@@ -760,7 +752,7 @@ func convertVaList(arg interface{}) (result []interface{}) {
 	if reflect.TypeOf(arg).Kind() == reflect.Slice {
 		arg := arg.([]interface{})
 		for j := 0; j < len(arg); j++ {
-			result = append(result, convertVaList(arg[j])...)
+			result = append(result, convert(arg[j])...)
 		}
 		return result
 	}
@@ -781,7 +773,7 @@ func Vsnprintf(buffer []byte, n int, format []byte, varList ...interface{}) int 
 		return 0
 	}
 
-	realArgs = append(realArgs, convertVaList(varList)...)
+	realArgs = append(realArgs, convert(varList)...)
 
 	result := fmt.Sprintf(CStringToString(format), realArgs...)
 	if len(result) > n {
