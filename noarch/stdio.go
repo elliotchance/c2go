@@ -755,3 +755,57 @@ func Vsprintf(buffer, format []byte, varList ...interface{}) int {
 	n := len(result)
 	return n
 }
+
+// Snprintf handles snprintf().
+//
+// Writes the C string pointed by format to the standard output (stdout). If
+// format includes format specifiers (subsequences beginning with %), the
+// additional arguments following format are formatted and inserted in the
+// resulting string replacing their respective specifiers.
+func Snprintf(buffer []byte, n int, format []byte, args ...interface{}) int {
+	return Vsnprintf(buffer, n, format, args)
+}
+
+// Vsnprintf handles vsnprintf().
+//
+// Writes the C string pointed by format to the standard output (stdout). If
+// format includes format specifiers (subsequences beginning with %), the
+// additional arguments following format are formatted and inserted in the
+// resulting string replacing their respective specifiers.
+func Vsnprintf(buffer []byte, n int, format []byte, varList ...interface{}) int {
+	realArgs := []interface{}{}
+
+	// Convert any C strings into Go strings.
+	typeOfByteSlice := reflect.TypeOf([]byte(nil))
+
+	if len(varList) > 1 {
+		// TODO : I don`t found the situation with more 1 size
+		return 0
+	}
+
+	for _, arg := range varList {
+		t := reflect.TypeOf(arg)
+		if t.Kind() == reflect.Slice {
+			arg := arg.([]interface{})
+			for i := range arg {
+				if reflect.TypeOf(arg[i]) == typeOfByteSlice {
+					realArgs = append(realArgs, CStringToString(arg[i].([]byte)))
+				} else {
+					realArgs = append(realArgs, arg[i])
+				}
+			}
+		}
+	}
+
+	result := fmt.Sprintf(CStringToString(format), realArgs...)
+	if len(result) > n {
+		result = result[:n]
+	}
+	for i := range []byte(result) {
+		buffer[i] = result[i]
+	}
+	buffer[len(result)] = '\x00'
+
+	n = len(result)
+	return n
+}

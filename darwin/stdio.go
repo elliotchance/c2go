@@ -2,6 +2,7 @@ package darwin
 
 import "github.com/elliotchance/c2go/noarch"
 
-func BuiltinSprintfChk(buffer []byte, _ int, _ int, format []byte, args ...interface{}) int {
-	return noarch.Sprintf(buffer, format, args)
+// BuiltinSprintfChk - implementation __builtin___sprintf_chk
+func BuiltinSprintfChk(buffer []byte, _ int, n int, format []byte, args ...interface{}) int {
+	return noarch.Snprintf(buffer, n, format, args)
 }

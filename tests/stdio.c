@@ -12,7 +12,7 @@
     test_##t();
 
 // size of that file
-int filesize = 9169;
+int filesize = 9699;
 
 void test_putchar()
 {
@@ -429,6 +429,15 @@ void test_feof()
 
 void test_sprintf()
 {
+	char buffer [100];
+	int cx;
+	cx = snprintf ( buffer, 100, "The half of %d is %d", 60, 60/2 );
+	is_streq(buffer,"The half of 60 is 30");
+	is_eq(cx,20);
+}
+
+void test_snprintf()
+{
 	char buffer [50];
 	int n, a=5, b=3;
 	n = sprintf (buffer, "%d plus %d is %d", a, b, a+b);
@@ -452,9 +461,25 @@ void test_vsprintf()
 	is_eq(s,19+8+5);
 }
 
+int PrintFError2(const char * format, ... )
+{
+	char buffer[256];
+	va_list args;
+	va_start (args, format);
+	int s = vsnprintf (buffer,256,format, args);
+	va_end (args);
+	return s;
+}
+
+void test_vsnprintf()
+{
+	int s = PrintFError2("Success function '%s' %.2f","vsprintf",3.1415926);
+	is_eq(s,19+8+5);
+}
+
 int main()
 {
-    plan(47);
+    plan(50);
 
     START_TEST(putchar)
     START_TEST(puts)
@@ -484,7 +509,9 @@ int main()
     START_TEST(rewind)
     START_TEST(feof)
     START_TEST(sprintf)
+    START_TEST(snprintf)
     START_TEST(vsprintf)
+    START_TEST(vsnprintf)
 
     done_testing();
 }
