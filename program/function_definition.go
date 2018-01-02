@@ -168,6 +168,9 @@ var builtInFunctionDefinitions = []string{
 	"int fsetpos(FILE*, int*) -> noarch.Fsetpos",
 	"int sprintf(char*, const char *) -> noarch.Sprintf",
 
+	// darwin/stdio.h
+	"int __builtin___sprintf_chk(char*, int, int, char*) -> darwin.BuiltinSprintfChk",
+
 	// string.h
 	"char* strcat(char *, const char *) -> noarch.Strcat",
 
