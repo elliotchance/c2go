@@ -10,6 +10,7 @@ import (
 	"github.com/elliotchance/c2go/util"
 
 	goast "go/ast"
+	"go/parser"
 	"go/token"
 )
 
@@ -45,6 +46,49 @@ func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
 	[]goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
 	if len(a.Children()) == 0 {
 		return nil, "", nil, nil, nil
+	}
+
+	if va, ok := a.Children()[0].(*ast.VAArgExpr); ok {
+		outType, err := types.ResolveType(p, va.Type)
+		if err != nil {
+			return nil, "", nil, nil, err
+		}
+		var argsName string
+		if a, ok := va.Children()[0].(*ast.ImplicitCastExpr); ok {
+			if a, ok := a.Children()[0].(*ast.DeclRefExpr); ok {
+				argsName = a.Name
+			} else {
+				return nil, "", nil, nil, fmt.Errorf("Expect DeclRefExpr for vaar, but we have %T", a)
+			}
+		} else {
+			return nil, "", nil, nil, fmt.Errorf("Expect ImplicitCastExpr for vaar, but we have %T", a)
+		}
+		src := fmt.Sprintf(`package main
+var temp = func() %s {
+	var ret %s
+	if v, ok := %s[c2goVaListPosition].(int32); ok{
+		// for 'rune' type
+		ret = %s(v)
+	} else {
+		ret = %s[c2goVaListPosition].(%s)
+	}
+	c2goVaListPosition++
+	return ret
+}()`, outType,
+			outType,
+			argsName,
+			outType,
+			argsName, outType)
+
+		// Create the AST by parsing src.
+		fset := token.NewFileSet() // positions are relative to fset
+		f, err := parser.ParseFile(fset, "", src, 0)
+		if err != nil {
+			return nil, "", nil, nil, err
+		}
+
+		expr := f.Decls[0].(*goast.GenDecl).Specs[0].(*goast.ValueSpec).Values
+		return expr, va.Type, nil, nil, nil
 	}
 
 	defaultValue, defaultValueType, newPre, newPost, err := transpileToExpr(a.Children()[0], p, false)

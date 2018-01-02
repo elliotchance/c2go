@@ -195,6 +195,27 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (decls []goa
 			}
 		}
 
+		// for function argument: ...
+		// added for "variadic function"
+		if strings.Contains(n.Type, "...") {
+			body.List = append([]goast.Stmt{&goast.DeclStmt{&goast.GenDecl{
+				Tok: token.VAR,
+				Specs: []goast.Spec{&goast.ValueSpec{
+					Names: []*goast.Ident{util.NewIdent("c2goVaListPosition")},
+					Type:  goast.NewIdent("int"),
+					Values: []goast.Expr{&goast.BasicLit{
+						Kind:  token.INT,
+						Value: "0",
+					}},
+				}},
+			}}, &goast.AssignStmt{
+				Lhs: []goast.Expr{goast.NewIdent("_")},
+				Tok: token.ASSIGN,
+				Rhs: []goast.Expr{util.NewIdent("c2goVaListPosition")},
+			},
+			}, body.List...)
+		}
+
 		decls = append(decls, &goast.FuncDecl{
 			Name: util.NewIdent(n.Name),
 			Type: util.NewFuncType(fieldList, t, addReturnName),
@@ -233,6 +254,23 @@ func getFieldList(f *ast.FunctionDecl, p *program.Program) (_ *goast.FieldList, 
 				Type:  util.NewTypeIdent(t),
 			})
 		}
+	}
+
+	// for function argument: ...
+	if strings.Contains(f.Type, "...") {
+		r = append(r, &goast.Field{
+			Names: []*goast.Ident{util.NewIdent("c2goArgs")},
+			Type: &goast.Ellipsis{
+				Ellipsis: 1,
+				Elt: &goast.InterfaceType{
+					Interface: 1,
+					Methods: &goast.FieldList{
+						Opening: 1,
+					},
+					Incomplete: false,
+				},
+			},
+		})
 	}
 
 	return &goast.FieldList{

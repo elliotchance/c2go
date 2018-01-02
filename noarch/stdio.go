@@ -685,3 +685,105 @@ func Scanf(format []byte, args ...interface{}) int {
 func Putchar(character int) {
 	fmt.Printf("%c", character)
 }
+
+// Sprintf handles sprintf().
+//
+// Writes the C string pointed by format to the standard output (stdout). If
+// format includes format specifiers (subsequences beginning with %), the
+// additional arguments following format are formatted and inserted in the
+// resulting string replacing their respective specifiers.
+func Sprintf(buffer, format []byte, args ...interface{}) int {
+	realArgs := []interface{}{}
+
+	realArgs = append(realArgs, convert(args)...)
+
+	result := fmt.Sprintf(CStringToString(format), realArgs...)
+	for i := range []byte(result) {
+		buffer[i] = result[i]
+	}
+	buffer[len(result)] = '\x00'
+
+	n := len(result)
+	return n
+}
+
+// Vsprintf handles vsprintf().
+//
+// Writes the C string pointed by format to the standard output (stdout). If
+// format includes format specifiers (subsequences beginning with %), the
+// additional arguments following format are formatted and inserted in the
+// resulting string replacing their respective specifiers.
+func Vsprintf(buffer, format []byte, varList ...interface{}) int {
+	realArgs := []interface{}{}
+
+	if len(varList) > 1 {
+		// TODO : I don`t found the situation with more 1 size
+		return 0
+	}
+
+	realArgs = append(realArgs, convert(varList)...)
+
+	result := fmt.Sprintf(CStringToString(format), realArgs...)
+	for i := range []byte(result) {
+		buffer[i] = result[i]
+	}
+	buffer[len(result)] = '\x00'
+
+	n := len(result)
+	return n
+}
+
+// Snprintf handles snprintf().
+//
+// Writes the C string pointed by format to the standard output (stdout). If
+// format includes format specifiers (subsequences beginning with %), the
+// additional arguments following format are formatted and inserted in the
+// resulting string replacing their respective specifiers.
+func Snprintf(buffer []byte, n int, format []byte, args ...interface{}) int {
+	return Vsnprintf(buffer, n, format, args)
+}
+
+// convert - convert va_list
+func convert(arg interface{}) (result []interface{}) {
+	typeOfByteSlice := reflect.TypeOf([]byte(nil))
+	if reflect.TypeOf(arg) == typeOfByteSlice {
+		return []interface{}{CStringToString(arg.([]byte))}
+	}
+	if reflect.TypeOf(arg).Kind() == reflect.Slice {
+		arg := arg.([]interface{})
+		for j := 0; j < len(arg); j++ {
+			result = append(result, convert(arg[j])...)
+		}
+		return result
+	}
+	return []interface{}{arg}
+}
+
+// Vsnprintf handles vsnprintf().
+//
+// Writes the C string pointed by format to the standard output (stdout). If
+// format includes format specifiers (subsequences beginning with %), the
+// additional arguments following format are formatted and inserted in the
+// resulting string replacing their respective specifiers.
+func Vsnprintf(buffer []byte, n int, format []byte, varList ...interface{}) int {
+	realArgs := []interface{}{}
+
+	if len(varList) > 1 {
+		// TODO : I don`t found the situation with more 1 size
+		return 0
+	}
+
+	realArgs = append(realArgs, convert(varList)...)
+
+	result := fmt.Sprintf(CStringToString(format), realArgs...)
+	if len(result) > n {
+		result = result[:n]
+	}
+	for i := range []byte(result) {
+		buffer[i] = result[i]
+	}
+	buffer[len(result)] = '\x00'
+
+	n = len(result)
+	return n
+}

@@ -166,6 +166,16 @@ var builtInFunctionDefinitions = []string{
 	"int fwrite(char*, int, int, FILE*) -> noarch.Fwrite",
 	"int fgetpos(FILE*, int*) -> noarch.Fgetpos",
 	"int fsetpos(FILE*, int*) -> noarch.Fsetpos",
+	"int sprintf(char*, const char *) -> noarch.Sprintf",
+	"int snprintf(char*, int, const char *) -> noarch.Snprintf",
+	"int vsprintf(char*, const char *) -> noarch.Vsprintf",
+	"int vsnprintf(char*, int, const char *) -> noarch.Vsnprintf",
+
+	// darwin/stdio.h
+	"int __builtin___sprintf_chk(char*, int, int, char*) -> darwin.BuiltinSprintfChk",
+	"int __builtin___snprintf_chk(char*, int, int, int, char*) -> darwin.BuiltinSnprintfChk",
+	"int __builtin___vsprintf_chk(char*, int, int, char*) -> darwin.BuiltinVsprintfChk",
+	"int __builtin___vsnprintf_chk(char*, int, int, int, char*) -> darwin.BuiltinVsnprintfChk",
 
 	// string.h
 	"char* strcat(char *, const char *) -> noarch.Strcat",

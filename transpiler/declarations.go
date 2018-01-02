@@ -401,6 +401,26 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 		return
 	}
 
+	if strings.Contains(n.Type, "va_list") && strings.Contains(n.Type2, "va_list_tag") {
+		// variable for va_list. see "variadic function"
+		// header : <stdarg.h>
+		// Example :
+		// DeclStmt 0x2fd87e0 <line:442:2, col:14>
+		// `-VarDecl 0x2fd8780 <col:2, col:10> col:10 used args 'va_list':'struct __va_list_tag [1]'
+		// Result:
+		// ... - convert to - c2goArgs ...interface{}
+		// var args = c2goArgs
+		return []goast.Decl{&goast.GenDecl{
+			Tok: token.VAR,
+			Specs: []goast.Spec{
+				&goast.ValueSpec{
+					Names:  []*goast.Ident{util.NewIdent(n.Name)},
+					Values: []goast.Expr{util.NewIdent("c2goArgs")},
+				},
+			},
+		}}, "", nil
+	}
+
 	/*
 		Example of DeclStmt for C code:
 		void * a = NULL;
