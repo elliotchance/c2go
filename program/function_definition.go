@@ -173,6 +173,8 @@ var builtInFunctionDefinitions = []string{
 
 	// darwin/stdio.h
 	"int __builtin___sprintf_chk(char*, int, int, char*) -> darwin.BuiltinSprintfChk",
+	"int __builtin___snprintf_chk(char*, int, int, int, char*) -> darwin.BuiltinSnprintfChk",
+	"int __builtin___vsprintf_chk(char*, int, int, char*) -> darwin.BuiltinVsprintfChk",
 
 	// string.h
 	"char* strcat(char *, const char *) -> noarch.Strcat",
