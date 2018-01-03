@@ -115,9 +115,56 @@ void union_typedef()
 	is_true(mmmm.B != 0);
 }
 
+typedef struct FuncDestructor FuncDestructor;
+struct FuncDestructor {
+	int i;
+};
+typedef struct FuncDef FuncDef;
+struct FuncDef {
+  int i;
+  union {
+    FuncDef *pHash;
+    FuncDestructor *pDestructor;
+  } u;
+};
+
+void union_inside_struct2()
+{
+	FuncDef f;
+	FuncDestructor fd;
+	fd.i = 100;
+	f.u.pDestructor = &fd;
+
+	FuncDestructor * p_fd = f.u.pDestructor;
+	is_eq((*p_fd).i , 100);
+
+	is_true(f.u.pHash       != NULL);
+	is_true(f.u.pDestructor != NULL);
+	int vHash = (*f.u.pHash).i;
+	is_eq(vHash          , 100);
+	is_eq((*f.u.pHash).i , 100);
+}
+
+union UPNT{
+	int * a;
+	int * b;
+	int * c;
+};
+
+void union_pointers()
+{
+	union UPNT u;
+	int v = 32;
+	u.a = &v;
+	is_eq(*u.a,32);
+	is_eq(*u.b,32);
+	is_eq(*u.c,32);
+	pass("ok")
+}
+
 int main()
 {
-    plan(19);
+    plan(28);
 
     union programming variable;
 
@@ -127,6 +174,8 @@ int main()
 
 	union_inside_struct();
 	union_typedef();
+	union_inside_struct2();
+	union_pointers();
 
     done_testing();
 }

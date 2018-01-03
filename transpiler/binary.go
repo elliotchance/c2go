@@ -319,11 +319,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 					union := p.GetStruct(un.Type)
 					if union != nil && union.IsUnion {
 						if str, ok := un.Children()[0].(*ast.DeclRefExpr); ok {
-							attrType, err := types.ResolveType(p, memberExpr.Type)
-							if err != nil {
-								p.AddMessage(p.GenerateWarningMessage(err, memberExpr))
-							}
-							funcName := getFunctionNameForUnionSetter("", attrType, memberExpr.Name)
+							funcName := getFunctionNameForUnionSetter("", memberExpr.Type, memberExpr.Name)
 							funcName = str.Name + "." + un.Name + funcName
 							resExpr := &goast.CallExpr{
 								Fun:  goast.NewIdent(funcName),

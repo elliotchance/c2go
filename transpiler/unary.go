@@ -183,6 +183,49 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 				found = true
 				return
 
+			case *ast.MemberExpr:
+				// check - if member of union
+				var ok bool
+				var a ast.Node = n.Children()[i]
+				var b ast.Node
+				var isUnion bool
+				for {
+					if b, ok = a.Children()[0].(*ast.MemberExpr); ok {
+						if strings.Contains(b.(*ast.MemberExpr).Type, "union ") {
+							isUnion = true
+							break
+						}
+						a = b
+						continue
+					} else if b, ok = a.Children()[0].(*ast.DeclRefExpr); ok {
+						if strings.Contains(b.(*ast.DeclRefExpr).Type, "union ") {
+							isUnion = true
+							break
+						}
+						a = b
+						continue
+					}
+					break
+				}
+				if isUnion {
+					counter++
+					if counter > 1 {
+						err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %v,%v", pointer, v)
+						return
+					}
+					// found pointer
+					pointer = v
+					// Replace pointer to zero
+					var zero ast.IntegerLiteral
+					zero.Type = "int"
+					zero.Value = "0"
+					n.Children()[i] = &zero
+					found = true
+					return
+				}
+				// member of struct
+				f(v)
+
 			case *ast.CallExpr:
 				if v.Type == "int" {
 					continue
@@ -264,6 +307,19 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 	eType = n.Type
 
 	switch v := pointer.(type) {
+	case *ast.MemberExpr:
+		arr, _, newPre, newPost, err2 := transpileToExpr(v, p, false)
+		if err2 != nil {
+			return
+		}
+		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+		return &goast.IndexExpr{
+			X: &goast.ParenExpr{
+				Lparen: 1,
+				X:      arr,
+			},
+			Index: e,
+		}, eType, preStmts, postStmts, err
 	case *ast.DeclRefExpr:
 		return &goast.IndexExpr{
 			X:     util.NewIdent(v.Name),
