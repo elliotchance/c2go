@@ -166,8 +166,20 @@ var builtInFunctionDefinitions = []string{
 	"int fwrite(char*, int, int, FILE*) -> noarch.Fwrite",
 	"int fgetpos(FILE*, int*) -> noarch.Fgetpos",
 	"int fsetpos(FILE*, int*) -> noarch.Fsetpos",
+	"int sprintf(char*, const char *) -> noarch.Sprintf",
+	"int snprintf(char*, int, const char *) -> noarch.Snprintf",
+	"int vsprintf(char*, const char *) -> noarch.Vsprintf",
+	"int vsnprintf(char*, int, const char *) -> noarch.Vsnprintf",
+
+	// darwin/stdio.h
+	"int __builtin___sprintf_chk(char*, int, int, char*) -> darwin.BuiltinSprintfChk",
+	"int __builtin___snprintf_chk(char*, int, int, int, char*) -> darwin.BuiltinSnprintfChk",
+	"int __builtin___vsprintf_chk(char*, int, int, char*) -> darwin.BuiltinVsprintfChk",
+	"int __builtin___vsnprintf_chk(char*, int, int, int, char*) -> darwin.BuiltinVsnprintfChk",
 
 	// string.h
+	"char* strcat(char *, const char *) -> noarch.Strcat",
+
 	"char* strcpy(const char*, char*) -> noarch.Strcpy",
 	// should be: "char* strncpy(const char*, char*, size_t) -> noarch.Strncpy",
 	"char* strncpy(const char*, char*, int) -> noarch.Strncpy",
@@ -184,6 +196,10 @@ var builtInFunctionDefinitions = []string{
 
 	// should be: size_t __builtin_object_size(const void*, int)
 	"int __builtin_object_size(const char*, int) -> darwin.BuiltinObjectSize",
+
+	// see https://opensource.apple.com/source/Libc/Libc-763.12/include/secure/_string.h.auto.html
+	"char* __builtin___strcat_chk(char *, const char *, int) -> darwin.BuiltinStrcat",
+	"char* __inline_strcat_chk(char *, const char *) -> noarch.Strcat",
 
 	// stdlib.h
 	"int abs(int) -> noarch.Abs",
