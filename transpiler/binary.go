@@ -292,8 +292,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 			}
 
 			// Construct code for assigning value to an union field
-			memberExpr, ok := n.Children()[0].(*ast.MemberExpr)
-			if ok {
+			if memberExpr, ok := n.Children()[0].(*ast.MemberExpr); ok {
 				ref := memberExpr.GetDeclRefExpr()
 				if ref != nil {
 					union := p.GetStruct(ref.Type)
@@ -308,6 +307,29 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 						resType := types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType)
 
 						return resExpr, resType, preStmts, postStmts, nil
+					}
+				}
+				// union inside struct
+				if un, ok := memberExpr.Children()[0].(*ast.MemberExpr); ok {
+					un.Type = types.GenerateCorrectType(un.Type)
+					un.Type2 = types.GenerateCorrectType(un.Type2)
+					union := p.GetStruct(un.Type)
+					if union != nil && union.IsUnion {
+						if str, ok := un.Children()[0].(*ast.DeclRefExpr); ok {
+							attrType, err := types.ResolveType(p, memberExpr.Type)
+							if err != nil {
+								p.AddMessage(p.GenerateWarningMessage(err, memberExpr))
+							}
+							funcName := getFunctionNameForUnionSetter("", attrType, memberExpr.Name)
+							funcName = str.Name + "." + un.Name + funcName
+							resExpr := &goast.CallExpr{
+								Fun:  goast.NewIdent(funcName),
+								Args: []goast.Expr{right},
+							}
+							resType := types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType)
+
+							return resExpr, resType, preStmts, postStmts, nil
+						}
 					}
 				}
 			}

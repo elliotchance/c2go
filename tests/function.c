@@ -55,9 +55,46 @@ int var()        {return 42;}
 int _()          {return 42;}
 int init()       {return 42;}
 
+void exit2(int t){
+	(void)(t);
+}
+void empty_return(){
+	int i = 0;
+	(void)(i);
+	exit2(-1);
+}
+int  empty_return_int(int a){
+	if ( a > 0 ){ return 1;} 
+	else        { exit2(-1);}
+}
+int empty_return_int2(int *a){
+	if (*a > 0 ){ return 1;} 
+	else        { exit2(-1);}
+}
+double empty_return_double(double a){
+	if ( a > 0.0 ){ return 1.0;} 
+	else          { exit2(-1);}
+}
+double empty_return_double2(double*a){
+	if (*a > 0.0 ){ return 1.0;} 
+	else          { exit2(-1);}
+}
+typedef struct RE RE;
+struct RE {
+	int re;
+};
+RE empty_return_struct(int a){
+	if ( a > 0.0 ){ RE r; r.re = 1; return r;} 
+	else          { exit2(-1);}
+}
+RE* empty_return_struct2(int a){
+	if ( a > 0.0 ){ RE r; r.re = 1; return &r;} 
+	else          { exit2(-1);}
+}
+
 int main()
 {
-    plan(33);
+    plan(40);
 
     pass("%s", "Main function.");
 
@@ -125,6 +162,34 @@ int main()
 	diag("Function pointer inside function")
 	is_eq(action(add2), add2(2,3,4));
 	is_eq(action(mul2), mul2(2,3,4));
+
+	diag("Function with empty return")
+	{
+		empty_return();
+		pass("ok");
+	}
+	{
+		empty_return_int(2);
+		pass("ok");
+	}
+	{
+		int Y = 6;
+		is_eq(empty_return_int2(&Y),1);
+	}
+	{
+		double Y = 6;
+		is_eq(empty_return_double(Y),1);
+	}
+	{
+		double Y = 6;
+		is_eq(empty_return_double2(&Y),1);
+	}
+	{
+		is_eq((empty_return_struct(6)).re,1);
+	}
+	{
+		is_eq((*(empty_return_struct2(6))).re,1);
+	}
 
     done_testing();
 }

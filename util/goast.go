@@ -145,7 +145,7 @@ func NewCallExpr(functionName string, args ...goast.Expr) *goast.CallExpr {
 func NewFuncClosure(returnType string, stmts ...goast.Stmt) *goast.CallExpr {
 	return &goast.CallExpr{
 		Fun: &goast.FuncLit{
-			Type: NewFuncType(&goast.FieldList{}, returnType),
+			Type: NewFuncType(&goast.FieldList{}, returnType, false),
 			Body: &goast.BlockStmt{
 				List: stmts,
 			},
@@ -344,12 +344,16 @@ func CreateSliceFromReference(goType string, expr goast.Expr) *goast.SliceExpr {
 	}
 }
 
-func NewFuncType(fieldList *goast.FieldList, returnType string) *goast.FuncType {
+func NewFuncType(fieldList *goast.FieldList, returnType string, addDefaultReturn bool) *goast.FuncType {
 	returnTypes := []*goast.Field{}
 	if returnType != "" {
-		returnTypes = append(returnTypes, &goast.Field{
+		field := goast.Field{
 			Type: NewTypeIdent(returnType),
-		})
+		}
+		if addDefaultReturn {
+			field.Names = []*goast.Ident{NewIdent("c2goDefaultReturn")}
+		}
+		returnTypes = append(returnTypes, &field)
 	}
 
 	return &goast.FuncType{

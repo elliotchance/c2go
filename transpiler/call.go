@@ -79,6 +79,13 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 	}
 	functionName = util.ConvertFunctionNameFromCtoGo(functionName)
 
+	if functionName == "__builtin_va_start" ||
+		functionName == "__builtin_va_end" {
+		// ignore function __builtin_va_start, __builtin_va_end
+		// see "Variadic functions"
+		return nil, "", nil, nil, nil
+	}
+
 	// function "calloc" from stdlib.c
 	if functionName == "calloc" && len(n.Children()) == 3 {
 		var allocType string
@@ -109,7 +116,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 	if functionName == "qsort" && len(n.Children()) == 5 {
 		defer func() {
 			if err != nil {
-				err = fmt.Errorf("Function: qsort. err = ", err)
+				err = fmt.Errorf("Function: qsort. err = %v", err)
 			}
 		}()
 		/*
