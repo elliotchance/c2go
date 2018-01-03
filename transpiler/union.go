@@ -7,6 +7,7 @@ import (
 	"go/token"
 
 	"fmt"
+
 	"github.com/elliotchance/c2go/util"
 )
 
