@@ -62,9 +62,34 @@ int summator(int i, float f){
 	return i+(int)(f);
 }
 
+typedef struct J J;
+struct J
+{
+	float f;
+	int (*fu)(J *j, float i);
+};
+
+int j_function(J *j, float i)
+{
+	if (j != NULL)
+	{
+		return (int)(i+(*j).f);
+	}
+	return -1;
+};
+
+void struct_with_rec_fuction()
+{
+	J j;
+	j.f = 5.0;
+	j.fu = j_function;
+	is_eq(j.fu(&j,4.0),9);
+	is_eq(j_function(NULL, 4.0),-1);
+}
+
 int main()
 {
-    plan(46);
+    plan(48);
 
     struct programming variable;
     char *s = "Programming in Software Development.";
@@ -284,6 +309,8 @@ int main()
 	{ typedef struct {int i;} _           ;	_           UU; UU.i = 5; is_eq(UU.i,5);}
 	{ typedef struct {int i;} init        ;	init        UU; UU.i = 5; is_eq(UU.i,5);}
 */
+
+	struct_with_rec_fuction();
 
     done_testing();
 }
