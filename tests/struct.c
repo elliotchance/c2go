@@ -64,7 +64,7 @@ int summator(int i, float f){
 
 int main()
 {
-    plan(44);
+    plan(46);
 
     struct programming variable;
     char *s = "Programming in Software Development.";
@@ -228,6 +228,24 @@ int main()
 		f = summator;
 		is_eq(f(3,5),8);
 	}
+
+	diag("typedef struct C C inside function")
+	{
+		typedef struct CCC CCC;
+		struct CCC {
+			float ff;
+		};
+		CCC c;
+		c.ff = 3.14;
+		is_eq(c.ff,3.14);
+	}
+	typedef struct CP CP;
+	struct CP {
+		float ff;
+	};
+	CP cp;
+	cp.ff = 3.14;
+	is_eq(cp.ff,3.14);
 
 	diag("struct name from Go keyword")
 	{ struct chan        {int i;}; struct chan        UU;  UU.i = 5; is_eq(UU.i,5);}

@@ -78,9 +78,46 @@ void union_inside_struct()
 	is_eq(sha2.ff2 , 12.444);
 }
 
+typedef union myunion myunion;
+typedef union myunion
+{
+	double PI;
+	int B;
+}MYUNION;
+
+typedef union
+{
+	double PI;
+	int B;
+}MYUNION2;
+
+void union_typedef()
+{
+	diag("Typedef union")
+	union myunion m;
+	m.PI = 3.14;
+	is_eq(m.PI,3.14);
+	is_true(m.B != 0);
+
+	MYUNION mm;
+	mm.PI = 3.14;
+	is_eq(mm.PI,3.14);
+	is_true(mm.B != 0);
+
+	myunion mmm;
+	mmm.PI = 3.14;
+	is_eq(mmm.PI,3.14);
+	is_true(mmm.B != 0);
+
+	MYUNION2 mmmm;
+	mmmm.PI = 3.14;
+	is_eq(mmmm.PI,3.14);
+	is_true(mmmm.B != 0);
+}
+
 int main()
 {
-    plan(11);
+    plan(19);
 
     union programming variable;
 
@@ -89,6 +126,7 @@ int main()
     pass_by_ref(&variable);
 
 	union_inside_struct();
+	union_typedef();
 
     done_testing();
 }

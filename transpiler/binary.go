@@ -296,6 +296,9 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 				ref := memberExpr.GetDeclRefExpr()
 				if ref != nil {
 					union := p.GetStruct(ref.Type)
+					if union == nil {
+						union = p.GetStruct("union " + ref.Type)
+					}
 					if union != nil && union.IsUnion {
 						attrType, err := types.ResolveType(p, ref.Type)
 						if err != nil {
