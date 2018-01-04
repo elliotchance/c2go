@@ -106,13 +106,6 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 	name = types.GenerateCorrectType(name)
 	p.DefineType(name)
 
-	s := program.NewStruct(n)
-	if s.IsUnion {
-		p.Unions["union "+s.Name] = s
-	} else {
-		p.Structs["struct "+s.Name] = s
-	}
-
 	// TODO: Some platform structs are ignored.
 	// https://github.com/elliotchance/c2go/issues/85
 	if name == "__locale_struct" ||
@@ -150,6 +143,18 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 					pos++
 					decls = append(decls, declUnion...)
 				}
+			} else if field.Kind == "struct" && len(field.Children()) > 0 && field.Name == "" && pos+2 <= len(n.Children()) {
+				if inField, ok := n.Children()[pos+1].(*ast.FieldDecl); ok {
+					inField.Type = types.GenerateCorrectType(inField.Type)
+					inField.Type2 = types.GenerateCorrectType(inField.Type2)
+					field.Name = string(([]byte(inField.Type))[len("struct "):])
+					declStruct, err := transpileRecordDecl(p, field)
+					if err != nil {
+						p.AddMessage(p.GenerateWarningMessage(err, field))
+					}
+					pos++
+					decls = append(decls, declStruct...)
+				}
 			} else {
 				decls, err = transpileRecordDecl(p, field)
 				if err != nil {
@@ -164,13 +169,19 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 		}
 	}
 
+	s := program.NewStruct(n)
+	if s.IsUnion {
+		p.Unions["union "+s.Name] = s
+	} else {
+		p.Structs["struct "+s.Name] = s
+	}
 	if s.IsUnion {
 		// Union size
 		size, err := types.SizeOf(p, "union "+name)
 
 		// In normal case no error is returned,
 		if err != nil {
-			// but if we catch one, send it as a aarning
+			// but if we catch one, send it as a warning
 			message := fmt.Sprintf("could not determine the size of type `union %s` for that reason: %s", name, err)
 			p.AddMessage(p.GenerateWarningMessage(errors.New(message), n))
 		} else {

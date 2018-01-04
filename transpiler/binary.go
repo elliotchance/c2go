@@ -291,6 +291,26 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 				right = util.NewNil()
 			}
 
+			var haveMemberExprWithUnion bool
+			var findUnion func(ast.Node)
+			var UnionNode ast.Node
+			findUnion = func(node ast.Node) {
+				switch chi := node.(type) {
+				case *ast.MemberExpr:
+					if strings.HasPrefix(chi.Type, "union ") {
+						haveMemberExprWithUnion = true
+						UnionNode = node
+					}
+					findUnion(node.Children()[0])
+				case *ast.DeclRefExpr:
+					if strings.HasPrefix(chi.Type, "union ") {
+						haveMemberExprWithUnion = true
+						UnionNode = node
+					}
+				}
+			}
+			findUnion(n.Children()[0])
+
 			// Construct code for assigning value to an union field
 			if memberExpr, ok := n.Children()[0].(*ast.MemberExpr); ok {
 				ref := memberExpr.GetDeclRefExpr()
@@ -330,6 +350,12 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 							return resExpr, resType, preStmts, postStmts, nil
 						}
 					}
+				}
+
+				// struct inside union
+				if haveMemberExprWithUnion {
+					p.AddMessage(p.GenerateWarningMessage(
+						fmt.Errorf("Binary operation with union not support. AST node with union : %v", UnionNode), n))
 				}
 			}
 		}
