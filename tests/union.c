@@ -95,9 +95,14 @@ void union_typedef()
 {
 	diag("Typedef union")
 	union myunion m;
-	m.PI = 3.14;
+	double v = 3.14;
+	m.PI = v;
 	is_eq(m.PI,3.14);
 	is_true(m.B != 0);
+	is_eq(v, 3.14);
+	v += 1.0;
+	is_eq(v, 4.14);
+	is_eq(m.PI,3.14);
 
 	MYUNION mm;
 	mm.PI = 3.14;
@@ -162,9 +167,27 @@ void union_pointers()
 	pass("ok")
 }
 
+union UPNTF{
+	int (*f1)(int);
+	int (*f2)(int);
+};
+
+int union_function(int a)
+{
+	return a+1;
+}
+
+void union_func_pointers()
+{
+	union UPNTF u;
+	u.f1 = union_function;
+	is_eq(u.f1(21), 22);
+	is_eq(u.f2(21), 22);
+}
+
 int main()
 {
-    plan(28);
+    plan(33);
 
     union programming variable;
 
@@ -176,6 +199,7 @@ int main()
 	union_typedef();
 	union_inside_struct2();
 	union_pointers();
+	union_func_pointers();
 
     done_testing();
 }
