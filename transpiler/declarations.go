@@ -143,11 +143,19 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 					pos++
 					decls = append(decls, declUnion...)
 				}
-			} else if field.Kind == "struct" && len(field.Children()) > 0 && field.Name == "" && pos+2 <= len(n.Children()) {
+			} else if field.Kind == "struct" &&
+				len(field.Children()) > 0 &&
+				field.Name == "" &&
+				pos+2 <= len(n.Children()) {
 				if inField, ok := n.Children()[pos+1].(*ast.FieldDecl); ok {
 					inField.Type = types.GenerateCorrectType(inField.Type)
 					inField.Type2 = types.GenerateCorrectType(inField.Type2)
 					field.Name = string(([]byte(inField.Type))[len("struct "):])
+					if strings.Contains(field.Name, "[") {
+						p.AddMessage(p.GenerateWarningMessage(
+							fmt.Errorf("Not acceptable name of struct %s", field.Name), n))
+						continue
+					}
 					declStruct, err := transpileRecordDecl(p, field)
 					if err != nil {
 						p.AddMessage(p.GenerateWarningMessage(err, field))
