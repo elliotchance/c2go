@@ -86,22 +86,28 @@ checkAgain:
 		case *ast.CaseStmt, *ast.DefaultStmt:
 			// do nothing
 		default:
-			if comp, ok := body.Children()[i-1].Children()[len(body.Children()[i-1].Children())-1].(*ast.CompoundStmt); ok {
-				// add node in CompoundStmt
-				comp.AddChild(body.Children()[i])
+			if i != 0 {
+				lastStmt := body.Children()[i-1].Children()
+				if comp, ok := lastStmt[len(lastStmt)-1].(*ast.CompoundStmt); ok {
+					// add node in CompoundStmt
+					comp.AddChild(body.Children()[i])
 
-				// remove from body
-				if i+1 < len(body.Children()) {
-					body.ChildNodes = append(body.ChildNodes[:i], body.ChildNodes[i+1:]...)
+					// remove from body
+					if i+1 < len(body.Children()) {
+						body.ChildNodes = append(body.ChildNodes[:i], body.ChildNodes[i+1:]...)
+					} else {
+						body.ChildNodes = body.ChildNodes[:i]
+					}
+
+					// goto to last iteration
+					i--
 				} else {
-					body.ChildNodes = body.ChildNodes[:i]
+					p.AddMessage(p.GenerateWarningMessage(
+						fmt.Errorf("Unexpected element"), n))
 				}
-
-				// goto to last iteration
-				i--
 			} else {
 				p.AddMessage(p.GenerateWarningMessage(
-					fmt.Errorf("Unexpected element"), n))
+					fmt.Errorf("Unsupport case"), n))
 			}
 
 		}
