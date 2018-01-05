@@ -51,14 +51,22 @@ func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
 	// Memory allocation is translated into the Go-style.
 	if allocSize := GetAllocationSizeNode(a.Children()[0]); allocSize != nil {
 		// type
-		t := a.Children()[0].(*ast.ImplicitCastExpr).Type
-		right, newPre, newPost, err := GenerateAlloc(p, allocSize, t)
-		if err != nil {
-			p.AddMessage(p.GenerateWarningMessage(err, a))
-			return nil, "", nil, nil, err
+		var t string
+		if v, ok := a.Children()[0].(*ast.ImplicitCastExpr); ok {
+			t = v.Type
 		}
+		if v, ok := a.Children()[0].(*ast.CStyleCastExpr); ok {
+			t = v.Type
+		}
+		if t != "" {
+			right, newPre, newPost, err := GenerateAlloc(p, allocSize, t)
+			if err != nil {
+				p.AddMessage(p.GenerateWarningMessage(err, a))
+				return nil, "", nil, nil, err
+			}
 
-		return []goast.Expr{right}, t, newPre, newPost, nil
+			return []goast.Expr{right}, t, newPre, newPost, nil
+		}
 	}
 
 	if va, ok := a.Children()[0].(*ast.VAArgExpr); ok {
