@@ -201,7 +201,7 @@ func Start(args ProgramArgs) (err error) {
 		fmt.Println("Running clang preprocessor...")
 	}
 
-	pp, err := preprocessor.Analyze(args.inputFiles, args.clangFlags)
+	pp, comments, err := preprocessor.Analyze(args.inputFiles, args.clangFlags)
 	if err != nil {
 		return err
 	}
@@ -250,6 +250,7 @@ func Start(args ProgramArgs) (err error) {
 	p := program.NewProgram()
 	p.Verbose = args.verbose
 	p.OutputAsTest = args.outputAsTest
+	p.Comments = comments
 
 	// Converting to nodes
 	if args.verbose {

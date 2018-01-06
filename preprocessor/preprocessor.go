@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
+
+	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/util"
 )
 
 // One simple part of preprocessor code
@@ -18,6 +21,25 @@ type entity struct {
 	// # 11 "/usr/include/x86_64-linux-gnu/gnu/stubs.h" 2 3 4
 	// After that 0 or more lines of codes
 	lines []*string
+}
+
+var Comments map[string]string
+
+func (e *entity) ParseComments(comments *[]program.Comment) {
+	reg := util.GetRegex("//.*")
+	for i := range e.lines {
+		if i == 0 {
+			continue
+		}
+		com := reg.Find([]byte(*e.lines[i]))
+		if com != nil {
+			var pos program.Comment
+			pos.Line = e.positionInSource + i - 1
+			pos.File = e.include
+			pos.Comment = com
+			(*comments) = append((*comments), pos)
+		}
+	}
 }
 
 // isSame - check is Same entities
@@ -48,12 +70,25 @@ func (e *entity) isSame(x *entity) bool {
 }
 
 // Analyze - separation preprocessor code to part
-func Analyze(inputFiles, clangFlags []string) (pp []byte, err error) {
+func Analyze(inputFiles, clangFlags []string) (pp []byte, comments []program.Comment, err error) {
 	var allItems []entity
 
 	allItems, err = analyzeFiles(inputFiles, clangFlags)
 	if err != nil {
 		return
+	}
+
+	// Generate list of user files
+	userSource := map[string]bool{}
+	var us []string
+	for i := range inputFiles {
+		us, err = GetIncludeListWithUserSource(inputFiles[i])
+		if err != nil {
+			return
+		}
+		for j := range us {
+			userSource[us[j]] = true
+		}
 	}
 
 	// Merge the entities
@@ -71,6 +106,10 @@ func Analyze(inputFiles, clangFlags []string) (pp []byte, err error) {
 		}
 		if found {
 			continue
+		}
+		// Parse comments only for user sources
+		if userSource[allItems[i].include] {
+			allItems[i].ParseComments(&comments)
 		}
 
 		// Parameter "other" is not included for avoid like:
@@ -93,7 +132,18 @@ func Analyze(inputFiles, clangFlags []string) (pp []byte, err error) {
 	return
 }
 
-// analyze - analyze single file and separation preprocessor code to part
+func isPreprocessorWord(line string) bool {
+	preprocessorWords := []string{"#pragma", "#elif", "#define", "# define"}
+	for i := range preprocessorWords {
+		length := len(preprocessorWords[i])
+		if len(line) >= length && line[0:length] == preprocessorWords[i] {
+			return true
+		}
+	}
+	return false
+}
+
+// analyzeFiles - analyze single file and separation preprocessor code to part
 func analyzeFiles(inputFiles, clangFlags []string) (items []entity, err error) {
 	// See : https://clang.llvm.org/docs/CommandGuide/clang.html
 	// clang -E <file>    Run the preprocessor stage.
@@ -110,10 +160,11 @@ func analyzeFiles(inputFiles, clangFlags []string) (items []entity, err error) {
 	var counter int
 	// item, items - entity of preprocess file
 	var item *entity
+
 	for scanner.Scan() {
 		line := scanner.Text()
 		if len(line) > 0 && line[0] == '#' &&
-			(len(line) >= 7 && line[0:7] != "#pragma") {
+			(!isPreprocessorWord(line)) {
 			if item != (*entity)(nil) {
 				items = append(items, *item)
 			}
@@ -148,7 +199,7 @@ func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, er
 		}
 
 		var args []string
-		args = append(args, "-E")
+		args = append(args, "-E", "-C")
 		args = append(args, clangFlags...)
 		args = append(args, inputFile)
 
@@ -169,14 +220,37 @@ func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, er
 	return
 }
 
-// getIncludeList - Get list of include files
+// GetIncludeListWithUserSource - Get list of include files
 // Example:
 // $ clang  -MM -c exit.c
 // exit.o: exit.c tests.h
-func getIncludeList(inputFile string) (lines []string, err error) {
+func GetIncludeListWithUserSource(inputFile string) (lines []string, err error) {
 	var out bytes.Buffer
 	var stderr bytes.Buffer
 	cmd := exec.Command("clang", "-MM", "-c", inputFile)
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+	err = cmd.Run()
+	if err != nil {
+		err = fmt.Errorf("preprocess failed: %v\nStdErr = %v", err, stderr.String())
+		return
+	}
+	return parseIncludeList(out.String())
+}
+
+// GetIncludeFullList - Get full list of include files
+// Example:
+// $ clang -M -c triangle.c
+// triangle.o: triangle.c /usr/include/stdio.h /usr/include/features.h \
+//   /usr/include/stdc-predef.h /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+//   /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+//   /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+//   /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+//   / ........ and other
+func GetIncludeFullList(inputFile string) (lines []string, err error) {
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd := exec.Command("clang", "-M", "-c", inputFile)
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
 	err = cmd.Run()
