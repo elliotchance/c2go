@@ -229,7 +229,6 @@ func GetIncludeListWithUserSource(inputFiles, clangFlags []string) (lines []stri
 	args = append(args, "-MM", "-c")
 	args = append(args, inputFiles...)
 	args = append(args, clangFlags...)
-	fmt.Println("a ", args)
 	cmd := exec.Command("clang", args...)
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
