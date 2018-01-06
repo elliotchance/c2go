@@ -467,7 +467,7 @@ func transpileToNode(node ast.Node, p *program.Program) (decls []goast.Decl, err
 			if _, ok := decls[0].(*goast.FuncDecl); ok {
 				decls[0].(*goast.FuncDecl).Doc = p.GetMessageComments()
 				decls[0].(*goast.FuncDecl).Doc.List = append(decls[0].(*goast.FuncDecl).Doc.List, &goast.Comment{
-					Text: fmt.Sprintf("// Info : %v", n.Pos),
+					Text: fmt.Sprintf("// Info - location of function, file : %s , line : %d", n.Pos.File, n.Pos.Line),
 				})
 			}
 		}
