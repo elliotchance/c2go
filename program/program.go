@@ -260,8 +260,7 @@ func (p *Program) GetNextIdentifier(prefix string) string {
 func (p *Program) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString(`/*
-	File transpiled by c2go
+	buf.WriteString(`/* Package main - transpiled by c2go
 
 	If you found any issue, then please connect to
 	maintainers - https://github.com/elliotchance/c2go/
