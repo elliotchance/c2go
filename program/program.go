@@ -321,5 +321,14 @@ func (p *Program) String() string {
 		panic(err)
 	}
 
-	return buf.String()
+	// simplify Go code. Example :
+	// Before:
+	// func compare(a interface {
+	// }, b interface {
+	// }) (c2goDefaultReturn int) {
+	// After :
+	// func compare(a interface {}, b interface {}) (c2goDefaultReturn int) {
+	reg := util.GetRegex("{(\r*)\n(\t*)}")
+
+	return string(reg.ReplaceAll(buf.Bytes(), []byte("{}")))
 }
