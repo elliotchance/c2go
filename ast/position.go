@@ -19,6 +19,10 @@ type Position struct {
 	StringValue string
 }
 
+func (pos Position) String() string {
+	return fmt.Sprintf("File : %s; Line : %d", pos.File, pos.Line)
+}
+
 func NewPositionFromString(s string) Position {
 	if s == "<invalid sloc>" || s == "" {
 		return Position{}
