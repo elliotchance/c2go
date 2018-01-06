@@ -81,14 +81,12 @@ func Analyze(inputFiles, clangFlags []string) (pp []byte, comments []program.Com
 	// Generate list of user files
 	userSource := map[string]bool{}
 	var us []string
-	for i := range inputFiles {
-		us, err = GetIncludeListWithUserSource(inputFiles[i])
-		if err != nil {
-			return
-		}
-		for j := range us {
-			userSource[us[j]] = true
-		}
+	us, err = GetIncludeListWithUserSource(inputFiles, clangFlags)
+	if err != nil {
+		return
+	}
+	for j := range us {
+		userSource[us[j]] = true
 	}
 
 	// Merge the entities
@@ -224,10 +222,15 @@ func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, er
 // Example:
 // $ clang  -MM -c exit.c
 // exit.o: exit.c tests.h
-func GetIncludeListWithUserSource(inputFile string) (lines []string, err error) {
+func GetIncludeListWithUserSource(inputFiles, clangFlags []string) (lines []string, err error) {
 	var out bytes.Buffer
 	var stderr bytes.Buffer
-	cmd := exec.Command("clang", "-MM", "-c", inputFile)
+	var args []string
+	args = append(args, "-MM", "-c")
+	args = append(args, inputFiles...)
+	args = append(args, clangFlags...)
+	fmt.Println("a ", args)
+	cmd := exec.Command("clang", args...)
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
 	err = cmd.Run()
