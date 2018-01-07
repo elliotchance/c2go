@@ -260,7 +260,8 @@ int main()
         PPptr1 = &PPptr2;
         is_eq(**PPptr1, Var);
         Var = 43;
-        is_eq (**PPptr1, Var)(void)(PPptr1);
+        is_eq(**PPptr1, Var);
+        (void)(PPptr1);
         (void)(PPptr2);
     }
     diag("Pointer to Pointer. 2");
@@ -270,7 +271,8 @@ int main()
         PPptr1 = &PPptr2;
         is_eq(**PPptr1, Var);
         Var = 43.0;
-        is_eq (**PPptr1, Var)(void)(PPptr1);
+        is_eq(**PPptr1, Var);
+        (void)(PPptr1);
         (void)(PPptr2);
     }
 
