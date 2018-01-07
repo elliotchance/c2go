@@ -232,6 +232,8 @@ func Parse(fullline string) Node {
 		return parseVAArgExpr(line)
 	case "VarDecl":
 		return parseVarDecl(line)
+	case "VerbatimLineComment":
+		return parseVerbatimLineComment(line)
 	case "VisibilityAttr":
 		return parseVisibilityAttr(line)
 	case "WarnUnusedResultAttr":

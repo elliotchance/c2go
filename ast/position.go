@@ -366,6 +366,8 @@ func setPosition(node Node, position Position) {
 		n.Pos = position
 	case *VarDecl:
 		n.Pos = position
+	case *VerbatimLineComment:
+		n.Pos = position
 	case *VisibilityAttr:
 		n.Pos = position
 	case *WarnUnusedResultAttr:
