@@ -136,7 +136,7 @@ int main()
         int x;
         int y;
     };
-    struct Point p = { .y = 2, .x = 3 };
+    struct Point p = {.y = 2, .x = 3 };
     is_eq(p.x, 3);
     is_eq(p.y, 2);
 
@@ -153,8 +153,8 @@ int main()
         } extCoord2;
 
         extCoord2 followingSteps[2] = {
-            { .possibleSteps2 = 1 },
-            { .possibleSteps2 = 1 },
+            {.possibleSteps2 = 1 },
+            {.possibleSteps2 = 1 },
         };
         is_eq(followingSteps[0].possibleSteps2, 1);
     }
@@ -170,8 +170,8 @@ int main()
         };
 
         struct extCoord followingSteps[2] = {
-            { .possibleSteps = 1 },
-            { .possibleSteps = 1 },
+            {.possibleSteps = 1 },
+            {.possibleSteps = 1 },
         };
         is_eq(followingSteps[0].possibleSteps, 1);
     }
