@@ -21,6 +21,17 @@ if [ -n "$(gofmt -l .)" ]; then
     exit 1
 fi
 
+# Install clang-format
+if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+	sudo apt-get update
+	sudo apt-cache search clang
+	sudo apt-get install  -f -y --force-yes clang-format-3.8
+fi
+
+# Version of clang-format
+echo "Version of clang-format:"
+eval "clang-format -version"
+
 # Check clang-format for C test source files
 C_TEST_FILES=`ls ./tests/*.c`
 for C_FILE in $C_TEST_FILES
