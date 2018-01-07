@@ -7,7 +7,7 @@
 
 void test_cast()
 {
-    int c[] = { (int)'a', (int)'b' };
+    int c[] = {(int)'a', (int)'b' };
     is_eq(c[0], 97);
 
     double d = (double)1;

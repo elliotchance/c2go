@@ -2,7 +2,7 @@
 
 set -e
 
-CLANG_FORMAT="clang-format-5.0"
+CLANG_FORMAT="clang-format-3.5"
 
 # Arguments menu
 echo "    -r rewrite C test files in according to code-style"

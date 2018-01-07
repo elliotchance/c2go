@@ -154,7 +154,7 @@ void test_calloc()
 
 void test_free()
 {
-    int *buffer1, *buffer2, *buffer3;
+    int* buffer1, *buffer2, *buffer3;
     buffer1 = (int*)malloc(100 * sizeof(int));
     buffer2 = (int*)calloc(100, sizeof(int));
     buffer3 = (int*)realloc(buffer2, 500 * sizeof(int));
