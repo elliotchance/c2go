@@ -119,8 +119,8 @@ int main()
     is_eq(FLY, 0);
     is_eq(JUMP, 1);
 
-    diag("sizeof")
-        is_eq(sizeof(JUMP), sizeof(int));
+    diag("sizeof");
+    is_eq(sizeof(JUMP), sizeof(int));
     is_eq(sizeof(Jan), sizeof(int));
 
     done_testing();

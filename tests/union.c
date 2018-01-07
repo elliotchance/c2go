@@ -1,18 +1,17 @@
 // Tests for unions.
 
-#include <stdio.h>
 #include "tests.h"
+#include <stdio.h>
 
-union programming
-{
+union programming {
     float constant;
-    char *pointer;
+    char* pointer;
 };
 
 union programming init_var()
 {
     union programming variable;
-    char *s = "Programming in Software Development.";
+    char* s = "Programming in Software Development.";
 
     variable.pointer = s;
     is_streq(variable.pointer, "Programming in Software Development.");
@@ -23,10 +22,10 @@ union programming init_var()
     return variable;
 }
 
-void pass_by_ref(union programming *addr)
+void pass_by_ref(union programming* addr)
 {
-    char *s = "Show string member.";
-    float v = 1.23+4.56;
+    char* s = "Show string member.";
+    float v = 1.23 + 4.56;
 
     addr->constant += 4.56;
     is_eq(addr->constant, v);
@@ -43,39 +42,38 @@ void var_by_val(union programming value)
 }
 
 struct SHA3 {
-  union {
-    double iY;
-    double dY;
-  } uY;
-  float ffY;
+    union {
+        double iY;
+        double dY;
+    } uY;
+    float ffY;
 };
 
 union unknown {
-  double i2;
-  double d2;
+    double i2;
+    double d2;
 };
 struct SHA32 {
-  union unknown u2;
-  float ff2;
+    union unknown u2;
+    float ff2;
 };
-
 
 void union_inside_struct()
 {
-	diag("Union inside struct")
-	struct SHA3 sha;
-	sha.ffY  = 12.444;
-	sha.uY.iY = 4;
-	is_eq(sha.uY.iY, 4);
-	is_eq(sha.uY.dY, 4);
-	is_eq(sha.ffY , 12.444);
+    diag("Union inside struct");
+    struct SHA3 sha;
+    sha.ffY = 12.444;
+    sha.uY.iY = 4;
+    is_eq(sha.uY.iY, 4);
+    is_eq(sha.uY.dY, 4);
+    is_eq(sha.ffY, 12.444);
 
-	struct SHA32 sha2;
-	sha2.ff2  = 12.444;
-	sha2.u2.i2 = 4;
-	is_eq(sha2.u2.i2, 4);
-	is_eq(sha2.u2.d2, 4);
-	is_eq(sha2.ff2 , 12.444);
+    struct SHA32 sha2;
+    sha2.ff2 = 12.444;
+    sha2.u2.i2 = 4;
+    is_eq(sha2.u2.i2, 4);
+    is_eq(sha2.u2.d2, 4);
+    is_eq(sha2.ff2, 12.444);
 }
 
 int main()
@@ -88,7 +86,7 @@ int main()
     var_by_val(variable);
     pass_by_ref(&variable);
 
-	union_inside_struct();
+    union_inside_struct();
 
     done_testing();
 }

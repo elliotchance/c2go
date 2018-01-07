@@ -1,75 +1,75 @@
+#include "tests.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "tests.h"
 
 #define test_strto0(actual, func, end) \
-    /* strtod */ \
-    func(strtod(actual, &endptr)); \
-    func(strtod(actual, NULL)); \
-    is_streq(endptr, end); \
-    /* strtof */ \
-    func(strtof(actual, &endptr)); \
-    func(strtof(actual, NULL)); \
-    is_streq(endptr, end); \
-    /* strtold */ \
-    func(strtold(actual, &endptr)); \
-    func(strtold(actual, NULL)); \
+    /* strtod */                       \
+    func(strtod(actual, &endptr));     \
+    func(strtod(actual, NULL));        \
+    is_streq(endptr, end);             \
+    /* strtof */                       \
+    func(strtof(actual, &endptr));     \
+    func(strtof(actual, NULL));        \
+    is_streq(endptr, end);             \
+    /* strtold */                      \
+    func(strtold(actual, &endptr));    \
+    func(strtold(actual, NULL));       \
     is_streq(endptr, end);
 
 #define test_strto1(actual, func, expected, end) \
-    /* strtod */ \
-    func(strtod(actual, &endptr), expected); \
-    func(strtod(actual, NULL), expected); \
-    is_streq(endptr, end); \
-    /* strtof */ \
-    func(strtof(actual, &endptr), expected); \
-    func(strtof(actual, NULL), expected); \
-    is_streq(endptr, end); \
-    /* strtold */ \
-    func(strtold(actual, &endptr), expected); \
-    func(strtold(actual, NULL), expected); \
+    /* strtod */                                 \
+    func(strtod(actual, &endptr), expected);     \
+    func(strtod(actual, NULL), expected);        \
+    is_streq(endptr, end);                       \
+    /* strtof */                                 \
+    func(strtof(actual, &endptr), expected);     \
+    func(strtof(actual, NULL), expected);        \
+    is_streq(endptr, end);                       \
+    /* strtold */                                \
+    func(strtold(actual, &endptr), expected);    \
+    func(strtold(actual, NULL), expected);       \
     is_streq(endptr, end);
 
-#define test_ato(actual, expected, end) \
-    /* atoi */ \
-    is_eq(atoi(actual), expected); \
-    /* atol */ \
-    is_eq(atol(actual), expected); \
-    /* atoll */ \
-    is_eq(atoll(actual), expected); \
-    /* strtol */ \
-    is_eq(strtol(actual, &endptr, 10), expected); \
-    is_streq(endptr, end); \
-    is_eq(strtol(actual, NULL, 10), expected); \
-    /* strtoll */ \
-    is_eq(strtoll(actual, &endptr, 10), expected); \
-    is_streq(endptr, end); \
-    is_eq(strtoll(actual, NULL, 10), expected); \
-    /* strtoul */ \
-    if (expected >= 0) { \
-        is_eq(strtoul(actual, &endptr, 10), expected); \
-        is_streq(endptr, end); \
-        is_eq(strtoul(actual, NULL, 10), expected); \
-    } \
-    /* strtoull */ \
-    if (expected >= 0) { \
+#define test_ato(actual, expected, end)                 \
+    /* atoi */                                          \
+    is_eq(atoi(actual), expected);                      \
+    /* atol */                                          \
+    is_eq(atol(actual), expected);                      \
+    /* atoll */                                         \
+    is_eq(atoll(actual), expected);                     \
+    /* strtol */                                        \
+    is_eq(strtol(actual, &endptr, 10), expected);       \
+    is_streq(endptr, end);                              \
+    is_eq(strtol(actual, NULL, 10), expected);          \
+    /* strtoll */                                       \
+    is_eq(strtoll(actual, &endptr, 10), expected);      \
+    is_streq(endptr, end);                              \
+    is_eq(strtoll(actual, NULL, 10), expected);         \
+    /* strtoul */                                       \
+    if (expected >= 0) {                                \
+        is_eq(strtoul(actual, &endptr, 10), expected);  \
+        is_streq(endptr, end);                          \
+        is_eq(strtoul(actual, NULL, 10), expected);     \
+    }                                                   \
+    /* strtoull */                                      \
+    if (expected >= 0) {                                \
         is_eq(strtoull(actual, &endptr, 10), expected); \
-        is_streq(endptr, end); \
-        is_eq(strtoull(actual, NULL, 10), expected); \
+        is_streq(endptr, end);                          \
+        is_eq(strtoull(actual, NULL, 10), expected);    \
     }
 
-#define test_strtol(actual, radix, expected, end) \
-    /* strtol */ \
-    is_eq(strtol(actual, &endptr, radix), expected); \
-    is_streq(endptr, end); \
-    /* strtoll */ \
-    is_eq(strtoll(actual, &endptr, radix), expected); \
-    is_streq(endptr, end); \
-    /* strtoul */ \
-    is_eq(strtoul(actual, &endptr, radix), expected); \
-    is_streq(endptr, end); \
-    /* strtoull */ \
+#define test_strtol(actual, radix, expected, end)      \
+    /* strtol */                                       \
+    is_eq(strtol(actual, &endptr, radix), expected);   \
+    is_streq(endptr, end);                             \
+    /* strtoll */                                      \
+    is_eq(strtoll(actual, &endptr, radix), expected);  \
+    is_streq(endptr, end);                             \
+    /* strtoul */                                      \
+    is_eq(strtoul(actual, &endptr, radix), expected);  \
+    is_streq(endptr, end);                             \
+    /* strtoull */                                     \
     is_eq(strtoull(actual, &endptr, radix), expected); \
     is_streq(endptr, end);
 
@@ -78,9 +78,9 @@ void test_malloc1()
     diag("malloc1");
 
     int i = 16, n;
-    char *buffer;
+    char* buffer;
 
-    buffer = (char *)malloc(i + 1);
+    buffer = (char*)malloc(i + 1);
     is_not_null(buffer) or_return();
 
     for (n = 0; n < i; n++)
@@ -95,8 +95,8 @@ void test_malloc2()
 {
     diag("malloc2");
 
-    int *p;
-    p = (int *)malloc(sizeof(int));
+    int* p;
+    p = (int*)malloc(sizeof(int));
     is_not_null(p) or_return();
 
     *p = 5;
@@ -115,8 +115,8 @@ void test_malloc3()
 
     // 10 ints, should be 5 doubles. Also use a bad cast to make sure that it
     // doesn't interfere with the types.
-    double *d;
-    d = (char *)malloc(sizeof(int) * 10);
+    double* d;
+    d = (char*)malloc(sizeof(int) * 10);
     is_not_null(d) or_return();
 
     // We can't test how much memory has been allocated by Go, but we can test
@@ -139,8 +139,8 @@ void test_calloc()
 
     // 10 ints, should be 5 doubles. Also use a bad cast to make sure that it
     // doesn't interfere with the types.
-    double *d;
-    d = (char *)calloc(10,sizeof(int));
+    double* d;
+    d = (char*)calloc(10, sizeof(int));
     is_not_null(d) or_return();
 
     // We can't test how much memory has been allocated by Go, but we can test
@@ -154,35 +154,34 @@ void test_calloc()
 
 void test_free()
 {
-	int * buffer1, * buffer2, * buffer3;
-	buffer1 = (int*) malloc (100*sizeof(int));
-	buffer2 = (int*) calloc (100,sizeof(int));
-	buffer3 = (int*) realloc (buffer2,500*sizeof(int));
-	int i = 0;
-	free ((i += 1, buffer1));
-	if (buffer2 != NULL){
-		i+=1;
-	}
-	if (i == 2)
-	{
-		free (buffer3);
-	  i++;
-	}
-	is_eq(i,3);
+    int *buffer1, *buffer2, *buffer3;
+    buffer1 = (int*)malloc(100 * sizeof(int));
+    buffer2 = (int*)calloc(100, sizeof(int));
+    buffer3 = (int*)realloc(buffer2, 500 * sizeof(int));
+    int i = 0;
+    free((i += 1, buffer1));
+    if (buffer2 != NULL) {
+        i += 1;
+    }
+    if (i == 2) {
+        free(buffer3);
+        i++;
+    }
+    is_eq(i, 3);
 }
 
 int main()
 {
     plan(742);
 
-    char *endptr;
+    char* endptr;
 
-    diag("abs")
+    diag("abs");
     is_eq(abs(-5), 5);
     is_eq(abs(7), 7);
     is_eq(abs(0), 0);
 
-    diag("atof")
+    diag("atof");
     is_eq(atof("123"), 123);
     is_eq(atof("1.23"), 1.23);
     is_eq(atof(""), 0);
@@ -239,7 +238,7 @@ int main()
     // This causes a segfault in C:
     // is_eq(atof(NULL), 0);
 
-    diag("atoi / atol / atoll / strtol / strtoll / strtoul")
+    diag("atoi / atol / atoll / strtol / strtoll / strtoul");
     test_ato("123", 123, "");
     test_ato("+456", 456, "");
     test_ato("-52", -52, "");
@@ -249,100 +248,100 @@ int main()
     test_ato(" \t", 0, " \t");
     test_ato("123abc", 123, "abc");
 
-    diag("div")
+    diag("div");
     {
         div_t result = div(17, 5);
-        is_eq(result.quot, 3)
-        is_eq(result.rem, 2)
+        is_eq(result.quot, 3);
+        is_eq(result.rem, 2);
 
         result = div(-17, 5);
-        is_eq(result.quot, -3)
-        is_eq(result.rem, -2)
+        is_eq(result.quot, -3);
+        is_eq(result.rem, -2);
 
         result = div(17, -5);
-        is_eq(result.quot, -3)
-        is_eq(result.rem, 2)
+        is_eq(result.quot, -3);
+        is_eq(result.rem, 2);
 
         result = div(-17, -5);
-        is_eq(result.quot, 3)
-        is_eq(result.rem, -2)
+        is_eq(result.quot, 3);
+        is_eq(result.rem, -2);
     }
 
-    diag("calloc")
+    diag("calloc");
     test_calloc();
 
     // exit() is handled in tests/exit.c
 
     // free() is handled with the malloc and calloc tests.
-	diag("free");
-	test_free();
+    diag("free");
+    test_free();
 
-    diag("getenv")
+    diag("getenv");
     is_not_null(getenv("PATH"));
     is_not_null(getenv("HOME"));
     is_null(getenv("FOOBAR"));
 
-    diag("labs")
+    diag("labs");
     is_eq(labs(-5), 5);
     is_eq(labs(7), 7);
     is_eq(labs(0), 0);
 
-    diag("ldiv")
+    diag("ldiv");
     {
         ldiv_t result = ldiv(17, 5);
-        is_eq(result.quot, 3)
-        is_eq(result.rem, 2)
+        is_eq(result.quot, 3);
+        is_eq(result.rem, 2);
 
         result = ldiv(-17, 5);
-        is_eq(result.quot, -3)
-        is_eq(result.rem, -2)
+        is_eq(result.quot, -3);
+        is_eq(result.rem, -2);
 
         result = ldiv(17, -5);
-        is_eq(result.quot, -3)
-        is_eq(result.rem, 2)
+        is_eq(result.quot, -3);
+        is_eq(result.rem, 2);
 
         result = ldiv(-17, -5);
-        is_eq(result.quot, 3)
-        is_eq(result.rem, -2)
+        is_eq(result.quot, 3);
+        is_eq(result.rem, -2);
     }
 
-    diag("llabs")
+    diag("llabs");
     is_eq(llabs(-5), 5);
     is_eq(llabs(7), 7);
     is_eq(llabs(0), 0);
 
-    diag("lldiv")
+    diag("lldiv");
     {
         lldiv_t result = lldiv(17, 5);
-        is_eq(result.quot, 3)
-        is_eq(result.rem, 2)
+        is_eq(result.quot, 3);
+        is_eq(result.rem, 2);
 
         result = lldiv(-17, 5);
-        is_eq(result.quot, -3)
-        is_eq(result.rem, -2)
+        is_eq(result.quot, -3);
+        is_eq(result.rem, -2);
 
         result = lldiv(17, -5);
-        is_eq(result.quot, -3)
-        is_eq(result.rem, 2)
+        is_eq(result.quot, -3);
+        is_eq(result.rem, 2);
 
         result = lldiv(-17, -5);
-        is_eq(result.quot, 3)
-        is_eq(result.rem, -2)
+        is_eq(result.quot, 3);
+        is_eq(result.rem, -2);
     }
 
-    diag("malloc")
+    diag("malloc");
     test_malloc1();
     test_malloc2();
     test_malloc3();
 
-    diag("rand")
+    diag("rand");
     int i, nextRand, lastRand = rand();
     for (i = 0; i < 10; ++i) {
         nextRand = rand();
         is_not_eq(lastRand, nextRand)
     }
 
-    diag("srand")
+    diag("srand");
     srand(0);
     lastRand = rand();
     for (i = 0; i < 10; ++i) {
@@ -360,11 +359,11 @@ int main()
     int b2 = rand();
     int b3 = rand();
 
-    is_eq(a1, b1)
-    is_eq(a2, b2)
-    is_eq(a3, b3)
+    is_eq(a1, b1);
+    is_eq(a2, b2);
+    is_eq(a3, b3);
 
-    diag("strtod / strtof / strtold")
+    diag("strtod / strtof / strtold");
     test_strto1("123", is_eq, 123, "");
     test_strto1("1.23", is_eq, 1.23, "");
     test_strto1("", is_eq, 0, "");
@@ -425,7 +424,7 @@ int main()
     // This causes a segfault in C:
     //     test_strtod1(NULL, is_eq, 0, "");
 
-    diag("strtol / strtoll / strtoul / strtoull")
+    diag("strtol / strtoll / strtoul / strtoull");
     test_strtol("123", 8, 83, "");
     test_strtol("123abc", 16, 1194684, "");
     test_strtol("123abc", 8, 83, "abc");

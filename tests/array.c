@@ -179,7 +179,8 @@ int main()
 
     is_eq(arrayEx[1], 2.0);
 
-    diag("Array arithmetic") float a[5];
+    diag("Array arithmetic");
+    float a[5];
     a[0] = 42.;
     is_eq(a[0], 42.);
     a[0 + 1] = 42.;
@@ -224,7 +225,7 @@ int main()
         (void)(rrr);
     }
 
-    diag("Pointer arithmetic. Part 2")
+    diag("Pointer arithmetic. Part 2");
     {
         float* arr;
         arr = (float*)calloc(1 + 1, sizeof(float));
@@ -250,27 +251,25 @@ int main()
         (void)(arr);
     }
 
-    diag("Pointer to Pointer. 1")
+    diag("Pointer to Pointer. 1");
     {
         double Var = 42;
         double** PPptr1;
         double* PPptr2;
         PPptr2 = &Var;
         PPptr1 = &PPptr2;
-        is_eq(**PPptr1, Var)
-            Var
-            = 43;
+        is_eq(**PPptr1, Var);
+        Var = 43;
         is_eq (**PPptr1, Var)(void)(PPptr1);
         (void)(PPptr2);
     }
-    diag("Pointer to Pointer. 2")
+    diag("Pointer to Pointer. 2");
     {
         double Var = 42.0, **PPptr1, *PPptr2;
         PPptr2 = &Var;
         PPptr1 = &PPptr2;
-        is_eq(**PPptr1, Var)
-            Var
-            = 43.0;
+        is_eq(**PPptr1, Var);
+        Var = 43.0;
         is_eq (**PPptr1, Var)(void)(PPptr1);
         (void)(PPptr2);
     }

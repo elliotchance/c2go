@@ -79,7 +79,7 @@ int main()
     char* c2 = 0;
     is_true(c2 == NULL);
 
-    diag("Calloc with type")
+    diag("Calloc with type");
     {
         double* ddd = (double*)calloc(2, sizeof(double));
         is_not_null(ddd);
@@ -92,7 +92,7 @@ int main()
         (void)(ddd);
     }
 
-    diag("Type convertion from void* to ...")
+    diag("Type convertion from void* to ...");
     {
         void* ptr2;
         int tInt = 55;
@@ -104,7 +104,7 @@ int main()
         float tFloat = 67;
         is_eq(*(float*)(&tFloat), 67);
     }
-    diag("Type convertion from void* to ... in initialization")
+    diag("Type convertion from void* to ... in initialization");
     {
         long tLong = 556;
         void* ptr3 = &tLong;

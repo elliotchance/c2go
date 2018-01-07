@@ -1,5 +1,5 @@
-#include <stdio.h>
 #include "tests.h"
+#include <stdio.h>
 
 #define START_TEST(t) \
     diag(#t);         \
@@ -24,7 +24,7 @@ void test_notint()
 
 void test_notptr()
 {
-    FILE *fp = NULL;
+    FILE* fp = NULL;
     if (!fp) {
         pass("good");
     } else {
