@@ -66,6 +66,8 @@ func Parse(fullline string) Node {
 		return parseAvailabilityAttr(line)
 	case "BinaryOperator":
 		return parseBinaryOperator(line)
+	case "BlockCommandComment":
+		return parseBlockCommandComment(line)
 	case "BreakStmt":
 		return parseBreakStmt(line)
 	case "BuiltinType":

@@ -232,6 +232,8 @@ func setPosition(node Node, position Position) {
 		n.Pos = position
 	case *BinaryOperator:
 		n.Pos = position
+	case *BlockCommandComment:
+		n.Pos = position
 	case *BreakStmt:
 		n.Pos = position
 	case *CallExpr:
