@@ -178,6 +178,8 @@ func Parse(fullline string) Node {
 		return parsePackedAttr(line)
 	case "ParagraphComment":
 		return parseParagraphComment(line)
+	case "ParamCommandComment":
+		return parseParamCommandComment(line)
 	case "ParenExpr":
 		return parseParenExpr(line)
 	case "ParenType":

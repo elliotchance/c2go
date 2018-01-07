@@ -328,6 +328,8 @@ func setPosition(node Node, position Position) {
 		n.Pos = position
 	case *ParagraphComment:
 		n.Pos = position
+	case *ParamCommandComment:
+		n.Pos = position
 	case *ParenExpr:
 		n.Pos = position
 	case *ParmVarDecl:
