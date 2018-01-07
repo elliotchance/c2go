@@ -126,10 +126,16 @@ func Parse(fullline string) Node {
 		return parseFormatAttr(line)
 	case "FunctionDecl":
 		return parseFunctionDecl(line)
+	case "FullComment":
+		return parseFullComment(line)
 	case "FunctionProtoType":
 		return parseFunctionProtoType(line)
 	case "ForStmt":
 		return parseForStmt(line)
+	case "HTMLStartTagComment":
+		return parseHTMLStartTagComment(line)
+	case "HTMLEndTagComment":
+		return parseHTMLEndTagComment(line)
 	case "GCCAsmStmt":
 		return parseGCCAsmStmt(line)
 	case "GotoStmt":
@@ -168,6 +174,8 @@ func Parse(fullline string) Node {
 		return parseOffsetOfExpr(line)
 	case "PackedAttr":
 		return parsePackedAttr(line)
+	case "ParagraphComment":
+		return parseParagraphComment(line)
 	case "ParenExpr":
 		return parseParenExpr(line)
 	case "ParenType":
@@ -202,6 +210,8 @@ func Parse(fullline string) Node {
 		return parseStringLiteral(line)
 	case "SwitchStmt":
 		return parseSwitchStmt(line)
+	case "TextComment":
+		return parseTextComment(line)
 	case "TranslationUnitDecl":
 		return parseTranslationUnitDecl(line)
 	case "TransparentUnionAttr":

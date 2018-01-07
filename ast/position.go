@@ -278,11 +278,17 @@ func setPosition(node Node, position Position) {
 		n.Pos = position
 	case *FormatAttr:
 		n.Pos = position
+	case *FullComment:
+		n.Pos = position
 	case *FunctionDecl:
 		n.Pos = position
 	case *ForStmt:
 		n.Pos = position
 	case *GCCAsmStmt:
+		n.Pos = position
+	case *HTMLStartTagComment:
+		n.Pos = position
+	case *HTMLEndTagComment:
 		n.Pos = position
 	case *GotoStmt:
 		n.Pos = position
@@ -318,6 +324,8 @@ func setPosition(node Node, position Position) {
 		n.Pos = position
 	case *PackedAttr:
 		n.Pos = position
+	case *ParagraphComment:
+		n.Pos = position
 	case *ParenExpr:
 		n.Pos = position
 	case *ParmVarDecl:
@@ -341,6 +349,8 @@ func setPosition(node Node, position Position) {
 	case *StringLiteral:
 		n.Pos = position
 	case *SwitchStmt:
+		n.Pos = position
+	case *TextComment:
 		n.Pos = position
 	case *TransparentUnionAttr:
 		n.Pos = position
