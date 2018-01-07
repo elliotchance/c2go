@@ -82,7 +82,7 @@ void test_structarr()
     is_eq(a[1].i, 2);
     is_eq(a[1].c, 'b');
 
-    struct s b[] = {(struct s){ 1, 'a' }, (struct s){ 2, 'b' } };
+    struct s b[] = { (struct s){ 1, 'a' }, (struct s){ 2, 'b' } };
     is_eq(b[0].i, 1);
     is_eq(b[0].c, 'a');
     is_eq(b[1].i, 2);
@@ -107,7 +107,7 @@ void test_multidim()
 
     // omit array length
     int b[][3][2] = { { { 1, 2 }, { 3, 4 }, { 5, 6 } },
-                      { { 6, 5 }, { 4, 3 }, { 2, 1 } } };
+        { { 6, 5 }, { 4, 3 }, { 2, 1 } } };
     is_eq(b[1][1][0], 4);
     // 2 * 3 * 2 * sizeof(int32)
     is_eq(sizeof(b), 48);

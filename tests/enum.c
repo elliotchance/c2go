@@ -2,9 +2,9 @@
 #include <stdio.h>
 
 enum number { zero,
-              one,
-              two,
-              three };
+    one,
+    two,
+    three };
 
 enum {
     _ISupper = ((0) < 8 ? ((1 << (0)) << 8) : ((1 << (0)) >> 8)),
@@ -12,38 +12,38 @@ enum {
 };
 
 enum year { Jan,
-            Feb,
-            Mar,
-            Apr,
-            May,
-            Jun,
-            Jul,
-            Aug,
-            Sep,
-            Oct,
-            Nov,
-            Dec };
+    Feb,
+    Mar,
+    Apr,
+    May,
+    Jun,
+    Jul,
+    Aug,
+    Sep,
+    Oct,
+    Nov,
+    Dec };
 
 enum State { Working = 1,
-             Failed = 0,
-             Freezed = 0 };
+    Failed = 0,
+    Freezed = 0 };
 
 enum day { sunday = 1,
-           monday,
-           tuesday = 5,
-           wednesday,
-           thursday = 10,
-           friday,
-           saturday };
+    monday,
+    tuesday = 5,
+    wednesday,
+    thursday = 10,
+    friday,
+    saturday };
 
 enum state { WORKING = 0,
-             FAILED,
-             FREEZED };
+    FAILED,
+    FREEZED };
 enum state currState = 2;
 enum state FindState() { return currState; }
 
 enum { FLY,
-       JUMP };
+    JUMP };
 // TYPEDEF
 
 typedef enum {
@@ -53,8 +53,8 @@ typedef enum {
 } T_ENUM;
 
 typedef enum e_strategy { RANDOM,
-                          IMMEDIATE = 5,
-                          SEARCH } strategy;
+    IMMEDIATE = 5,
+    SEARCH } strategy;
 
 // main function
 

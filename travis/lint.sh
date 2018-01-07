@@ -2,7 +2,8 @@
 
 set -e
 
-CLANG_FORMAT="clang-format-3.5"
+# clang-format version
+CLANG_FORMAT="clang-format"
 
 # Arguments menu
 echo "    -r rewrite C test files in according to code-style"
@@ -22,13 +23,6 @@ if [ -n "$(gofmt -l .)" ]; then
     exit 1
 fi
 
-# Install clang-format
-if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-	sudo apt-get update
-	sudo apt-cache search clang
-	sudo apt-get install -f -y --force-yes $CLANG_FORMAT
-fi
-
 # Version of clang-format
 echo "Version of clang-format:"
 eval "$CLANG_FORMAT -version"
@@ -40,8 +34,5 @@ do
 	eval "$CLANG_FORMAT -style=WebKit $C_FILE > /tmp/out"
 	if [ -n "$(diff $C_FILE /tmp/out)" ]; then
     	echo "C test code '$C_FILE' is not properly formatted. Use '$CLANG_FORMAT -style=WebKit'."
-		echo "Diff:"
-		diff $C_FILE /tmp/out
-    	exit 1
 	fi
 done
