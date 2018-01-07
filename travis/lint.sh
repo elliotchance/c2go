@@ -2,7 +2,7 @@
 
 set -e
 
-CLANG_FORMAT="clang-format-3.8"
+CLANG_FORMAT="clang-format-5.0"
 
 # Arguments menu
 echo "    -r rewrite C test files in according to code-style"
@@ -20,6 +20,13 @@ if [ -n "$(gofmt -l .)" ]; then
     echo "Go code is not properly formatted. Use 'gofmt'."
     gofmt -d .
     exit 1
+fi
+
+# Install clang-format
+if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+	sudo apt-get update
+	sudo apt-cache search clang
+	sudo apt-get install -f -y --force-yes $CLANG_FORMAT
 fi
 
 # Version of clang-format
