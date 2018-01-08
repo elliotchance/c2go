@@ -262,8 +262,8 @@ func (p *Program) String() string {
 
 	buf.WriteString(`/* Package main - transpiled by c2go
 
-	If you found any issue, then please connect to
-	maintainers - https://github.com/elliotchance/c2go/
+	If you have found any issues, please raise an issue at:
+	https://github.com/elliotchance/c2go/
 */
 
 `)
