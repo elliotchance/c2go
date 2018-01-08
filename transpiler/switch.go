@@ -13,9 +13,12 @@ import (
 )
 
 func transpileSwitchStmt(n *ast.SwitchStmt, p *program.Program) (
-	*goast.SwitchStmt, []goast.Stmt, []goast.Stmt, error) {
-	preStmts := []goast.Stmt{}
-	postStmts := []goast.Stmt{}
+	_ *goast.SwitchStmt, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot transpileSwitchStmt : err = %v", err)
+		}
+	}()
 
 	// The first two children are nil. I don't know what they are supposed to be
 	// for. It looks like the number of children is also not reliable, but we
@@ -36,9 +39,82 @@ func transpileSwitchStmt(n *ast.SwitchStmt, p *program.Program) (
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
+	// separation body of switch on cases
+	body := n.Children()[len(n.Children())-1].(*ast.CompoundStmt)
+
+	// solving switch case without body
+	// case -1:
+	// default: ...
+checkAgain:
+	for i := range body.Children() {
+		if v, ok := body.Children()[i].(*ast.CaseStmt); ok {
+			if vv, ok := v.Children()[len(v.Children())-1].(*ast.CaseStmt); ok {
+				body.AddChild(vv)
+				v.Children()[len(v.Children())-1] = &ast.CompoundStmt{}
+				goto checkAgain
+			}
+			if vv, ok := v.Children()[len(v.Children())-1].(*ast.DefaultStmt); ok {
+				body.AddChild(vv)
+				v.Children()[len(v.Children())-1] = &ast.CompoundStmt{}
+				goto checkAgain
+			}
+		}
+	}
+
+	for i := range body.Children() {
+		// For simplification - each CaseStmt will have CompoundStmt
+		if v, ok := body.Children()[i].(*ast.CaseStmt); ok {
+			if _, ok := v.Children()[len(v.Children())-1].(*ast.CompoundStmt); !ok {
+				var compoundStmt ast.CompoundStmt
+				compoundStmt.AddChild(v.Children()[len(v.Children())-1])
+				v.Children()[len(v.Children())-1] = &compoundStmt
+			}
+		}
+		// For simplification - each DefaultStmt will have CompoundStmt
+		if v, ok := body.Children()[i].(*ast.DefaultStmt); ok {
+			if _, ok := v.Children()[len(v.Children())-1].(*ast.CompoundStmt); !ok {
+				var compoundStmt ast.CompoundStmt
+				compoundStmt.AddChild(v.Children()[len(v.Children())-1])
+				v.Children()[len(v.Children())-1] = &compoundStmt
+			}
+		}
+	}
+
+	// Move element inside CompoundStmt
+	for i := 0; i < len(body.Children()); i++ {
+		switch body.Children()[i].(type) {
+		case *ast.CaseStmt, *ast.DefaultStmt:
+			// do nothing
+		default:
+			if i != 0 {
+				lastStmt := body.Children()[i-1].Children()
+				if comp, ok := lastStmt[len(lastStmt)-1].(*ast.CompoundStmt); ok {
+					// add node in CompoundStmt
+					comp.AddChild(body.Children()[i])
+
+					// remove from body
+					if i+1 < len(body.Children()) {
+						body.ChildNodes = append(body.ChildNodes[:i], body.ChildNodes[i+1:]...)
+					} else {
+						body.ChildNodes = body.ChildNodes[:i]
+					}
+
+					// goto to last iteration
+					i--
+				} else {
+					p.AddMessage(p.GenerateWarningMessage(
+						fmt.Errorf("Unexpected element"), n))
+				}
+			} else {
+				p.AddMessage(p.GenerateWarningMessage(
+					fmt.Errorf("Unsupport case"), n))
+			}
+
+		}
+	}
+
 	// The body will always be a CompoundStmt because a switch statement is not
 	// valid without curly brackets.
-	body := n.Children()[len(n.Children())-1].(*ast.CompoundStmt)
 	cases, newPre, newPost, err := normalizeSwitchCases(body, p)
 	if err != nil {
 		return nil, nil, nil, err
