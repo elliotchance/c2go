@@ -89,8 +89,8 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 					switch v.Name {
 					case "noarch", "darwin", "linux",
 						"math":
-						p.FunctionDeclareted[functionNameForDefer] = true
-						p.FunctionDeclareted[functionNameForDefer] = true
+						p.FunctionDeclared[functionNameForDefer] = true
+						p.FunctionDeclared[functionNameForDefer] = true
 					}
 				}
 			}

@@ -60,7 +60,7 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (decls []goa
 	defer func() {
 		if len(decls) > 0 {
 			// Registration declareted function in program
-			p.FunctionDeclareted[n.Name] = true
+			p.FunctionDeclared[n.Name] = true
 		}
 	}()
 
