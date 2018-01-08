@@ -10,13 +10,12 @@
 // CompoundStmt. For example, the first switch statement below contains a
 // CompoundStmt with 12 children.
 
-#include <stdio.h>
 #include "tests.h"
+#include <stdio.h>
 
 void match_a_single_case()
 {
-    switch (1)
-    {
+    switch (1) {
     case 0:
         fail("code should not reach here");
         break;
@@ -34,8 +33,7 @@ void match_a_single_case()
 
 void fallthrough_to_next_case()
 {
-    switch (1)
-    {
+    switch (1) {
     case 0:
         fail("code should not reach here");
         break;
@@ -52,8 +50,7 @@ void fallthrough_to_next_case()
 
 void match_no_cases()
 {
-    switch (1)
-    {
+    switch (1) {
     case 5:
         fail("code should not reach here");
         break;
@@ -65,8 +62,7 @@ void match_no_cases()
 
 void match_default()
 {
-    switch (1)
-    {
+    switch (1) {
     case 5:
         fail("code should not reach here");
         break;
@@ -81,8 +77,7 @@ void match_default()
 
 void fallthrough_several_cases_including_default()
 {
-    switch (1)
-    {
+    switch (1) {
     case 0:
         fail("code should not reach here");
     case 1:
@@ -96,25 +91,20 @@ void fallthrough_several_cases_including_default()
 
 void scoped_match_a_single_case()
 {
-    switch (1)
-    {
-    case 0:
-    {
+    switch (1) {
+    case 0: {
         fail("code should not reach here");
         break;
     }
-    case 1:
-    {
+    case 1: {
         pass(__func__);
         break;
     }
-    case 2:
-    {
+    case 2: {
         fail("code should not reach here");
         break;
     }
-    default:
-    {
+    default: {
         fail("code should not reach here");
         break;
     }
@@ -123,24 +113,19 @@ void scoped_match_a_single_case()
 
 void scoped_fallthrough_to_next_case()
 {
-    switch (1)
-    {
-    case 0:
-    {
+    switch (1) {
+    case 0: {
         fail("code should not reach here");
         break;
     }
-    case 1:
-    {
+    case 1: {
         pass(__func__);
     }
-    case 2:
-    {
+    case 2: {
         pass(__func__);
         break;
     }
-    default:
-    {
+    default: {
         fail("code should not reach here");
         break;
     }
@@ -149,15 +134,12 @@ void scoped_fallthrough_to_next_case()
 
 void scoped_match_no_cases()
 {
-    switch (1)
-    {
-    case 5:
-    {
+    switch (1) {
+    case 5: {
         fail("code should not reach here");
         break;
     }
-    case 2:
-    {
+    case 2: {
         fail("code should not reach here");
         break;
     }
@@ -166,20 +148,16 @@ void scoped_match_no_cases()
 
 void scoped_match_default()
 {
-    switch (1)
-    {
-    case 5:
-    {
+    switch (1) {
+    case 5: {
         fail("code should not reach here");
         break;
     }
-    case 2:
-    {
+    case 2: {
         fail("code should not reach here");
         break;
     }
-    default:
-    {
+    default: {
         pass(__func__);
         break;
     }
@@ -188,22 +166,17 @@ void scoped_match_default()
 
 void scoped_fallthrough_several_cases_including_default()
 {
-    switch (1)
-    {
-    case 0:
-    {
+    switch (1) {
+    case 0: {
         fail("code should not reach here");
     }
-    case 1:
-    {
+    case 1: {
         pass(__func__);
     }
-    case 2:
-    {
+    case 2: {
         pass(__func__);
     }
-    default:
-    {
+    default: {
         pass(__func__);
     }
     }

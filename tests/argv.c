@@ -1,9 +1,9 @@
 // This file contains tests for the system arguments (argv).
 
-#include <stdio.h>
 #include "tests.h"
+#include <stdio.h>
 
-int main(int argc, const char **argv)
+int main(int argc, const char** argv)
 {
     plan(2);
 

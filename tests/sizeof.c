@@ -1,7 +1,7 @@
 // This file contains tests for the sizeof() function and operator.
 
-#include <stdio.h>
 #include "tests.h"
+#include <stdio.h>
 
 #define check_sizes(type, size)         \
     is_eq(sizeof(type), size);          \
@@ -21,15 +21,13 @@
 #define VARIABLE(v, p) \
     printf("%s = (%d) %d bytes\n", #v, p, sizeof(v));
 
-struct MyStruct
-{
+struct MyStruct {
     double a;
     char b;
     char c;
 };
 
-union MyUnion
-{
+union MyUnion {
     double a;
     char b;
     int c;
@@ -57,9 +55,9 @@ int main()
     is_eq(sizeof(void), 1);
 
     diag("Pointers");
-    is_eq(sizeof(char *), 8);
-    is_eq(sizeof(char *), 8);
-    is_eq(sizeof(short **), 8);
+    is_eq(sizeof(char*), 8);
+    is_eq(sizeof(char*), 8);
+    is_eq(sizeof(short**), 8);
 
     diag("Variables");
     a = 123;
@@ -84,19 +82,19 @@ int main()
     is_eq(sizeof(main), 1);
 
     diag("Arrays");
-    char c[3] = {'a', 'b', 'c'};
+    char c[3] = { 'a', 'b', 'c' };
     c[0] = 'a';
     is_eq(sizeof(c), 3);
 
-    int *d[3];
+    int* d[3];
     d[0] = &b;
     is_eq(sizeof(d), 24);
 
-    int **e[4];
+    int** e[4];
     e[0] = d;
     is_eq(sizeof(e), 32);
 
-    const char * const f[] = {"a", "b", "c", "d", "e", "f"};
+    const char* const f[] = { "a", "b", "c", "d", "e", "f" };
     is_eq(sizeof(f), 48);
     is_streq(f[1], "b");
 

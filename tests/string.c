@@ -1,32 +1,32 @@
-#include <string.h>
 #include "tests.h"
+#include <string.h>
 
 int main()
 {
     plan(25);
 
-    diag("TODO: __builtin_object_size")
+    diag("TODO: __builtin_object_size");
     // https://github.com/elliotchance/c2go/issues/359
 
     {
-        diag("strcpy")
-        char *src = "foo bar\0baz";
+        diag("strcpy");
+        char* src = "foo bar\0baz";
         char dest1[40];
-        char *dest2;
+        char* dest2;
         dest2 = strcpy(dest1, src);
         is_streq(dest1, "foo bar");
         is_streq(dest2, "foo bar");
     }
 
-    diag("strncpy")
+    diag("strncpy");
 
     // If the end of the source C string (which is signaled by a null-character)
     // is found before num characters have been copied, destination is padded
     // with zeros until a total of num characters have been written to it.
     {
-        char *src = "foo bar\0baz";
+        char* src = "foo bar\0baz";
         char dest1[40];
-        char *dest2;
+        char* dest2;
 
         dest1[7] = 'a';
         dest1[15] = 'b';
@@ -52,9 +52,9 @@ int main()
     // considered a null terminated C string (reading it as such would
     // overflow).
     {
-        char *src = "foo bar\0baz";
+        char* src = "foo bar\0baz";
         char dest1[40];
-        char *dest2;
+        char* dest2;
 
         dest1[7] = 'a';
         dest1[15] = 'b';
@@ -73,7 +73,7 @@ int main()
     }
 
     {
-        diag("strlen")
+        diag("strlen");
         is_eq(strlen(""), 0);
         is_eq(strlen("a"), 1);
         is_eq(strlen("foo"), 3);
@@ -81,15 +81,15 @@ int main()
         // is_eq(strlen(NULL), 0);
         is_eq(strlen("fo\0o"), 2);
     }
-	{
-		diag("strcat")
-		char str[80];
-		strcpy (str,"these ");
-		strcat (str,"strings ");
-		strcat (str,"are ");
-		strcat (str,"concatenated.");
-		is_streq(str,"these strings are concatenated.");
-	}
+    {
+        diag("strcat");
+        char str[80];
+        strcpy(str, "these ");
+        strcat(str, "strings ");
+        strcat(str, "are ");
+        strcat(str, "concatenated.");
+        is_streq(str, "these strings are concatenated.");
+    }
 
     done_testing();
 }

@@ -6,9 +6,11 @@
 
 #include "tests.h"
 
-__inline__ unsigned long sqlite3Hwtime1(void){
+__inline__ unsigned long sqlite3Hwtime1(void)
+{
     unsigned int lo, hi;
-    __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
+    __asm__ __volatile__("rdtsc"
+                         : "=a"(lo), "=d"(hi));
     return (unsigned long)hi << 32 | lo;
 }
 
@@ -20,13 +22,16 @@ __inline__ unsigned long sqlite3Hwtime1(void){
 //    }
 //}
 
-__inline__ unsigned long sqlite3Hwtime3(void){
+__inline__ unsigned long sqlite3Hwtime3(void)
+{
     unsigned long val;
-    __asm__ __volatile__ ("rdtsc" : "=A" (val));
+    __asm__ __volatile__("rdtsc"
+                         : "=A"(val));
     return val;
 }
 
-int main() {
+int main()
+{
     // There are no actual tests in this file because Go does not support inline
     // assembly. We will have to revisit this in the future.
     plan(0);
