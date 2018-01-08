@@ -328,7 +328,7 @@ func (p *Program) String() string {
 	// }) (c2goDefaultReturn int) {
 	// After :
 	// func compare(a interface {}, b interface {}) (c2goDefaultReturn int) {
-	reg := util.GetRegex("{(\r*)\n(\t*)}")
+	reg := util.GetRegex("interface( )?{(\r*)\n(\t*)}")
 
-	return string(reg.ReplaceAll(buf.Bytes(), []byte("{}")))
+	return string(reg.ReplaceAll(buf.Bytes(), []byte("interface {}")))
 }
