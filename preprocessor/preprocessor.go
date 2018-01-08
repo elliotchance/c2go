@@ -130,17 +130,6 @@ func Analyze(inputFiles, clangFlags []string) (pp []byte, comments []program.Com
 	return
 }
 
-func isPreprocessorWord(line string) bool {
-	preprocessorWords := []string{"#pragma", "#elif", "#define", "# define"}
-	for i := range preprocessorWords {
-		length := len(preprocessorWords[i])
-		if len(line) >= length && line[0:length] == preprocessorWords[i] {
-			return true
-		}
-	}
-	return false
-}
-
 // analyzeFiles - analyze single file and separation preprocessor code to part
 func analyzeFiles(inputFiles, clangFlags []string) (items []entity, err error) {
 	// See : https://clang.llvm.org/docs/CommandGuide/clang.html
@@ -159,10 +148,11 @@ func analyzeFiles(inputFiles, clangFlags []string) (items []entity, err error) {
 	// item, items - entity of preprocess file
 	var item *entity
 
+	reg := util.GetRegex("# (\\d+) \".*\".*")
+
 	for scanner.Scan() {
 		line := scanner.Text()
-		if len(line) > 0 && line[0] == '#' &&
-			(!isPreprocessorWord(line)) {
+		if reg.MatchString(line) {
 			if item != (*entity)(nil) {
 				items = append(items, *item)
 			}
