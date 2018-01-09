@@ -175,7 +175,7 @@ func TestParseComments(t *testing.T) {
 			for j := range testCases[i].code {
 				testCases[i].ent.lines = append(testCases[i].ent.lines, &testCases[i].code[j])
 			}
-			testCases[i].ent.ParseComments(&result)
+			testCases[i].ent.parseComments(&result)
 			if len(result) != len(testCases[i].comments) {
 				t.Fatalf("Size of comments is not same\nresult = '%d'\nexpect = '%d'",
 					len(result),
