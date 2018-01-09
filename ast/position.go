@@ -334,6 +334,8 @@ func setPosition(node Node, position Position) {
 		n.Pos = position
 	case *ReturnsTwiceAttr:
 		n.Pos = position
+	case *SentinelAttr:
+		n.Pos = position
 	case *StmtExpr:
 		n.Pos = position
 	case *StringLiteral:

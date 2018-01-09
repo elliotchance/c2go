@@ -1,5 +1,6 @@
 package ast
 
+// ParenExpr is expression.
 type ParenExpr struct {
 	Addr       Address
 	Pos        Position

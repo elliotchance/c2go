@@ -60,16 +60,121 @@ func GetArrayTypeAndSize(s string) (string, int) {
 //    a bug. It is most useful to do this when dealing with compound types like
 //    FILE where those function probably exist (or should exist) in the noarch
 //    package.
-func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (goast.Expr, error) {
+func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (_ goast.Expr, err2 error) {
+	defer func() {
+		if err2 != nil {
+			err2 = fmt.Errorf("Cannot casting {%s -> %s}. err = %v", cFromType, cToType, err2)
+		}
+	}()
 	cFromType = CleanCType(cFromType)
 	cToType = CleanCType(cToType)
 
 	fromType := cFromType
 	toType := cToType
 
-	// C null pointer can cast to any pointer
-	if cFromType == NullPointer && cToType[len(cToType)-1] == '*' {
+	if cFromType == cToType {
 		return expr, nil
+	}
+
+	// Function casting
+	// Example :
+	// cFromType  : double (int, float, double)
+	// cToType    : double (*)(int, float, double)
+	if IsFunction(cFromType) {
+		return expr, nil
+	}
+
+	// Exceptions for stdout, stdin, stderr
+	if fromType == "FILE *" && toType == "struct _IO_FILE *" {
+		return expr, nil
+	}
+	if fromType == "struct _IO_FILE *" && toType == "FILE *" {
+		return expr, nil
+	}
+
+	// casting
+	if fromType == "void *" && toType[len(toType)-1] == '*' && !strings.Contains(toType, "FILE") && toType[len(toType)-2] != '*' {
+		toType = strings.Replace(toType, "*", " ", -1)
+		t, err := ResolveType(p, toType)
+		if err != nil {
+			return nil, err
+		}
+		return &goast.TypeAssertExpr{
+			X:      expr,
+			Lparen: 1,
+			Type: &goast.ArrayType{
+				Lbrack: 1,
+				Elt:    util.NewIdent(t),
+			}}, nil
+	}
+
+	// registration type _Bool in program
+	if cFromType == "_Bool" {
+		p.TypedefType["_Bool"] = "int"
+	}
+	if cToType == "_Bool" {
+		p.TypedefType["_Bool"] = "int"
+	}
+
+	// Checking registated typedef types in program
+	if v, ok := p.TypedefType[toType]; ok {
+		if fromType == v {
+			toType, err := ResolveType(p, toType)
+			if err != nil {
+				return expr, err
+			}
+
+			return &goast.CallExpr{
+				Fun: &goast.Ident{
+					Name: toType,
+				},
+				Lparen: 1,
+				Args: []goast.Expr{
+					&goast.ParenExpr{
+						Lparen: 1,
+						X:      expr,
+						Rparen: 2,
+					},
+				},
+				Rparen: 2,
+			}, nil
+		}
+		e, err := CastExpr(p, expr, fromType, v)
+		if err != nil {
+			return nil, err
+		}
+		return CastExpr(p, e, v, toType)
+	}
+	if v, ok := p.TypedefType[fromType]; ok {
+		t, err := ResolveType(p, v)
+		if err != nil {
+			return expr, err
+		}
+		expr = &goast.CallExpr{
+			Fun: &goast.Ident{
+				Name: t,
+			},
+			Lparen: 1,
+			Args: []goast.Expr{
+				&goast.ParenExpr{
+					Lparen: 1,
+					X:      expr,
+					Rparen: 2,
+				},
+			},
+			Rparen: 2,
+		}
+		if toType == v {
+			return expr, nil
+		}
+		return CastExpr(p, expr, v, toType)
+	}
+
+	// C null pointer can cast to any pointer
+	if cFromType == NullPointer && len(cToType) > 0 {
+		if cToType[len(cToType)-1] == '*' {
+			return expr, nil
+		}
 	}
 
 	// Replace for specific case of fromType for darwin:
@@ -278,7 +383,7 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (g
 		return util.NewStringLit(`""`), nil
 	}
 
-	if fromType == "_Bool" && toType == "bool" {
+	if fromType == "_Bool" && toType == "int" {
 		return expr, nil
 	}
 
@@ -298,6 +403,10 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (g
 	if strings.Index(rightName, ".") != -1 {
 		parts := strings.Split(rightName, ".")
 		rightName = parts[len(parts)-1]
+	}
+
+	if cFromType == "void *" && cToType == "char *" {
+		return expr, nil
 	}
 
 	functionName := fmt.Sprintf("noarch.%sTo%s",

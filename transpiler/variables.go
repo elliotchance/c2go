@@ -10,6 +10,7 @@ import (
 	"github.com/elliotchance/c2go/util"
 
 	goast "go/ast"
+	"go/parser"
 	"go/token"
 )
 
@@ -47,6 +48,49 @@ func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
 		return nil, "", nil, nil, nil
 	}
 
+	if va, ok := a.Children()[0].(*ast.VAArgExpr); ok {
+		outType, err := types.ResolveType(p, va.Type)
+		if err != nil {
+			return nil, "", nil, nil, err
+		}
+		var argsName string
+		if a, ok := va.Children()[0].(*ast.ImplicitCastExpr); ok {
+			if a, ok := a.Children()[0].(*ast.DeclRefExpr); ok {
+				argsName = a.Name
+			} else {
+				return nil, "", nil, nil, fmt.Errorf("Expect DeclRefExpr for vaar, but we have %T", a)
+			}
+		} else {
+			return nil, "", nil, nil, fmt.Errorf("Expect ImplicitCastExpr for vaar, but we have %T", a)
+		}
+		src := fmt.Sprintf(`package main
+var temp = func() %s {
+	var ret %s
+	if v, ok := %s[c2goVaListPosition].(int32); ok{
+		// for 'rune' type
+		ret = %s(v)
+	} else {
+		ret = %s[c2goVaListPosition].(%s)
+	}
+	c2goVaListPosition++
+	return ret
+}()`, outType,
+			outType,
+			argsName,
+			outType,
+			argsName, outType)
+
+		// Create the AST by parsing src.
+		fset := token.NewFileSet() // positions are relative to fset
+		f, err := parser.ParseFile(fset, "", src, 0)
+		if err != nil {
+			return nil, "", nil, nil, err
+		}
+
+		expr := f.Decls[0].(*goast.GenDecl).Specs[0].(*goast.ValueSpec).Values
+		return expr, va.Type, nil, nil, nil
+	}
+
 	defaultValue, defaultValueType, newPre, newPost, err := transpileToExpr(a.Children()[0], p, false)
 	if err != nil {
 		return nil, defaultValueType, newPre, newPost, err
@@ -57,98 +101,11 @@ func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
 		t, err := types.CastExpr(p, defaultValue, defaultValueType, a.Type)
 		if !p.AddMessage(p.GenerateWarningMessage(err, a)) {
 			values = append(values, t)
+			defaultValueType = a.Type
 		}
 	}
 
 	return values, defaultValueType, newPre, newPost, nil
-}
-
-func newDeclStmt(a *ast.VarDecl, p *program.Program) (
-	*goast.DeclStmt, []goast.Stmt, []goast.Stmt, error) {
-	preStmts := []goast.Stmt{}
-	postStmts := []goast.Stmt{}
-	/*
-		Example of DeclStmt for C code:
-		void * a = NULL;
-		void(*t)(void) = a;
-		Example of AST:
-		`-VarDecl 0x365fea8 <col:3, col:20> col:9 used t 'void (*)(void)' cinit
-		  `-ImplicitCastExpr 0x365ff48 <col:20> 'void (*)(void)' <BitCast>
-		    `-ImplicitCastExpr 0x365ff30 <col:20> 'void *' <LValueToRValue>
-		      `-DeclRefExpr 0x365ff08 <col:20> 'void *' lvalue Var 0x365f8c8 'r' 'void *'
-	*/
-	if len(a.Children()) > 0 {
-		if v, ok := (a.Children()[0]).(*ast.ImplicitCastExpr); ok {
-			if len(v.Type) > 0 {
-				// Is it function ?
-				if types.IsFunction(v.Type) {
-					fields, returns, err := types.ResolveFunction(p, v.Type)
-					if err != nil {
-						return &goast.DeclStmt{}, preStmts, postStmts, fmt.Errorf("Cannot resolve function : %v", err)
-					}
-					functionType := GenerateFuncType(fields, returns)
-					nameVar1 := a.Name
-
-					if vv, ok := v.Children()[0].(*ast.ImplicitCastExpr); ok {
-						if decl, ok := vv.Children()[0].(*ast.DeclRefExpr); ok {
-							nameVar2 := decl.Name
-
-							return &goast.DeclStmt{Decl: &goast.GenDecl{
-								Tok: token.VAR,
-								Specs: []goast.Spec{&goast.ValueSpec{
-									Names: []*goast.Ident{{Name: nameVar1}},
-									Type:  functionType,
-									Values: []goast.Expr{&goast.TypeAssertExpr{
-										X:    &goast.Ident{Name: nameVar2},
-										Type: functionType,
-									}},
-								},
-								}}}, preStmts, postStmts, nil
-						}
-					}
-				}
-			}
-		}
-	}
-
-	defaultValue, _, newPre, newPost, err := getDefaultValueForVar(p, a)
-	p.AddMessage(p.GenerateWarningMessage(err, a))
-	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
-
-	// Allocate slice so that it operates like a fixed size array.
-	arrayType, arraySize := types.GetArrayTypeAndSize(a.Type)
-
-	if arraySize != -1 && defaultValue == nil {
-		goArrayType, err := types.ResolveType(p, arrayType)
-		p.AddMessage(p.GenerateWarningMessage(err, a))
-
-		defaultValue = []goast.Expr{
-			util.NewCallExpr(
-				"make",
-				&goast.ArrayType{
-					Elt: util.NewTypeIdent(goArrayType),
-				},
-				util.NewIntLit(arraySize),
-				util.NewIntLit(arraySize),
-			),
-		}
-	}
-
-	t, err := types.ResolveType(p, a.Type)
-	p.AddMessage(p.GenerateWarningMessage(err, a))
-
-	return &goast.DeclStmt{
-		Decl: &goast.GenDecl{
-			Tok: token.VAR,
-			Specs: []goast.Spec{
-				&goast.ValueSpec{
-					Names:  []*goast.Ident{util.NewIdent(a.Name)},
-					Type:   util.NewTypeIdent(t),
-					Values: defaultValue,
-				},
-			},
-		},
-	}, preStmts, postStmts, nil
 }
 
 // GenerateFuncType in according to types
@@ -299,19 +256,19 @@ func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) (stmts []goast.Stmt,
 		p.AddMessage(p.GenerateErrorMessage(err, n))
 		err = nil
 	}
-	for i := range decls {
-		if decls[i] != nil {
-			stmts = append(stmts, &goast.DeclStmt{Decl: decls[i]})
-		}
-	}
+	stmts = convertDeclToStmt(decls)
 
 	return
 }
 
 func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program) (
-	*goast.IndexExpr, string, []goast.Stmt, []goast.Stmt, error) {
-	preStmts := []goast.Stmt{}
-	postStmts := []goast.Stmt{}
+	_ *goast.IndexExpr, theType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot transpile ArraySubscriptExpr. err = %v", err)
+			p.AddMessage(p.GenerateWarningMessage(err, n))
+		}
+	}()
 
 	children := n.Children()
 	expression, expressionType, newPre, newPost, err := transpileToExpr(children[0], p, false)
@@ -328,29 +285,32 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program) 
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	newType, err := types.GetDereferenceType(expressionType)
+	theType, err = types.GetDereferenceType(expressionType)
 	if err != nil {
 		message := fmt.Sprintf(
-			"Cannot dereference type '%s' for the expression '%s'",
-			expressionType, expression)
-		return nil, newType, nil, nil, errors.New(message)
+			"Cannot dereference type '%s' for the expression '%#v'. err = %v",
+			expressionType, expression, err)
+		return nil, theType, nil, nil, errors.New(message)
 	}
 
 	return &goast.IndexExpr{
 		X:     expression,
 		Index: index,
-	}, newType, preStmts, postStmts, nil
+	}, n.Type, preStmts, postStmts, nil
 }
 
 func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
-	goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
-	preStmts := []goast.Stmt{}
-	postStmts := []goast.Stmt{}
+	_ goast.Expr, _ string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+
+	n.Type = types.GenerateCorrectType(n.Type)
+	n.Type2 = types.GenerateCorrectType(n.Type2)
 
 	lhs, lhsType, newPre, newPost, err := transpileToExpr(n.Children()[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
+
+	lhsType = types.GenerateCorrectType(lhsType)
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
@@ -402,7 +362,14 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 			funcName := getFunctionNameForUnionGetter(t.Name, lhsResolvedType, n.Name)
 			resExpr = util.NewCallExpr(funcName)
 		case *goast.SelectorExpr:
-			resExpr = t
+			funcName := getFunctionNameForUnionGetter("", lhsResolvedType, n.Name)
+			if id, ok := t.X.(*goast.Ident); ok {
+				funcName = id.Name + "." + t.Sel.Name + funcName
+			}
+			resExpr = &goast.CallExpr{
+				Fun:  goast.NewIdent(funcName),
+				Args: nil,
+			}
 		}
 
 		return resExpr, rhsType, preStmts, postStmts, nil

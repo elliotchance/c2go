@@ -84,8 +84,8 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 	// Now we need to build the __init() function. This sets up certain state
 	// and variables that the runtime expects to be ready.
 	p.File.Decls = append(p.File.Decls, &goast.FuncDecl{
-		Name: util.NewIdent("__init"),
-		Type: util.NewFuncType(&goast.FieldList{}, ""),
+		Name: goast.NewIdent("init"),
+		Type: util.NewFuncType(&goast.FieldList{}, "", false),
 		Body: &goast.BlockStmt{
 			List: p.StartupStatements(),
 		},
@@ -136,6 +136,7 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 	case *ast.FloatingLiteral:
 		expr = transpileFloatingLiteral(n)
 		exprType = "double"
+		err = nil
 
 	case *ast.PredefinedExpr:
 		expr, exprType, err = transpilePredefinedExpr(n, p)
@@ -156,7 +157,7 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 		expr, exprType, preStmts, postStmts, err = transpileMemberExpr(n, p)
 
 	case *ast.ImplicitCastExpr:
-		if n.Kind == "NullToPointer" {
+		if n.Kind == ast.CStyleCastExprNullToPointer {
 			expr = util.NewIdent("nil")
 			exprType = types.NullPointer
 			return
@@ -168,6 +169,20 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 			}
 		}
 		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children()[0], p, exprIsStmt)
+		if err != nil {
+			return nil, "", nil, nil, err
+		}
+		if exprType == types.NullPointer {
+			return
+		}
+
+		if !types.IsFunction(exprType) && n.Kind != ast.ImplicitCastExprArrayToPointerDecay {
+			expr, err = types.CastExpr(p, expr, exprType, n.Type)
+			if err != nil {
+				return nil, "", nil, nil, err
+			}
+			exprType = n.Type
+		}
 
 	case *ast.DeclRefExpr:
 		if n.For == "EnumConstant" {
@@ -187,14 +202,31 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 		expr, exprType, preStmts, postStmts, err = transpileParenExpr(n, p)
 
 	case *ast.CStyleCastExpr:
-		if n.Kind == "NullToPointer" {
+		if n.Kind == ast.CStyleCastExprNullToPointer {
 			expr = util.NewIdent("nil")
 			exprType = types.NullPointer
 			return
 		}
 		expr, exprType, preStmts, postStmts, err = transpileToExpr(n.Children()[0], p, exprIsStmt)
-		if err == nil {
+		if err != nil {
+			return nil, "", nil, nil, err
+		}
+
+		if exprType == types.NullPointer {
+			return
+		}
+
+		if n.Kind == ast.CStyleCastExprToVoid {
+			exprType = types.ToVoid
+			return
+		}
+
+		if !types.IsFunction(exprType) && n.Kind != ast.ImplicitCastExprArrayToPointerDecay {
 			expr, err = types.CastExpr(p, expr, exprType, n.Type)
+			if err != nil {
+				return nil, "", nil, nil, err
+			}
+			exprType = n.Type
 		}
 
 	case *ast.CharacterLiteral:
@@ -218,6 +250,30 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 	case *ast.StmtExpr:
 		return transpileStmtExpr(n, p)
 
+	case *ast.ImplicitValueInitExpr:
+		cType := n.Type1
+
+		if strings.HasPrefix(cType, "struct ") {
+			s := p.Structs[cType]
+			if s == nil {
+				return nil, "", nil, nil, fmt.Errorf("cannot found struct with name: `%s`", cType)
+			}
+			expr = &goast.CompositeLit{
+				Type:   util.NewIdent(cType[len("struct "):]),
+				Lbrace: 1,
+			}
+			return
+		}
+
+		s := p.Structs["struct "+cType]
+		if s == nil {
+			return nil, "", nil, nil, fmt.Errorf("cannot found struct with name: `%s`", cType)
+		}
+		expr = &goast.CompositeLit{
+			Type:   util.NewIdent(cType),
+			Lbrace: 1,
+		}
+
 	default:
 		p.AddMessage(p.GenerateWarningMessage(errors.New("cannot transpile to expr"), node))
 		expr = util.NewNil()
@@ -235,11 +291,6 @@ func transpileToStmts(node ast.Node, p *program.Program) (stmts []goast.Stmt, er
 		stmts = nilFilterStmts(stmts)
 	}()
 
-	var (
-		stmt      goast.Stmt
-		preStmts  []goast.Stmt
-		postStmts []goast.Stmt
-	)
 	switch n := node.(type) {
 	case *ast.DeclStmt:
 		stmts, err = transpileDeclStmt(n, p)
@@ -249,13 +300,18 @@ func transpileToStmts(node ast.Node, p *program.Program) (stmts []goast.Stmt, er
 		}
 		return
 	default:
+		var (
+			stmt      goast.Stmt
+			preStmts  []goast.Stmt
+			postStmts []goast.Stmt
+		)
 		stmt, preStmts, postStmts, err = transpileToStmt(node, p)
 		if err != nil {
 			p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Error in DeclStmt: %v", err), n))
 			err = nil // Error is ignored
 		}
+		return combineStmts(stmt, preStmts, postStmts), err
 	}
-	stmts = append(stmts, combineStmts(stmt, preStmts, postStmts)...)
 	return
 }
 
@@ -343,19 +399,56 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 
 		stmt = &goast.EmptyStmt{}
 		return
+	case *ast.DeclStmt:
+		var stmts []goast.Stmt
+		stmts, err = transpileDeclStmt(n, p)
+		if err != nil {
+			return
+		}
+		stmt = stmts[len(stmts)-1]
+		if len(stmts) > 1 {
+			preStmts = stmts[0 : len(stmts)-2]
+		}
+		return
 	}
 
 	// We do not care about the return type.
-	expr, _, preStmts, postStmts, err = transpileToExpr(node, p, true)
+	var theType string
+	expr, theType, preStmts, postStmts, err = transpileToExpr(node, p, true)
 	if err != nil {
 		return
 	}
 
 	// nil is happen, when we remove function `free` of <stdlib.h>
 	// see function CallExpr in transpiler
-	if expr != (*goast.CallExpr)(nil) {
-		stmt = util.NewExprStmt(expr)
+	if expr == (*goast.CallExpr)(nil) {
+		return
 	}
+
+	// CStyleCastExpr.Kind == ToVoid
+	var foundToVoid bool
+	if theType == types.ToVoid {
+		foundToVoid = true
+	}
+	if v, ok := node.(*ast.CStyleCastExpr); ok && v.Kind == ast.CStyleCastExprToVoid {
+		foundToVoid = true
+	}
+	if len(node.Children()) > 0 {
+		if v, ok := node.Children()[0].(*ast.CStyleCastExpr); ok && v.Kind == ast.CStyleCastExprToVoid {
+			foundToVoid = true
+		}
+	}
+	if foundToVoid {
+		stmt = &goast.AssignStmt{
+			Lhs: []goast.Expr{goast.NewIdent("_")},
+			Tok: token.ASSIGN,
+			Rhs: []goast.Expr{expr},
+		}
+		return
+	}
+
+	// For all other cases
+	stmt = util.NewExprStmt(expr)
 
 	return
 }
@@ -374,6 +467,14 @@ func transpileToNode(node ast.Node, p *program.Program) (decls []goast.Decl, err
 
 	case *ast.FunctionDecl:
 		decls, err = transpileFunctionDecl(n, p)
+		if len(decls) > 0 {
+			if _, ok := decls[0].(*goast.FuncDecl); ok {
+				decls[0].(*goast.FuncDecl).Doc = p.GetMessageComments()
+				decls[0].(*goast.FuncDecl).Doc.List = append([]*goast.Comment{&goast.Comment{
+					Text: fmt.Sprintf("// %s - transpiled function from file : %s , line : %d", decls[0].(*goast.FuncDecl).Name.Name, n.Pos.File, n.Pos.Line),
+				}}, decls[0].(*goast.FuncDecl).Doc.List...)
+			}
+		}
 
 	case *ast.TypedefDecl:
 		decls, err = transpileTypedefDecl(p, n)

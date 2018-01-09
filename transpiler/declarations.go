@@ -16,19 +16,67 @@ import (
 	"github.com/elliotchance/c2go/util"
 )
 
-func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, string) {
+func NewFunctionField(p *program.Program, name, cType string) (_ *goast.Field, err error) {
+	if name == "" {
+		err = fmt.Errorf("Name of function field cannot be empty")
+		return
+	}
+	if !types.IsFunction(cType) {
+		err = fmt.Errorf("Cannot create function field for type : %s", cType)
+		return
+	}
+
+	field := &goast.Field{
+		Names: []*goast.Ident{
+			util.NewIdent(name),
+		},
+	}
+	var arg, ret []string
+	arg, ret, err = types.ResolveFunction(p, cType)
+	if err != nil {
+		return
+	}
+	funcType := &goast.FuncType{}
+	argFieldList := []*goast.Field{}
+	for _, aa := range arg {
+		argFieldList = append(argFieldList, &goast.Field{
+			Type: goast.NewIdent(aa),
+		})
+	}
+	funcType.Params = &goast.FieldList{
+		List: argFieldList,
+	}
+	funcType.Results = &goast.FieldList{
+		List: []*goast.Field{
+			&goast.Field{
+				Type: goast.NewIdent(ret[0]),
+			},
+		},
+	}
+	field.Type = funcType
+
+	return field, nil
+}
+func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (field *goast.Field, err error) {
+	if types.IsFunction(n.Type) {
+		field, err = NewFunctionField(p, n.Name, n.Type)
+		if err == nil {
+			return
+		}
+	}
+
 	name := n.Name
 
 	// FIXME: What causes this? See __darwin_fp_control for example.
 	if name == "" {
-		return nil, ""
+		return nil, fmt.Errorf("Error : name of FieldDecl is empty")
 	}
 
 	// Add for fix bug in "stdlib.h"
 	// build/tests/exit/main_test.go:90:11: undefined: wait
 	// it is "union" with some anonymous struct
 	if n.Type == "union wait *" {
-		return nil, ""
+		return nil, fmt.Errorf("Avoid struct `union wait *` in FieldDecl")
 	}
 
 	fieldType, err := types.ResolveType(p, n.Type)
@@ -44,7 +92,7 @@ func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (*goast.Field, str
 	return &goast.Field{
 		Names: []*goast.Ident{util.NewIdent(name)},
 		Type:  util.NewTypeIdent(fieldType),
-	}, "unknown3"
+	}, nil
 }
 
 func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.Decl, err error) {
@@ -55,6 +103,7 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 		return
 	}
 
+	name = types.GenerateCorrectType(name)
 	p.DefineType(name)
 
 	s := program.NewStruct(n)
@@ -75,20 +124,41 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 
 	var fields []*goast.Field
 
-	for _, c := range n.Children() {
-		if field, ok := c.(*ast.FieldDecl); ok {
-			f, _ := transpileFieldDecl(p, field)
-
-			if f != nil {
+	for pos := range n.Children() {
+		c := n.Children()[pos]
+		switch field := c.(type) {
+		case *ast.FieldDecl:
+			field.Type = types.GenerateCorrectType(field.Type)
+			field.Type2 = types.GenerateCorrectType(field.Type2)
+			f, err := transpileFieldDecl(p, field)
+			if err != nil {
+				p.AddMessage(p.GenerateWarningMessage(err, field))
+			} else {
 				fields = append(fields, f)
 			}
-		} else if field, ok := c.(*ast.RecordDecl); ok {
-			decls, err = transpileRecordDecl(p, field)
-			if err != nil {
-				message := fmt.Sprintf("could not parse %v", c)
-				p.AddMessage(p.GenerateWarningMessage(errors.New(message), c))
+
+		case *ast.RecordDecl:
+			if field.Kind == "union" && pos+2 <= len(n.Children()) {
+				if inField, ok := n.Children()[pos+1].(*ast.FieldDecl); ok {
+					inField.Type = types.GenerateCorrectType(inField.Type)
+					inField.Type2 = types.GenerateCorrectType(inField.Type2)
+					field.Name = string(([]byte(inField.Type))[len("union "):])
+					declUnion, err := transpileRecordDecl(p, field)
+					if err != nil {
+						p.AddMessage(p.GenerateWarningMessage(err, field))
+					}
+					pos++
+					decls = append(decls, declUnion...)
+				}
+			} else {
+				decls, err = transpileRecordDecl(p, field)
+				if err != nil {
+					message := fmt.Sprintf("could not parse %v", c)
+					p.AddMessage(p.GenerateWarningMessage(errors.New(message), c))
+				}
 			}
-		} else {
+
+		default:
 			message := fmt.Sprintf("could not parse %v", c)
 			p.AddMessage(p.GenerateWarningMessage(errors.New(message), c))
 		}
@@ -135,7 +205,35 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 	if n.IsImplicit && n.Pos.File == ast.PositionBuiltIn {
 		return
 	}
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot transpile Typedef Decl : err = %v", err)
+		}
+	}()
 	name := n.Name
+
+	if types.IsFunction(n.Type) {
+		var field *goast.Field
+		field, err = NewFunctionField(p, n.Name, n.Type)
+		if err != nil {
+			p.AddMessage(p.GenerateWarningMessage(err, n))
+		} else {
+			// registration type
+			p.TypedefType[n.Name] = n.Type
+
+			decls = append(decls, &goast.GenDecl{
+				Tok: token.TYPE,
+				Specs: []goast.Spec{
+					&goast.TypeSpec{
+						Name: util.NewIdent(name),
+						Type: field.Type,
+					},
+				},
+			})
+			err = nil
+			return
+		}
+	}
 
 	// added for support "typedef enum {...} dd" with empty name of struct
 	// Result in Go: "type dd int"
@@ -166,7 +264,9 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 	p.DefineType(name)
 
 	resolvedType, err := types.ResolveType(p, n.Type)
-	p.AddMessage(p.GenerateWarningMessage(err, n))
+	if err != nil {
+		p.AddMessage(p.GenerateWarningMessage(err, n))
+	}
 
 	// There is a case where the name of the type is also the definition,
 	// like:
@@ -193,27 +293,6 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 		resolvedType = p.ImportType("github.com/elliotchance/c2go/darwin.CtRuneT")
 	}
 
-	// TODO: Some platform structs are ignored.
-	// https://github.com/elliotchance/c2go/issues/85
-	if name == "__builtin_va_list" ||
-		name == "__qaddr_t" ||
-		name == "definition" ||
-		name == "_IO_lock_t" ||
-		name == "va_list" ||
-		name == "fpos_t" ||
-		name == "__NSConstantString" ||
-		name == "__darwin_va_list" ||
-		name == "__fsid_t" ||
-		name == "_G_fpos_t" ||
-		name == "_G_fpos64_t" ||
-		name == "__locale_t" ||
-		name == "locale_t" ||
-		name == "fsid_t" ||
-		name == "sigset_t" {
-		err = nil
-		return
-	}
-
 	if name == "div_t" || name == "ldiv_t" || name == "lldiv_t" {
 		intType := "int"
 		if name == "ldiv_t" {
@@ -238,6 +317,7 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 		}
 	}
 
+	err = nil
 	decls = append(decls, &goast.GenDecl{
 		Tok: token.TYPE,
 		Specs: []goast.Spec{
@@ -248,16 +328,17 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 		},
 	})
 
-	// added for support "struct typedef" with non-empty name of struct
 	if v, ok := p.Structs["struct "+resolvedType]; ok {
+		// Registration "typedef struct" with non-empty name of struct
 		p.Structs["struct "+name] = v
-	}
-
-	if v, ok := p.EnumConstantToEnum["enum "+resolvedType]; ok {
+	} else if v, ok := p.EnumConstantToEnum["enum "+resolvedType]; ok {
+		// Registration "enum constants"
 		p.EnumConstantToEnum["enum "+resolvedType] = v
+	} else {
+		// Registration "typedef type type2"
+		p.TypedefType[n.Name] = n.Type
 	}
 
-	err = nil
 	return
 }
 
@@ -284,6 +365,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 				Specs: []goast.Spec{&goast.ValueSpec{
 					Names: []*goast.Ident{{Name: name}},
 					Type:  util.NewTypeIdent(theType),
+					Doc:   p.GetMessageComments(),
 				}},
 			}}, "", nil
 
@@ -306,6 +388,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 					Names: []*goast.Ident{{Name: name}},
 					Type:  util.NewTypeIdent(theType),
 				}},
+				Doc: p.GetMessageComments(),
 			}}, "", nil
 
 		default:
@@ -316,6 +399,26 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 	// Ignore extern as there is no analogy for Go right now.
 	if n.IsExtern && len(n.ChildNodes) == 0 {
 		return
+	}
+
+	if strings.Contains(n.Type, "va_list") && strings.Contains(n.Type2, "va_list_tag") {
+		// variable for va_list. see "variadic function"
+		// header : <stdarg.h>
+		// Example :
+		// DeclStmt 0x2fd87e0 <line:442:2, col:14>
+		// `-VarDecl 0x2fd8780 <col:2, col:10> col:10 used args 'va_list':'struct __va_list_tag [1]'
+		// Result:
+		// ... - convert to - c2goArgs ...interface{}
+		// var args = c2goArgs
+		return []goast.Decl{&goast.GenDecl{
+			Tok: token.VAR,
+			Specs: []goast.Spec{
+				&goast.ValueSpec{
+					Names:  []*goast.Ident{util.NewIdent(n.Name)},
+					Values: []goast.Expr{util.NewIdent("c2goArgs")},
+				},
+			},
+		}}, "", nil
 	}
 
 	/*
@@ -356,6 +459,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 										X:    &goast.Ident{Name: nameVar2},
 										Type: functionType,
 									}},
+									Doc: p.GetMessageComments(),
 								},
 								}}}, "", nil
 						}
@@ -380,16 +484,25 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 			Specs: []goast.Spec{&goast.ValueSpec{
 				Names: []*goast.Ident{{Name: nameVar1}},
 				Type:  functionType,
+				Doc:   p.GetMessageComments(),
 			},
 			}})
 		err = nil
 		return
 	}
 
-	theType, err = types.ResolveType(p, n.Type)
-	if err != nil {
-		p.AddMessage(p.GenerateErrorMessage(err, n))
-		err = nil // Error is ignored
+	var t string = n.Type
+	if len(t) > 1 {
+		t = n.Type[0 : len(n.Type)-len(" *")]
+	}
+	_, isTypedefType := p.TypedefType[t]
+
+	if !isTypedefType {
+		theType, err = types.ResolveType(p, n.Type)
+		if err != nil {
+			p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Cannot resolve type %s : %v", n.Type, err), n))
+			err = nil // Error is ignored
+		}
 	}
 
 	p.GlobalVariables[n.Name] = theType
@@ -440,14 +553,23 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 		}
 	}
 
-	t, err := types.ResolveType(p, n.Type)
-	if err != nil {
-		p.AddMessage(p.GenerateErrorMessage(err, n))
-		err = nil // Error is ignored
+	if !isTypedefType {
+		t, err = types.ResolveType(p, n.Type)
+		if err != nil {
+			p.AddMessage(p.GenerateErrorMessage(err, n))
+			err = nil // Error is ignored
+		}
 	}
 
 	if len(preStmts) != 0 || len(postStmts) != 0 {
 		p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Not acceptable length of Stmt : pre(%d), post(%d)", len(preStmts), len(postStmts)), n))
+	}
+
+	var typeResult goast.Expr
+	if isTypedefType {
+		typeResult = goast.NewIdent(t)
+	} else {
+		typeResult = util.NewTypeIdent(t)
 	}
 
 	return []goast.Decl{&goast.GenDecl{
@@ -455,8 +577,9 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 		Specs: []goast.Spec{
 			&goast.ValueSpec{
 				Names:  []*goast.Ident{util.NewIdent(n.Name)},
-				Type:   util.NewTypeIdent(t),
+				Type:   typeResult,
 				Values: defaultValue,
+				Doc:    p.GetMessageComments(),
 			},
 		},
 	}}, "", nil

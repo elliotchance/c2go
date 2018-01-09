@@ -66,6 +66,10 @@ type Program struct {
 	// appended to the very top of the output file. See AddMessage().
 	messages []string
 
+	// messagePosition - position of slice messages, added like a comment
+	// in output Go code
+	messagePosition int
+
 	// A map of all the global variables (variables that exist outside of a
 	// function) and their types.
 	GlobalVariables map[string]string
@@ -83,6 +87,12 @@ type Program struct {
 	// EnumTypedefName - a map with key="Name of typedef enum" and
 	// value="exist ot not"
 	EnumTypedefName map[string]bool
+
+	// TypedefType - map for type alias, for example:
+	// C  : typedef int INT;
+	// Map: key = INT, value = int
+	// Important: key and value are C types
+	TypedefType map[string]string
 }
 
 // NewProgram creates a new blank program.
@@ -119,6 +129,7 @@ func NewProgram() *Program {
 		GlobalVariables:    map[string]string{},
 		EnumConstantToEnum: map[string]string{},
 		EnumTypedefName:    map[string]bool{},
+		TypedefType:        map[string]string{},
 	}
 }
 
@@ -138,7 +149,41 @@ func (p *Program) AddMessage(message string) bool {
 	}
 
 	p.messages = append(p.messages, message)
+
+	// Compactizarion warnings stack
+	if len(p.messages) > 1 {
+		var (
+			new  = len(p.messages) - 1
+			last = len(p.messages) - 2
+		)
+		// Warning collapsing for minimaze warnings
+		warning := "// Warning"
+		if strings.HasPrefix(p.messages[last], warning) {
+			l := string(p.messages[last][len(warning):])
+			if strings.HasSuffix(p.messages[new], l) {
+				p.messages[last] = p.messages[new]
+				p.messages = p.messages[0:new]
+			}
+		}
+	}
+
 	return true
+}
+
+// GetMessageComments - get messages "Warnings", "Error" like a comment
+// Location of comments only NEAR of error or warning and
+// don't show directly location
+func (p *Program) GetMessageComments() (_ *goast.CommentGroup) {
+	var group goast.CommentGroup
+	if p.messagePosition < len(p.messages) {
+		for i := p.messagePosition; i < len(p.messages); i++ {
+			group.List = append(group.List, &goast.Comment{
+				Text: p.messages[i],
+			})
+		}
+		p.messagePosition = len(p.messages)
+	}
+	return &group
 }
 
 // GetStruct returns a struct object (representing struct type or union type) or
@@ -214,6 +259,14 @@ func (p *Program) GetNextIdentifier(prefix string) string {
 // messages at the top of the file and all the rendered Go code.
 func (p *Program) String() string {
 	var buf bytes.Buffer
+
+	buf.WriteString(`/* Package main - transpiled by c2go
+
+	If you have found any issues, please raise an issue at:
+	https://github.com/elliotchance/c2go/
+*/
+
+`)
 
 	// First write all the messages. The double newline afterwards is important
 	// so that the package statement has a newline above it so that the warnings

@@ -72,6 +72,8 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
 		conditionalType = "bool"
 	}
 
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
 	// The condition in Go must always be a bool.
 	boolCondition, err := types.CastExpr(p, conditional, conditionalType, "bool")
 	p.AddMessage(p.GenerateWarningOrErrorMessage(err, n, boolCondition == nil))
@@ -117,19 +119,14 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
 }
 
 func transpileForStmt(n *ast.ForStmt, p *program.Program) (
-	f *goast.ForStmt, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+	f goast.Stmt, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 
 	// This `defer` is workaround
 	// Please remove after solving all problems
 	defer func() {
-		if f == (*goast.ForStmt)(nil) {
-			p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("ForStmt cannot be nil"), n))
-			f = &goast.ForStmt{ // This is workaround
-				Body: &goast.BlockStmt{
-					Lbrace: 1,
-					List:   []goast.Stmt{&goast.BranchStmt{Tok: token.BREAK}},
-				},
-			}
+		if err != nil {
+			err = fmt.Errorf("Cannot tranpile ForStmt: err = %v", err)
+			p.AddMessage(p.GenerateWarningMessage(err, n))
 		}
 	}()
 
@@ -215,7 +212,12 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 			var compound *ast.CompoundStmt
 			if children[4] != nil {
 				// if body is exist
-				compound = children[4].(*ast.CompoundStmt)
+				if _, ok := children[4].(*ast.CompoundStmt); !ok {
+					compound = new(ast.CompoundStmt)
+					compound.AddChild(children[4])
+				} else {
+					compound = children[4].(*ast.CompoundStmt)
+				}
 			} else {
 				// if body is not exist
 				compound = new(ast.CompoundStmt)
@@ -254,8 +256,10 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 			var condition ast.IfStmt
 			condition.AddChild(nil)
 			var par ast.ParenExpr
+			par.Type = "bool"
 			par.AddChild(c.Children()[len(c.Children())-1])
 			var unitary ast.UnaryOperator
+			unitary.Type = "bool"
 			unitary.AddChild(&par)
 			unitary.Operator = "!"
 			condition.AddChild(&unitary)
@@ -332,15 +336,7 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 	block.List = combineStmts(&forStmt, preStmts, postStmts)
 	block.Lbrace = 1
 
-	return &goast.ForStmt{ // This is workaround
-			Body: &goast.BlockStmt{
-				Lbrace: 1,
-				List:   []goast.Stmt{&goast.BranchStmt{Tok: token.BREAK}},
-			},
-		},
-		nil,
-		[]goast.Stmt{&block},
-		nil
+	return &block, nil, nil, nil
 }
 
 // transpileWhileStmt - transpiler for operator While.
@@ -399,12 +395,17 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 //    |   `-UnaryOperator 0x2530ca0 <line:13:3, col:4> 'int' postfix '--'
 //    |     `-DeclRefExpr 0x2530c78 <col:3> 'int' lvalue Var 0x25306f8 'i' 'int'
 func transpileWhileStmt(n *ast.WhileStmt, p *program.Program) (
-	*goast.ForStmt, []goast.Stmt, []goast.Stmt, error) {
+	goast.Stmt, []goast.Stmt, []goast.Stmt, error) {
 	var forOperator ast.ForStmt
 	forOperator.AddChild(nil)
 	forOperator.AddChild(nil)
 	forOperator.AddChild(n.Children()[1])
 	forOperator.AddChild(nil)
+	if n.Children()[2] == nil {
+		// added for case if WHILE haven't body, for example:
+		// while(0);
+		n.Children()[2] = &ast.CompoundStmt{}
+	}
 	forOperator.AddChild(n.Children()[2])
 
 	return transpileForStmt(&forOperator, p)
@@ -476,7 +477,7 @@ func transpileWhileStmt(n *ast.WhileStmt, p *program.Program) (
 //    |     | `-BreakStmt 0x3bb1d80 <line:16:4>
 //    |     `-<<<NULL>>>
 func transpileDoStmt(n *ast.DoStmt, p *program.Program) (
-	*goast.ForStmt, []goast.Stmt, []goast.Stmt, error) {
+	goast.Stmt, []goast.Stmt, []goast.Stmt, error) {
 	var forOperator ast.ForStmt
 	forOperator.AddChild(nil)
 	forOperator.AddChild(nil)

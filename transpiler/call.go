@@ -12,6 +12,7 @@ import (
 	"github.com/elliotchance/c2go/util"
 
 	goast "go/ast"
+	"go/parser"
 	"go/token"
 )
 
@@ -21,6 +22,11 @@ func getName(firstChild ast.Node) string {
 		return fc.Name
 
 	case *ast.MemberExpr:
+		if types.IsFunction(fc.Type) {
+			if decl, ok := fc.Children()[0].(*ast.DeclRefExpr); ok {
+				return decl.Name + "." + fc.Name
+			}
+		}
 		return fc.Name
 
 	case *ast.ParenExpr:
@@ -60,15 +66,134 @@ func getNameOfFunctionFromCallExpr(n *ast.CallExpr) (string, error) {
 // returned by the function) and any error. If there is an error returned you
 // can assume the first two arguments will not contain any useful information.
 func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
-	*goast.CallExpr, string, []goast.Stmt, []goast.Stmt, error) {
-	preStmts := []goast.Stmt{}
-	postStmts := []goast.Stmt{}
+	_ *goast.CallExpr, resultType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Error in transpileCallExpr : %v", err)
+		}
+	}()
 
 	functionName, err := getNameOfFunctionFromCallExpr(n)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
 	functionName = util.ConvertFunctionNameFromCtoGo(functionName)
+
+	if functionName == "__builtin_va_start" ||
+		functionName == "__builtin_va_end" {
+		// ignore function __builtin_va_start, __builtin_va_end
+		// see "Variadic functions"
+		return nil, "", nil, nil, nil
+	}
+
+	// function "calloc" from stdlib.c
+	if functionName == "calloc" && len(n.Children()) == 3 {
+		var allocType string
+		size, _, preStmts, postStmts, err := transpileToExpr(n.Children()[1], p, false)
+		if err != nil {
+			return nil, "", nil, nil, err
+		}
+		if v, ok := n.Children()[2].(*ast.UnaryExprOrTypeTraitExpr); ok {
+			allocType = v.Type2
+		} else {
+			return nil, "", nil, nil,
+				fmt.Errorf("Unsupport type '%T' in function calloc", n.Children()[2])
+		}
+		goType, err := types.ResolveType(p, allocType)
+		if err != nil {
+			return nil, "", nil, nil, err
+		}
+		return &goast.CallExpr{
+			Fun: util.NewIdent("make"),
+			Args: []goast.Expr{
+				&goast.ArrayType{Elt: goast.NewIdent(goType)},
+				size,
+			},
+		}, allocType + " *", preStmts, postStmts, nil
+	}
+
+	// function "qsort" from stdlib.h
+	if functionName == "qsort" && len(n.Children()) == 5 {
+		defer func() {
+			if err != nil {
+				err = fmt.Errorf("Function: qsort. err = %v", err)
+			}
+		}()
+		/*
+			CallExpr 0x2c6b1b0 <line:182:2, col:40> 'void'
+			|-ImplicitCastExpr 0x2c6b198 <col:2> 'void (*)(void *, size_t, size_t, __compar_fn_t)' <FunctionToPointerDecay>
+			| `-DeclRefExpr 0x2c6b070 <col:2> 'void (void *, size_t, size_t, __compar_fn_t)' Function 0x2bec110 'qsort' 'void (void *, size_t, size_t, __compar_fn_t)'
+			|-ImplicitCastExpr 0x2c6b210 <col:9> 'void *' <BitCast>
+			| `-ImplicitCastExpr 0x2c6b1f8 <col:9> 'int *' <ArrayToPointerDecay>
+			|   `-DeclRefExpr 0x2c6b098 <col:9> 'int [6]' lvalue Var 0x2c6a6c0 'values' 'int [6]'
+			|-ImplicitCastExpr 0x2c6b228 <col:17> 'size_t':'unsigned long' <IntegralCast>
+			| `-IntegerLiteral 0x2c6b0c0 <col:17> 'int' 6
+			|-UnaryExprOrTypeTraitExpr 0x2c6b0f8 <col:20, col:30> 'unsigned long' sizeof 'int'
+			`-ImplicitCastExpr 0x2c6b240 <col:33> 'int (*)(const void *, const void *)' <FunctionToPointerDecay>
+			  `-DeclRefExpr 0x2c6b118 <col:33> 'int (const void *, const void *)' Function 0x2c6aa70 'compare' 'int (const void *, const void *)'
+		*/
+		var element [4]goast.Expr
+		for i := 1; i < 5; i++ {
+			el, _, newPre, newPost, err := transpileToExpr(n.Children()[i], p, false)
+			if err != nil {
+				return nil, "", nil, nil, err
+			}
+			element[i-1] = el
+			preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+		}
+		// found the C type
+		t := n.Children()[3].(*ast.UnaryExprOrTypeTraitExpr).Type2
+		t, err := types.ResolveType(p, t)
+		if err != nil {
+			return nil, "", nil, nil, err
+		}
+
+		var compareFunc string
+		if v, ok := element[3].(*goast.Ident); !ok {
+			return nil, "", nil, nil,
+				fmt.Errorf("golang ast for compare function have type %T, expect ast.Ident", element[3])
+		} else {
+			compareFunc = v.Name
+		}
+
+		var varName string
+		if v, ok := element[0].(*goast.Ident); !ok {
+			return nil, "", nil, nil,
+				fmt.Errorf("golang ast for variable name have type %T, expect ast.Ident", element[3])
+		} else {
+			varName = v.Name
+		}
+
+		p.AddImport("sort")
+		src := fmt.Sprintf(`package main
+		var %s func(a,b interface{})int
+		var temp = func(i, j int) bool {
+			c2goTempVarA := ([]%s{%s[i]})
+			c2goTempVarB := ([]%s{%s[j]})
+			return %s(c2goTempVarA, c2goTempVarB) <= 0
+		}`, compareFunc, t, varName, t, varName, compareFunc)
+
+		// Create the AST by parsing src.
+		fset := token.NewFileSet() // positions are relative to fset
+		f, err := parser.ParseFile(fset, "", src, 0)
+		if err != nil {
+			return nil, "", nil, nil, err
+		}
+
+		// AST tree part of code after "var temp = ..."
+		convertExpr := f.Decls[1].(*goast.GenDecl).Specs[0].(*goast.ValueSpec).Values[0]
+
+		return &goast.CallExpr{
+			Fun: &goast.SelectorExpr{
+				X:   goast.NewIdent("sort"),
+				Sel: goast.NewIdent("SliceStable"),
+			},
+			Args: []goast.Expr{
+				element[0],
+				convertExpr,
+			},
+		}, "", preStmts, postStmts, nil
+	}
 
 	// Get the function definition from it's name. The case where it is not
 	// defined is handled below (we haven't seen the prototype yet).
@@ -87,14 +212,34 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 			Name: functionName,
 		}
 		if len(n.Children()) > 0 {
-			if v, ok := n.Children()[0].(*ast.ImplicitCastExpr); ok && types.IsFunction(v.Type) {
-				fields, returns, err := types.ResolveFunction(p, v.Type)
+			if v, ok := n.Children()[0].(*ast.ImplicitCastExpr); ok && (types.IsFunction(v.Type) || types.IsTypedefFunction(p, v.Type)) {
+				t := v.Type
+				if types.IsTypedefFunction(p, t) {
+					t = t[0 : len(t)-len(" *")]
+					t, _ = p.TypedefType[t]
+				}
+				fields, returns, err := types.ParseFunction(t)
 				if err != nil {
 					p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Cannot resolve function : %v", err), n))
 					return nil, "", nil, nil, err
 				}
 				functionDef.ReturnType = returns[0]
 				functionDef.ArgumentTypes = fields
+			}
+		}
+	} else {
+		// type correction for definition function in
+		// package program
+		var ok bool
+		for pos, arg := range n.Children() {
+			if pos == 0 {
+				continue
+			}
+			if pos >= len(functionDef.ArgumentTypes) {
+				continue
+			}
+			if arg, ok = arg.(*ast.ImplicitCastExpr); ok {
+				arg.(*ast.ImplicitCastExpr).Type = functionDef.ArgumentTypes[pos-1]
 			}
 		}
 	}
@@ -219,35 +364,13 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 	// i += 4
 	// _ = buffer
 	if functionDef.Substitution == "_" {
-		var argName string
-		if v, ok := realArgs[0].(*goast.CallExpr); ok && len(realArgs) == 1 {
-			if vv, ok := v.Args[0].(*goast.Ident); ok && len(v.Args) == 1 {
-				argName = vv.Name
-			}
-			if vv, ok := v.Args[0].(*goast.ParenExpr); ok && len(v.Args) == 1 {
-				argName = vv.X.(*goast.Ident).Name
-			}
+		devNull := &goast.AssignStmt{
+			Lhs: []goast.Expr{goast.NewIdent("_")},
+			Tok: token.ASSIGN,
+			Rhs: []goast.Expr{realArgs[0]},
 		}
-		if v, ok := realArgs[0].(*goast.Ident); ok {
-			argName = v.Name
-		}
-		if argName != "" {
-			devNull := &goast.AssignStmt{
-				Lhs: []goast.Expr{
-					&goast.Ident{
-						Name: "_",
-					},
-				},
-				Tok: token.ASSIGN,
-				Rhs: []goast.Expr{
-					&goast.Ident{
-						Name: argName,
-					},
-				},
-			}
-			preStmts = append(preStmts, devNull)
-			return nil, "", preStmts, postStmts, nil
-		}
+		preStmts = append(preStmts, devNull)
+		return nil, "", preStmts, postStmts, nil
 	}
 
 	return util.NewCallExpr(functionName, realArgs...),

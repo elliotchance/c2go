@@ -131,13 +131,6 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (decls []goa
 			// (before any other code) in main().
 			prependStmtsInMain := []goast.Stmt{}
 
-			// We also need to append a setup function that will instantiate
-			// some things that are expected to be available at runtime.
-			prependStmtsInMain = append(
-				prependStmtsInMain,
-				util.NewExprStmt(util.NewCallExpr("__init")),
-			)
-
 			// In Go, the main() function does not take the system arguments.
 			// Instead they are accessed through the os package. We create new
 			// variables in the main() function (if needed), immediately after
@@ -164,7 +157,7 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (decls []goa
 						Rhs: []goast.Expr{&goast.CompositeLit{Type: util.NewTypeIdent("[][]byte")}},
 					},
 					&goast.RangeStmt{
-						Key:   util.NewIdent("_"),
+						Key:   goast.NewIdent("_"),
 						Value: util.NewIdent("argvSingle"),
 						Tok:   token.DEFINE,
 						X:     util.NewTypeIdent("os.Args"),
@@ -191,9 +184,41 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (decls []goa
 			fieldList = &goast.FieldList{}
 		}
 
+		// Each function MUST have "ReturnStmt",
+		// except function without return type
+		var addReturnName bool
+		if len(body.List) > 0 {
+			last := body.List[len(body.List)-1]
+			if _, ok := last.(*goast.ReturnStmt); !ok && t != "" {
+				body.List = append(body.List, &goast.ReturnStmt{})
+				addReturnName = true
+			}
+		}
+
+		// for function argument: ...
+		// added for "variadic function"
+		if strings.Contains(n.Type, "...") {
+			body.List = append([]goast.Stmt{&goast.DeclStmt{&goast.GenDecl{
+				Tok: token.VAR,
+				Specs: []goast.Spec{&goast.ValueSpec{
+					Names: []*goast.Ident{util.NewIdent("c2goVaListPosition")},
+					Type:  goast.NewIdent("int"),
+					Values: []goast.Expr{&goast.BasicLit{
+						Kind:  token.INT,
+						Value: "0",
+					}},
+				}},
+			}}, &goast.AssignStmt{
+				Lhs: []goast.Expr{goast.NewIdent("_")},
+				Tok: token.ASSIGN,
+				Rhs: []goast.Expr{util.NewIdent("c2goVaListPosition")},
+			},
+			}, body.List...)
+		}
+
 		decls = append(decls, &goast.FuncDecl{
 			Name: util.NewIdent(n.Name),
-			Type: util.NewFuncType(fieldList, t),
+			Type: util.NewFuncType(fieldList, t, addReturnName),
 			Body: body,
 		})
 	}
@@ -203,10 +228,24 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (decls []goa
 }
 
 // getFieldList returns the parameters of a C function as a Go AST FieldList.
-func getFieldList(f *ast.FunctionDecl, p *program.Program) (*goast.FieldList, error) {
+func getFieldList(f *ast.FunctionDecl, p *program.Program) (_ *goast.FieldList, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Error in function field list. err = %v", err)
+		}
+	}()
 	r := []*goast.Field{}
 	for _, n := range f.Children() {
 		if v, ok := n.(*ast.ParmVarDecl); ok {
+			if types.IsFunction(v.Type) {
+				field, err := NewFunctionField(p, v.Name, v.Type)
+				if err != nil {
+					p.AddMessage(p.GenerateWarningMessage(err, v))
+					continue
+				}
+				r = append(r, field)
+				continue
+			}
 			t, err := types.ResolveType(p, v.Type)
 			p.AddMessage(p.GenerateWarningMessage(err, f))
 
@@ -215,6 +254,23 @@ func getFieldList(f *ast.FunctionDecl, p *program.Program) (*goast.FieldList, er
 				Type:  util.NewTypeIdent(t),
 			})
 		}
+	}
+
+	// for function argument: ...
+	if strings.Contains(f.Type, "...") {
+		r = append(r, &goast.Field{
+			Names: []*goast.Ident{util.NewIdent("c2goArgs")},
+			Type: &goast.Ellipsis{
+				Ellipsis: 1,
+				Elt: &goast.InterfaceType{
+					Interface: 1,
+					Methods: &goast.FieldList{
+						Opening: 1,
+					},
+					Incomplete: false,
+				},
+			},
+		})
 	}
 
 	return &goast.FieldList{

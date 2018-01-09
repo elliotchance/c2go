@@ -7,44 +7,50 @@ import (
 	"github.com/elliotchance/c2go/program"
 )
 
-func removePrefix(s, prefix string) string {
-	if strings.HasPrefix(s, prefix) {
-		s = s[len(prefix):]
-	}
-
-	return s
-}
-
-func removeSuffix(s, suffix string) string {
-	if strings.HasSuffix(s, suffix) {
-		s = s[:len(suffix)+1]
-	}
-
-	return s
-}
-
 // SizeOf returns the number of bytes for a type. This the same as using the
 // sizeof operator/function in C.
-func SizeOf(p *program.Program, cType string) (int, error) {
+func SizeOf(p *program.Program, cType string) (size int, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot determine sizeof : |%s|. err = %v", cType, err)
+		}
+	}()
+
 	// Remove keywords that do not effect the size.
-	cType = removePrefix(cType, "signed ")
-	cType = removePrefix(cType, "unsigned ")
-	cType = removePrefix(cType, "const ")
-	cType = removePrefix(cType, "volatile ")
-	cType = removeSuffix(cType, "const")
+	cType = CleanCType(cType)
+	cType = strings.Replace(cType, "unsigned ", "", -1)
+	cType = strings.Replace(cType, "signed ", "", -1)
 
 	// FIXME: The pointer size will be different on different platforms. We
 	// should find out the correct size at runtime.
 	pointerSize := 8
 
-	// A structure will be the sum of its parts.
-	if strings.HasPrefix(cType, "struct ") {
-		totalBytes := 0
+	// Enum with name
+	if strings.HasPrefix(cType, "enum") {
+		return SizeOf(p, "int")
+	}
 
-		s := p.Structs[cType]
-		if s == nil {
-			return 0, fmt.Errorf("cannot determine size of: `%s`", cType)
-		}
+	// typedef int Integer;
+	if v, ok := p.TypedefType[cType]; ok {
+		return SizeOf(p, v)
+	}
+
+	// typedef Enum
+	if _, ok := p.EnumTypedefName[cType]; ok {
+		return SizeOf(p, "int")
+	}
+
+	// A structure will be the sum of its parts.
+	var isStruct, ok bool
+	var s *program.Struct
+	cType = GenerateCorrectType(cType)
+	if s, ok = p.Structs[cType]; ok {
+		isStruct = true
+	} else if s, ok = p.Structs["struct "+cType]; ok {
+		isStruct = true
+	}
+	if isStruct {
+		totalBytes := 0
 
 		for _, t := range s.Fields {
 			var bytes int
@@ -79,7 +85,7 @@ func SizeOf(p *program.Program, cType string) (int, error) {
 
 		s := p.Unions[cType]
 		if s == nil {
-			return 0, fmt.Errorf("cannot determine size of: `%s`", cType)
+			return 0, fmt.Errorf("error in union")
 		}
 
 		for _, t := range s.Fields {
@@ -134,7 +140,7 @@ func SizeOf(p *program.Program, cType string) (int, error) {
 	case "long", "double":
 		return 8, nil
 
-	case "long double":
+	case "long double", "long long", "long long int", "long long unsigned int":
 		return 16, nil
 	}
 
@@ -142,7 +148,7 @@ func SizeOf(p *program.Program, cType string) (int, error) {
 	totalArraySize := 1
 	arrayType, arraySize := GetArrayTypeAndSize(cType)
 	if arraySize <= 0 {
-		return 0, fmt.Errorf("cannot determine size of: `%s`", cType)
+		return 0, fmt.Errorf("error in array size")
 	}
 
 	for arraySize != -1 {
@@ -152,7 +158,7 @@ func SizeOf(p *program.Program, cType string) (int, error) {
 
 	baseSize, err := SizeOf(p, arrayType)
 	if err != nil {
-		return 0, fmt.Errorf("cannot determine size of: `%s`", cType)
+		return 0, fmt.Errorf("error in sizeof baseSize")
 	}
 
 	return baseSize * totalArraySize, nil

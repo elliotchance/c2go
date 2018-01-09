@@ -24,6 +24,12 @@ import (
 //               logical operators like "==", "!=", ...
 func transpileBinaryOperatorComma(n *ast.BinaryOperator, p *program.Program) (
 	stmt goast.Stmt, preStmts []goast.Stmt, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot transpile operator comma : err = %v", err)
+			p.AddMessage(p.GenerateWarningMessage(err, n))
+		}
+	}()
 
 	left, err := transpileToStmts(n.Children()[0], p)
 	if err != nil {
@@ -40,15 +46,21 @@ func transpileBinaryOperatorComma(n *ast.BinaryOperator, p *program.Program) (
 	}
 
 	preStmts = append(preStmts, left...)
+	if len(right) > 1 {
+		preStmts = append(preStmts, right[:len(right)-1]...)
+	}
 
-	return right[0], preStmts, nil
+	return right[len(right)-1], preStmts, nil
 }
 
 func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsStmt bool) (
-	goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
-	preStmts := []goast.Stmt{}
-	postStmts := []goast.Stmt{}
-	var err error
+	_ goast.Expr, resultType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot transpile BinaryOperator with type '%s' : result type = {%s}. Error: %v", n.Type, resultType, err)
+			p.AddMessage(p.GenerateWarningMessage(err, n))
+		}
+	}()
 
 	operator := getTokenForOperator(n.Operator)
 
@@ -134,19 +146,25 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 	// | `-ImplicitCastExpr 0x21a7898 <col:6> 'int' <LValueToRValue>
 	// |   `-DeclRefExpr 0x21a7870 <col:6> 'int' lvalue Var 0x21a7748 'y' 'int'
 	if getTokenForOperator(n.Operator) == token.COMMA {
-		stmts, st, newPre, newPost, err := transpileToExpr(n.Children()[0], p, false)
+		stmts, _, newPre, newPost, err := transpileToExpr(n.Children()[0], p, false)
 		if err != nil {
 			return nil, "unknown50", nil, nil, err
 		}
 		preStmts = append(preStmts, newPre...)
 		preStmts = append(preStmts, util.NewExprStmt(stmts))
-		postStmts = append(postStmts, newPost...)
+		preStmts = append(preStmts, newPost...)
+
+		var st string
 		stmts, st, newPre, newPost, err = transpileToExpr(n.Children()[1], p, false)
 		if err != nil {
 			return nil, "unknown51", nil, nil, err
 		}
-		preStmts = append(preStmts, newPre...)
-		postStmts = append(postStmts, newPost...)
+		// Theoretically , we don't have any preStmts or postStmts
+		// from n.Children()[1]
+		if len(newPre) > 0 || len(newPost) > 0 {
+			p.AddMessage(p.GenerateWarningMessage(
+				fmt.Errorf("Not support lenght pre or post stmts: {%d,%d}", len(newPre), len(newPost)), n))
+		}
 		return stmts, st, preStmts, postStmts, nil
 	}
 
@@ -204,16 +222,14 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 			leftType, preStmts, postStmts, nil
 	}
 
-	if operator == token.NEQ || operator == token.EQL {
-		// Convert "(0)" to "nil" when we are dealing with equality.
-		if types.IsNullExpr(right) {
-			right = util.NewNil()
-		} else {
-			// We may have to cast the right side to the same type as the left
-			// side. This is a bit crude because we should make a better
-			// decision of which type to cast to instead of only using the type
-			// of the left side.
+	if operator == token.NEQ || operator == token.EQL || operator == token.LSS || operator == token.GTR || operator == token.AND || operator == token.ADD || operator == token.SUB || operator == token.MUL || operator == token.QUO || operator == token.REM {
+		// We may have to cast the right side to the same type as the left
+		// side. This is a bit crude because we should make a better
+		// decision of which type to cast to instead of only using the type
+		// of the left side.
+		if rightType != types.NullPointer {
 			right, err = types.CastExpr(p, right, rightType, leftType)
+			rightType = leftType
 			p.AddMessage(p.GenerateWarningOrErrorMessage(err, n, right == nil))
 		}
 	}
@@ -253,7 +269,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 		} else {
 			right, err = types.CastExpr(p, right, rightType, returnType)
 
-			if _, ok := right.(*goast.UnaryExpr); ok {
+			if _, ok := right.(*goast.UnaryExpr); ok && types.IsDereferenceType(rightType) {
 				deref, err := types.GetDereferenceType(rightType)
 
 				if !p.AddMessage(p.GenerateWarningMessage(err, n)) {
@@ -276,8 +292,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 			}
 
 			// Construct code for assigning value to an union field
-			memberExpr, ok := n.Children()[0].(*ast.MemberExpr)
-			if ok {
+			if memberExpr, ok := n.Children()[0].(*ast.MemberExpr); ok {
 				ref := memberExpr.GetDeclRefExpr()
 				if ref != nil {
 					union := p.GetStruct(ref.Type)
@@ -294,13 +309,39 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 						return resExpr, resType, preStmts, postStmts, nil
 					}
 				}
+				// union inside struct
+				if un, ok := memberExpr.Children()[0].(*ast.MemberExpr); ok {
+					un.Type = types.GenerateCorrectType(un.Type)
+					un.Type2 = types.GenerateCorrectType(un.Type2)
+					union := p.GetStruct(un.Type)
+					if union != nil && union.IsUnion {
+						if str, ok := un.Children()[0].(*ast.DeclRefExpr); ok {
+							attrType, err := types.ResolveType(p, memberExpr.Type)
+							if err != nil {
+								p.AddMessage(p.GenerateWarningMessage(err, memberExpr))
+							}
+							funcName := getFunctionNameForUnionSetter("", attrType, memberExpr.Name)
+							funcName = str.Name + "." + un.Name + funcName
+							resExpr := &goast.CallExpr{
+								Fun:  goast.NewIdent(funcName),
+								Args: []goast.Expr{right},
+							}
+							resType := types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType)
+
+							return resExpr, resType, preStmts, postStmts, nil
+						}
+					}
+				}
 			}
 		}
 	}
 
-	resolvedLeftType, err := types.ResolveType(p, leftType)
-	if err != nil {
-		p.AddMessage(p.GenerateWarningMessage(err, n))
+	var resolvedLeftType = n.Type
+	if !types.IsFunction(n.Type) && !types.IsTypedefFunction(p, n.Type) {
+		resolvedLeftType, err = types.ResolveType(p, leftType)
+		if err != nil {
+			p.AddMessage(p.GenerateWarningMessage(err, n))
+		}
 	}
 
 	// Enum casting
@@ -317,6 +358,18 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 		if err != nil {
 			p.AddMessage(p.GenerateWarningMessage(err, n))
 		}
+	}
+
+	if left == nil {
+		err = fmt.Errorf("left part of binary operation is nil. left : %#v", n.Children()[0])
+		p.AddMessage(p.GenerateWarningMessage(err, n))
+		return nil, "", nil, nil, err
+	}
+
+	if right == nil {
+		err = fmt.Errorf("right part of binary operation is nil. right : %#v", n.Children()[1])
+		p.AddMessage(p.GenerateWarningMessage(err, n))
+		return nil, "", nil, nil, err
 	}
 
 	return util.NewBinaryExpr(left, operator, right, resolvedLeftType, exprIsStmt),

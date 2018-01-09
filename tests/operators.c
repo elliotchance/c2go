@@ -4,9 +4,31 @@
 // TODO: More comprehensive operator tests
 // https://github.com/elliotchance/c2go/issues/143
 
+void empty(){;}
+
+int sAdd(char *opt) {
+    int l = strlen(opt) + 12;
+    return l;
+}
+
+int sMul(char *opt) {
+    int l = strlen(opt) * 12;
+    return l;
+}
+
+int sMin(char *opt) {
+    int l = strlen(opt) - 12;
+    return l;
+}
+
+int sDiv(char *opt) {
+    int l = strlen(opt) / 12;
+    return l;
+}
+
 int main()
 {
-	plan(36);
+	plan(58);
 
     int i = 10;
     signed char j = 1;
@@ -124,5 +146,100 @@ int main()
 	int type = 42;
 	is_eq(type,42);
 
+	diag("Go keywords inside C code")
+	{
+		int chan = 42;
+		is_eq(chan ,42);
+	}
+	{
+		int defer = 42;
+		is_eq(defer ,42);
+	}
+	{
+		int fallthrough = 42;
+		is_eq(fallthrough ,42);
+	}
+	{
+		int func = 42;
+		is_eq(func ,42);
+	}
+	{
+		int go = 42;
+		is_eq(go ,42);
+	}
+	{
+		int import = 42;
+		is_eq(import ,42);
+	}
+	{
+		int interface = 42;
+		is_eq(interface ,42);
+	}
+	{
+		int map = 42;
+		is_eq(map ,42);
+	}
+	{
+		int package = 42;
+		is_eq(package ,42);
+	}
+	{
+		int range = 42;
+		is_eq(range ,42);
+	}
+	{
+		int select = 42;
+		is_eq(select ,42);
+	}
+	{
+		int type = 42;
+		is_eq(type ,42);
+	}
+	{
+		int var = 42;
+		is_eq(var ,42);
+	}
+	{
+		int _ = 42;
+		is_eq(_ ,42);
+	}
+
+	// checking is_eq is no need, because if "(void)(az)" not transpile,
+	// then go build return fail - value is not used
+	diag("CStyleCast <ToVoid>")
+	{ char            **az; (void)(az); }
+	{ double     *const*az; (void)(az); }
+	{ int             **az; (void)(az); }
+	{ float   *volatile*az; (void)(az); }
+	
+	diag("CStyleCast <ToVoid> with comma")
+	{ unsigned int *ui; (void)(empty(),ui);}
+	{ 
+		long int *li;
+		int counter_li = 0;
+		(void)(counter_li++,empty(),li);
+		is_eq(counter_li,1);
+	}
+
+	diag("switch with initialization")
+	switch(0)
+	{
+		int ii;
+		case 0: { ii = 42; is_eq(ii,42); }
+		case 1:	{ ii = 50; is_eq(ii,50); }
+	}
+	switch(1)
+	{
+		int ia;
+		case 0: { ia = 42; is_eq(ia,42); }
+		case 1:	{ ia = 60; is_eq(ia,60); }
+	}
+
+	diag("Binary operators for definition function")
+	is_eq(sAdd("rrr"),15);
+	is_eq(sMul("rrr"),36);
+	is_eq(sMin("rrrrrrrrrrrrr"),1);
+	is_eq(sDiv("rrrrrrrrrrrr"),1);
+	
 	done_testing();
 }

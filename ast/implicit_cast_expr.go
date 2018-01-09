@@ -1,5 +1,6 @@
 package ast
 
+// ImplicitCastExpr is expression.
 type ImplicitCastExpr struct {
 	Addr       Address
 	Pos        Position
@@ -8,6 +9,9 @@ type ImplicitCastExpr struct {
 	Kind       string
 	ChildNodes []Node
 }
+
+// ImplicitCastExprArrayToPointerDecay - constant
+const ImplicitCastExprArrayToPointerDecay = "ArrayToPointerDecay"
 
 func parseImplicitCastExpr(line string) *ImplicitCastExpr {
 	groups := groupsFromRegex(

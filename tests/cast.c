@@ -27,10 +27,39 @@ void test_castbool()
 
 int main()
 {
-    plan(11);
+    plan(23);
 
     START_TEST(cast)
     START_TEST(castbool)
+
+	{
+	typedef unsigned int u32;
+	u32 x = 42;
+	is_eq(x , 42);
+    u32 a[10];
+    a[0] = x;
+	is_eq(a[0],42);
+	}
+
+	{
+	typedef double u32d;
+	u32d x = 42.0;
+	is_eq(x , 42.0);
+    u32d a[10];
+    a[0] = x;
+	is_eq(a[0],42.0);
+	}
+
+	{
+	typedef int integer;
+	typedef int INTEGER;
+    integer i = 123;
+    INTEGER j = 567;
+    j = i;
+    i = j;
+	is_eq(i , 123);
+	is_eq(j , 123);
+	}
 
 	double *d = (double *) 0;
 	is_true(d == NULL);
@@ -49,6 +78,38 @@ int main()
 	is_true(f2 == NULL);
 	char   *c2 = 0;
 	is_true(c2 == NULL);
+
+	diag("Calloc with type")
+	{
+		double *ddd = (double *)calloc(2,sizeof(double));
+		is_not_null(ddd);
+		(void)(ddd);
+	}
+	{
+		double *ddd;
+		ddd = (double *)calloc(2,sizeof(double));
+		is_not_null(ddd);
+		(void)(ddd);
+	}
+	
+	diag("Type convertion from void* to ...")
+	{
+		void * ptr2;
+		int tInt = 55;
+		ptr2 = &tInt;
+		is_eq(*(int*)ptr2, 55);
+		double tDouble = -13;
+		ptr2 = &tDouble;
+		is_eq(*(double*)ptr2,-13);
+		float tFloat = 67;
+		is_eq(*(float *)(&tFloat),67);
+	}
+	diag("Type convertion from void* to ... in initialization")
+	{
+		long tLong = 556;
+		void * ptr3 = &tLong;
+		is_eq(*(long *) ptr3, 556);
+	}
 
     done_testing();
 }

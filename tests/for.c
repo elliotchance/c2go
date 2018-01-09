@@ -3,7 +3,7 @@
 
 int main()
 {
-    plan(50);
+    plan(57);
 
     int i = 0;
 
@@ -119,6 +119,52 @@ int main()
 		}
 	}
 	is_eq( nn2 , 3 );
-    
+
+	diag("for with specific body");
+	{
+	        double vars = 42.0;
+	        for(int s = 0;s<1;s++)
+	                vars ++;
+	        is_eq(vars,43.0);
+	}
+	{
+	        double vars = 42.0;
+	        for(int s = 0;s<1;s++)
+	                vars += 1.0;
+	        is_eq(vars,43.0);
+	}
+	{
+	        double vars = 42.0;
+			int X,Y;
+	        for(X = 0, Y = 0; X < 1;X++,Y++)
+	                vars += 1.0;
+	        is_eq(vars,43.0);
+	}
+	{
+	        double vars = 42.0;
+	        for(int s = 0;s<1;s++)
+	                vars = vars + 1.0;
+	        is_eq(vars,43.0);
+	}
+	{
+	        double vars = 42.0;
+			int X,Y;
+	        for(X = 0, Y = 0; X < 1;X++,Y++)
+	                vars = vars + 1.0;
+	        is_eq(vars,43.0);
+	}
+	{
+			int X,Y;
+	        for(X = 0, Y = 0; X < 1;X++,Y++)
+	                X += Y;
+	        pass("ok");
+	}
+	{
+			int X,Y;
+	        for(X = 0, Y = 0; X < 1;X++,Y++)
+	                X = X + Y;
+	        pass("ok");
+	}
+
 	done_testing();
 }

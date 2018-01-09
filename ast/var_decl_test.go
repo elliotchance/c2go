@@ -126,6 +126,21 @@ func TestVarDecl(t *testing.T) {
 			IsRegister:   true,
 			ChildNodes:   []Node{},
 		},
+		`0x26fd180 <col:4, col:32> col:13 used aExt 'extCoord':'extCoord' cinit`: &VarDecl{
+			Addr:         0x26fd180,
+			Pos:          NewPositionFromString("col:4, col:32"),
+			Position2:    "col:13",
+			Name:         "aExt",
+			Type:         "extCoord",
+			Type2:        "extCoord",
+			IsExtern:     false,
+			IsUsed:       true,
+			IsCInit:      true,
+			IsReferenced: false,
+			IsStatic:     false,
+			IsRegister:   false,
+			ChildNodes:   []Node{},
+		},
 	}
 
 	runNodeTests(t, nodes)

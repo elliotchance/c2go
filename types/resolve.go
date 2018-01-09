@@ -39,7 +39,7 @@ var simpleResolveTypes = map[string]string{
 	"unsigned short":         "uint16",
 	"unsigned short int":     "uint16",
 	"void":                   "",
-	"_Bool":                  "bool",
+	"_Bool":                  "int",
 
 	// void*
 	"void*":  "interface{}",
@@ -85,6 +85,9 @@ var simpleResolveTypes = map[string]string{
 // created only for transpiler.CStyleCastExpr
 var NullPointer = "NullPointerType *"
 
+// ToVoid - specific type for ignore the cast
+var ToVoid = "ToVoid"
+
 // ResolveType determines the Go type from a C type.
 //
 // Some basic examples are obvious, such as "float" in C would be "float32" in
@@ -114,8 +117,17 @@ var NullPointer = "NullPointerType *"
 //    certainly incorrect) "interface{}" is also returned. This is to allow the
 //    transpiler to step over type errors and put something as a placeholder
 //    until a more suitable solution is found for those cases.
-func ResolveType(p *program.Program, s string) (string, error) {
+func ResolveType(p *program.Program, s string) (_ string, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot resolve type '%s' : %v", s, err)
+		}
+	}()
 	s = CleanCType(s)
+
+	if s == "_Bool" {
+		p.TypedefType[s] = "int"
+	}
 
 	// FIXME: This is a hack to avoid casting in some situations.
 	if s == "" {
@@ -146,6 +158,10 @@ func ResolveType(p *program.Program, s string) (string, error) {
 	// Check is it typedef enum
 	if _, ok := p.EnumTypedefName[s]; ok {
 		return ResolveType(p, "int")
+	}
+
+	if v, ok := p.TypedefType[s]; ok {
+		return ResolveType(p, v)
 	}
 
 	// If the type is already defined we can proceed with the same name.
@@ -220,12 +236,14 @@ func ResolveType(p *program.Program, s string) (string, error) {
 	// properly.
 	search := util.GetRegex("[\\w ]+\\(\\*.*?\\)\\(.*\\)").MatchString(s)
 	if search {
-		return "interface{}", errors.New("function pointers are not supported")
+		return "interface{}",
+			fmt.Errorf("function pointers are not supported [1] : '%s'", s)
 	}
 
 	search = util.GetRegex("[\\w ]+ \\(.*\\)").MatchString(s)
 	if search {
-		return "interface{}", errors.New("function pointers are not supported")
+		return "interface{}",
+			fmt.Errorf("function pointers are not supported [2] : '%s'", s)
 	}
 
 	// It could be an array of fixed length. These needs to be converted to
@@ -249,6 +267,11 @@ func ResolveType(p *program.Program, s string) (string, error) {
 
 // ResolveFunction determines the Go type from a C type.
 func ResolveFunction(p *program.Program, s string) (fields []string, returns []string, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot resolve function '%s' : %v", s, err)
+		}
+	}()
 	f, r, err := ParseFunction(s)
 	if err != nil {
 		return
@@ -274,19 +297,42 @@ func ResolveFunction(p *program.Program, s string) (fields []string, returns []s
 
 // IsFunction - return true if string is function like "void (*)(void)"
 func IsFunction(s string) bool {
-	parts := strings.Split(s, "(*)")
-	if len(parts) != 2 {
-		return false
+	var counter int
+	for i := range []byte(s) {
+		if s[i] == '(' {
+			counter++
+		}
 	}
-	inside := strings.TrimSpace(parts[1])
-	if inside[0] != '(' || inside[len(inside)-1] != ')' {
-		return false
+	if counter > 0 {
+		return true
 	}
-	return true
+	return false
+}
+
+// IsPointer - check type is pointer
+func IsPointer(s string) bool {
+	if strings.ContainsAny(s, "*[]") {
+		return true
+	}
+	return false
+}
+
+func IsTypedefFunction(p *program.Program, s string) bool {
+	s = string(s[0 : len(s)-len(" *")])
+	if v, ok := p.TypedefType[s]; ok && IsFunction(v) {
+		return true
+	}
+	return false
 }
 
 // ParseFunction - parsing elements of C function
 func ParseFunction(s string) (f []string, r []string, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot parse function '%s' : %v", s, err)
+		}
+	}()
+
 	if !IsFunction(s) {
 		err = fmt.Errorf("Is not function : %s", s)
 		return
@@ -297,12 +343,22 @@ func ParseFunction(s string) (f []string, r []string, err error) {
 		return
 	}
 	r = append(r, s[0:i])
-	parts := strings.Split(s, "(*)")
-	if len(parts) != 2 {
-		err = fmt.Errorf("Cannot parse (separation on parts) : %v", s)
-		return
+	var part string
+	{
+		parts := strings.Split(s, "(*)")
+		if len(parts) != 2 {
+			parts := strings.Split(s, " (")
+			if len(parts) != 2 {
+				err = fmt.Errorf("Cannot parse (separation on parts) : %v", s)
+				return
+			} else {
+				part = "(" + parts[1]
+			}
+		} else {
+			part = parts[1]
+		}
 	}
-	inside := strings.TrimSpace(parts[1])
+	inside := strings.TrimSpace(part)
 	if inside == "" {
 		err = fmt.Errorf("Cannot parse (right part is nil) : %v", s)
 		return
@@ -322,8 +378,14 @@ func ParseFunction(s string) (f []string, r []string, err error) {
 // CleanCType - remove from C type not Go type
 func CleanCType(s string) (out string) {
 	out = s
-	out = strings.Replace(out, "()", "", -1)
-	out = strings.Replace(out, "(*)", "", -1)
+
+	// remove space from pointer symbols
+	out = strings.Replace(out, "* *", "**", -1)
+
+	// add space for simplification redactoring
+	out = strings.Replace(out, "*", " *", -1)
+
+	out = strings.Replace(out, "( *)", "(*)", -1)
 
 	// Remove any whitespace or attributes that are not relevant to Go.
 	out = strings.Replace(out, "const", "", -1)
@@ -336,6 +398,8 @@ func CleanCType(s string) (out string) {
 
 	// remove space from pointer symbols
 	out = strings.Replace(out, "* *", "**", -1)
+	out = strings.Replace(out, "[", " [", -1)
+	out = strings.Replace(out, "] [", "][", -1)
 
 	// remove addition spaces
 	out = strings.Replace(out, "  ", " ", -1)
@@ -346,6 +410,48 @@ func CleanCType(s string) (out string) {
 	if out != s {
 		return CleanCType(out)
 	}
+
+	return out
+}
+
+// GenerateCorrectType - generate correct type
+// Example: 'union (anonymous union at tests/union.c:46:3)'
+func GenerateCorrectType(name string) string {
+	if !strings.Contains(name, "anonymous") {
+		return name
+	}
+	index := strings.Index(name, "(anonymous")
+	if index < 0 {
+		return name
+	}
+	name = strings.Replace(name, "anonymous", "", 1)
+	var last int
+	for last = index; last < len(name); last++ {
+		if name[last] == ')' {
+			break
+		}
+	}
+
+	// Create a string, for example:
+	// Input (name)   : 'union (anonymous union at tests/union.c:46:3)'
+	// Output(inside) : '(anonymous union at tests/union.c:46:3)'
+	inside := string(([]byte(name))[index : last+1])
+
+	// change unacceptable C name letters
+	inside = strings.Replace(inside, "(", "B", -1)
+	inside = strings.Replace(inside, ")", "E", -1)
+	inside = strings.Replace(inside, " ", "S", -1)
+	inside = strings.Replace(inside, ":", "D", -1)
+	inside = strings.Replace(inside, "/", "S", -1)
+	inside = strings.Replace(inside, "-", "T", -1)
+	inside = strings.Replace(inside, "\\", "S", -1)
+	inside = strings.Replace(inside, ".", "P", -1)
+	out := string(([]byte(name))[0:index]) + inside + string(([]byte(name))[last+1:])
+
+	// For case:
+	// struct siginfo_t::(anonymous at /usr/include/x86_64-linux-gnu/bits/siginfo.h:119:2)
+	// we see '::' before 'anonymous' word
+	out = strings.Replace(out, ":", "D", -1)
 
 	return out
 }

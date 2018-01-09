@@ -1,5 +1,6 @@
 package ast
 
+// DeclRefExpr is expression.
 type DeclRefExpr struct {
 	Addr       Address
 	Pos        Position
@@ -42,6 +43,9 @@ func parseDeclRefExpr(line string) *DeclRefExpr {
 		ChildNodes: []Node{},
 	}
 }
+
+// FunctionDeclRefExpr - value of DeclRefExpr.For for function
+var FunctionDeclRefExpr = "Function"
 
 // AddChild adds a new child node. Child nodes can then be accessed with the
 // Children attribute.
