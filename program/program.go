@@ -107,7 +107,7 @@ type Program struct {
 type Comment struct {
 	File    string
 	Line    int
-	Comment []byte
+	Comment string
 }
 
 // NewProgram creates a new blank program.
@@ -208,7 +208,7 @@ func (p *Program) GetComments(n ast.Position) (out []*goast.Comment) {
 	lastLine := n.LineEnd
 	for i := range p.Comments {
 		if p.Comments[i].File == n.File {
-			if beginLine <= p.Comments[i].Line && p.Comments[i].Line <= lastLine {
+			if beginLine < p.Comments[i].Line && p.Comments[i].Line <= lastLine {
 				out = append(out, &goast.Comment{
 					Text: string(p.Comments[i].Comment),
 				})
@@ -360,6 +360,17 @@ func (p *Program) String() string {
 		goast.Print(p.FileSet, p.File)
 
 		panic(err)
+	}
+
+	// Add comments at the end C file
+	for file, beginLine := range p.commentLine {
+		for i := range p.Comments {
+			if p.Comments[i].File == file {
+				if beginLine < p.Comments[i].Line {
+					buf.WriteString(p.Comments[i].Comment)
+				}
+			}
+		}
 	}
 
 	return buf.String()

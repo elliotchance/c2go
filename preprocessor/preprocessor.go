@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
+	"text/scanner"
 
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/util"
@@ -23,23 +24,30 @@ type entity struct {
 	lines []*string
 }
 
-var Comments map[string]string
-
-func (e *entity) ParseComments(comments *[]program.Comment) {
-	reg := util.GetRegex("//.*")
+func (e *entity) parseComments(comments *[]program.Comment) {
+	var source bytes.Buffer
 	for i := range e.lines {
 		if i == 0 {
 			continue
 		}
-		com := reg.Find([]byte(*e.lines[i]))
-		if com != nil {
-			var pos program.Comment
-			pos.Line = e.positionInSource + i - 1
-			pos.File = e.include
-			pos.Comment = com
-			(*comments) = append((*comments), pos)
+		source.Write([]byte(*e.lines[i]))
+		source.Write([]byte{'\n'})
+	}
+
+	var s scanner.Scanner
+	s.Init(strings.NewReader(source.String()))
+	s.Mode = scanner.ScanComments
+	s.Filename = e.include
+	for tok := s.Scan(); tok != scanner.EOF; tok = s.Scan() {
+		if scanner.TokenString(tok) == "Comment" {
+			(*comments) = append(*comments, program.Comment{
+				File:    e.include,
+				Line:    s.Position.Line + e.positionInSource - 1,
+				Comment: s.TokenText(),
+			})
 		}
 	}
+	return
 }
 
 // isSame - check is Same entities
@@ -106,8 +114,17 @@ func Analyze(inputFiles, clangFlags []string) (pp []byte, comments []program.Com
 			continue
 		}
 		// Parse comments only for user sources
+		var isUserSource bool
 		if userSource[allItems[i].include] {
-			allItems[i].ParseComments(&comments)
+			isUserSource = true
+		}
+		if allItems[i].include[0] == '.' &&
+			allItems[i].include[1] == '/' &&
+			userSource[allItems[i].include[2:]] {
+			isUserSource = true
+		}
+		if isUserSource {
+			allItems[i].parseComments(&comments)
 		}
 
 		// Parameter "other" is not included for avoid like:
