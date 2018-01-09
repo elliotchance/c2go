@@ -119,20 +119,11 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
 }
 
 func transpileForStmt(n *ast.ForStmt, p *program.Program) (
-	f *goast.ForStmt, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+	f goast.Stmt, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 
 	// This `defer` is workaround
 	// Please remove after solving all problems
 	defer func() {
-		if f == (*goast.ForStmt)(nil) {
-			p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("ForStmt cannot be nil"), n))
-			f = &goast.ForStmt{ // This is workaround
-				Body: &goast.BlockStmt{
-					Lbrace: 1,
-					List:   []goast.Stmt{&goast.BranchStmt{Tok: token.BREAK}},
-				},
-			}
-		}
 		if err != nil {
 			err = fmt.Errorf("Cannot tranpile ForStmt: err = %v", err)
 			p.AddMessage(p.GenerateWarningMessage(err, n))
@@ -345,15 +336,7 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 	block.List = combineStmts(&forStmt, preStmts, postStmts)
 	block.Lbrace = 1
 
-	return &goast.ForStmt{ // This is workaround
-			Body: &goast.BlockStmt{
-				Lbrace: 1,
-				List:   []goast.Stmt{&goast.BranchStmt{Tok: token.BREAK}},
-			},
-		},
-		nil,
-		[]goast.Stmt{&block},
-		nil
+	return &block, nil, nil, nil
 }
 
 // transpileWhileStmt - transpiler for operator While.
@@ -412,7 +395,7 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 //    |   `-UnaryOperator 0x2530ca0 <line:13:3, col:4> 'int' postfix '--'
 //    |     `-DeclRefExpr 0x2530c78 <col:3> 'int' lvalue Var 0x25306f8 'i' 'int'
 func transpileWhileStmt(n *ast.WhileStmt, p *program.Program) (
-	*goast.ForStmt, []goast.Stmt, []goast.Stmt, error) {
+	goast.Stmt, []goast.Stmt, []goast.Stmt, error) {
 	var forOperator ast.ForStmt
 	forOperator.AddChild(nil)
 	forOperator.AddChild(nil)
@@ -494,7 +477,7 @@ func transpileWhileStmt(n *ast.WhileStmt, p *program.Program) (
 //    |     | `-BreakStmt 0x3bb1d80 <line:16:4>
 //    |     `-<<<NULL>>>
 func transpileDoStmt(n *ast.DoStmt, p *program.Program) (
-	*goast.ForStmt, []goast.Stmt, []goast.Stmt, error) {
+	goast.Stmt, []goast.Stmt, []goast.Stmt, error) {
 	var forOperator ast.ForStmt
 	forOperator.AddChild(nil)
 	forOperator.AddChild(nil)
