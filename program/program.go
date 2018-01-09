@@ -260,6 +260,14 @@ func (p *Program) GetNextIdentifier(prefix string) string {
 func (p *Program) String() string {
 	var buf bytes.Buffer
 
+	buf.WriteString(`/* Package main - transpiled by c2go
+
+	If you have found any issues, please raise an issue at:
+	https://github.com/elliotchance/c2go/
+*/
+
+`)
+
 	// First write all the messages. The double newline afterwards is important
 	// so that the package statement has a newline above it so that the warnings
 	// are not part of the documentation for the package.
