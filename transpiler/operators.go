@@ -179,6 +179,58 @@ func transpileParenExpr(n *ast.ParenExpr, p *program.Program) (
 	return
 }
 
+// pointerArithmetic - operations between 'int' and pointer
+// Example:
+// code : ptr += 1
+// AST:
+// CompoundAssignOperator 0x2738b20 <line:300:3, col:10> 'int *' '+=' ComputeLHSTy='int *' ComputeResultTy='int *'
+// |-DeclRefExpr 0x2738ad8 <col:3> 'int *' lvalue Var 0x2737a90 'ptr' 'int *'
+// `-IntegerLiteral 0x2738b00 <col:10> 'int' 1
+// Solution on meta language:
+// ptr = func() { return ptr + 1 }()
+// Example of solution on Go:
+// intArray := [...]int{1, 2}
+// intPtr := &intArray[0] // type of intPtr is '* int' on Go
+// intPtr = (*int)(unsafe.Pointer(uintptr(unsafe.Pointer(intPtr)) + unsafe.Sizeof(intArray[0])))
+// for our case :
+// ptr = ([]int)(unsafe.Pointer(uintptr(unsafe.Pointer(&ptr[0])) + i * unsafe.Sizeof(ptr[0])))
+// , where i  - left
+//        '+' - operator
+//      'ptr' - right
+//      'int' - leftType transpiled in Go type
+// Note:
+// rigthType MUST be 'int'
+// pointerArithmetic - implemented ONLY right part of formula
+func pointerArithmetic(p *program.Program,
+	left goast.Expr, leftType string,
+	right goast.Expr, rightType string,
+	operator token.Token) (
+	_ goast.Expr, _ string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot transpile pointerArithmetic. err = %v", err)
+		}
+	}()
+	if rightType != "int" {
+		err = fmt.Errorf("right type is not 'int' : '%s'", rightType)
+		return
+	}
+
+	resolvedLeftType, err := types.ResolveType(p, leftType)
+	if err != nil {
+		return
+	}
+	fmt.Println("resolvedType = ", resolvedLeftType)
+	fmt.Println("left  :")
+	goast.Print(token.NewFileSet(), left)
+	fmt.Println("right :")
+	goast.Print(token.NewFileSet(), right)
+
+	_ = resolvedLeftType
+	err = fmt.Errorf("Pointer arithmetic is not supported")
+	return
+}
+
 func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.Program, exprIsStmt bool) (
 	_ goast.Expr, _ string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 	defer func() {
@@ -188,11 +240,6 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
 	}()
 
 	operator := getTokenForOperator(n.Opcode)
-
-	if types.IsPointer(n.Type) {
-		err = fmt.Errorf("Pointer arithmetic is not supported")
-		return nil, "", nil, nil, err
-	}
 
 	right, rightType, newPre, newPost, err := transpileToExpr(n.Children()[1], p, false)
 	if err != nil {
@@ -242,6 +289,13 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
+	// Pointer arithmetic
+	if types.IsPointer(n.Type) &&
+		(operator == token.ADD_ASSIGN || operator == token.SUB_ASSIGN) {
+		operator = convertToWithoutAssign(operator)
+		return pointerArithmetic(p, left, leftType, right, rightType, operator)
+	}
 
 	// The right hand argument of the shift left or shift right operators
 	// in Go must be unsigned integers. In C, shifting with a negative shift
@@ -359,4 +413,18 @@ func getTokenForOperator(operator string) token.Token {
 	}
 
 	panic(fmt.Sprintf("unknown operator: %s", operator))
+}
+
+func convertToWithoutAssign(operator token.Token) token.Token {
+	switch operator {
+	case token.ADD_ASSIGN: // "+="
+		return token.ADD
+	case token.SUB_ASSIGN: // "-="
+		return token.SUB
+	case token.MUL_ASSIGN: // "*="
+		return token.MUL
+	case token.QUO_ASSIGN: // "/="
+		return token.QUO
+	}
+	panic(fmt.Sprintf("not support operator: %v", operator))
 }
