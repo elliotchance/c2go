@@ -1,23 +1,6 @@
 #include <string.h> // strlen()
 #include <math.h> // signbit()
 
-// TODO: This can be removed and replaced with strcmp() when string.h is
-// implemented.
-int streq(const char *a, const char *b) {
-    if (strlen(a) != strlen(b)) {
-        return 0;
-    }
-
-    int i = 0;
-    for (; i < strlen(a); ++i) {
-        if (a[i] != b[i]) {
-            return 0;
-        }
-    }
-
-    return 1;
-}
-
 // When comparing floating-point numbers this is how many significant bits will
 // be used to calculate the epsilon.
 #define INT64 52 - 4
@@ -196,7 +179,7 @@ static int last_test_was_ok = 1;
 // the same value. This is nor to be used with strings that are mixed case or
 // contain multibyte characters (eg. UTF-16, etc).
 #define is_streq(actual, expected)                                 \
-    if (streq(actual, expected))                                   \
+    if (strcmp(actual, expected) == 0)                             \
     {                                                              \
         pass("%s == %s", #actual, #expected)                       \
     }                                                              \
