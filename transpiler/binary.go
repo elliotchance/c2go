@@ -235,10 +235,10 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 
 	if operator == token.ASSIGN {
 		// Memory allocation is translated into the Go-style.
-		allocSize := GetAllocationSizeNode(n.Children()[1])
+		allocSize := getAllocationSizeNode(n.Children()[1])
 
 		if allocSize != nil {
-			right, newPre, newPost, err = GenerateAlloc(p, allocSize, leftType)
+			right, newPre, newPost, err = generateAlloc(p, allocSize, leftType)
 			if err != nil {
 				p.AddMessage(p.GenerateWarningMessage(err, n))
 				return nil, "", nil, nil, err
@@ -357,7 +357,17 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 		preStmts, postStmts, nil
 }
 
-// GetAllocationSizeNode returns the node that, if evaluated, would return the
+func foundCallExpr(n ast.Node) *ast.CallExpr {
+	switch v := n.(type) {
+	case *ast.ImplicitCastExpr, *ast.CStyleCastExpr:
+		return foundCallExpr(n.Children()[0])
+	case *ast.CallExpr:
+		return v
+	}
+	return nil
+}
+
+// getAllocationSizeNode returns the node that, if evaluated, would return the
 // size (in bytes) of a memory allocation operation. For example:
 //
 //     (int *)malloc(sizeof(int))
@@ -369,21 +379,10 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 //
 // In the case of calloc() it will return a new BinaryExpr that multiplies both
 // arguments.
-func GetAllocationSizeNode(node ast.Node) ast.Node {
-	var foundCall func(ast.Node)
-	var expr *ast.CallExpr
+func getAllocationSizeNode(node ast.Node) ast.Node {
+	var expr *ast.CallExpr = foundCallExpr(node)
 
-	foundCall = func(n ast.Node) {
-		switch v := n.(type) {
-		case *ast.ImplicitCastExpr, *ast.CStyleCastExpr:
-			foundCall(n.Children()[0])
-		case *ast.CallExpr:
-			expr = v
-		}
-	}
-	foundCall(node)
-
-	if expr == nil {
+	if expr == nil || expr == (*ast.CallExpr)(nil) {
 		return nil
 	}
 
@@ -415,7 +414,7 @@ func GetAllocationSizeNode(node ast.Node) ast.Node {
 	return nil
 }
 
-func GenerateAlloc(p *program.Program, allocSize ast.Node, leftType string) (
+func generateAlloc(p *program.Program, allocSize ast.Node, leftType string) (
 	right goast.Expr, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 
 	allocSizeExpr, _, newPre, newPost, err := transpileToExpr(allocSize, p, false)
