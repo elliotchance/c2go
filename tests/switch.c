@@ -209,9 +209,105 @@ void scoped_fallthrough_several_cases_including_default()
     }
 }
 
+typedef struct I67 I67;
+struct I67{
+	int x,y;
+};
+
+void run( I67 * i ,int pos)
+{
+	switch (pos) {
+		case 0:
+			(*i).x += 1;
+			(*i).y += 1;
+			break;
+		case 1:
+			(*i).x -= 1;
+			(*i).y -= 1;
+			break;
+	}
+}
+
+void run_with_block( I67 * i ,int pos)
+{
+	switch (pos) {
+		case 0:
+			{
+			(*i).x += 1;
+			(*i).y += 1;
+			break;
+			}
+		case 1:
+			{
+			(*i).x -= 1;
+			(*i).y -= 1;
+			}
+			break;
+		case 2:
+			(*i).x *= 1;
+			(*i).y *= 1;
+			break;
+		default:
+			(*i).x *= 10;
+			(*i).y *= 10;
+	}
+}
+
+void switch_issue67()
+{
+	I67 i;
+	i.x = 0;
+	i.y = 0;
+	run(&i, 0);
+	is_eq(i.x, 1);
+	is_eq(i.y, 1);
+	run(&i, 1);
+	is_eq(i.x, 0);
+	is_eq(i.y, 0);
+	run_with_block(&i,0);
+	is_eq(i.x, 1);
+	is_eq(i.y, 1);
+	run_with_block(&i, 1);
+	is_eq(i.x, 0);
+	is_eq(i.y, 0);
+}
+
+void empty_switch()
+{
+	int pos = 0;
+	switch (pos){
+	}
+	is_eq(pos,0);
+}
+
+void default_only_switch()
+{
+	int pos = 0;
+	switch (pos){
+		case -1: // empty case
+		case -1-4: // empty case
+		case (-1-4-4): // empty case
+		case (-3): // empty case
+		case -2: // empty case
+		default:
+			pos++;
+	}
+	is_eq(pos,1);
+}
+
+void switch_without_input()
+{
+	int pos = 0;
+	switch (0){
+		default:
+			pos++;
+	}
+	is_eq(pos,1);
+}
+
 int main()
 {
-    plan(14);
+    plan(25);
 
     match_a_single_case();
     fallthrough_to_next_case();
@@ -226,6 +322,11 @@ int main()
     scoped_match_no_cases();
     scoped_match_default();
     scoped_fallthrough_several_cases_including_default();
+
+	switch_issue67();
+	empty_switch();
+	default_only_switch();
+	switch_without_input();
 
     done_testing();
 }
