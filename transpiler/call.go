@@ -335,6 +335,11 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 				}
 			}
 
+			if realArg == nil {
+				return nil, "", preStmts, postStmts,
+					fmt.Errorf("Real argument is nil in function : %s", functionName)
+			}
+
 			realArgs = append(realArgs, realArg)
 		}
 	} else {
@@ -351,6 +356,11 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 				if p.AddMessage(p.GenerateWarningMessage(err, n)) {
 					a = util.NewNil()
 				}
+			}
+
+			if a == nil {
+				return nil, "", preStmts, postStmts,
+					fmt.Errorf("Argument is nil in function : %s", functionName)
 			}
 
 			realArgs = append(realArgs, a)

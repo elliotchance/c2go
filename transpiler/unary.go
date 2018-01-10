@@ -61,6 +61,10 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program,
 		}
 	}
 
+	if types.IsPointer(n.Type) {
+		return nil, "", nil, nil, fmt.Errorf("Increment operation (++, --) for pointer is not support")
+	}
+
 	binaryOperator := "+="
 	if operator == token.DEC {
 		binaryOperator = "-="
@@ -126,6 +130,12 @@ func transpileUnaryOperatorNot(n *ast.UnaryOperator, p *program.Program) (
 
 	return util.NewCallExpr(functionName, e),
 		eType, preStmts, postStmts, nil
+}
+
+func transpileUnaryOperatorAmpersant(n *ast.UnaryOperator, p *program.Program) (
+	expr goast.Expr, eType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+	err = fmt.Errorf("Unary operator is not supported")
+	return
 }
 
 // transpilePointerArith - transpile pointer aripthmetic
@@ -335,23 +345,19 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 
 	operator := getTokenForOperator(n.Operator)
 
-	// Prefix "*" is not a multiplication.
-	// Prefix "*" used for pointer ariphmetic
-	// Example of using:
-	// *(t + 1) = ...
-	if n.IsPrefix && n.IsLvalue && n.Operator == "*" {
-		expr, eType, preStmts, postStmts, err := transpilePointerArith(n, p)
-		if err != nil {
-			return nil, "", nil, nil, err
-		}
-		return expr, eType, preStmts, postStmts, nil
-	}
-
 	switch operator {
-	case token.INC, token.DEC:
+	case token.MUL: // *
+		// Prefix "*" is not a multiplication.
+		// Prefix "*" used for pointer ariphmetic
+		// Example of using:
+		// *(t + 1) = ...
+		return transpilePointerArith(n, p)
+	case token.INC, token.DEC: // ++, --
 		return transpileUnaryOperatorInc(n, p, operator)
-	case token.NOT:
+	case token.NOT: // !
 		return transpileUnaryOperatorNot(n, p)
+	case token.AND: // &
+		return transpileUnaryOperatorAmpersant(n, p)
 	}
 
 	// Otherwise handle like a unary operator.

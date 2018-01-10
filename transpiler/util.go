@@ -6,6 +6,15 @@ import (
 	goast "go/ast"
 )
 
+func isNil(stmt goast.Stmt) bool {
+	if stmt != nil &&
+		stmt != (*goast.IfStmt)(nil) &&
+		stmt != (goast.Stmt)(nil) {
+		return false
+	}
+	return true
+}
+
 func convertDeclToStmt(decls []goast.Decl) (stmts []goast.Stmt) {
 	for i := range decls {
 		if decls[i] != nil {
@@ -29,7 +38,7 @@ func combinePreAndPostStmts(
 // nilFilterStmts - remove nil stmt from slice
 func nilFilterStmts(stmts []goast.Stmt) (out []goast.Stmt) {
 	for _, stmt := range stmts {
-		if stmt != nil && stmt != (*goast.IfStmt)(nil) && stmt != (goast.Stmt)(nil) {
+		if !isNil(stmt) {
 			out = append(out, stmt)
 		}
 	}
@@ -42,7 +51,7 @@ func combineStmts(stmt goast.Stmt, preStmts, postStmts []goast.Stmt) (stmts []go
 	if preStmts != nil {
 		stmts = append(stmts, preStmts...)
 	}
-	if stmt != nil {
+	if !isNil(stmt) {
 		stmts = append(stmts, stmt)
 	}
 	postStmts = nilFilterStmts(postStmts)

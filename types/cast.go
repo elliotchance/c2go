@@ -76,6 +76,10 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (_
 		return expr, nil
 	}
 
+	if expr == nil {
+		return nil, fmt.Errorf("Expr is nil")
+	}
+
 	// Function casting
 	// Example :
 	// cFromType  : double (int, float, double)

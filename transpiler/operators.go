@@ -156,6 +156,10 @@ func transpileParenExpr(n *ast.ParenExpr, p *program.Program) (
 	if err != nil {
 		return
 	}
+	if expr == nil {
+		err = fmt.Errorf("Expr is nil")
+		return
+	}
 
 	if exprType == types.NullPointer {
 		r = &goast.ParenExpr{X: expr}
@@ -245,6 +249,15 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
 	resolvedLeftType, err := types.ResolveType(p, leftType)
 	if err != nil {
 		p.AddMessage(p.GenerateWarningMessage(err, n))
+	}
+
+	if right == nil {
+		err = fmt.Errorf("Right part is nil. err = %v", err)
+		return nil, "", nil, nil, err
+	}
+	if left == nil {
+		err = fmt.Errorf("Left part is nil. err = %v", err)
+		return nil, "", nil, nil, err
 	}
 
 	return util.NewBinaryExpr(left, operator, right, resolvedLeftType, exprIsStmt),

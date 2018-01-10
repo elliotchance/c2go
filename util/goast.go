@@ -132,6 +132,9 @@ func internalTypeToExpr(t string) goast.Expr {
 // The function name is checked with IsAValidFunctionName and will panic if the
 // function name is deemed to be not valid.
 func NewCallExpr(functionName string, args ...goast.Expr) *goast.CallExpr {
+	for i := range args {
+		PanicIfNil(args[i], "Argument of function is cannot be nil")
+	}
 	return &goast.CallExpr{
 		Fun:  typeToExpr(functionName),
 		Args: args,
