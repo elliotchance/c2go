@@ -131,6 +131,8 @@ void test_ptrarr()
     int **e[4];
     e[0] = d;
     is_eq(*(e[0][1]), 22);
+
+	(void)(b);
 }
 
 void test_stringarr_init()
@@ -290,6 +292,7 @@ int main()
 		is_eq(*ptr, 10);
 		*++ptr;
 		is_eq(*ptr, 20);
+		(void)(arr);
 	}
 	diag("Pointer to Pointer. 5.1");
 	{
@@ -299,6 +302,7 @@ int main()
 		is_eq(*ptr, 10);
 		ptr += 1;
 		is_eq(*ptr, 20);
+		(void)(arr);
 	}
 	diag("Pointer to Pointer. 5.2");
 	{
@@ -308,6 +312,7 @@ int main()
 		is_eq(*ptr, 10.);
 		ptr += 1;
 		is_eq(*ptr, 20.);
+		(void)(arr);
 	}
 	diag("Pointer to Pointer. 6");
 	{
@@ -317,6 +322,7 @@ int main()
 		is_eq(*ptr, 10);
 		ptr = ptr + 1;
 		is_eq(*ptr, 20);
+		(void)(arr);
 	}
 	diag("Pointer to Pointer. 7");
 	{
@@ -326,6 +332,7 @@ int main()
 		is_eq(*ptr, 10);
 		ptr++;
 		is_eq(*ptr, 20);
+		(void)(arr);
 	}
 
     done_testing();

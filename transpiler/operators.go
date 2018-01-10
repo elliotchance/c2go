@@ -215,20 +215,96 @@ func pointerArithmetic(p *program.Program,
 		err = fmt.Errorf("right type is not 'int' : '%s'", rightType)
 		return
 	}
+	if !types.IsPointer(leftType) {
+		err = fmt.Errorf("left type is not a pointer : '%s'", leftType)
+		return
+	}
 
 	resolvedLeftType, err := types.ResolveType(p, leftType)
 	if err != nil {
 		return
 	}
-	fmt.Println("resolvedType = ", resolvedLeftType)
-	fmt.Println("left  :")
-	goast.Print(token.NewFileSet(), left)
-	fmt.Println("right :")
-	goast.Print(token.NewFileSet(), right)
 
-	_ = resolvedLeftType
-	err = fmt.Errorf("Pointer arithmetic is not supported")
-	return
+	expr := &goast.StarExpr{
+		Star: 1,
+		X: &goast.CallExpr{
+			Fun: &goast.ParenExpr{
+				Lparen: 1,
+				X: &goast.StarExpr{
+					Star: 1,
+					X: &goast.ParenExpr{
+						Lparen: 1,
+						X:      goast.NewIdent(resolvedLeftType), // Type
+					},
+				},
+			},
+			Lparen: 1,
+			Args: []goast.Expr{
+				&goast.CallExpr{
+					Fun: &goast.SelectorExpr{
+						X:   goast.NewIdent("unsafe"),
+						Sel: goast.NewIdent("Pointer"),
+					},
+					Lparen: 1,
+					Args: []goast.Expr{
+						&goast.BinaryExpr{
+							X: &goast.CallExpr{
+								Fun:    goast.NewIdent("uintptr"),
+								Lparen: 1,
+								Args: []goast.Expr{
+									&goast.CallExpr{
+										Fun: &goast.SelectorExpr{
+											X:   goast.NewIdent("unsafe"),
+											Sel: goast.NewIdent("Pointer"),
+										},
+										Lparen: 1,
+										Args: []goast.Expr{
+											&goast.UnaryExpr{
+												Op: token.AND, // &
+												X: &goast.IndexExpr{
+													X:      left, // ptr
+													Lbrack: 1,
+													Index: &goast.BasicLit{
+														Kind:  token.INT,
+														Value: "0",
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							Op: token.ADD, // operation
+							Y: &goast.BinaryExpr{
+								X:  &goast.ParenExpr{Lparen: 1, X: right}, // i
+								Op: token.MUL,                             // *
+								Y: &goast.CallExpr{
+									Fun: &goast.SelectorExpr{
+										X:   goast.NewIdent("unsafe"),
+										Sel: goast.NewIdent("Sizeof"),
+									},
+									Lparen: 1,
+									Args: []goast.Expr{
+										&goast.IndexExpr{
+											X:      left, // ptr
+											Lbrack: 1,
+											Index: &goast.BasicLit{
+												Kind:  token.INT,
+												Value: "0",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	p.AddImport("unsafe")
+
+	return expr, leftType, preStmts, postStmts, nil
 }
 
 func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.Program, exprIsStmt bool) (
@@ -294,7 +370,20 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
 	if types.IsPointer(n.Type) &&
 		(operator == token.ADD_ASSIGN || operator == token.SUB_ASSIGN) {
 		operator = convertToWithoutAssign(operator)
-		return pointerArithmetic(p, left, leftType, right, rightType, operator)
+		v, vType, newPre, newPost, err := pointerArithmetic(p, left, leftType, right, rightType, operator)
+		if err != nil {
+			return nil, "", nil, nil, err
+		}
+		if v == nil {
+			return nil, "", nil, nil, fmt.Errorf("Expr is nil")
+		}
+		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+		v = &goast.BinaryExpr{
+			X:  util.NewIdent(n.Children()[0].(*ast.DeclRefExpr).Name),
+			Op: token.ASSIGN,
+			Y:  v,
+		}
+		return v, vType, preStmts, postStmts, nil
 	}
 
 	// The right hand argument of the shift left or shift right operators

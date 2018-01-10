@@ -132,9 +132,77 @@ func transpileUnaryOperatorNot(n *ast.UnaryOperator, p *program.Program) (
 		eType, preStmts, postStmts, nil
 }
 
+// tranpileUnaryOperatorAmpersant - operator ampersant &
+// Example of AST:
+// `-ImplicitCastExpr 0x2d0fe38 <col:9, col:10> 'int *' <BitCast>
+//   `-UnaryOperator 0x2d0fe18 <col:9, col:10> 'int (*)[5]' prefix '&'
+//     `-DeclRefExpr 0x2d0fdc0 <col:10> 'int [5]' lvalue Var 0x2d0fb20 'arr' 'int [5]'
 func transpileUnaryOperatorAmpersant(n *ast.UnaryOperator, p *program.Program) (
 	expr goast.Expr, eType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
-	err = fmt.Errorf("Unary operator is not supported")
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot transpileUnaryOperatorAmpersant : err = %v", err)
+		}
+	}()
+
+	expr, eType, preStmts, postStmts, err = transpileToExpr(n.Children()[0], p, false)
+	if err != nil {
+		return
+	}
+	if expr == nil {
+		err = fmt.Errorf("Expr is nil")
+		return
+	}
+
+	if types.IsLastArray(eType) {
+		// In:
+		// eType = 'int [5]'
+		// Out:
+		// eType = 'int *'
+		err = fmt.Errorf("Array not support")
+		return
+	}
+
+	if !types.IsPointer(eType) && !types.IsLastArray(eType) {
+		// In:
+		// eType = 'int'
+		// Out:
+		// eType = 'int *'
+		err = fmt.Errorf("Type not support")
+		return
+	}
+
+	expr = &goast.UnaryExpr{
+		Op: token.AND,
+		X:  expr,
+	}
+
+	eType = n.Type
+
+	if eType[len(eType)-1] == n.Type[len(n.Type)-1] && eType[len(eType)-1] == ']' {
+		for i := 1; i < len(eType); i++ {
+			if eType[len(eType)-i] == n.Type[len(n.Type)-i] && eType[len(eType)-1] != '[' {
+				// do nothing. All is ok
+			} else if eType[len(eType)-i] == n.Type[len(n.Type)-i] && eType[len(eType)-1] == '[' {
+				eType = eType[:len(eType)-i]
+				eType = strings.Replace(eType, "(*)", "*", 1)
+				return
+			} else {
+				break
+			}
+		}
+	}
+
+	if strings.Contains(eType, "(*)") {
+		eType = strings.Replace(eType, "(*)", "", 1)
+	} else if strings.Contains(eType, "*") {
+		eType = strings.Replace(eType, "*", "", 1)
+	} else {
+		err = fmt.Errorf("Other convertion type like '&(*int)->(int)' is not support")
+	}
+
+	// err = fmt.Errorf("Unary operator '&' is not supported")
+	// fmt.Println("")
 	return
 }
 
