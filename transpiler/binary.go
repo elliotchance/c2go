@@ -62,6 +62,11 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 		}
 	}()
 
+	if types.IsPointer(n.Type) {
+		err = fmt.Errorf("Pointer arithmetic is not supported")
+		return
+	}
+
 	operator := getTokenForOperator(n.Operator)
 
 	// Example of C code

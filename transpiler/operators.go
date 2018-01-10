@@ -180,10 +180,19 @@ func transpileParenExpr(n *ast.ParenExpr, p *program.Program) (
 }
 
 func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.Program, exprIsStmt bool) (
-	goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
+	_ goast.Expr, _ string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot transpileCompoundAssignOperator. err = %v", err)
+		}
+	}()
+
 	operator := getTokenForOperator(n.Opcode)
-	preStmts := []goast.Stmt{}
-	postStmts := []goast.Stmt{}
+
+	if types.IsPointer(n.Type) {
+		err = fmt.Errorf("Pointer arithmetic is not supported")
+		return nil, "", nil, nil, err
+	}
 
 	right, rightType, newPre, newPost, err := transpileToExpr(n.Children()[1], p, false)
 	if err != nil {
