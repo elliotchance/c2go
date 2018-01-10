@@ -128,6 +128,31 @@ void test_malloc3()
     is_eq(d[4], 456);
 }
 
+void test_malloc4()
+{
+    diag("malloc4");
+
+	int length = 5;
+
+	char *m = malloc(length * sizeof(char));
+    is_not_null(m) or_return();
+	(void)(m);
+
+	char *m2 = malloc(sizeof(char) * length);
+    is_not_null(m2) or_return();
+	(void)(m2);
+	
+	char *m3;
+	m3 = malloc(sizeof(char) * length);
+    is_not_null(m3) or_return();
+	(void)(m3);
+	
+	char *m4;
+	m4 = malloc(length * sizeof(char));
+    is_not_null(m4) or_return();
+	(void)(m4);
+}
+
 // calloc() works exactly the same as malloc() however the memory is zeroed out.
 // In Go all allocated memory is zeroed out so they actually are the same thing.
 void test_calloc()
@@ -190,7 +215,7 @@ void q_sort(){
 
 int main()
 {
-    plan(748);
+    plan(752);
 
     char *endptr;
 
@@ -351,6 +376,7 @@ int main()
     test_malloc1();
     test_malloc2();
     test_malloc3();
+    test_malloc4();
 
     diag("rand")
     int i, nextRand, lastRand = rand();

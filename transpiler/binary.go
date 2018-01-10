@@ -6,7 +6,6 @@ import (
 	"fmt"
 	goast "go/ast"
 	"go/token"
-	"reflect"
 	"strings"
 
 	"github.com/elliotchance/c2go/ast"
@@ -236,36 +235,17 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 
 	if operator == token.ASSIGN {
 		// Memory allocation is translated into the Go-style.
-		allocSize := GetAllocationSizeNode(n.Children()[1])
+		allocSize := getAllocationSizeNode(n.Children()[1])
 
 		if allocSize != nil {
-			allocSizeExpr, _, newPre, newPost, err := transpileToExpr(allocSize, p, false)
+			right, newPre, newPost, err = generateAlloc(p, allocSize, leftType)
+			if err != nil {
+				p.AddMessage(p.GenerateWarningMessage(err, n))
+				return nil, "", nil, nil, err
+			}
+
 			preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-			if err != nil {
-				return nil, "unknown60", preStmts, postStmts, err
-			}
-
-			derefType, err := types.GetDereferenceType(leftType)
-			if err != nil {
-				return nil, "unknown61", preStmts, postStmts, err
-			}
-
-			toType, err := types.ResolveType(p, leftType)
-			if err != nil {
-				return nil, "unknown62", preStmts, postStmts, err
-			}
-
-			elementSize, err := types.SizeOf(p, derefType)
-			if err != nil {
-				return nil, "unknown63", preStmts, postStmts, err
-			}
-
-			right = util.NewCallExpr(
-				"make",
-				util.NewTypeIdent(toType),
-				util.NewBinaryExpr(allocSizeExpr, token.QUO, util.NewIntLit(elementSize), "int", false),
-			)
 		} else {
 			right, err = types.CastExpr(p, right, rightType, returnType)
 
@@ -377,7 +357,17 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 		preStmts, postStmts, nil
 }
 
-// GetAllocationSizeNode returns the node that, if evaluated, would return the
+func foundCallExpr(n ast.Node) *ast.CallExpr {
+	switch v := n.(type) {
+	case *ast.ImplicitCastExpr, *ast.CStyleCastExpr:
+		return foundCallExpr(n.Children()[0])
+	case *ast.CallExpr:
+		return v
+	}
+	return nil
+}
+
+// getAllocationSizeNode returns the node that, if evaluated, would return the
 // size (in bytes) of a memory allocation operation. For example:
 //
 //     (int *)malloc(sizeof(int))
@@ -389,35 +379,71 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 //
 // In the case of calloc() it will return a new BinaryExpr that multiplies both
 // arguments.
-func GetAllocationSizeNode(node ast.Node) ast.Node {
-	exprs := ast.GetAllNodesOfType(node, reflect.TypeOf((*ast.CallExpr)(nil)))
+func getAllocationSizeNode(node ast.Node) ast.Node {
+	var expr *ast.CallExpr = foundCallExpr(node)
 
-	for _, expr := range exprs {
-		functionName, _ := getNameOfFunctionFromCallExpr(expr.(*ast.CallExpr))
+	if expr == nil || expr == (*ast.CallExpr)(nil) {
+		return nil
+	}
 
-		if functionName == "malloc" {
-			// Is 1 always the body in this case? Might need to be more careful
-			// to find the correct node.
-			return expr.(*ast.CallExpr).Children()[1]
-		}
+	functionName, _ := getNameOfFunctionFromCallExpr(expr)
 
-		if functionName == "calloc" {
-			return &ast.BinaryOperator{
-				Type:       "int",
-				Operator:   "*",
-				ChildNodes: expr.(*ast.CallExpr).Children()[1:],
-			}
-		}
+	if functionName == "malloc" {
+		// Is 1 always the body in this case? Might need to be more careful
+		// to find the correct node.
+		return expr.Children()[1]
+	}
 
-		// TODO: realloc() is not supported
-		// https://github.com/elliotchance/c2go/issues/118
-		//
-		// Realloc will be treated as calloc which will almost certainly cause
-		// bugs in your code.
-		if functionName == "realloc" {
-			return expr.(*ast.CallExpr).Children()[2]
+	if functionName == "calloc" {
+		return &ast.BinaryOperator{
+			Type:       "int",
+			Operator:   "*",
+			ChildNodes: expr.Children()[1:],
 		}
 	}
 
+	// TODO: realloc() is not supported
+	// https://github.com/elliotchance/c2go/issues/118
+	//
+	// Realloc will be treated as calloc which will almost certainly cause
+	// bugs in your code.
+	if functionName == "realloc" {
+		return expr.Children()[2]
+	}
+
 	return nil
+}
+
+func generateAlloc(p *program.Program, allocSize ast.Node, leftType string) (
+	right goast.Expr, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+
+	allocSizeExpr, _, newPre, newPost, err := transpileToExpr(allocSize, p, false)
+
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
+	if err != nil {
+		return nil, preStmts, postStmts, err
+	}
+
+	derefType, err := types.GetDereferenceType(leftType)
+	if err != nil {
+		return nil, preStmts, postStmts, err
+	}
+
+	toType, err := types.ResolveType(p, leftType)
+	if err != nil {
+		return nil, preStmts, postStmts, err
+	}
+
+	elementSize, err := types.SizeOf(p, derefType)
+	if err != nil {
+		return nil, preStmts, postStmts, err
+	}
+
+	right = util.NewCallExpr(
+		"make",
+		util.NewTypeIdent(toType),
+		util.NewBinaryExpr(allocSizeExpr, token.QUO, util.NewIntLit(elementSize), "int", false),
+	)
+	return
 }
