@@ -52,6 +52,25 @@ func transpileBinaryOperatorComma(n *ast.BinaryOperator, p *program.Program) (
 	return right[len(right)-1], preStmts, nil
 }
 
+func findUnion(node ast.Node) (unionNode ast.Node, haveMemberExprWithUnion bool) {
+	switch chi := node.(type) {
+	case *ast.MemberExpr:
+		if strings.HasPrefix(chi.Type, "union ") {
+			haveMemberExprWithUnion = true
+			unionNode = node
+			return
+		}
+		return findUnion(node.Children()[0])
+	case *ast.DeclRefExpr:
+		if strings.HasPrefix(chi.Type, "union ") {
+			haveMemberExprWithUnion = true
+			unionNode = node
+			return
+		}
+	}
+	return nil, false
+}
+
 func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsStmt bool) (
 	_ goast.Expr, resultType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 	defer func() {
@@ -271,25 +290,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 				right = util.NewNil()
 			}
 
-			var haveMemberExprWithUnion bool
-			var findUnion func(ast.Node)
-			var UnionNode ast.Node
-			findUnion = func(node ast.Node) {
-				switch chi := node.(type) {
-				case *ast.MemberExpr:
-					if strings.HasPrefix(chi.Type, "union ") {
-						haveMemberExprWithUnion = true
-						UnionNode = node
-					}
-					findUnion(node.Children()[0])
-				case *ast.DeclRefExpr:
-					if strings.HasPrefix(chi.Type, "union ") {
-						haveMemberExprWithUnion = true
-						UnionNode = node
-					}
-				}
-			}
-			findUnion(n.Children()[0])
+			unionNode, haveMemberExprWithUnion := findUnion(n.Children()[0])
 
 			// Construct code for assigning value to an union field
 			if memberExpr, ok := n.Children()[0].(*ast.MemberExpr); ok {
@@ -335,7 +336,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 				// struct inside union
 				if haveMemberExprWithUnion {
 					p.AddMessage(p.GenerateWarningMessage(
-						fmt.Errorf("Binary operation with union not support. AST node with union : %v", UnionNode), n))
+						fmt.Errorf("Binary operation with union not support. AST node with union : %v", unionNode), n))
 				}
 			}
 		}
