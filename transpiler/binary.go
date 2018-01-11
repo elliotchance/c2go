@@ -224,12 +224,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 	if operator == token.NEQ || operator == token.EQL || operator == token.LSS || operator == token.GTR || operator == token.AND || operator == token.ADD || operator == token.SUB || operator == token.MUL || operator == token.QUO || operator == token.REM {
 
 		if types.IsPointer(n.Type) {
-			// err = fmt.Errorf("Pointer arithmetic is not supported")
-			// return
 			p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Pointer arithmetic is not supported"), n))
-			fmt.Println("t = ", n.Type)
-			fmt.Println("l = ", leftType)
-			fmt.Println("r = ", rightType)
 		}
 		// We may have to cast the right side to the same type as the left
 		// side. This is a bit crude because we should make a better
