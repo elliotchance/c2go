@@ -468,6 +468,24 @@ int main()
 			is_eq(*ptr,arr[i])
 		}
 	}
+	diag("Pointer to Pointer. 14.1");
+	{
+		int arr[5] = {10,20,30,40,50};
+		int *ptr ;
+		ptr = &arr[2];
+		is_eq(*ptr, 30);
+		*(ptr + 1) = 42;
+		is_eq(arr[4], 42);
+	}
+	diag("Pointer to Pointer. 14.2");
+	{
+		double arr[5] = {10.,20.,30.,40.,50.};
+		double *ptr ;
+		ptr = &arr[2];
+		is_eq(*ptr, 30.);
+		*(ptr + 1) = 42.;
+		is_eq(arr[4], 42.);
+	}
 
     done_testing();
 }
