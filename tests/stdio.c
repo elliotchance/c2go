@@ -47,7 +47,7 @@ void test_printf()
     printf("# %s \n", "A string");
 
 
-    int magnitude = 2;
+    int magnitude = 4;
     char printfFormat[30] = "%0";
     char magnitudeString[10];
     sprintf(magnitudeString, "%d", magnitude);

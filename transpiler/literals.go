@@ -32,9 +32,7 @@ func transpileStringLiteral(n *ast.StringLiteral) goast.Expr {
 	}
 	buf := bytes.NewBufferString(n.Value + "\x00")
 	if buf.Len() < s {
-		for i := buf.Len(); i < s; i++ {
-			buf.WriteByte('\x00')
-		}
+		buf.Write(make([]byte, s-buf.Len()))
 	}
 	return util.NewCallExpr("[]byte",
 		util.NewStringLit(strconv.Quote(buf.String())))
