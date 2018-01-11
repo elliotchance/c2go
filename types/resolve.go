@@ -317,6 +317,19 @@ func IsPointer(s string) bool {
 	return false
 }
 
+// IsLastArray - check type have array '[]'
+func IsLastArray(s string) bool {
+	for _, b := range s {
+		switch b {
+		case '[':
+			return true
+		case '*':
+			break
+		}
+	}
+	return false
+}
+
 func IsTypedefFunction(p *program.Program, s string) bool {
 	s = string(s[0 : len(s)-len(" *")])
 	if v, ok := p.TypedefType[s]; ok && IsFunction(v) {

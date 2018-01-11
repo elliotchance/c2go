@@ -154,55 +154,31 @@ func transpileUnaryOperatorAmpersant(n *ast.UnaryOperator, p *program.Program) (
 		return
 	}
 
+	if types.IsFunction(eType) {
+		err = fmt.Errorf("function pointer is not supported")
+		return
+	}
+
 	if types.IsLastArray(eType) {
-		// In:
-		// eType = 'int [5]'
-		// Out:
-		// eType = 'int *'
-		err = fmt.Errorf("Array not support")
+		// In : eType = 'int [5]'
+		// Out: eType = 'int *'
+		f := strings.Index(eType, "[")
+		e := strings.Index(eType, "]")
+		if e == len(eType)-1 {
+			eType = eType[:f] + "*"
+		} else {
+			eType = eType[:f] + "*" + eType[e+1:]
+		}
 		return
 	}
 
-	if !types.IsPointer(eType) && !types.IsLastArray(eType) {
-		// In:
-		// eType = 'int'
-		// Out:
-		// eType = 'int *'
-		err = fmt.Errorf("Type not support")
-		return
-	}
-
+	// In : eType = 'int'
+	// Out: eType = 'int *'
 	expr = &goast.UnaryExpr{
 		Op: token.AND,
 		X:  expr,
 	}
-
-	eType = n.Type
-
-	if eType[len(eType)-1] == n.Type[len(n.Type)-1] && eType[len(eType)-1] == ']' {
-		for i := 1; i < len(eType); i++ {
-			if eType[len(eType)-i] == n.Type[len(n.Type)-i] && eType[len(eType)-1] != '[' {
-				// do nothing. All is ok
-			} else if eType[len(eType)-i] == n.Type[len(n.Type)-i] && eType[len(eType)-1] == '[' {
-				eType = eType[:len(eType)-i]
-				eType = strings.Replace(eType, "(*)", "*", 1)
-				return
-			} else {
-				break
-			}
-		}
-	}
-
-	if strings.Contains(eType, "(*)") {
-		eType = strings.Replace(eType, "(*)", "", 1)
-	} else if strings.Contains(eType, "*") {
-		eType = strings.Replace(eType, "*", "", 1)
-	} else {
-		err = fmt.Errorf("Other convertion type like '&(*int)->(int)' is not support")
-	}
-
-	// err = fmt.Errorf("Unary operator '&' is not supported")
-	// fmt.Println("")
+	eType = eType + " *"
 	return
 }
 
