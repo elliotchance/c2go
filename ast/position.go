@@ -304,6 +304,8 @@ func setPosition(node Node, position Position) {
 		n.Pos = position
 	case *InitListExpr:
 		n.Pos = position
+	case *InlineCommandComment:
+		n.Pos = position
 	case *IntegerLiteral:
 		n.Pos = position
 	case *LabelStmt:
