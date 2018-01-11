@@ -179,6 +179,7 @@ var builtInFunctionDefinitions = []string{
 
 	// string.h
 	"char* strcat(char *, const char *) -> noarch.Strcat",
+	"int strcmp(const char *, const char *) -> noarch.Strcmp",
 
 	"char* strcpy(const char*, char*) -> noarch.Strcpy",
 	// should be: "char* strncpy(const char*, char*, size_t) -> noarch.Strncpy",
