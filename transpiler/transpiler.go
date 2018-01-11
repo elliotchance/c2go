@@ -445,7 +445,7 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 
 	// For all other cases
 	if expr == nil {
-		err = fmt.Errorf("Expr is nil. err = %v", err)
+		err = fmt.Errorf("Expr is nil")
 		return
 	}
 	stmt = util.NewExprStmt(expr)
