@@ -35,7 +35,7 @@ import (
 //     c2go -v
 //
 // See https://github.com/elliotchance/c2go/wiki/Release-Process
-const Version = "v0.20.1 Ytterbium 2018-01-07"
+const Version = "v0.20.3 Ytterbium 2018-01-10"
 
 var stderr io.Writer = os.Stderr
 
@@ -201,7 +201,7 @@ func Start(args ProgramArgs) (err error) {
 		fmt.Println("Running clang preprocessor...")
 	}
 
-	pp, err := preprocessor.Analyze(args.inputFiles, args.clangFlags)
+	pp, comments, err := preprocessor.Analyze(args.inputFiles, args.clangFlags)
 	if err != nil {
 		return err
 	}
@@ -250,6 +250,7 @@ func Start(args ProgramArgs) (err error) {
 	p := program.NewProgram()
 	p.Verbose = args.verbose
 	p.OutputAsTest = args.outputAsTest
+	p.Comments = comments
 
 	// Converting to nodes
 	if args.verbose {
