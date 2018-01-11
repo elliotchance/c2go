@@ -1,5 +1,9 @@
 package noarch
 
+import (
+	"bytes"
+)
+
 // Strlen returns the length of a string.
 //
 // The length of a C string is determined by the terminating null-character: A
@@ -68,4 +72,10 @@ func Strncpy(dest, src []byte, len int) []byte {
 func Strcat(dest, src []byte) []byte {
 	Strcpy(dest[Strlen(dest):], src)
 	return dest
+}
+
+// Strcmp - compare two strings
+// Compares the C string str1 to the C string str2.
+func Strcmp(str1, str2 []byte) int {
+	return bytes.Compare([]byte(CStringToString(str1)), []byte(CStringToString(str2)))
 }
