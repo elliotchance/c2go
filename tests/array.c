@@ -159,6 +159,16 @@ int arrayEx[4] = { 1, 2, 3, 4 };
 
 int ff(){ return 3;}
 
+double rep_double(double a)
+{
+	return a;
+}
+
+int rep_int(int a)
+{
+	return a;
+}
+
 int main()
 {
     plan(102);
@@ -416,6 +426,47 @@ int main()
 		is_eq(*ptr, 30.);
 		ptr--;
 		is_eq(*ptr, 20.);
+	}
+	diag("Pointer to Pointer. 11.1");
+	{
+		int arr[5] = {10,20,30,40,50};
+		int *ptr ;
+		ptr = &arr[2];
+		is_eq(*ptr, 30);
+		is_eq(*(ptr--), 20);
+	}
+	diag("Pointer to Pointer. 11.2");
+	{
+		double arr[5] = {10.,20.,30.,40.,50.};
+		double *ptr ;
+		ptr = &arr[2];
+		is_eq(*ptr, 30.);
+		is_eq(*(ptr--), 20.);
+	}
+	diag("Pointer to Pointer. 12.1");
+	{
+		int arr[5] = {10,20,30,40,50};
+		int *ptr ;
+		ptr = &arr[2];
+		is_eq(*ptr, 30);
+		is_eq(rep_int(*(ptr + 1)), 40);
+	}
+	diag("Pointer to Pointer. 12.2");
+	{
+		double arr[5] = {10.,20.,30.,40.,50.};
+		double *ptr ;
+		ptr = &arr[2];
+		is_eq(*ptr, 30.);
+		is_eq(rep_double(*(ptr+1)), 40.);
+	}
+	diag("Pointer to Pointer. 13");
+	{
+		double arr[5] = {10.,20.,30.,40.,50.};
+		double *ptr ;
+		int i = 0;
+		for (ptr = &arr[0]; i < 5; ptr++){
+			is_eq(*ptr,arr[i])
+		}
 	}
 
     done_testing();
