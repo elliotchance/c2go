@@ -419,3 +419,40 @@ func TestExternalInclude(t *testing.T) {
 		t.Errorf("Wrong result: %v", buf.String())
 	}
 }
+
+func TestComments(t *testing.T) {
+	var args = DefaultProgramArgs()
+	args.inputFiles = []string{"./tests/comment/main.c"}
+	dir, err := ioutil.TempDir("", "c2go_multi5")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir) // clean up
+	args.outputFile = path.Join(dir, "comment.go")
+	args.packageName = "main"
+	args.outputAsTest = true
+
+	// testing
+	err = Start(args)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	dat, err := ioutil.ReadFile(args.outputFile)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	reg := util.GetRegex("comment(\\d+)")
+	comms := reg.FindAll(dat, -1)
+	amountComments := 30
+	for i := range comms {
+		if fmt.Sprintf("comment%d", i+1) != string(comms[i]) {
+			t.Fatalf("Not expected name of comment.Expected = %s, actual = %s.",
+				fmt.Sprintf("comment%d", i+1),
+				string(comms[i]))
+		}
+	}
+	if len(comms) != amountComments {
+		t.Fatalf("Expect %d comments, but found %d commnets", amountComments, len(comms))
+	}
+}
