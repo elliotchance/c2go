@@ -161,7 +161,7 @@ int ff(){ return 3;}
 
 int main()
 {
-    plan(84);
+    plan(90);
 
     START_TEST(intarr);
     START_TEST(doublearr);
@@ -282,7 +282,7 @@ int main()
 		is_eq(**ptr1, i);
 		is_eq(* ptr2, i);
 	}
-	diag("Pointer to Pointer. 4");
+	diag("Pointer to Pointer. 4.1");
 	{
 		int arr[5] = {10,20,30,40,50};
 		int *ptr ;
@@ -290,6 +290,15 @@ int main()
 		is_eq(*ptr, 10);
 		*++ptr;
 		is_eq(*ptr, 20);
+	}
+	diag("Pointer to Pointer. 4.2");
+	{
+		double arr[5] = {10.,20.,30.,40.,50.};
+		double *ptr ;
+		ptr = &arr;
+		is_eq(*ptr, 10.);
+		*++ptr;
+		is_eq(*ptr, 20.);
 	}
 	diag("Pointer to Pointer. 5.1");
 	{
@@ -327,7 +336,16 @@ int main()
 		ptr = 1 + ptr;
 		is_eq(*ptr, 20);
 	}
-	diag("Pointer to Pointer. 7");
+	diag("Pointer to Pointer. 6.3");
+	{
+		double arr[5] = {10.,20.,30.,40.,50.};
+		double *ptr ;
+		ptr = &arr;
+		is_eq(*ptr, 10.);
+		ptr = 1 + ptr;
+		is_eq(*ptr, 20.);
+	}
+	diag("Pointer to Pointer. 7.1");
 	{
 		int arr[5] = {10,20,30,40,50};
 		int *ptr ;
@@ -335,6 +353,15 @@ int main()
 		is_eq(*ptr, 10);
 		ptr++;
 		is_eq(*ptr, 20);
+	}
+	diag("Pointer to Pointer. 7.2");
+	{
+		double arr[5] = {10.,20.,30.,40.,50.};
+		double *ptr ;
+		ptr = &arr;
+		is_eq(*ptr, 10.);
+		ptr++;
+		is_eq(*ptr, 20.);
 	}
 
     done_testing();
