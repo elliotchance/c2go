@@ -1,5 +1,9 @@
 package noarch
 
+import (
+	"bytes"
+)
+
 // Strlen returns the length of a string.
 //
 // The length of a C string is determined by the terminating null-character: A
@@ -26,7 +30,7 @@ func Strcpy(dest, src []byte) []byte {
 
 		// We only need to copy until the first NULL byte. Make sure we also
 		// include that NULL byte on the end.
-		if c == 0 {
+		if c == '\x00' {
 			break
 		}
 	}
@@ -58,4 +62,20 @@ func Strncpy(dest, src []byte, len int) []byte {
 	}
 
 	return dest
+}
+
+// Strcat - concatenate strings
+// Appends a copy of the source string to the destination string.
+// The terminating null character in destination is overwritten by the first
+// character of source, and a null-character is included at the end
+// of the new string formed by the concatenation of both in destination.
+func Strcat(dest, src []byte) []byte {
+	Strcpy(dest[Strlen(dest):], src)
+	return dest
+}
+
+// Strcmp - compare two strings
+// Compares the C string str1 to the C string str2.
+func Strcmp(str1, str2 []byte) int {
+	return bytes.Compare([]byte(CStringToString(str1)), []byte(CStringToString(str2)))
 }

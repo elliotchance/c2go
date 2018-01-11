@@ -93,6 +93,21 @@ type Program struct {
 	// Map: key = INT, value = int
 	// Important: key and value are C types
 	TypedefType map[string]string
+
+	// Comments
+	Comments []Comment
+
+	// commentLine - a map with:
+	// key    - filename
+	// value  - last comment inserted in Go code
+	commentLine map[string]int
+}
+
+// Comment - position of line comment '//...'
+type Comment struct {
+	File    string
+	Line    int
+	Comment string
 }
 
 // NewProgram creates a new blank program.
@@ -130,6 +145,7 @@ func NewProgram() *Program {
 		EnumConstantToEnum: map[string]string{},
 		EnumTypedefName:    map[string]bool{},
 		TypedefType:        map[string]string{},
+		commentLine:        map[string]int{},
 	}
 }
 
@@ -184,6 +200,23 @@ func (p *Program) GetMessageComments() (_ *goast.CommentGroup) {
 		p.messagePosition = len(p.messages)
 	}
 	return &group
+}
+
+// GetComments - return comments
+func (p *Program) GetComments(n ast.Position) (out []*goast.Comment) {
+	beginLine := p.commentLine[n.File]
+	lastLine := n.LineEnd
+	for i := range p.Comments {
+		if p.Comments[i].File == n.File {
+			if beginLine < p.Comments[i].Line && p.Comments[i].Line <= lastLine {
+				out = append(out, &goast.Comment{
+					Text: string(p.Comments[i].Comment),
+				})
+			}
+		}
+	}
+	p.commentLine[n.File] = lastLine
+	return
 }
 
 // GetStruct returns a struct object (representing struct type or union type) or
@@ -260,6 +293,14 @@ func (p *Program) GetNextIdentifier(prefix string) string {
 func (p *Program) String() string {
 	var buf bytes.Buffer
 
+	buf.WriteString(`/* Package main - transpiled by c2go
+
+	If you have found any issues, please raise an issue at:
+	https://github.com/elliotchance/c2go/
+*/
+
+`)
+
 	// First write all the messages. The double newline afterwards is important
 	// so that the package statement has a newline above it so that the warnings
 	// are not part of the documentation for the package.
@@ -319,6 +360,17 @@ func (p *Program) String() string {
 		goast.Print(p.FileSet, p.File)
 
 		panic(err)
+	}
+
+	// Add comments at the end C file
+	for file, beginLine := range p.commentLine {
+		for i := range p.Comments {
+			if p.Comments[i].File == file {
+				if beginLine < p.Comments[i].Line {
+					buf.WriteString(p.Comments[i].Comment)
+				}
+			}
+		}
 	}
 
 	return buf.String()

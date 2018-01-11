@@ -84,7 +84,7 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 	// and variables that the runtime expects to be ready.
 	p.File.Decls = append(p.File.Decls, &goast.FuncDecl{
 		Name: goast.NewIdent("init"),
-		Type: util.NewFuncType(&goast.FieldList{}, ""),
+		Type: util.NewFuncType(&goast.FieldList{}, "", false),
 		Body: &goast.BlockStmt{
 			List: p.StartupStatements(),
 		},
@@ -466,6 +466,11 @@ func transpileToNode(node ast.Node, p *program.Program) (decls []goast.Decl, err
 		if len(decls) > 0 {
 			if _, ok := decls[0].(*goast.FuncDecl); ok {
 				decls[0].(*goast.FuncDecl).Doc = p.GetMessageComments()
+				decls[0].(*goast.FuncDecl).Doc.List = append(decls[0].(*goast.FuncDecl).Doc.List,
+					p.GetComments(node.Position())...)
+				decls[0].(*goast.FuncDecl).Doc.List = append([]*goast.Comment{&goast.Comment{
+					Text: fmt.Sprintf("// %s - transpiled function from file : %s , line : %d", decls[0].(*goast.FuncDecl).Name.Name, n.Pos.File, n.Pos.Line),
+				}}, decls[0].(*goast.FuncDecl).Doc.List...)
 			}
 		}
 

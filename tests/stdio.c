@@ -3,12 +3,16 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
 #include <assert.h>
 #include "tests.h"
 
 #define START_TEST(t) \
     diag(#t);         \
     test_##t();
+
+// size of that file
+int filesize = 9699;
 
 void test_putchar()
 {
@@ -297,7 +301,7 @@ void test_ftell()
     size = ftell(pFile);
     fclose(pFile);
 
-    is_eq(size, 8592);
+    is_eq(size, filesize);
 }
 
 void test_fread()
@@ -413,7 +417,7 @@ void test_feof()
     if (feof(pFile))
     {
         pass("%s", "End-of-File reached.");
-        is_eq(n, 8592);
+        is_eq(n, filesize);
     }
     else
     {
@@ -423,9 +427,59 @@ void test_feof()
     fclose(pFile);
 }
 
+void test_sprintf()
+{
+	char buffer [100];
+	int cx;
+	cx = snprintf ( buffer, 100, "The half of %d is %d", 60, 60/2 );
+	is_streq(buffer,"The half of 60 is 30");
+	is_eq(cx,20);
+}
+
+void test_snprintf()
+{
+	char buffer [50];
+	int n, a=5, b=3;
+	n = sprintf (buffer, "%d plus %d is %d", a, b, a+b);
+	is_streq(buffer, "5 plus 3 is 8")
+	is_eq(n,13)
+}
+
+int PrintFError(const char * format, ... )
+{
+	char buffer[256];
+	va_list args;
+	va_start (args, format);
+	int s = vsprintf (buffer,format, args);
+	va_end (args);
+	return s;
+}
+
+void test_vsprintf()
+{
+	int s = PrintFError("Success function '%s' %.2f","vsprintf",3.1415926);
+	is_eq(s,19+8+5);
+}
+
+int PrintFError2(const char * format, ... )
+{
+	char buffer[256];
+	va_list args;
+	va_start (args, format);
+	int s = vsnprintf (buffer,256,format, args);
+	va_end (args);
+	return s;
+}
+
+void test_vsnprintf()
+{
+	int s = PrintFError2("Success function '%s' %.2f","vsprintf",3.1415926);
+	is_eq(s,19+8+5);
+}
+
 int main()
 {
-    plan(44);
+    plan(50);
 
     START_TEST(putchar)
     START_TEST(puts)
@@ -454,6 +508,10 @@ int main()
     START_TEST(fsetpos)
     START_TEST(rewind)
     START_TEST(feof)
+    START_TEST(sprintf)
+    START_TEST(snprintf)
+    START_TEST(vsprintf)
+    START_TEST(vsnprintf)
 
     done_testing();
 }

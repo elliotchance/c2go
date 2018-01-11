@@ -413,3 +413,45 @@ func CleanCType(s string) (out string) {
 
 	return out
 }
+
+// GenerateCorrectType - generate correct type
+// Example: 'union (anonymous union at tests/union.c:46:3)'
+func GenerateCorrectType(name string) string {
+	if !strings.Contains(name, "anonymous") {
+		return name
+	}
+	index := strings.Index(name, "(anonymous")
+	if index < 0 {
+		return name
+	}
+	name = strings.Replace(name, "anonymous", "", 1)
+	var last int
+	for last = index; last < len(name); last++ {
+		if name[last] == ')' {
+			break
+		}
+	}
+
+	// Create a string, for example:
+	// Input (name)   : 'union (anonymous union at tests/union.c:46:3)'
+	// Output(inside) : '(anonymous union at tests/union.c:46:3)'
+	inside := string(([]byte(name))[index : last+1])
+
+	// change unacceptable C name letters
+	inside = strings.Replace(inside, "(", "B", -1)
+	inside = strings.Replace(inside, ")", "E", -1)
+	inside = strings.Replace(inside, " ", "S", -1)
+	inside = strings.Replace(inside, ":", "D", -1)
+	inside = strings.Replace(inside, "/", "S", -1)
+	inside = strings.Replace(inside, "-", "T", -1)
+	inside = strings.Replace(inside, "\\", "S", -1)
+	inside = strings.Replace(inside, ".", "P", -1)
+	out := string(([]byte(name))[0:index]) + inside + string(([]byte(name))[last+1:])
+
+	// For case:
+	// struct siginfo_t::(anonymous at /usr/include/x86_64-linux-gnu/bits/siginfo.h:119:2)
+	// we see '::' before 'anonymous' word
+	out = strings.Replace(out, ":", "D", -1)
+
+	return out
+}

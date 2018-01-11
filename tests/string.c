@@ -3,7 +3,7 @@
 
 int main()
 {
-    plan(24);
+    plan(28);
 
     diag("TODO: __builtin_object_size")
     // https://github.com/elliotchance/c2go/issues/359
@@ -81,6 +81,33 @@ int main()
         // is_eq(strlen(NULL), 0);
         is_eq(strlen("fo\0o"), 2);
     }
+	{
+		diag("strcat")
+		char str[80];
+		strcpy (str,"these ");
+		strcat (str,"strings ");
+		strcat (str,"are ");
+		strcat (str,"concatenated.");
+		is_streq(str,"these strings are concatenated.");
+	}
+	{
+		diag("strcmp");
+		{
+			char* a = "ab";
+			char* b = "ab";
+			is_true(strcmp(a,b) == 0);
+		}
+		{
+			char* a = "bb";
+			char* b = "ab";
+			is_true(strcmp(a,b) > 0);
+		}
+		{
+			char* a = "ab";
+			char* b = "bb";
+			is_true(strcmp(a,b) < 0);
+		}
+	}
 
     done_testing();
 }

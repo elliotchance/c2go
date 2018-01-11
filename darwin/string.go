@@ -19,3 +19,9 @@ func BuiltinObjectSize(ptr []byte, theType int) int {
 func BuiltinStrncpy(dest, src []byte, len, size int) []byte {
 	return noarch.Strncpy(dest, src, len)
 }
+
+// BuiltinStrcat is for __builtin___strcat_chk
+// https://opensource.apple.com/source/Libc/Libc-763.12/include/secure/_string.h.auto.html
+func BuiltinStrcat(dest, src []byte, _ int) []byte {
+	return noarch.Strcat(dest, src)
+}
