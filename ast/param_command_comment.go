@@ -1,5 +1,6 @@
 package ast
 
+// ParamCommandComment is a type of comment
 type ParamCommandComment struct {
 	Addr       Address
 	Pos        Position

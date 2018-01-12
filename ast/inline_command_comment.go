@@ -1,5 +1,6 @@
 package ast
 
+// InlineCommandComment is a type of comment
 type InlineCommandComment struct {
 	Addr       Address
 	Pos        Position

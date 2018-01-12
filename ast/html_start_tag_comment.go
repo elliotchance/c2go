@@ -1,5 +1,6 @@
 package ast
 
+// HTMLStartTagComment is a type of comment
 type HTMLStartTagComment struct {
 	Addr       Address
 	Pos        Position

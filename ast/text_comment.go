@@ -1,5 +1,6 @@
 package ast
 
+// TextComment is a type of comment
 type TextComment struct {
 	Addr       Address
 	Pos        Position
