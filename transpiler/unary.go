@@ -15,8 +15,19 @@ import (
 	"go/token"
 )
 
-func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program,
-	operator token.Token) (goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
+func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program, operator token.Token) (
+	expr goast.Expr, eType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot transpileUnaryOperatorInc. err = %v", err)
+		}
+	}()
+
+	if !(operator == token.INC || operator == token.DEC) {
+		err = fmt.Errorf("Not acceptable operator '%v'.", operator)
+		return
+	}
+
 	// Unfortunately we cannot use the Go increment operators because we are not
 	// providing any position information for tokens. This means that the ++/--
 	// would be placed before the expression and would be invalid in Go.
@@ -62,7 +73,45 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program,
 	}
 
 	if types.IsPointer(n.Type) {
-		return nil, "", nil, nil, fmt.Errorf("Increment operation (++, --) for pointer is not support")
+		switch operator {
+		case token.INC:
+			operator = token.ADD
+		case token.DEC:
+			operator = token.SUB
+		}
+
+		var left goast.Expr
+		var leftType string
+		var newPre, newPost []goast.Stmt
+		left, leftType, newPre, newPost, err = transpileToExpr(n.Children()[0], p, false)
+		if err != nil {
+			return
+		}
+
+		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
+		rightType := "int"
+		right := &goast.BasicLit{
+			Kind:  token.INT,
+			Value: "1",
+		}
+
+		expr, eType, newPre, newPost, err = pointerArithmetic(p, left, leftType, right, rightType, operator)
+		if err != nil {
+			return
+		}
+		if expr == nil {
+			return nil, "", nil, nil, fmt.Errorf("Expr is nil")
+		}
+
+		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
+		expr = &goast.BinaryExpr{
+			X:  util.NewIdent(n.Children()[0].(*ast.DeclRefExpr).Name),
+			Op: token.ASSIGN,
+			Y:  expr,
+		}
+		return
 	}
 
 	binaryOperator := "+="
@@ -174,11 +223,19 @@ func transpileUnaryOperatorAmpersant(n *ast.UnaryOperator, p *program.Program) (
 
 	// In : eType = 'int'
 	// Out: eType = 'int *'
-	expr = &goast.UnaryExpr{
-		Op: token.AND,
-		X:  expr,
+	// FIXME: This will need to use a real slice to reference the original
+	// value.
+	resolvedType, err := types.ResolveType(p, eType)
+	if err != nil {
+		p.AddMessage(p.GenerateWarningMessage(err, n))
+		return
 	}
-	eType = eType + " *"
+
+	p.AddImport("unsafe")
+	expr = util.CreateSliceFromReference(resolvedType, expr)
+
+	// We now have a pointer to the original type.
+	eType += " *"
 	return
 }
 
@@ -378,6 +435,7 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 	}
 	return nil, "", nil, nil, fmt.Errorf("Cannot found : %#v", pointer)
 }
+
 func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 	_ goast.Expr, theType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 	defer func() {
@@ -412,27 +470,11 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	if operator == token.AND {
-		// FIXME: This will need to use a real slice to reference the original
-		// value.
-		resolvedType, err := types.ResolveType(p, eType)
-		if err != nil {
-			p.AddMessage(p.GenerateWarningMessage(err, n))
-		}
-
-		p.AddImport("unsafe")
-		e = util.CreateSliceFromReference(resolvedType, e)
-
-		// We now have a pointer to the original type.
-		eType += " *"
-
-		return e, eType, preStmts, postStmts, nil
-	}
-
 	return &goast.UnaryExpr{
 		Op: operator,
 		X:  e,
 	}, eType, preStmts, postStmts, nil
+
 }
 
 func transpileUnaryExprOrTypeTraitExpr(n *ast.UnaryExprOrTypeTraitExpr, p *program.Program) (
