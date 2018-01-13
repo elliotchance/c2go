@@ -237,11 +237,11 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 				preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 				// fmt.Println("*")
-				expr = &goast.BinaryExpr{
-					X:  util.NewIdent(getName(n.Children()[0])),
-					Op: token.ASSIGN,
-					Y:  expr,
-				}
+				// expr = &goast.BinaryExpr{
+				// 	X:  util.NewIdent(getName(n.Children()[0])),
+				// 	Op: token.ASSIGN,
+				// 	Y:  expr,
+				// }
 				return
 			} else {
 				expr, eType, newPre, newPost, err = pointerArithmetic(p, right, rightType, left, leftType, operator)
