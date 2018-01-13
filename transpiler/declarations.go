@@ -198,7 +198,11 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 			p.AddImports("reflect", "unsafe")
 
 			// Declaration for implementing union type
-			decls = append(decls, transpileUnion(name, size, fields)...)
+			d, err2 := transpileUnion(name, size, fields)
+			if err2 != nil {
+				return nil, err2
+			}
+			decls = append(decls, d...)
 		}
 	} else {
 		decls = append(decls, &goast.GenDecl{

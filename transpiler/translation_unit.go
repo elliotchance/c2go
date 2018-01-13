@@ -85,15 +85,6 @@ func isSameTypedefNames(v *ast.TypedefDecl) bool {
 	     `-RecordType 0x33d9fa0 'struct Uq'
 	       `-Record 0x33da090 'Uq'
 	*/
-	if "struct "+v.Name == v.Type2 && v.Type == v.Type2 {
-		if vv, ok := v.Children()[0].(*ast.ElaboratedType); ok && vv.Type == v.Type {
-			if vvv, ok := vv.Children()[0].(*ast.RecordType); ok && vvv.Type == v.Type2 {
-				if vvvv, ok := vvv.Children()[0].(*ast.Record); ok && vvvv.Type == v.Name {
-					return true
-				}
-			}
-		}
-	}
 	// for unions:
 	/*
 		TypedefDecl 0x38bc070 <col:1, col:23> col:23 referenced myunion 'union myunion':'union myunion'
@@ -101,7 +92,7 @@ func isSameTypedefNames(v *ast.TypedefDecl) bool {
 		  `-RecordType 0x38bc000 'union myunion'
 		    `-Record 0x38bc0d8 'myunion'
 	*/
-	if "union "+v.Name == v.Type2 && v.Type == v.Type2 {
+	if ("struct "+v.Name == v.Type2 || "union "+v.Name == v.Type2) && v.Type == v.Type2 {
 		if vv, ok := v.Children()[0].(*ast.ElaboratedType); ok && vv.Type == v.Type {
 			if vvv, ok := vv.Children()[0].(*ast.RecordType); ok && vvv.Type == v.Type2 {
 				if vvvv, ok := vvv.Children()[0].(*ast.Record); ok && vvvv.Type == v.Name {

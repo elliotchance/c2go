@@ -13,7 +13,8 @@ import (
 	"fmt"
 )
 
-func transpileUnion(name string, size int, fields []*goast.Field) []goast.Decl {
+func transpileUnion(name string, size int, fields []*goast.Field) (
+	_ []goast.Decl, err error) {
 
 	type field struct {
 		Name      string
@@ -53,11 +54,13 @@ func (self *{{ .Name }}) UntypedSet(v interface{}){
 }
 
 {{ range .Fields }}
+// Get{{ .Name }} - return value of {{ .Name }}
 func (self *{{ $.Name }}) Get{{ .Name }} () (res {{ .TypeField }}){
 	self.assign(&res)
 	return
 }
 
+// Set{{ .Name }} - set value of {{ .Name }}
 func (self *{{ $.Name }}) Set{{ .Name }} (v {{ .TypeField }}) {{ .TypeField }}{
 	self.value = v // added for avoid GC removing pointers in union
 	self.UntypedSet(v)
@@ -90,22 +93,21 @@ func (self *{{ $.Name }}) Set{{ .Name }} (v {{ .TypeField }}) {{ .TypeField }}{
 		un.Fields = append(un.Fields, f)
 	}
 
-	var err error
 	tmpl := template.Must(template.New("").Parse(src))
 	var source bytes.Buffer
 	err = tmpl.Execute(&source, un)
 	if err != nil {
-		panic(err)
+		return
 	}
 
 	// Create the AST by parsing src.
 	fset := token.NewFileSet() // positions are relative to fset
 	f, err := parser.ParseFile(fset, "", source.String(), 0)
 	if err != nil {
-		panic(err)
+		return
 	}
 
-	return f.Decls[1:]
+	return f.Decls[1:], nil
 }
 
 func getFunctionNameForUnion(verb, variableName, variableType, attributeName string) string {
