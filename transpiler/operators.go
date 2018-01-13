@@ -318,8 +318,6 @@ func main(){
 		panic(err)
 	}
 
-	fmt.Println(strings.Replace(source.String(), "&#43;", "+", -1))
-
 	// Create the AST by parsing src.
 	fset := token.NewFileSet() // positions are relative to fset
 	f, err := parser.ParseFile(fset, "", strings.Replace(source.String(), "&#43;", "+", -1), 0)
@@ -329,105 +327,8 @@ func main(){
 
 	p.AddImport("unsafe")
 
-	// expr := /*&goast.ExprStmt{
-	// 	X: */&goast.DeclStmt{
-	// 		Decl: f.Decls[0],
-	// 	} /*,
-	// 	}
-	// 	*/
-
-	// expr := nil
-	fmt.Println(f.Decls[0].(*goast.FuncDecl).Body)
-	fmt.Println(f.Decls[0].(*goast.FuncDecl).Body)
-	fmt.Println(f.Decls[0].(*goast.FuncDecl).Body.List[0].(*goast.AssignStmt).Rhs[0])
-
 	return f.Decls[0].(*goast.FuncDecl).Body.List[0].(*goast.AssignStmt).Rhs[0],
 		leftType, preStmts, postStmts, nil
-	//
-	// return f.Decls[1:]
-	// expr := &goast.SliceExpr{
-	// 	X: &goast.ParenExpr{
-	// 		Lparen: 1,
-	// 		X: &goast.StarExpr{
-	// 			X: &goast.CallExpr{
-	// 				Fun: &goast.ParenExpr{
-	// 					Lparen: 1,
-	// 					X: &goast.StarExpr{
-	// 						X: &goast.ArrayType{
-	// 							Len: &goast.BasicLit{Kind: token.INT, Value: "1"},
-	// 							Elt: goast.NewIdent(resolvedLeftType[2:]),
-	// 						},
-	// 					},
-	// 				},
-	// 				Lparen: 1,
-	// 				Args: []goast.Expr{
-	// 					&goast.CallExpr{
-	// 						Fun: &goast.SelectorExpr{
-	// 							X:   goast.NewIdent("unsafe"),
-	// 							Sel: goast.NewIdent("Pointer"),
-	// 						},
-	// 						Lparen: 1,
-	// 						Args: []goast.Expr{
-	// 							&goast.BinaryExpr{
-	// 								X: &goast.CallExpr{
-	// 									Fun:    goast.NewIdent("uintptr"),
-	// 									Lparen: 1,
-	// 									Args: []goast.Expr{
-	// 										&goast.CallExpr{
-	// 											Fun: &goast.SelectorExpr{
-	// 												X:   goast.NewIdent("unsafe"),
-	// 												Sel: goast.NewIdent("Pointer"),
-	// 											},
-	// 											Lparen: 1,
-	// 											Args: []goast.Expr{
-	// 												&goast.UnaryExpr{
-	// 													Op: token.AND, // &
-	// 													X: &goast.IndexExpr{
-	// 														X:      left, // ptr
-	// 														Lbrack: 1,
-	// 														Index: &goast.BasicLit{
-	// 															Kind:  token.INT,
-	// 															Value: "0",
-	// 														},
-	// 													},
-	// 												},
-	// 											},
-	// 										},
-	// 									},
-	// 								},
-	// 								Op: operator, // operation
-	// 								Y: &goast.BinaryExpr{
-	// 									X:  &goast.ParenExpr{Lparen: 1, X: right}, // i
-	// 									Op: token.MUL,                             // *
-	// 									Y: &goast.CallExpr{
-	// 										Fun: &goast.SelectorExpr{
-	// 											X:   goast.NewIdent("unsafe"),
-	// 											Sel: goast.NewIdent("Sizeof"),
-	// 										},
-	// 										Lparen: 1,
-	// 										Args: []goast.Expr{
-	// 											&goast.IndexExpr{
-	// 												X:      left, // ptr
-	// 												Lbrack: 1,
-	// 												Index: &goast.BasicLit{
-	// 													Kind:  token.INT,
-	// 													Value: "0",
-	// 												},
-	// 											},
-	// 										},
-	// 									},
-	// 								},
-	// 							},
-	// 						},
-	// 					},
-	// 				},
-	// 			},
-	// 		},
-	// 	},
-	// }
-	// p.AddImport("unsafe")
-	//
-	// return expr, leftType, preStmts, postStmts, nil
 }
 
 func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.Program, exprIsStmt bool) (
