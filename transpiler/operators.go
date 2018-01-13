@@ -341,7 +341,7 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
 		}
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 		v = &goast.BinaryExpr{
-			X:  util.NewIdent(n.Children()[0].(*ast.DeclRefExpr).Name),
+			X:  util.NewIdent(getName(n.Children()[0])),
 			Op: token.ASSIGN,
 			Y:  v,
 		}
