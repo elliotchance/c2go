@@ -257,14 +257,14 @@ func main(){
 	var source bytes.Buffer
 	err = tmpl.Execute(&source, s)
 	if err != nil {
-		panic(err)
+		return
 	}
 
 	// Create the AST by parsing src.
 	fset := token.NewFileSet() // positions are relative to fset
 	f, err := parser.ParseFile(fset, "", strings.Replace(source.String(), "&#43;", "+", -1), 0)
 	if err != nil {
-		panic(err)
+		return
 	}
 
 	p.AddImport("unsafe")

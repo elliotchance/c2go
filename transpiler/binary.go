@@ -223,77 +223,32 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 
 	// pointer arithmetic
 	if types.IsPointer(n.Type) {
-		// fmt.Println("n.Type = ", n.Type)
-		// fmt.Println("operator = ", operator)
 		if operator == token.ADD || operator == token.SUB {
 			if types.IsPointer(leftType) {
-				expr, eType, newPre, newPost, err = pointerArithmetic(p, left, leftType, right, rightType, operator)
-				if err != nil {
-					return
-				}
-				if expr == nil {
-					return nil, "", nil, nil, fmt.Errorf("Expr is nil")
-				}
-				preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
-
-				// fmt.Println("*")
-				// expr = &goast.BinaryExpr{
-				// 	X:  util.NewIdent(getName(n.Children()[0])),
-				// 	Op: token.ASSIGN,
-				// 	Y:  expr,
-				// }
-				return
+				expr, eType, newPre, newPost, err =
+					pointerArithmetic(p, left, leftType, right, rightType, operator)
 			} else {
-				expr, eType, newPre, newPost, err = pointerArithmetic(p, right, rightType, left, leftType, operator)
-				if err != nil {
-					return
-				}
-				if expr == nil {
-					return nil, "", nil, nil, fmt.Errorf("Expr is nil")
-				}
-				preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
-
-				// fmt.Println("*")
-				// expr = &goast.BinaryExpr{
-				// 	X:  util.NewIdent(getName(n.Children()[1])),
-				// 	Op: token.ASSIGN,
-				// 	Y:  expr,
-				// }
+				expr, eType, newPre, newPost, err =
+					pointerArithmetic(p, right, rightType, left, leftType, operator)
+			}
+			if err != nil {
 				return
 			}
+			if expr == nil {
+				return nil, "", nil, nil, fmt.Errorf("Expr is nil")
+			}
+			preStmts, postStmts =
+				combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
+			return
 		}
-		// if operator == token.ASSIGN {
-		// 	var resolvedType string
-		// 	resolvedType, err = types.ResolveType(p, leftType)
-		// 	if err != nil {
-		// 		p.AddMessage(p.GenerateWarningMessage(err, n))
-		// 		return
-		// 	}
-		//
-		// 	p.AddImport("unsafe")
-		// 	right = util.CreateSliceFromReference(resolvedType, right)
-		//
-		// 	// We now have a pointer to the original type.
-		// 	eType += n.Type // " *"
-		// 	expr = &goast.BinaryExpr{
-		// 		X:  left,
-		// 		Op: token.ASSIGN,
-		// 		Y:  right,
-		// 	}
-		// 	return
-		// }
 	}
 
-	if operator == token.NEQ ||
-		operator == token.EQL ||
-		operator == token.LSS ||
-		operator == token.GTR ||
-		operator == token.AND ||
-		operator == token.ADD ||
-		operator == token.SUB ||
-		operator == token.MUL ||
-		operator == token.QUO ||
-		operator == token.REM {
+	if operator == token.NEQ || operator == token.EQL ||
+		operator == token.LSS || operator == token.GTR ||
+		operator == token.AND || operator == token.ADD ||
+		operator == token.SUB || operator == token.MUL ||
+		operator == token.QUO || operator == token.REM {
 
 		// We may have to cast the right side to the same type as the left
 		// side. This is a bit crude because we should make a better

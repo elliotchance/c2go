@@ -375,26 +375,5 @@ int main()
 		}
 	}
 
-	/* diag("Pointer to Pointer. 8.3"); */
-	/* { */
-	/* 	double arr[5] = {10.,20.,30.,40.,50.}; */
-	/* 	double *ptr ; */
-	/* 	ptr = &arr[2]; */
-	/* 	is_eq(*ptr, 30.); */
-	/* 	ptr = -1 + ptr; */
-	/* 	is_eq(*ptr, 20.); */
-	/* } */
-	/* diag("Pointer to Pointer. 8.4"); */
-	/* { */
-	/* 	double arr[5] = {10.,20.,30.,40.,50.}; */
-	/* 	double *ptr ; */
-	/* 	ptr = &arr[2]; */
-	/* 	is_eq(*ptr, 30.); */
-	/* 	ptr = (-1-2+2) + ptr; */
-	/* 	is_eq(*ptr, 20.); */
-	/* } */
-	//TODO:
-	// ptr = ptr + f(32)
-
     done_testing();
 }
