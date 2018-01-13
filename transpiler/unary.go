@@ -79,6 +79,10 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program, operato
 		case token.DEC:
 			operator = token.SUB
 		}
+		if _, ok := n.Children()[0].(*ast.DeclRefExpr); !ok {
+			err = fmt.Errorf("Unsupported type %T", n.Children()[0])
+			return
+		}
 
 		var left goast.Expr
 		var leftType string
@@ -107,7 +111,7 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program, operato
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 		expr = &goast.BinaryExpr{
-			X:  util.NewIdent(n.Children()[0].(*ast.DeclRefExpr).Name),
+			X:  util.NewIdent(getName(n.Children()[0])),
 			Op: token.ASSIGN,
 			Y:  expr,
 		}

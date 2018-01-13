@@ -10,7 +10,6 @@ import (
 	"go/printer"
 	"go/token"
 	"html/template"
-	"os"
 	"strings"
 
 	goast "go/ast"
@@ -219,9 +218,6 @@ func pointerArithmetic(p *program.Program,
 	if err != nil {
 		return
 	}
-
-	printer.Fprint(os.Stdout, token.NewFileSet(), right)
-	fmt.Println("")
 
 	type pA struct {
 		Name      string // name of variable: 'ptr'
