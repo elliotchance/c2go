@@ -29,18 +29,27 @@ void pass_by_val(struct programming value)
     is_streq(value.pointer, "Programming in Software Development.");
 }
 
+/**
+ * text
+ */
 typedef struct mainStruct{
     double constant;
 } secondStruct;
 
+/*
+ * Text
+ */
 typedef struct {
     double t;
 } ts_c;
 
+// Text
 typedef struct ff {
     int v1,v2;
 } tt1, tt2;
 
+// Text1
+// Text2
 struct outer {
     int i;
     struct z {
@@ -50,6 +59,9 @@ struct outer {
 
 struct xx {
     int i;
+	/**
+	 * Text
+	 */
     struct yy {
         int j;
         struct zz {
@@ -58,6 +70,9 @@ struct xx {
     } inner;
 };
 
+/**
+ * Some function
+ */
 int summator(int i, float f){
 	return i+(int)(f);
 }
