@@ -186,60 +186,16 @@ func transpileParenExpr(n *ast.ParenExpr, p *program.Program) (
 }
 
 // pointerArithmetic - operations between 'int' and pointer
-// Example:
-// code : ptr += 1
-// AST:
-// CompoundAssignOperator 0x2738b20 <line:300:3, col:10> 'int *' '+=' ComputeLHSTy='int *' ComputeResultTy='int *'
-// |-DeclRefExpr 0x2738ad8 <col:3> 'int *' lvalue Var 0x2737a90 'ptr' 'int *'
-// `-IntegerLiteral 0x2738b00 <col:10> 'int' 1
-// Solution on meta language:
-// ptr = func() { return ptr + 1 }()
-// Example of solution on Go:
-// intArray := [...]int{1, 2}
-// intPtr := &intArray[0] // type of intPtr is '* int' on Go
-// intPtr = (*int)(unsafe.Pointer(uintptr(unsafe.Pointer(intPtr)) + unsafe.Sizeof(intArray[0])))
-// for our case :
-// ptr = ([]int)(unsafe.Pointer(uintptr(unsafe.Pointer(&ptr[0])) + i * unsafe.Sizeof(ptr[0])))
+// Example C code : ptr += i
+// ptr = (*(*[1]int)(unsafe.Pointer(uintptr(unsafe.Pointer(&ptr[0])) + (i)*unsafe.Sizeof(ptr[0]))))[:]
 // , where i  - left
 //        '+' - operator
 //      'ptr' - right
 //      'int' - leftType transpiled in Go type
 // Note:
-// rigthType MUST be 'int'
-// pointerArithmetic - implemented ONLY right part of formula
-/*
-	TODO: REAL WORK CODE:
-		var arr []int = []int{1, 2, 3, 4, 5}
-		var ptr *int
-		ptr = (*int)(unsafe.Pointer(uintptr(unsafe.Pointer(&(arr[0])))))
-		fmt.Println("ptr = ", *ptr)
-		ptr = (*int)(unsafe.Pointer(uintptr(unsafe.Pointer(ptr)) + (1)*unsafe.Sizeof(ptr)))
-		fmt.Println("ptr = ", *ptr)
-
-		OR
-
-		ptr = (*(*[1]int)(unsafe.Pointer(uintptr(unsafe.Pointer(&ptr[0])) + (1)*unsafe.Sizeof(ptr[0]))))[:]
-
-
-		var arr []int = []int{1, 2, 3, 4, 5}
-		var ptr []int
-		ptr = (*[1]int)(unsafe.Pointer(uintptr(unsafe.Pointer(&(arr[0])))))[:]
-		fmt.Println("ptr = ", ptr[0])
-		ptr = (*(*[1]int)(unsafe.Pointer(uintptr(unsafe.Pointer(&ptr[0])) + (1)*unsafe.Sizeof(ptr[0]))))[:]
-
-
-		var arr []int = []int{1, 2, 3, 4, 5}
-		var ptr []int
-		ptr = arr
-		fmt.Println("ptr = ", ptr[0])
-		ptr = (*(*[1]int)(unsafe.Pointer(uintptr(unsafe.Pointer(&ptr[0])) + (1)*unsafe.Sizeof(ptr[0]))))[:]
-		fmt.Println("ptr = ", ptr[0])
-
-
-
-		ptr = (*(*[1]int)(unsafe.Pointer(uintptr(unsafe.Pointer(&ptr[0])) + noarch.Sign(1)*noarch.Abs(1)*unsafe.Sizeof(ptr[0]))))[:]
-*/
-
+// 1) rigthType MUST be 'int'
+// 2) pointerArithmetic - implemented ONLY right part of formula
+// 3) right is MUST be positive value, because impossible multiply uintptr to (-1)
 func pointerArithmetic(p *program.Program,
 	left goast.Expr, leftType string,
 	right goast.Expr, rightType string,
@@ -286,30 +242,16 @@ func pointerArithmetic(p *program.Program,
 		printer.Fprint(&buf, token.NewFileSet(), right)
 		s.Condition = buf.String()
 	}
-	fmt.Println("O = ", operator)
 	s.Type = resolvedLeftType[2:]
+
 	s.Operator = "+"
 	if operator == token.SUB {
 		s.Operator = "-"
 	}
-	// s.Operator = token.SUB //operator
-	fmt.Printf("op -- %s\n", s.Operator)
-	fmt.Println("R = ", s)
-	/*
-	   	src := `package main
-	   func main(){
-	   	a := func() []{{ .Type }} {
-	   	if ({{ .Condition }}) > 0{
-	   		return (*(*[1]{{ .Type }})(unsafe.Pointer(uintptr(unsafe.Pointer(&{{ .Name }}[0])) {{ .Operator }} ({{ .Condition }})*unsafe.Sizeof({{ .Name }}[0]))))[:]
-	   	}
-	   	return (*(*[1]{{ .Type }})(unsafe.Pointer(uintptr(unsafe.Pointer(&{{ .Name }}[0])) {{ .Operator }} (-({{ .Condition }}))*unsafe.Sizeof({{ .Name }}[0]))))[:]
-	   }()
-	   }`
-	*/
 
 	src := `package main
 func main(){
-	a:=	(*(*[1]{{ .Type }})(unsafe.Pointer(uintptr(unsafe.Pointer(&{{ .Name }}[0])) {{ .Operator }} ({{ .Condition }})*unsafe.Sizeof({{ .Name }}[0]))))[:]
+	a := (*(*[1]{{ .Type }})(unsafe.Pointer(uintptr(unsafe.Pointer(&{{ .Name }}[0])) {{ .Operator }} ({{ .Condition }})*unsafe.Sizeof({{ .Name }}[0]))))[:]
 }`
 	tmpl := template.Must(template.New("").Parse(src))
 	var source bytes.Buffer
