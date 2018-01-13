@@ -29,6 +29,9 @@ func (sr StructRegistry) HasType(typename string) bool {
 // Program contains all of the input, output and transpition state of a C
 // program to a Go program.
 type Program struct {
+	// Version of c2go
+	Version string
+
 	// All of the Go import paths required for this program.
 	imports []string
 
@@ -293,13 +296,14 @@ func (p *Program) GetNextIdentifier(prefix string) string {
 func (p *Program) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString(`/* Package main - transpiled by c2go
+	buf.WriteString(fmt.Sprintf(`/*
+	Package main - transpiled by c2go version: %s
 
 	If you have found any issues, please raise an issue at:
 	https://github.com/elliotchance/c2go/
 */
 
-`)
+`, p.Version))
 
 	// First write all the messages. The double newline afterwards is important
 	// so that the package statement has a newline above it so that the warnings
@@ -367,7 +371,7 @@ func (p *Program) String() string {
 		for i := range p.Comments {
 			if p.Comments[i].File == file {
 				if beginLine < p.Comments[i].Line {
-					buf.WriteString(p.Comments[i].Comment)
+					buf.WriteString(fmt.Sprintln(p.Comments[i].Comment))
 				}
 			}
 		}

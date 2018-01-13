@@ -19,6 +19,19 @@ type Position struct {
 	StringValue string
 }
 
+// GetSimpleLocation - return a string like : "file : 1.c , line : 100" in
+// accoring to position
+func (p Position) GetSimpleLocation() (loc string) {
+	fs := len(p.File)
+	if fs > 20 {
+		loc += fmt.Sprintf("file : ...%s", p.File[fs-17:])
+	} else {
+		loc += fmt.Sprintf("file : %s", p.File)
+	}
+	loc += fmt.Sprintf(" , line : %d", p.Line)
+	return
+}
+
 func NewPositionFromString(s string) Position {
 	if s == "<invalid sloc>" || s == "" {
 		return Position{}

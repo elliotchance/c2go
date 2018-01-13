@@ -251,6 +251,7 @@ func Start(args ProgramArgs) (err error) {
 	p.Verbose = args.verbose
 	p.OutputAsTest = args.outputAsTest
 	p.Comments = comments
+	p.Version = Version
 
 	// Converting to nodes
 	if args.verbose {
