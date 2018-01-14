@@ -24,6 +24,9 @@ func getName(firstChild ast.Node) string {
 	case *ast.MemberExpr:
 		if types.IsFunction(fc.Type) {
 			if decl, ok := fc.Children()[0].(*ast.DeclRefExpr); ok {
+				if strings.Contains(decl.Type, "union ") {
+					return getFunctionNameForUnionGetter(decl.Name, "", fc.Name) + "()"
+				}
 				return decl.Name + "." + fc.Name
 			}
 		}
