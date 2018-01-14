@@ -306,6 +306,10 @@ func Start(args ProgramArgs) (err error) {
 		return fmt.Errorf("writing Go output file failed: %v", err)
 	}
 
+	// simplify Go code by `gofmt`
+	// error ignored, because it is not change the workflow
+	_, _ = exec.Command("gofmt", "-w", outputFilePath).Output()
+
 	return nil
 }
 
