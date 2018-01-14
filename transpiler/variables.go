@@ -344,6 +344,10 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	if structType == nil {
 		structType = p.GetStruct("struct " + lhsType)
 	}
+	// added for support "union typedef"
+	if structType == nil {
+		structType = p.GetStruct("union " + lhsType)
+	}
 	rhs := n.Name
 	rhsType := "void *"
 	if structType == nil {

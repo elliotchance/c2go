@@ -3,6 +3,7 @@ package types
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/elliotchance/c2go/program"
@@ -454,4 +455,27 @@ func GenerateCorrectType(name string) string {
 	out = strings.Replace(out, ":", "D", -1)
 
 	return out
+}
+
+// GetAmountArraySize - return amount array size
+// Example :
+// In  : 'char [40]'
+// Out : 40
+func GetAmountArraySize(cType string) (size int, err error) {
+	reg := util.GetRegex("\\[(?P<size>\\d+)\\]")
+	match := reg.FindStringSubmatch(cType)
+
+	if reg.NumSubexp() != 1 {
+		err = fmt.Errorf("Cannot found size of array in type : %s", cType)
+		return
+	}
+
+	result := make(map[string]string)
+	for i, name := range reg.SubexpNames() {
+		if i != 0 {
+			result[name] = match[i]
+		}
+	}
+
+	return strconv.Atoi(result["size"])
 }

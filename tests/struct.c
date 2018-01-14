@@ -29,18 +29,27 @@ void pass_by_val(struct programming value)
     is_streq(value.pointer, "Programming in Software Development.");
 }
 
+/**
+ * text
+ */
 typedef struct mainStruct{
     double constant;
 } secondStruct;
 
+/*
+ * Text
+ */
 typedef struct {
     double t;
 } ts_c;
 
+// Text
 typedef struct ff {
     int v1,v2;
 } tt1, tt2;
 
+// Text1
+// Text2
 struct outer {
     int i;
     struct z {
@@ -50,6 +59,9 @@ struct outer {
 
 struct xx {
     int i;
+	/**
+	 * Text
+	 */
     struct yy {
         int j;
         struct zz {
@@ -58,13 +70,41 @@ struct xx {
     } inner;
 };
 
+/**
+ * Some function
+ */
 int summator(int i, float f){
 	return i+(int)(f);
 }
 
+typedef struct J J;
+struct J
+{
+	float f;
+	int (*fu)(J *j, float i);
+};
+
+int j_function(J *j, float i)
+{
+	if (j != NULL)
+	{
+		return (int)(i+(*j).f);
+	}
+	return -1;
+};
+
+void struct_with_rec_fuction()
+{
+	J j;
+	j.f = 5.0;
+	j.fu = j_function;
+	is_eq(j.fu(&j,4.0),9);
+	is_eq(j_function(NULL, 4.0),-1);
+}
+
 int main()
 {
-    plan(44);
+    plan(48);
 
     struct programming variable;
     char *s = "Programming in Software Development.";
@@ -229,6 +269,24 @@ int main()
 		is_eq(f(3,5),8);
 	}
 
+	diag("typedef struct C C inside function")
+	{
+		typedef struct CCC CCC;
+		struct CCC {
+			float ff;
+		};
+		CCC c;
+		c.ff = 3.14;
+		is_eq(c.ff,3.14);
+	}
+	typedef struct CP CP;
+	struct CP {
+		float ff;
+	};
+	CP cp;
+	cp.ff = 3.14;
+	is_eq(cp.ff,3.14);
+
 	diag("struct name from Go keyword")
 	{ struct chan        {int i;}; struct chan        UU;  UU.i = 5; is_eq(UU.i,5);}
 	{ struct defer       {int i;}; struct defer       UU;  UU.i = 5; is_eq(UU.i,5);}
@@ -266,6 +324,8 @@ int main()
 	{ typedef struct {int i;} _           ;	_           UU; UU.i = 5; is_eq(UU.i,5);}
 	{ typedef struct {int i;} init        ;	init        UU; UU.i = 5; is_eq(UU.i,5);}
 */
+
+	struct_with_rec_fuction();
 
     done_testing();
 }
