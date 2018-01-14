@@ -1,5 +1,6 @@
 package ast
 
+// HTMLEndTagComment is a type of comment
 type HTMLEndTagComment struct {
 	Addr       Address
 	Pos        Position
