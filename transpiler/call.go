@@ -69,7 +69,7 @@ func getNameOfFunctionFromCallExpr(n *ast.CallExpr) (string, error) {
 // returned by the function) and any error. If there is an error returned you
 // can assume the first two arguments will not contain any useful information.
 func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
-	_ *goast.CallExpr, resultType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+	call *goast.CallExpr, resultType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("Error in transpileCallExpr : %v", err)
@@ -81,6 +81,24 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 		return nil, "", nil, nil, err
 	}
 	functionName = util.ConvertFunctionNameFromCtoGo(functionName)
+
+	functionNameForDefer := functionName
+	defer func() {
+		// Registration called function in program
+		p.FunctionCalled[functionNameForDefer] = true
+		if call != nil {
+			if v, ok := call.Fun.(*goast.SelectorExpr); ok {
+				if v, ok := v.X.(*goast.Ident); ok {
+					switch v.Name {
+					case "noarch", "darwin", "linux",
+						"math":
+						p.FunctionDeclared[functionNameForDefer] = true
+						p.FunctionDeclared[functionNameForDefer] = true
+					}
+				}
+			}
+		}
+	}()
 
 	if functionName == "__builtin_va_start" ||
 		functionName == "__builtin_va_end" {

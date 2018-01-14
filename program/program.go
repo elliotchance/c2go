@@ -43,6 +43,11 @@ type Program struct {
 	// Contains the current function name during the transpilation.
 	Function *ast.FunctionDecl
 
+	// Functions declared
+	FunctionDeclared map[string]bool
+	// Functions called
+	FunctionCalled map[string]bool
+
 	// These are used to setup the runtime before the application begins. An
 	// example would be to setup globals with stdin file pointers on certain
 	// platforms.
@@ -116,6 +121,8 @@ func NewProgram() *Program {
 		imports:             []string{},
 		typesAlreadyDefined: []string{},
 		startupStatements:   []goast.Stmt{},
+		FunctionDeclared:    map[string]bool{},
+		FunctionCalled:      map[string]bool{},
 		Structs: StructRegistry(map[string]*Struct{
 			// Structs without implementations inside system C headers
 			// Example node for adding:
@@ -383,4 +390,14 @@ func (p *Program) String() string {
 	reg := util.GetRegex("interface( )?{(\r*)\n(\t*)}")
 
 	return string(reg.ReplaceAll(buf.Bytes(), []byte("interface {}")))
+}
+
+// FunctionWithoutDeclaration - return warnings for function without
+// declareted, but with called
+func (p *Program) FunctionWithoutDeclaration() {
+	for k := range p.FunctionCalled {
+		if !p.FunctionDeclared[k] {
+			p.AddMessage(fmt.Sprintf("// Probably function '%s' called but haven't declaration", k))
+		}
+	}
 }

@@ -57,6 +57,13 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (decls []goa
 
 	n.Name = util.ConvertFunctionNameFromCtoGo(n.Name)
 
+	defer func() {
+		if len(decls) > 0 {
+			// Registration declareted function in program
+			p.FunctionDeclared[n.Name] = true
+		}
+	}()
+
 	// Always register the new function. Only from this point onwards will
 	// we be allowed to refer to the function.
 	if program.GetFunctionDefinition(n.Name) == nil {

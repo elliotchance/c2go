@@ -36,6 +36,9 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 	}
 	p.File.Decls = append(p.File.Decls, decls...)
 
+	// add warning if function is called, but not declareted
+	p.FunctionWithoutDeclaration()
+
 	if p.OutputAsTest {
 		p.AddImport("testing")
 		p.AddImport("io/ioutil")
