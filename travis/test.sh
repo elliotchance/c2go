@@ -108,3 +108,5 @@ if [ "$TRAVIS_OS_NAME" == "osx" ]; then
     curl -H "Authorization: token ${GITHUB_API_TOKEN}" -H "Content-Type: application/json" https://api.github.com/repos/elliotchance/c2go/statuses/${TRAVIS_COMMIT} -d "{\"state\": \"success\",\"target_url\": \"https://travis-ci.org/elliotchance/c2go/builds/${TRAVIS_JOB_ID}\", \"description\": \"$(($SQLITE_WARNINGS)) warnings\", \"context\": \"c2go/sqlite3\"}" 
 fi
 
+# Testing knightstour
+bash ./travis/knightstour.sh $OUTFILE
