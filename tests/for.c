@@ -3,7 +3,7 @@
 
 int main()
 {
-    plan(57);
+    plan(60);
 
     int i = 0;
 
@@ -165,6 +165,10 @@ int main()
 	                X = X + Y;
 	        pass("ok");
 	}
+
+    diag("increment --");
+    for (i = 3; i >= 1; i--)
+        pass("%d", i);
 
 	done_testing();
 }
