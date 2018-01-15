@@ -7,5 +7,5 @@ FILES='tests/code_quality/*.c'
 for file in $FILES
 do
   echo "Processing $file file..."
-  c2go transpile -o="$file.go" -p="code_quality" $file
+  c2go transpile -o="$file.txt" -p="code_quality" $file
 done

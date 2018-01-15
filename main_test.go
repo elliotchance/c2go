@@ -493,7 +493,7 @@ func TestCodeQuality(t *testing.T) {
 				t.Fatalf(err.Error())
 			}
 
-			goExpect, err := cleaningGoCode(file + ".go")
+			goExpect, err := cleaningGoCode(file + ".txt")
 			if err != nil {
 				t.Fatalf(err.Error())
 			}
