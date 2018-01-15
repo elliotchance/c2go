@@ -379,10 +379,15 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 			return
 		}
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+		var memberName string
+		memberName, err = getMemberName(n.Children()[0])
+		if err != nil {
+			return
+		}
 		return &goast.IndexExpr{
 			X: &goast.SelectorExpr{
 				X:   arr,
-				Sel: util.NewIdent(n.Children()[0].Children()[0].(*ast.MemberExpr).Name),
+				Sel: util.NewIdent(memberName),
 			},
 			Index: &goast.BasicLit{
 				Kind:  token.INT,

@@ -16,6 +16,23 @@ import (
 	"go/token"
 )
 
+func getMemberName(firstChild ast.Node) (string, error) {
+	switch fc := firstChild.(type) {
+	case *ast.MemberExpr:
+		return fc.Name, nil
+
+	case *ast.ParenExpr:
+		return getMemberName(fc.Children()[0])
+
+	case *ast.ImplicitCastExpr:
+		return getMemberName(fc.Children()[0])
+
+	case *ast.CStyleCastExpr:
+		return getMemberName(fc.Children()[0])
+
+	}
+	return "", fmt.Errorf("cannot found name on: %#v", firstChild)
+}
 func getName(firstChild ast.Node) string {
 	switch fc := firstChild.(type) {
 	case *ast.DeclRefExpr:
