@@ -479,7 +479,7 @@ func TestCodeQuality(t *testing.T) {
 			var args = DefaultProgramArgs()
 			args.inputFiles = []string{file}
 			args.outputFile = path.Join(dir, "main.go")
-			args.packageName = "main"
+			args.packageName = "code_quality"
 			args.outputAsTest = false
 
 			// testing

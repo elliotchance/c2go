@@ -4,7 +4,7 @@ If you have found any issues, please raise an issue at:
 https://github.com/elliotchance/c2go/
 */
 
-package main
+package code_quality
 
 // f1 - transpiled function from file : tests/code_quality/for.c , line : 1
 func f1() {
@@ -13,7 +13,7 @@ func f1() {
 	}
 }
 
-// f2 - transpiled function from file : tests/code_quality/for.c , line : 6
+// f2 - transpiled function from file : tests/code_quality/for.c , line : 7
 func f2() {
 	var i int
 	for i = 10; i > 0; func() int {
@@ -23,21 +23,13 @@ func f2() {
 	}
 }
 
-// f3 - transpiled function from file : tests/code_quality/for.c , line : 11
+// f3 - transpiled function from file : tests/code_quality/for.c , line : 13
 func f3() {
 	{
 		var i int = 0
 		for ; i < 10; i++ {
 		}
 	}
-}
-
-// main - transpiled function from file : tests/code_quality/for.c , line : 16
-func main() {
-	f1()
-	f2()
-	f3()
-	return
 }
 func init() {
 }
