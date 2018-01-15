@@ -171,6 +171,9 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 				}
 			}
 
+		case *ast.FullComment:
+			// do nothing
+
 		default:
 			message := fmt.Sprintf("could not parse %v", c)
 			p.AddMessage(p.GenerateWarningMessage(errors.New(message), c))
