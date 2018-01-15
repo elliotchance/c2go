@@ -228,12 +228,27 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 		}
 	}
 
-	post, newPre, newPost, err := transpileToStmt(children[3], p)
-	if err != nil {
-		return nil, nil, nil, err
+	var post goast.Stmt
+	var transpilate bool
+	if v, ok := children[3].(*ast.UnaryOperator); ok && v.Operator == "++" {
+		// for cace:
+		// for(...;...;i++)...
+		if vv, ok := v.Children()[0].(*ast.DeclRefExpr); ok {
+			post = &goast.IncDecStmt{
+				X:   util.NewIdent(vv.Name),
+				Tok: token.INC,
+			}
+			transpilate = true
+		}
 	}
+	if !transpilate {
+		post, newPre, newPost, err = transpileToStmt(children[3], p)
+		if err != nil {
+			return nil, nil, nil, err
+		}
 
-	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+	}
 
 	// If we have 2 and more conditions
 	// in operator for
@@ -323,9 +338,18 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
+	// avoid extra block around FOR
+	if len(preStmts) == 0 && len(postStmts) == 0 {
+		return &goast.ForStmt{
+			Init: init,
+			Cond: condition,
+			Post: post,
+			Body: body,
+		}, preStmts, postStmts, nil
+	}
+
 	// for avoid dublication of init values for
 	// case with 2 for`s
-
 	var block goast.BlockStmt
 	var forStmt = goast.ForStmt{
 		Init: init,
