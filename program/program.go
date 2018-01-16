@@ -29,9 +29,6 @@ func (sr StructRegistry) HasType(typename string) bool {
 // Program contains all of the input, output and transpition state of a C
 // program to a Go program.
 type Program struct {
-	// Version of c2go
-	Version string
-
 	// All of the Go import paths required for this program.
 	imports []string
 
@@ -303,7 +300,7 @@ func (p *Program) String() string {
 	https://github.com/elliotchance/c2go/
 */
 
-`, p.Version))
+`, Version))
 
 	// First write all the messages. The double newline afterwards is important
 	// so that the package statement has a newline above it so that the warnings

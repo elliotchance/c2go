@@ -2,6 +2,7 @@ package ast
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/elliotchance/c2go/util"
 )
@@ -19,17 +20,15 @@ type Position struct {
 	StringValue string
 }
 
-// GetSimpleLocation - return a string like : "file : 1.c , line : 100" in
+// GetSimpleLocation - return a string like : "file:line" in
 // accoring to position
+// Example : " /tmp/1.c:200 "
 func (p Position) GetSimpleLocation() (loc string) {
-	fs := len(p.File)
-	if fs > 20 {
-		loc += fmt.Sprintf("file : ...%s", p.File[fs-17:])
-	} else {
-		loc += fmt.Sprintf("file : %s", p.File)
+	file := p.File
+	if f, err := filepath.Abs(p.File); err != nil {
+		file = f
 	}
-	loc += fmt.Sprintf(" , line : %d", p.Line)
-	return
+	return fmt.Sprintf(" %s:%d ", file, p.Line)
 }
 
 func NewPositionFromString(s string) Position {

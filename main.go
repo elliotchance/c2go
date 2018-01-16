@@ -30,13 +30,6 @@ import (
 	"github.com/elliotchance/c2go/transpiler"
 )
 
-// Version can be requested through the command line with:
-//
-//     c2go -v
-//
-// See https://github.com/elliotchance/c2go/wiki/Release-Process
-const Version = "v0.21.0 Zinc 2018-01-11"
-
 var stderr io.Writer = os.Stderr
 
 // ProgramArgs defines the options available when processing the program. There
@@ -251,7 +244,6 @@ func Start(args ProgramArgs) (err error) {
 	p.Verbose = args.verbose
 	p.OutputAsTest = args.outputAsTest
 	p.Comments = comments
-	p.Version = Version
 
 	// Converting to nodes
 	if args.verbose {
@@ -368,7 +360,7 @@ func runCommand() int {
 
 	if *versionFlag {
 		// Simply print out the version and exit.
-		fmt.Println(Version)
+		fmt.Println(program.Version)
 		return 0
 	}
 
