@@ -1,5 +1,6 @@
 package ast
 
+// BlockCommandComment is a type of comment
 type BlockCommandComment struct {
 	Addr       Address
 	Pos        Position

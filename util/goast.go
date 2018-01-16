@@ -60,6 +60,21 @@ func internalTypeToExpr(t string) goast.Expr {
 		}
 	}
 
+	// function return a function
+	// Example : u.GetF1()
+	if strings.HasSuffix(t, "()") && strings.Contains(t, ".") {
+		i := strings.Index(t, ".")
+		if i > 0 {
+			t = t[:len(t)-2] // remove "()" at the end
+			return &goast.CallExpr{
+				Fun: &goast.SelectorExpr{
+					X:   NewIdent(t[0:i]),
+					Sel: NewIdent(t[i+1:]),
+				},
+			}
+		}
+	}
+
 	// Parenthesis Expression
 	if strings.HasPrefix(t, "(") && strings.HasSuffix(t, ")") {
 		return &goast.ParenExpr{

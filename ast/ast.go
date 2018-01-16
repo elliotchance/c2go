@@ -154,6 +154,8 @@ func Parse(fullline string) Node {
 		return parseIndirectFieldDecl(line)
 	case "InitListExpr":
 		return parseInitListExpr(line)
+	case "InlineCommandComment":
+		return parseInlineCommandComment(line)
 	case "IntegerLiteral":
 		return parseIntegerLiteral(line)
 	case "LabelStmt":
