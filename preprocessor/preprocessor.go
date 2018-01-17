@@ -242,7 +242,7 @@ func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, er
 	var args []string
 	args = append(args, "-E", "-C")
 	args = append(args, clangFlags...)
-	args = append(args, unionFileName) // inputFiles...)
+	args = append(args, unionFileName) // All inputFiles
 
 	var outFile bytes.Buffer
 	cmd := exec.Command("clang", args...)
