@@ -43,7 +43,12 @@ func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (
 }
 
 func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
-	[]goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
+	_ []goast.Expr, _ string, _ []goast.Stmt, _ []goast.Stmt, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot getDefaultValueForVar : err = %v", err)
+		}
+	}()
 	if len(a.Children()) == 0 {
 		return nil, "", nil, nil, nil
 	}

@@ -162,6 +162,10 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 	}
 
 	if v, ok := p.TypedefType[s]; ok {
+		if IsFunction(v) {
+			// typedef function
+			return s, nil
+		}
 		return ResolveType(p, v)
 	}
 
@@ -319,6 +323,9 @@ func IsPointer(s string) bool {
 }
 
 func IsTypedefFunction(p *program.Program, s string) bool {
+	if v, ok := p.TypedefType[s]; ok && IsFunction(v) {
+		return true
+	}
 	s = string(s[0 : len(s)-len(" *")])
 	if v, ok := p.TypedefType[s]; ok && IsFunction(v) {
 		return true
