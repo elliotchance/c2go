@@ -42,6 +42,9 @@ before_install:
   # profiles.
   - go get -u github.com/wadey/gocovmerge
 
+  # install gometalinter
+  - go get -u gopkg.in/alecthomas/gometalinter.v2
+
 script:
   - . ./travis/$SCRIPT.sh
 
