@@ -117,5 +117,5 @@ echo "After transpiling shell.c and sqlite3.c together, have summary: $SQLITE_WA
 
 # Amount warning from gometalinter
 echo "Calculation warnings by gometalinter"
-GOMETALINTER_WARNINGS=`$GOPATH/bin/gometalinter $SQLITE_TEMP_FOLDER/sqlite.go | wc -l`
+GOMETALINTER_WARNINGS=`$GOPATH/bin/gometalinter $SQLITE_TEMP_FOLDER/sqlite.go 2>&1 | wc -l`
 echo "Amount found warnings by gometalinter at 30 second : $GOMETALINTER_WARNINGS warnings."
