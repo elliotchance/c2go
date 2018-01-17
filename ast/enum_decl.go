@@ -4,6 +4,7 @@ import (
 	"strings"
 )
 
+// EnumDecl is node represents a enum declaration.
 type EnumDecl struct {
 	Addr       Address
 	Pos        Position

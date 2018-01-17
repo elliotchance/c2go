@@ -4,6 +4,7 @@ import (
 	"github.com/elliotchance/c2go/util"
 )
 
+// CharacterLiteral is type of character literal
 type CharacterLiteral struct {
 	Addr       Address
 	Pos        Position

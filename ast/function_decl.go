@@ -4,6 +4,7 @@ import (
 	"strings"
 )
 
+// FunctionDecl is node represents a function declaration.
 type FunctionDecl struct {
 	Addr         Address
 	Pos          Position

@@ -1,5 +1,6 @@
 package ast
 
+// ElaboratedType is elaborated type
 type ElaboratedType struct {
 	Addr       Address
 	Type       string

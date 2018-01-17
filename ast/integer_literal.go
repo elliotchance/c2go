@@ -1,5 +1,6 @@
 package ast
 
+// IntegerLiteral is type of integer literal
 type IntegerLiteral struct {
 	Addr       Address
 	Pos        Position

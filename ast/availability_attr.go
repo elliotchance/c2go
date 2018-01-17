@@ -4,6 +4,8 @@ import (
 	"github.com/elliotchance/c2go/util"
 )
 
+// AvailabilityAttr is a type of attribute that is optionally attached to a variable
+// or struct field definition.
 type AvailabilityAttr struct {
 	Addr          Address
 	Pos           Position

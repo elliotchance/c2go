@@ -1,5 +1,6 @@
 package ast
 
+// QualType is qual type
 type QualType struct {
 	Addr       Address
 	Type       string

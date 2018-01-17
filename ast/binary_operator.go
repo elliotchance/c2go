@@ -1,5 +1,6 @@
 package ast
 
+// BinaryOperator is type of binary operator
 type BinaryOperator struct {
 	Addr       Address
 	Pos        Position

@@ -1,5 +1,6 @@
 package ast
 
+// WhileStmt is node represent 'while'
 type WhileStmt struct {
 	Addr       Address
 	Pos        Position
