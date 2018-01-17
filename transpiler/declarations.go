@@ -365,7 +365,13 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 	return
 }
 
-func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, theType string, err error) {
+func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
+	decls []goast.Decl, theType string, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot transpileVarDecl : err = %v", err)
+		}
+	}()
 	// There may be some startup code for this global variable.
 	if p.Function == nil {
 		name := n.Name
