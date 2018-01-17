@@ -116,5 +116,5 @@ SQLITE_WARNINGS=`cat $SQLITE_TEMP_FOLDER/sqlite.go | grep "// Warning" | wc -l`
 echo "After transpiling shell.c and sqlite3.c together, have summary: $SQLITE_WARNINGS warnings."
 
 # Amount warning from gometalinter
-GOMETALINTER_WARNINGS=`gometalinter $SQLITE_TEMP_FOLDER/sqlite.go | wc -l`
-echo "Amount gometalinter warnings: $GOMETALINTER_WARNINGS warnings."
+GOMETALINTER_WARNINGS=`$GOPATH/bin/gometalinter $SQLITE_TEMP_FOLDER/sqlite.go | wc -l`
+echo "Amount found warnings by gometalinter at 30 second : $GOMETALINTER_WARNINGS warnings."
