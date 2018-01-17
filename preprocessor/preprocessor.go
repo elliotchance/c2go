@@ -269,6 +269,12 @@ func GetIncludeListWithUserSource(inputFiles, clangFlags []string) (lines []stri
 	var out bytes.Buffer
 	var stderr bytes.Buffer
 	var args []string
+	for i := range inputFiles {
+		inputFiles[i], err = filepath.Abs(inputFiles[i])
+		if err != nil {
+			return
+		}
+	}
 	args = append(args, "-MM", "-c")
 	args = append(args, inputFiles...)
 	args = append(args, clangFlags...)
