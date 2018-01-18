@@ -1,5 +1,6 @@
 package ast
 
+// ConditionalOperator is type of condition operator
 type ConditionalOperator struct {
 	Addr       Address
 	Pos        Position

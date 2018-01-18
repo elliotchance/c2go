@@ -5,6 +5,7 @@ import (
 	"strconv"
 )
 
+// StringLiteral is type of string literal
 type StringLiteral struct {
 	Addr       Address
 	Pos        Position

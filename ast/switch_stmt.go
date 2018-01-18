@@ -1,5 +1,6 @@
 package ast
 
+// SwitchStmt is node represent 'switch'
 type SwitchStmt struct {
 	Addr       Address
 	Pos        Position

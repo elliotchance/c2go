@@ -1,5 +1,6 @@
 package ast
 
+// EnumType is enum type
 type EnumType struct {
 	Addr       Address
 	Name       string
