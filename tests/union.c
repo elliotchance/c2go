@@ -185,9 +185,33 @@ void union_func_pointers()
 	is_eq(u.f2(21), 22);
 }
 
+
+typedef int ii;
+typedef struct SHA SHA;
+struct SHA{
+  union {
+    ii            s[25];
+    unsigned char x[100];
+  } u;
+  unsigned uuu;
+};
+
+void union_with_array()
+{
+	SHA sha;
+	sha.uuu = 15;
+	is_eq(sha.uuu,15);
+	for (int i=0;i<25;i++){
+		sha.u.s[i] = (ii)(0);
+		sha.u.s[i] = (ii)(42) + sha.u.s[i];
+	}
+	is_eq(sha.u.s[5],42);
+	is_true(sha.u.x[88] != 0);
+}
+
 int main()
 {
-    plan(33);
+    plan(36);
 
     union programming variable;
 
@@ -200,6 +224,8 @@ int main()
 	union_inside_struct2();
 	union_pointers();
 	union_func_pointers();
+
+	union_with_array();
 
     done_testing();
 }
