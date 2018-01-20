@@ -32,7 +32,7 @@ func newFunctionField(p *program.Program, name, cType string) (_ *goast.Field, e
 		},
 	}
 	var arg, ret []string
-	arg, ret, err = types.ResolveFunction(p, cType)
+	arg, ret, err = types.SeparateFunction(p, cType)
 	if err != nil {
 		return
 	}
@@ -110,12 +110,12 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 
 	// TODO: Some platform structs are ignored.
 	// https://github.com/elliotchance/c2go/issues/85
-	if name == "__locale_struct" ||
-		name == "__sigaction" ||
-		name == "sigaction" {
-		err = nil
-		return
-	}
+	// if name == "__locale_struct" ||
+	// 	name == "__sigaction" ||
+	// 	name == "sigaction" {
+	// 	err = nil
+	// 	return
+	// }
 
 	var fields []*goast.Field
 
@@ -252,7 +252,7 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (
 			p.AddMessage(p.GenerateWarningMessage(err, n))
 		} else {
 			// registration type
-			p.TypedefType[n.Name] = n.Type
+			p.AddTypedefType(n.Name, n.Type)
 
 			decls = append(decls, &goast.GenDecl{
 				Tok: token.TYPE,
@@ -288,6 +288,8 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (
 		err = nil
 		return
 	}
+
+	p.AddTypedefType(n.Name, n.Type)
 
 	if p.IsTypeAlreadyDefined(name) {
 		err = nil
@@ -369,7 +371,7 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (
 		p.EnumConstantToEnum["enum "+resolvedType] = v
 	} else {
 		// Registration "typedef type type2"
-		p.TypedefType[n.Name] = n.Type
+		p.AddTypedefType(n.Name, n.Type)
 	}
 
 	return
@@ -478,7 +480,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 				// Is it function ?
 				if types.IsFunction(v.Type) {
 					var fields, returns []string
-					fields, returns, err = types.ResolveFunction(p, v.Type)
+					fields, returns, err = types.SeparateFunction(p, v.Type)
 					if err != nil {
 						err = fmt.Errorf("Cannot resolve function : %v", err)
 						return
@@ -511,7 +513,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 
 	if types.IsFunction(n.Type) {
 		var fields, returns []string
-		fields, returns, err = types.ResolveFunction(p, n.Type)
+		fields, returns, err = types.SeparateFunction(p, n.Type)
 		if err != nil {
 			p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Cannot resolve function : %v", err), n))
 			err = nil // Error is ignored

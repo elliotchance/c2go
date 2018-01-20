@@ -60,6 +60,12 @@ func internalTypeToExpr(t string) goast.Expr {
 		}
 	}
 
+	// For union function variable
+	// *(*func(int)(int))(unsafe.Pointer(&u.memory))
+	if strings.Contains(t, "unsafe.Pointer") && strings.Contains(t, "func") {
+		return &goast.ParenExpr{X: goast.NewIdent(t)}
+	}
+
 	// function return a function
 	// Example : u.GetF1()
 	if strings.HasSuffix(t, "()") && strings.Contains(t, ".") {
@@ -340,7 +346,10 @@ func CreateSliceFromReference(goType string, expr goast.Expr) *goast.SliceExpr {
 
 // NewFuncType - create a new function type, example:
 // func ...(fieldList)(returnType)
-func NewFuncType(fieldList *goast.FieldList, returnType string, addDefaultReturn bool) *goast.FuncType {
+func NewFuncType(fieldList *goast.FieldList,
+	returnType string,
+	addDefaultReturn bool) *goast.FuncType {
+
 	returnTypes := []*goast.Field{}
 	if returnType != "" {
 		field := goast.Field{

@@ -111,4 +111,47 @@ func getUnionVariable(goType string, union goast.Expr) goast.Expr {
 			}},
 		},
 	}
+	// <<<<<<< 809e28306caf2b0723251597b3420b5d9601eea2
+	// =======
+	// }
+	//
+	// func isUnionMemberExpr(p *program.Program, n *ast.MemberExpr) (IsUnion bool) {
+	// 	if len(n.Children()) > 0 {
+	// 		if v, ok := n.Children()[0].(*ast.MemberExpr); ok {
+	// 			if p.IsUnion(v.Type) {
+	// 				IsUnion = true
+	// 			}
+	// 		}
+	// 		if v, ok := n.Children()[0].(*ast.DeclRefExpr); ok {
+	// 			if p.IsUnion(v.Type) {
+	// 				IsUnion = true
+	// 			}
+	// 		}
+	// 		if v, ok := n.Children()[0].(*ast.ImplicitCastExpr); ok {
+	// 			if p.IsUnion(v.Type) {
+	// 				IsUnion = true
+	// 			}
+	// 		}
+	// 	}
+	// 	return
+	// }
+	//
+	// func unionVariable(p *program.Program, n *ast.MemberExpr, x goast.Expr) (
+	// 	_ goast.Expr, cType string, ok bool) {
+	// 	if isUnionMemberExpr(p, n) {
+	// 		cType := n.Type
+	// 		var goType string
+	// 		var err error
+	// 		if types.IsFunction(cType) {
+	// 			goType, err = types.ResolveFunction(p, cType)
+	// 			p.AddMessage(p.GenerateWarningMessage(err, n))
+	// 		} else {
+	// 			goType, err = types.ResolveType(p, cType)
+	// 			p.AddMessage(p.GenerateWarningMessage(err, n))
+	// 		}
+	// 		return getUnionVariable(goType, x),
+	// 			n.Type, true
+	// 	}
+	// 	panic(fmt.Errorf("That MemberExpr is not union"))
+	// >>>>>>> step
 }

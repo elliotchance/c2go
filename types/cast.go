@@ -122,14 +122,14 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 
 	// registration type _Bool in program
 	if cFromType == "_Bool" {
-		p.TypedefType["_Bool"] = "int"
+		p.AddTypedefType("_Bool", "int")
 	}
 	if cToType == "_Bool" {
-		p.TypedefType["_Bool"] = "int"
+		p.AddTypedefType("_Bool", "int")
 	}
 
 	// Checking registated typedef types in program
-	if v, ok := p.TypedefType[toType]; ok {
+	if v, ok := p.GetBaseTypeOfTypedef(toType); ok {
 		if fromType == v {
 			toType, err := ResolveType(p, toType)
 			if err != nil {
@@ -157,7 +157,7 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 		}
 		return CastExpr(p, e, v, toType)
 	}
-	if v, ok := p.TypedefType[fromType]; ok {
+	if v, ok := p.GetBaseTypeOfTypedef(fromType); ok {
 		t, err := ResolveType(p, v)
 		if err != nil {
 			return expr, err

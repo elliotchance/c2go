@@ -412,35 +412,14 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 		rhs = "anon"
 	}
 
-	if len(n.Children()) > 0 {
-		var IsUnion bool
-		var cType string
-		cType = n.Type
-
-		if v, ok := n.Children()[0].(*ast.MemberExpr); ok {
-			if p.IsUnion(v.Type) {
-				IsUnion = true
-			}
-		}
-		if v, ok := n.Children()[0].(*ast.DeclRefExpr); ok {
-			if p.IsUnion(v.Type) {
-				IsUnion = true
-			}
-		}
-		if v, ok := n.Children()[0].(*ast.ImplicitCastExpr); ok {
-			if p.IsUnion(v.Type) {
-				IsUnion = true
-			}
-		}
-		if IsUnion {
-			goType, err := types.ResolveType(p, cType)
-			p.AddMessage(p.GenerateWarningMessage(err, n))
-			return getUnionVariable(goType, x),
-				n.Type, preStmts, postStmts, nil
+	if isUnionMemberExpr(p, n) {
+		if expr, unionType, ok := unionVariable(p, n, x); ok {
+			return expr, unionType, preStmts, postStmts, nil
 		}
 	}
 
 	_ = rhsType
+
 	return &goast.SelectorExpr{
 		X:   x,
 		Sel: util.NewIdent(rhs),

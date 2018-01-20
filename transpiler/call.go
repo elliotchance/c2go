@@ -42,10 +42,17 @@ func getName(p *program.Program, firstChild ast.Node) string {
 		return fc.Name
 
 	case *ast.MemberExpr:
+		if isUnionMemberExpr(p, fc) {
+			lhs, _, _, _, _ := transpileToExpr(fc, p, false)
+			var buf bytes.Buffer
+			printer.Fprint(&buf, token.NewFileSet(), lhs)
+			fmt.Println("buf  = ", buf.String())
+			return buf.String()
+		}
 		if len(fc.Children()) == 0 {
 			return fc.Name
 		}
-		return getName(fc.Children()[0]) + "." + fc.Name
+		return getName(p, fc.Children()[0]) + "." + fc.Name
 
 	case *ast.ParenExpr:
 		return getName(p, fc.Children()[0])

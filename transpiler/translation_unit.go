@@ -21,6 +21,9 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 			if len(v.Children()) == 0 {
 				if i+1 < len(n.Children()) {
 					if vv, ok := n.Children()[i+1].(*ast.TypedefDecl); ok {
+
+						p.AddTypedefType(vv.Name, vv.Type)
+
 						if isSameTypedefNames(vv) {
 							i++
 							continue
@@ -50,6 +53,9 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 						recordDecl.Kind = "union"
 					}
 					recordDecl.ChildNodes = fields
+
+					p.AddTypedefType(vv.Name, vv.Type)
+
 					var d []goast.Decl
 					d, err = transpileRecordDecl(p, &recordDecl)
 					if err != nil {
