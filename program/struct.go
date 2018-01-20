@@ -2,6 +2,7 @@ package program
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/elliotchance/c2go/ast"
 )
@@ -52,4 +53,22 @@ func NewStruct(n *ast.RecordDecl) *Struct {
 		IsUnion: n.Kind == "union",
 		Fields:  fields,
 	}
+}
+
+// IsUnion - return true if the cType is 'union' or
+// typedef of union
+func (p *Program) IsUnion(cType string) bool {
+	if strings.HasPrefix(cType, "union ") {
+		return true
+	}
+	if _, ok := p.TypedefType["union "+cType]; ok {
+		return true
+	}
+	if t, ok := p.TypedefType[cType]; ok {
+		if t == cType {
+			panic(fmt.Errorf("Cannot be same name: %s", t))
+		}
+		return p.IsUnion(t)
+	}
+	return false
 }

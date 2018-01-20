@@ -81,6 +81,12 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 	if expr == nil {
 		return nil, fmt.Errorf("Expr is nil")
 	}
+	if IsFunction(cFromType) {
+		return nil, fmt.Errorf("Cannot cast function pointer cFromType = %s", cFromType)
+	}
+	if IsFunction(cToType) {
+		return nil, fmt.Errorf("Cannot cast function pointer cToType = %s", cToType)
+	}
 
 	// Function casting
 	// Example :

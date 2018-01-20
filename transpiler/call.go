@@ -42,15 +42,10 @@ func getName(p *program.Program, firstChild ast.Node) string {
 		return fc.Name
 
 	case *ast.MemberExpr:
-		if types.IsFunction(fc.Type) {
-			if decl, ok := fc.Children()[0].(*ast.DeclRefExpr); ok {
-				if strings.Contains(decl.Type, "union ") {
-					return getFunctionNameForUnionGetter(decl.Name, "", fc.Name) + "()"
-				}
-				return decl.Name + "." + fc.Name
-			}
+		if len(fc.Children()) == 0 {
+			return fc.Name
 		}
-		return fc.Name
+		return getName(fc.Children()[0]) + "." + fc.Name
 
 	case *ast.ParenExpr:
 		return getName(p, fc.Children()[0])
@@ -95,7 +90,10 @@ func getNameOfFunctionFromCallExpr(p *program.Program, n *ast.CallExpr) (string,
 // returned by the function) and any error. If there is an error returned you
 // can assume the first two arguments will not contain any useful information.
 func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
-	_ *goast.CallExpr, resultType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+	_ *goast.CallExpr, resultType string,
+	preStmts []goast.Stmt, postStmts []goast.Stmt,
+	err error) {
+
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("Error in transpileCallExpr : %v", err)

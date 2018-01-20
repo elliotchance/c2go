@@ -105,6 +105,7 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 	}
 
 	name = types.GenerateCorrectType(name)
+
 	p.DefineType(name)
 
 	// TODO: Some platform structs are ignored.
@@ -202,7 +203,7 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 		} else {
 			// So, we got size, then
 			// Add imports needed
-			p.AddImports("reflect", "unsafe")
+			p.AddImports("unsafe")
 
 			// Declaration for implementing union type
 			d, err2 := transpileUnion(name, size, fields)
@@ -230,7 +231,9 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 	return
 }
 
-func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast.Decl, err error) {
+func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (
+	decls []goast.Decl, err error) {
+
 	// implicit code from clang at the head of each clang AST tree
 	if n.IsImplicit && n.Pos.File == ast.PositionBuiltIn {
 		return
@@ -379,6 +382,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 			err = fmt.Errorf("Cannot transpileVarDecl : err = %v", err)
 		}
 	}()
+
 	// There may be some startup code for this global variable.
 	if p.Function == nil {
 		name := n.Name
@@ -403,7 +407,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 					Type:  util.NewTypeIdent(theType),
 					Doc:   p.GetMessageComments(),
 				}},
-			}}, "", nil
+			}}, "", nil, nil, nil
 
 		// Below are for linux.
 		case "stdout", "stdin", "stderr":
@@ -425,7 +429,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 					Type:  util.NewTypeIdent(theType),
 				}},
 				Doc: p.GetMessageComments(),
-			}}, "", nil
+			}}, "", nil, nil, nil
 
 		default:
 			// No init needed.
@@ -454,7 +458,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 					Values: []goast.Expr{util.NewIdent("c2goArgs")},
 				},
 			},
-		}}, "", nil
+		}}, "", nil, nil, nil
 	}
 
 	/*
@@ -497,7 +501,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 									}},
 									Doc: p.GetMessageComments(),
 								},
-								}}}, "", nil
+								}}}, "", nil, nil, nil
 						}
 					}
 				}
@@ -544,8 +548,6 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 	p.GlobalVariables[n.Name] = theType
 
 	name := n.Name
-	preStmts := []goast.Stmt{}
-	postStmts := []goast.Stmt{}
 
 	// TODO: Some platform structs are ignored.
 	// https://github.com/elliotchance/c2go/issues/85
@@ -618,5 +620,5 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 				Doc:    p.GetMessageComments(),
 			},
 		},
-	}}, "", nil
+	}}, "", preStmts, postStmts, nil
 }
