@@ -2,6 +2,7 @@ package transpiler
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 
 	goast "go/ast"
@@ -9,6 +10,9 @@ import (
 	"go/parser"
 	"go/token"
 
+	"github.com/elliotchance/c2go/ast"
+	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/types"
 	"github.com/elliotchance/c2go/util"
 )
 
@@ -106,5 +110,44 @@ func getUnionVariable(goType string, union goast.Expr) goast.Expr {
 			}},
 		},
 	}
+}
 
+func isUnionMemberExpr(p *program.Program, n *ast.MemberExpr) (IsUnion bool) {
+	if len(n.Children()) > 0 {
+		if v, ok := n.Children()[0].(*ast.MemberExpr); ok {
+			if p.IsUnion(v.Type) {
+				IsUnion = true
+			}
+		}
+		if v, ok := n.Children()[0].(*ast.DeclRefExpr); ok {
+			if p.IsUnion(v.Type) {
+				IsUnion = true
+			}
+		}
+		if v, ok := n.Children()[0].(*ast.ImplicitCastExpr); ok {
+			if p.IsUnion(v.Type) {
+				IsUnion = true
+			}
+		}
+	}
+	return
+}
+
+func unionVariable(p *program.Program, n *ast.MemberExpr, x goast.Expr) (
+	_ goast.Expr, cType string, ok bool) {
+	if isUnionMemberExpr(p, n) {
+		cType := n.Type
+		var goType string
+		var err error
+		if types.IsFunction(cType) {
+			goType, err = types.ResolveFunction(p, cType)
+			p.AddMessage(p.GenerateWarningMessage(err, n))
+		} else {
+			goType, err = types.ResolveType(p, cType)
+			p.AddMessage(p.GenerateWarningMessage(err, n))
+		}
+		return getUnionVariable(goType, x),
+			n.Type, true
+	}
+	panic(fmt.Errorf("That MemberExpr is not union"))
 }

@@ -62,7 +62,7 @@ struct SHA32 {
 
 void union_inside_struct()
 {
-	diag("Union inside struct")
+	diag("Union inside struct");
 	struct SHA3 sha;
 	sha.ffY  = 12.444;
 	sha.uY.iY = 4;

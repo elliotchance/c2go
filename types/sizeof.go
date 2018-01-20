@@ -31,12 +31,12 @@ func SizeOf(p *program.Program, cType string) (size int, err error) {
 	}
 
 	// typedef int Integer;
-	if v, ok := p.TypedefType[cType]; ok {
+	if v, ok := p.GetBaseTypeOfTypedef(cType); ok {
 		return SizeOf(p, v)
 	}
 
 	// typedef Enum
-	if _, ok := p.EnumTypedefName[cType]; ok {
+	if _, ok := p.GetBaseTypeOfTypedef(cType); ok {
 		return SizeOf(p, "int")
 	}
 

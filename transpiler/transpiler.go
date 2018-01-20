@@ -42,6 +42,9 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 	}
 	p.File.Decls = append(p.File.Decls, decls...)
 
+	fmt.Println("P ", p.Structs)
+	fmt.Println("U ", p.Unions)
+
 	if p.OutputAsTest {
 		p.AddImport("testing")
 		p.AddImport("io/ioutil")

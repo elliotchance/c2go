@@ -127,7 +127,7 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 	s = CleanCType(s)
 
 	if s == "_Bool" {
-		p.TypedefType[s] = "int"
+		p.AddTypedefType(s, "int")
 	}
 
 	// FIXME: This is a hack to avoid casting in some situations.
@@ -161,7 +161,7 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 		return ResolveType(p, "int")
 	}
 
-	if v, ok := p.TypedefType[s]; ok {
+	if v, ok := p.GetBaseTypeOfTypedef(s); ok {
 		return ResolveType(p, v)
 	}
 
@@ -266,8 +266,32 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 	return "interface{}", errors.New(errMsg)
 }
 
-// ResolveFunction determines the Go type from a C type.
-func ResolveFunction(p *program.Program, s string) (fields []string, returns []string, err error) {
+// ResolveType determines the Go type from a C type.
+func ResolveFunction(p *program.Program, s string) (goType string, err error) {
+	var f, r []string
+	f, r, err = SeparateFunction(p, s)
+	goType = "func("
+	for i := range f {
+		goType += fmt.Sprintf("%s", f[i])
+		if i < len(f)-1 {
+			goType += " , "
+		}
+	}
+	goType += ")("
+	for i := range r {
+		goType += fmt.Sprintf("%s", r[i])
+		if i < len(r)-1 {
+			goType += " , "
+		}
+	}
+	goType += ")"
+	fmt.Println("out = ", goType)
+	return
+}
+
+// SeparateFunction separate a function C type to Go types parts.
+func SeparateFunction(p *program.Program, s string) (
+	fields []string, returns []string, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("Cannot resolve function '%s' : %v", s, err)
@@ -320,7 +344,7 @@ func IsPointer(s string) bool {
 
 func IsTypedefFunction(p *program.Program, s string) bool {
 	s = string(s[0 : len(s)-len(" *")])
-	if v, ok := p.TypedefType[s]; ok && IsFunction(v) {
+	if v, ok := p.GetBaseTypeOfTypedef(s); ok && IsFunction(v) {
 		return true
 	}
 	return false
