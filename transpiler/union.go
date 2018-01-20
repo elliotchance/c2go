@@ -8,6 +8,8 @@ import (
 	"go/format"
 	"go/parser"
 	"go/token"
+
+	"github.com/elliotchance/c2go/util"
 )
 
 func transpileUnion(name string, size int, fields []*goast.Field) (
@@ -33,63 +35,10 @@ import(
 )
 
 type {{ .Name }} struct{
-	{{ range .Field }}
-	{{ .Name }} {{ .TypeField }}
-	{{ end }}
-	// value    interface{}
-	// arr      [{{ .Size }}]byte
 	memory [{{ .Size }}]byte
-	updatePosition int
+	pointer interface{}
 }
 
-func (u *{{ .Name }}) update() {
-	switch u.updatePosition[i] {
-	{{ range .Field }}
-	case {{ .PositionField }}:
-		u.UntypedSet({{ .Name }})
-	{{ end }}
-	}
-	{{ range .Field }}
-	u.{{ .Name }} = u.assign(u.memory)
-	{{ end }}
-}
-
-
-func (u *{{ .Name }}) cast(t reflect.Type) reflect.Value {
-	return reflect.NewAt(t, unsafe.Pointer(&u.arr[0]))
-}
-
-func (u *{{ .Name }}) assign(v interface{}){
-	value := reflect.ValueOf(v).Elem()
-	value.Set(u.cast(value.Type()).Elem())
-}
-
-func (u *{{ .Name }}) UntypedSet(v interface{}){
-	value := reflect.ValueOf(v)
-	u.cast(value.Type()).Elem().Set(value)
-}
-
-// {{ range .Fields }}
-// Get{{ .Name }} - return value of {{ .Name }}
-// func (self *{{ $.Name }}) Get{{ .Name }} () (res {{ .TypeField }}){
-// 	self.assign(&res)
-// 	return
-// }
-//
-// // Set{{ .Name }} - set value of {{ .Name }}
-// func (self *{{ $.Name }}) Set{{ .Name }} (v {{ .TypeField }}) {{ .TypeField }}{
-// 	self.value = v // added for avoid GC removing pointers in union
-// 	self.UntypedSet(v)
-// 	return v
-// }
-
-// // {{ .Name }} - value of {{ .Name }}
-// func (u *{{ $.Name }}) {{ .Name }} (/*v {{ .TypeField }}*/) {{ .TypeField }}{
-// 	u.value = v // added for avoid GC removing pointers in union
-// 	u.UntypedSet(v)
-// 	return v
-// }
-// {{ end }}
 `
 	// Generate structure of union
 	var un union
@@ -105,13 +54,6 @@ func (u *{{ .Name }}) UntypedSet(v interface{}){
 			panic(err)
 		}
 		f.TypeField = buf.String()
-
-		// capitalization first letter
-		// name := strings.ToUpper(string(f.Name[0]))
-		// if len(f.Name) > 1 {
-		// 	name += f.Name[1:]
-		// }
-		// f.Name = name
 
 		f.PositionField = i
 
@@ -135,19 +77,34 @@ func (u *{{ .Name }}) UntypedSet(v interface{}){
 	return f.Decls[1:], nil
 }
 
-//
-// func getFunctionNameForUnion(verb, variableName, variableType, attributeName string) string {
-// 	if strings.HasPrefix(variableType, "[]") {
-// 		return fmt.Sprintf("%s[0].%s%s", variableName, verb, strings.Title(attributeName))
-// 	}
-//
-// 	return fmt.Sprintf("%s.%s%s", variableName, verb, strings.Title(attributeName))
-// }
-//
-// func getFunctionNameForUnionGetter(variableName, variableType, attributeName string) string {
-// 	return getFunctionNameForUnion("Get", variableName, variableType, attributeName)
-// }
-//
-// func getFunctionNameForUnionSetter(variableName, variableType, attributeName string) string {
-// 	return getFunctionNameForUnion("Set", variableName, variableType, attributeName)
-// }
+func getUnionVariable(goType string, union goast.Expr) goast.Expr {
+	return &goast.StarExpr{
+		X: &goast.CallExpr{
+			Fun: &goast.ParenExpr{
+				Lparen: 1,
+				X: &goast.StarExpr{
+					X: goast.NewIdent(goType),
+					//X: &goast.ArrayType{Elt: goast.NewIdent(goType)},
+				},
+			},
+			Lparen: 1,
+			Args: []goast.Expr{&goast.CallExpr{
+				Fun: &goast.SelectorExpr{
+					X:   goast.NewIdent("unsafe"),
+					Sel: goast.NewIdent("Pointer"),
+				},
+				Lparen: 1,
+				Args: []goast.Expr{
+					&goast.UnaryExpr{
+						Op: token.AND,
+						X: &goast.SelectorExpr{
+							X:   union,
+							Sel: util.NewIdent("memory"),
+						},
+					},
+				},
+			}},
+		},
+	}
+
+}

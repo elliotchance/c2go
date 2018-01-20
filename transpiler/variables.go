@@ -3,7 +3,6 @@ package transpiler
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
@@ -273,12 +272,15 @@ func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) (stmts []goast.Stmt,
 	var tud ast.TranslationUnitDecl
 	tud.ChildNodes = n.Children()
 	var decls []goast.Decl
-	decls, err = transpileToNode(&tud, p)
+	var preStmts, postStmts []goast.Stmt
+	decls, preStmts, postStmts, err = transpileToNode(&tud, p)
 	if err != nil {
 		p.AddMessage(p.GenerateErrorMessage(err, n))
 		err = nil
 	}
+	stmts = append(stmts, preStmts...)
 	stmts = convertDeclToStmt(decls)
+	stmts = append(stmts, postStmts...)
 
 	return
 }
@@ -322,7 +324,7 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program) 
 }
 
 func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
-	_ goast.Expr, _ string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+	expr goast.Expr, _ string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 
 	n.Type = types.GenerateCorrectType(n.Type)
 	n.Type2 = types.GenerateCorrectType(n.Type2)
@@ -338,33 +340,6 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 
 	lhsResolvedType, err := types.ResolveType(p, lhsType)
 	p.AddMessage(p.GenerateWarningMessage(err, n))
-
-	if len(n.Children()) > 0 {
-		var n1, n2 string
-		if v, ok := n.Children()[0].(*ast.MemberExpr); ok {
-			if strings.HasPrefix(v.Type, "union ") {
-				n1 = v.Type
-				n2 = n.Name
-				fmt.Println("1 -> ", v.Name, ".", n.Name)
-			}
-		}
-		if v, ok := n.Children()[0].(*ast.DeclRefExpr); ok {
-			if strings.HasPrefix(v.Type, "union ") {
-				n1 = v.Type
-				n2 = n.Name
-				fmt.Println("2 -> ", v.Name, ".", n.Name)
-			}
-		}
-		if n1 != "" && n2 != "" {
-			fmt.Println("lhsType = ", lhsResolvedType)
-			return &goast.CallExpr{
-				Fun: &goast.SelectorExpr{
-					X:   lhs,
-					Sel: util.NewIdent(n2),
-				},
-			}, n1, preStmts, postStmts, err
-		}
-	}
 
 	// lhsType will be something like "struct foo"
 	structType := p.GetStruct(lhsType)
@@ -405,29 +380,6 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 		rhs = util.GetExportedName(rhs)
 		rhsType = "int"
 	}
-	/*
-		// Construct code for getting value to an union field
-		if structType != nil && structType.IsUnion {
-			var resExpr goast.Expr
-
-			switch t := lhs.(type) {
-			case *goast.Ident:
-				funcName := getFunctionNameForUnionGetter(t.Name, lhsResolvedType, n.Name)
-				resExpr = util.NewCallExpr(funcName)
-			case *goast.SelectorExpr:
-				funcName := getFunctionNameForUnionGetter("", lhsResolvedType, n.Name)
-				if id, ok := t.X.(*goast.Ident); ok {
-					funcName = id.Name + "." + t.Sel.Name + funcName
-				}
-				resExpr = &goast.CallExpr{
-					Fun:  goast.NewIdent(funcName),
-					Args: nil,
-				}
-			}
-
-			return resExpr, rhsType, preStmts, postStmts, nil
-		}
-	*/
 
 	x := lhs
 	if n.IsPointer {
@@ -446,8 +398,37 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 		rhs = "anon"
 	}
 
+	if len(n.Children()) > 0 {
+		var IsUnion bool
+		var cType string
+		cType = n.Type
+
+		if v, ok := n.Children()[0].(*ast.MemberExpr); ok {
+			if p.IsUnion(v.Type) {
+				IsUnion = true
+			}
+		}
+		if v, ok := n.Children()[0].(*ast.DeclRefExpr); ok {
+			if p.IsUnion(v.Type) {
+				IsUnion = true
+			}
+		}
+		if v, ok := n.Children()[0].(*ast.ImplicitCastExpr); ok {
+			if p.IsUnion(v.Type) {
+				IsUnion = true
+			}
+		}
+		if IsUnion {
+			goType, err := types.ResolveType(p, cType)
+			p.AddMessage(p.GenerateWarningMessage(err, n))
+			return getUnionVariable(goType, x),
+				n.Type, preStmts, postStmts, nil
+		}
+	}
+
+	_ = rhsType
 	return &goast.SelectorExpr{
 		X:   x,
 		Sel: util.NewIdent(rhs),
-	}, rhsType, preStmts, postStmts, nil
+	}, n.Type /* rhsType*/, preStmts, postStmts, nil
 }
