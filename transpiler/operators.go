@@ -171,7 +171,8 @@ func transpileParenExpr(n *ast.ParenExpr, p *program.Program) (
 		return
 	}
 
-	if !types.IsFunction(exprType) && exprType != "void" && exprType != types.ToVoid {
+	if !types.IsFunction(exprType) && exprType != "void" &&
+		exprType != types.ToVoid {
 		expr, err = types.CastExpr(p, expr, exprType, n.Type)
 		if err != nil {
 			return
@@ -269,8 +270,10 @@ func main(){
 		leftType, preStmts, postStmts, nil
 }
 
-func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.Program, exprIsStmt bool) (
+func transpileCompoundAssignOperator(
+	n *ast.CompoundAssignOperator, p *program.Program, exprIsStmt bool) (
 	_ goast.Expr, _ string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("Cannot transpileCompoundAssignOperator. err = %v", err)
@@ -375,7 +378,7 @@ func transpileCompoundAssignOperator(n *ast.CompoundAssignOperator, p *program.P
 	}
 
 	return util.NewBinaryExpr(left, operator, right, resolvedLeftType, exprIsStmt),
-		"", preStmts, postStmts, nil
+		n.Type, preStmts, postStmts, nil
 }
 
 // getTokenForOperator returns the Go operator token for the provided C
