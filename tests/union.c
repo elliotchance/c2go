@@ -76,11 +76,12 @@ void union_inside_struct()
 	is_eq(sha2.u2.i2, 4);
 	is_eq(sha2.u2.d2, 4);
 	is_eq(sha2.ff2 , 12.444);
+	pass("ok");
 }
 
 int main()
 {
-    plan(11);
+    plan(12);
 
     union programming variable;
 
