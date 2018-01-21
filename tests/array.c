@@ -171,7 +171,7 @@ int rep_int(int a)
 
 int main()
 {
-    plan(93);
+    plan(95);
 
     START_TEST(intarr);
     START_TEST(doublearr);
@@ -373,6 +373,17 @@ int main()
 			is_eq(*ptr,arr[i]);
 			i++;
 		}
+	}
+	diag("Operation += 1 for double array");
+	{
+		float **m;
+		m = (float **) malloc(5*sizeof(float*));
+		is_not_null(m);
+		m[0] = (float *) malloc(10*sizeof(float));
+		m[1] = (float *) malloc(10*sizeof(float));
+		m[0] += 1;
+		(void)(m);
+		pass("ok");
 	}
 
     done_testing();

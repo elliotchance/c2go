@@ -263,7 +263,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 
 	if operator == token.ASSIGN {
 		// Memory allocation is translated into the Go-style.
-		allocSize := getAllocationSizeNode(n.Children()[1])
+		allocSize := getAllocationSizeNode(p, n.Children()[1])
 
 		if allocSize != nil {
 			right, newPre, newPost, err = generateAlloc(p, allocSize, leftType)
@@ -407,14 +407,14 @@ func foundCallExpr(n ast.Node) *ast.CallExpr {
 //
 // In the case of calloc() it will return a new BinaryExpr that multiplies both
 // arguments.
-func getAllocationSizeNode(node ast.Node) ast.Node {
+func getAllocationSizeNode(p *program.Program, node ast.Node) ast.Node {
 	var expr *ast.CallExpr = foundCallExpr(node)
 
 	if expr == nil || expr == (*ast.CallExpr)(nil) {
 		return nil
 	}
 
-	functionName, _ := getNameOfFunctionFromCallExpr(expr)
+	functionName, _ := getNameOfFunctionFromCallExpr(p, expr)
 
 	if functionName == "malloc" {
 		// Is 1 always the body in this case? Might need to be more careful

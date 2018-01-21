@@ -3,6 +3,7 @@
 package transpiler
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
@@ -13,10 +14,11 @@ import (
 
 	goast "go/ast"
 	"go/parser"
+	"go/printer"
 	"go/token"
 )
 
-func getName(firstChild ast.Node) string {
+func getName(p *program.Program, firstChild ast.Node) string {
 	switch fc := firstChild.(type) {
 	case *ast.DeclRefExpr:
 		return fc.Name
@@ -30,23 +32,29 @@ func getName(firstChild ast.Node) string {
 		return fc.Name
 
 	case *ast.ParenExpr:
-		return getName(fc.Children()[0])
+		return getName(p, fc.Children()[0])
 
 	case *ast.UnaryOperator:
-		return getName(fc.Children()[0])
+		return getName(p, fc.Children()[0])
 
 	case *ast.ImplicitCastExpr:
-		return getName(fc.Children()[0])
+		return getName(p, fc.Children()[0])
 
 	case *ast.CStyleCastExpr:
-		return getName(fc.Children()[0])
+		return getName(p, fc.Children()[0])
+
+	case *ast.ArraySubscriptExpr:
+		expr, _, _, _, _ := transpileArraySubscriptExpr(fc, p)
+		var buf bytes.Buffer
+		printer.Fprint(&buf, token.NewFileSet(), expr)
+		return buf.String()
 
 	default:
-		panic(fmt.Sprintf("cannot CallExpr on: %#v", fc))
+		panic(fmt.Sprintf("cannot getName for: %#v", fc))
 	}
 }
 
-func getNameOfFunctionFromCallExpr(n *ast.CallExpr) (string, error) {
+func getNameOfFunctionFromCallExpr(p *program.Program, n *ast.CallExpr) (string, error) {
 	// The first child will always contain the name of the function being
 	// called.
 	firstChild, ok := n.Children()[0].(*ast.ImplicitCastExpr)
@@ -55,7 +63,7 @@ func getNameOfFunctionFromCallExpr(n *ast.CallExpr) (string, error) {
 		return "", err
 	}
 
-	return getName(firstChild.Children()[0]), nil
+	return getName(p, firstChild.Children()[0]), nil
 }
 
 // transpileCallExpr transpiles expressions that calls a function, for example:
@@ -73,7 +81,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 		}
 	}()
 
-	functionName, err := getNameOfFunctionFromCallExpr(n)
+	functionName, err := getNameOfFunctionFromCallExpr(p, n)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}

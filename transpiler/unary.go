@@ -111,7 +111,7 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program, operato
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 		expr = &goast.BinaryExpr{
-			X:  util.NewIdent(getName(n.Children()[0])),
+			X:  goast.NewIdent(getName(p, n.Children()[0])),
 			Op: token.ASSIGN,
 			Y:  expr,
 		}

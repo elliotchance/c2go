@@ -49,7 +49,7 @@ func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
 	}
 
 	// Memory allocation is translated into the Go-style.
-	if allocSize := getAllocationSizeNode(a.Children()[0]); allocSize != nil {
+	if allocSize := getAllocationSizeNode(p, a.Children()[0]); allocSize != nil {
 		// type
 		var t string
 		if v, ok := a.Children()[0].(*ast.ImplicitCastExpr); ok {
