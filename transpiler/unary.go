@@ -251,6 +251,10 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 	// pointer - expression with name of array pointer
 	var pointer interface{}
 
+	// locationPointer
+	var locPointer ast.Node
+	var locPosition int
+
 	// counter - count of amount of changes in AST tree
 	var counter int
 
@@ -275,6 +279,8 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 				var zero ast.IntegerLiteral
 				zero.Type = "int"
 				zero.Value = "0"
+				locPointer = n
+				locPosition = i
 				n.Children()[i] = &zero
 				found = true
 				return
@@ -294,6 +300,8 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 				var zero ast.IntegerLiteral
 				zero.Type = "int"
 				zero.Value = "0"
+				locPointer = n
+				locPosition = i
 				n.Children()[i] = &zero
 				found = true
 				return
@@ -313,6 +321,8 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 				var zero ast.IntegerLiteral
 				zero.Type = "int"
 				zero.Value = "0"
+				locPointer = n
+				locPosition = i
 				n.Children()[i] = &zero
 				found = true
 				return
@@ -348,28 +358,61 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 	if err != nil {
 		return
 	}
+
 	if pointer == nil {
-		err = fmt.Errorf("pointer of array is nil")
+		err = fmt.Errorf("pointer is nil")
 		return
 	}
+
+	defer func() {
+		locPointer.Children()[locPosition] = pointer.(ast.Node)
+	}()
+
+	var typesParentBefore []string
 	for i := range parents {
 		switch v := parents[i].(type) {
 		case *ast.ParenExpr:
+			typesParentBefore = append(typesParentBefore, v.Type)
 			v.Type = "int"
 		case *ast.BinaryOperator:
+			typesParentBefore = append(typesParentBefore, v.Type)
 			v.Type = "int"
 		case *ast.ImplicitCastExpr:
+			typesParentBefore = append(typesParentBefore, v.Type)
 			v.Type = "int"
 		case *ast.CStyleCastExpr:
+			typesParentBefore = append(typesParentBefore, v.Type)
 			v.Type = "int"
 		case *ast.VAArgExpr:
+			typesParentBefore = append(typesParentBefore, v.Type)
 			v.Type = "int"
 		case *ast.MemberExpr:
+			typesParentBefore = append(typesParentBefore, v.Type)
 			v.Type = "int"
 		default:
 			panic(fmt.Errorf("Not support parent type %T in pointer seaching", v))
 		}
 	}
+	defer func() {
+		for i := range parents {
+			switch v := parents[i].(type) {
+			case *ast.ParenExpr:
+				v.Type = typesParentBefore[i]
+			case *ast.BinaryOperator:
+				v.Type = typesParentBefore[i]
+			case *ast.ImplicitCastExpr:
+				v.Type = typesParentBefore[i]
+			case *ast.CStyleCastExpr:
+				v.Type = typesParentBefore[i]
+			case *ast.VAArgExpr:
+				v.Type = typesParentBefore[i]
+			case *ast.MemberExpr:
+				v.Type = typesParentBefore[i]
+			default:
+				panic(fmt.Errorf("Not support parent type %T in pointer seaching", v))
+			}
+		}
+	}()
 
 	e, eType, newPre, newPost, err := transpileToExpr(n.Children()[0], p, false)
 	if err != nil {

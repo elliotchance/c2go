@@ -169,9 +169,14 @@ int rep_int(int a)
 	return a;
 }
 
+void zero(int *a, int *b, int *c)
+{
+	*a = *b = *c = 0;
+}
+
 int main()
 {
-    plan(95);
+    plan(100);
 
     START_TEST(intarr);
     START_TEST(doublearr);
@@ -383,6 +388,17 @@ int main()
 		m[1] = (float *) malloc(10*sizeof(float));
 		m[0] += 1;
 		(void)(m);
+		pass("ok");
+	}
+	diag("*Pointer = 0");
+	{
+		int a,b,c;
+		a = b = c = 10;
+		is_eq(a , 10);
+		zero(&a,&b,&c);
+		is_eq(a , 0);
+		is_eq(b , 0);
+		is_eq(c , 0);
 		pass("ok");
 	}
 
