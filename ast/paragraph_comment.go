@@ -1,5 +1,6 @@
 package ast
 
+// ParagraphComment is a type of comment
 type ParagraphComment struct {
 	Addr       Address
 	Pos        Position

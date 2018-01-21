@@ -12,7 +12,7 @@
     test_##t();
 
 // size of that file
-int filesize = 9699;
+int filesize = 9979;
 
 void test_putchar()
 {
@@ -45,6 +45,17 @@ void test_printf()
     printf("# floats: %4.2f %+.0e %E \n", 3.1416, 3.1416, 3.1416);
     printf("# Width trick: %*d \n", 5, 10);
     printf("# %s \n", "A string");
+
+
+    int magnitude = 4;
+    char printfFormat[30] = "%0";
+    char magnitudeString[10];
+    sprintf(magnitudeString, "%d", magnitude);
+    strcat(printfFormat, magnitudeString);
+    strcat(printfFormat, "d  ");
+    printf("# ");
+    printf(printfFormat, 120);
+    printf(" \n");
 
     pass("%s", "printf");
 }

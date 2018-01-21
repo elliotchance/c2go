@@ -4,6 +4,7 @@
 package transpiler
 
 import (
+	"bytes"
 	"fmt"
 	"go/token"
 
@@ -13,6 +14,7 @@ import (
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/types"
 	"github.com/elliotchance/c2go/util"
 )
 
@@ -21,8 +23,19 @@ func transpileFloatingLiteral(n *ast.FloatingLiteral) *goast.BasicLit {
 }
 
 func transpileStringLiteral(n *ast.StringLiteral) goast.Expr {
+	// Example:
+	// StringLiteral 0x280b918 <col:29> 'char [30]' lvalue "%0"
+	s, err := types.GetAmountArraySize(n.Type)
+	if err != nil {
+		return util.NewCallExpr("[]byte",
+			util.NewStringLit(strconv.Quote(n.Value+"\x00")))
+	}
+	buf := bytes.NewBufferString(n.Value + "\x00")
+	if buf.Len() < s {
+		buf.Write(make([]byte, s-buf.Len()))
+	}
 	return util.NewCallExpr("[]byte",
-		util.NewStringLit(strconv.Quote(n.Value+"\x00")))
+		util.NewStringLit(strconv.Quote(buf.String())))
 }
 
 func transpileIntegerLiteral(n *ast.IntegerLiteral) *goast.BasicLit {

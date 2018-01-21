@@ -1,5 +1,6 @@
 package ast
 
+// FullComment is a type of comment
 type FullComment struct {
 	Addr       Address
 	Pos        Position

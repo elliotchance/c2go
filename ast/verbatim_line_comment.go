@@ -1,5 +1,6 @@
 package ast
 
+// VerbatimLineComment is a type of comment
 type VerbatimLineComment struct {
 	Addr       Address
 	Pos        Position
