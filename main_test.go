@@ -62,8 +62,6 @@ func TestIntegrationScripts(t *testing.T) {
 		separator    = string(os.PathSeparator)
 	)
 
-	t.Parallel()
-
 	for _, file := range files {
 		t.Run(file, func(t *testing.T) {
 			cc.ResetCache()
