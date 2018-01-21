@@ -174,9 +174,18 @@ void zero(int *a, int *b, int *c)
 	*a = *b = *c = 0;
 }
 
+float * next_pointer(float *v)
+{
+	long l = 1;
+	long p = 2;
+	(void)(l);
+	(void)(p);
+	return p - p + v + l;
+}
+
 int main()
 {
-    plan(100);
+    plan(101);
 
     START_TEST(intarr);
     START_TEST(doublearr);
@@ -400,6 +409,13 @@ int main()
 		is_eq(b , 0);
 		is_eq(c , 0);
 		pass("ok");
+	}
+	diag("pointer + long");
+	{
+		float *v = (float *)malloc(5*sizeof(float));
+		*(v+0) = 5;
+		*(v+1) = 6;
+		is_eq(*(next_pointer(v)),6);
 	}
 
     done_testing();

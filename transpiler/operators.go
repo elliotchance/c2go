@@ -206,8 +206,8 @@ func pointerArithmetic(p *program.Program,
 			err = fmt.Errorf("Cannot transpile pointerArithmetic. err = %v", err)
 		}
 	}()
-	if rightType != "int" {
-		err = fmt.Errorf("right type is not 'int' : '%s'", rightType)
+	if !types.IsCInteger(rightType) {
+		err = fmt.Errorf("right type is not C integer type : '%s'", rightType)
 		return
 	}
 	if !types.IsPointer(leftType) {
@@ -248,19 +248,23 @@ func pointerArithmetic(p *program.Program,
 
 	src := `package main
 func main(){
-	a := (*(*[1]{{ .Type }})(unsafe.Pointer(uintptr(unsafe.Pointer(&{{ .Name }}[0])) {{ .Operator }} ({{ .Condition }})*unsafe.Sizeof({{ .Name }}[0]))))[:]
+	a := (*(*[1]{{ .Type }})(unsafe.Pointer(uintptr(unsafe.Pointer(&{{ .Name }}[0])) {{ .Operator }} (uintptr)({{ .Condition }})*unsafe.Sizeof({{ .Name }}[0]))))[:]
 }`
 	tmpl := template.Must(template.New("").Parse(src))
 	var source bytes.Buffer
 	err = tmpl.Execute(&source, s)
 	if err != nil {
+		err = fmt.Errorf("Cannot execute template. err = %v", err)
 		return
 	}
 
 	// Create the AST by parsing src.
 	fset := token.NewFileSet() // positions are relative to fset
-	f, err := parser.ParseFile(fset, "", strings.Replace(source.String(), "&#43;", "+", -1), 0)
+	body := strings.Replace(source.String(), "&#43;", "+", -1)
+	body = strings.Replace(body, "&amp;", "&", -1)
+	f, err := parser.ParseFile(fset, "", body, 0)
 	if err != nil {
+		err = fmt.Errorf("Cannot parse file. err = %v", err)
 		return
 	}
 

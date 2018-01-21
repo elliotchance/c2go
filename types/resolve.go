@@ -9,6 +9,32 @@ import (
 	"github.com/elliotchance/c2go/util"
 )
 
+// cIntegerType - slice of C integer type
+var cIntegerType = []string{
+	"int",
+	"long long",
+	"long long int",
+	"long long unsigned int",
+	"long unsigned int",
+	"long",
+	"short",
+	"unsigned int",
+	"unsigned long long",
+	"unsigned long",
+	"unsigned short",
+	"unsigned short int",
+}
+
+// IsCInteger - return true is C type integer
+func IsCInteger(cType string) bool {
+	for i := range cIntegerType {
+		if cType == cIntegerType[i] {
+			return true
+		}
+	}
+	return false
+}
+
 // TODO: Some of these are based on assumptions that may not be true for all
 // architectures (like the size of an int). At some point in the future we will
 // need to find out the sizes of some of there and pick the most compatible

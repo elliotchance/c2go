@@ -270,7 +270,7 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 				*ast.DeclRefExpr:
 				counter++
 				if counter > 1 {
-					err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %v,%v", pointer, v)
+					err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %T,%T", pointer, v)
 					return
 				}
 				// found pointer
@@ -291,7 +291,7 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 				}
 				counter++
 				if counter > 1 {
-					err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %v,%v", pointer, v)
+					err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %T,%T", pointer, v)
 					return
 				}
 				// found pointer
@@ -312,7 +312,7 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 				}
 				counter++
 				if counter > 1 {
-					err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %v,%v", pointer, v)
+					err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %T,%T", pointer, v)
 					return
 				}
 				// found pointer
@@ -337,10 +337,10 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 					}
 					parents = append(parents, v)
 					var deep bool = true
-					if vv, ok := v.(*ast.ImplicitCastExpr); ok && vv.Type == "int" {
+					if vv, ok := v.(*ast.ImplicitCastExpr); ok && types.IsCInteger(vv.Type) {
 						deep = false
 					}
-					if vv, ok := v.(*ast.CStyleCastExpr); ok && vv.Type == "int" {
+					if vv, ok := v.(*ast.CStyleCastExpr); ok && types.IsCInteger(vv.Type) {
 						deep = false
 					}
 					if deep {
