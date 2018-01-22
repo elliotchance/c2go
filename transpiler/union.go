@@ -82,6 +82,8 @@ type {{ .Name }} struct{
 	return f.Decls[1:], nil
 }
 
+// ((*(*[100]uint8)(unsafe.Pointer(&sha.u.memory)))[:])[0]
+// ((*(*[ 25]int  )(unsafe.Pointer(&sha.u.memory)))[:])[0]
 func getUnionVariable(goType string, union goast.Expr) goast.Expr {
 	return &goast.StarExpr{
 		X: &goast.CallExpr{
