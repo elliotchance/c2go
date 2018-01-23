@@ -230,15 +230,26 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 
 	var post goast.Stmt
 	var transpilate bool
-	if v, ok := children[3].(*ast.UnaryOperator); ok && v.Operator == "++" {
-		// for case:
-		// for(...;...;i++)...
+	if v, ok := children[3].(*ast.UnaryOperator); ok {
 		if vv, ok := v.Children()[0].(*ast.DeclRefExpr); ok {
-			post = &goast.IncDecStmt{
-				X:   util.NewIdent(vv.Name),
-				Tok: token.INC,
+			switch v.Operator {
+			case "++":
+				// for case:
+				// for(...;...;i++)...
+				post = &goast.IncDecStmt{
+					X:   util.NewIdent(vv.Name),
+					Tok: token.INC,
+				}
+				transpilate = true
+			case "--":
+				// for case:
+				// for(...;...;i--)...
+				post = &goast.IncDecStmt{
+					X:   util.NewIdent(vv.Name),
+					Tok: token.DEC,
+				}
+				transpilate = true
 			}
-			transpilate = true
 		}
 	}
 	if !transpilate {

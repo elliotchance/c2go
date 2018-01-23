@@ -3,7 +3,7 @@
 
 int main()
 {
-    plan(60);
+    plan(61);
 
     int i = 0;
 
@@ -168,6 +168,10 @@ int main()
 
     diag("increment --");
     for (i = 3; i >= 1; i--)
+        pass("%d", i);
+
+    diag("increment -= 3");
+    for (i = 3; i >= 1; i-=3)
         pass("%d", i);
 
 	done_testing();

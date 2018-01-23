@@ -16,10 +16,7 @@ func f1() {
 // f2 - transpiled function from file : tests/code_quality/for.c , line : 7
 func f2() {
 	var i int
-	for i = 10; i > 0; func() int {
-		i -= 1
-		return i
-	}() {
+	for i = 10; i > 0; i-- {
 	}
 }
 

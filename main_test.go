@@ -468,7 +468,12 @@ func TestCodeQuality(t *testing.T) {
 
 	t.Parallel()
 
+	suffix := ".expected.c"
+
 	for i, file := range files {
+		if strings.HasSuffix(file, suffix) {
+			continue
+		}
 		t.Run(file, func(t *testing.T) {
 			dir, err := ioutil.TempDir("", fmt.Sprintf("c2go_code_quality_%d_", i))
 			if err != nil {
@@ -493,7 +498,7 @@ func TestCodeQuality(t *testing.T) {
 				t.Fatalf(err.Error())
 			}
 
-			goExpect, err := cleaningGoCode(file + ".txt")
+			goExpect, err := cleaningGoCode(file[:len(file)-2] + suffix)
 			if err != nil {
 				t.Fatalf(err.Error())
 			}
