@@ -104,7 +104,7 @@ void struct_with_rec_fuction()
 
 int main()
 {
-    plan(48);
+    plan(51);
 
     struct programming variable;
     char *s = "Programming in Software Development.";
@@ -326,6 +326,26 @@ int main()
 */
 
 	struct_with_rec_fuction();
+
+	diag("name of struct inside struct")
+	{
+		typedef struct TI TI;
+		struct TI{
+			TI *left, *right;
+			double varTI;
+		};
+		TI t1;
+		t1.varTI = 4.3;
+		TI t2;
+		t2.varTI = 4.1;
+		TI tt;
+		tt.left       = &t1;
+		(*tt.left).right = &t2;
+		tt.right      = &t2;
+		is_eq((*tt.left  ).varTI, 4.3);
+		is_eq((*(*tt.left).right).varTI, 4.1);
+		is_eq((*tt.right ).varTI, 4.1);
+	}
 
     done_testing();
 }
