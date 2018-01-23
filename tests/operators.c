@@ -28,7 +28,7 @@ int sDiv(char *opt) {
 
 int main()
 {
-	plan(58);
+	plan(64);
 
     int i = 10;
     signed char j = 1;
@@ -241,5 +241,19 @@ int main()
 	is_eq(sMin("rrrrrrrrrrrrr"),1);
 	is_eq(sDiv("rrrrrrrrrrrr"),1);
 	
+	diag("Many equal");
+	{
+		int x, y, z;
+		x = y = z = 42;
+		is_eq(x,42);
+		is_eq(y,42);
+		is_eq(z,42);
+	}
+	{
+		int x, y, z = x = y = 42;
+		is_eq(x,42);
+		is_eq(y,42);
+		is_eq(z,42);
+	}
 	done_testing();
 }
