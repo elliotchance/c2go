@@ -186,14 +186,14 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 		return stmts, st, preStmts, postStmts, nil
 	}
 
-	left, leftType, newPre, newPost, err := transpileToExpr(n.Children()[0], p, false)
+	left, leftType, newPre, newPost, err := atomicOperation(n.Children()[0], p) //transpileToExpr(n.Children()[0], p, false)
 	if err != nil {
 		return nil, "unknown52", nil, nil, err
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	right, rightType, newPre, newPost, err := transpileToExpr(n.Children()[1], p, false)
+	right, rightType, newPre, newPost, err := atomicOperation(n.Children()[1], p) //transpileToExpr(n.Children()[1], p, false)
 	if err != nil {
 		return nil, "unknown53", nil, nil, err
 	}

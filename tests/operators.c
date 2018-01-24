@@ -26,9 +26,14 @@ int sDiv(char *opt) {
     return l;
 }
 
+int simple_repeat(int a)
+{
+	return a;
+}
+
 int main()
 {
-	plan(64);
+	plan(70);
 
     int i = 10;
     signed char j = 1;
@@ -256,6 +261,19 @@ int main()
 		is_eq(a[(iterator = 0,iterator  )] ,   5);
 		/* is_eq(a[(iterator = 0,iterator++)] ,   5); */
 		/* is_eq(a[(iterator = 1,++iterator)] , -13); */
+		is_eq(simple_repeat((iterator = 42, iterator)),42);
+		is_eq(simple_repeat((iterator = 42, ++iterator, iterator)),43);
+		int b = 0;
+		for ( iterator = 0; b++, iterator < 2; iterator ++, iterator --, iterator ++)
+		{
+			pass("iterator in for");
+		}
+		is_eq(b,3);
+		iterator = 0;
+		if (i++ > 0)
+		{
+			pass("i++ > 0 is pass");
+		}
 	}
 
 	done_testing();
