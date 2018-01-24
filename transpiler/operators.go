@@ -599,11 +599,13 @@ func atomicOperation(n ast.Node, p *program.Program) (
 			e, _, newPre, newPost, _ := atomicOperation(v.Children()[1], p)
 			body := combineStmts(&goast.ExprStmt{e}, newPre, newPost)
 
-			body = []goast.Stmt{&goast.ExprStmt{&goast.BinaryExpr{
-				X:  util.NewIdent(varName),
-				Op: token.ASSIGN,
-				Y:  e,
-			}}}
+			body = []goast.Stmt{&goast.ExprStmt{
+				&goast.BinaryExpr{
+					X:  util.NewIdent(varName),
+					Op: token.ASSIGN,
+					Y:  e,
+				},
+			}}
 
 			expr, exprType, _, _, _ = atomicOperation(v.Children()[0], p)
 
@@ -620,6 +622,10 @@ func atomicOperation(n ast.Node, p *program.Program) (
 				nil,
 				util.NewIdent(varName),
 				exprResolveType)
+			expr = &goast.ParenExpr{
+				X:      expr,
+				Lparen: 1,
+			}
 		}
 	}
 

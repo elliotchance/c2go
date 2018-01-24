@@ -33,7 +33,7 @@ int simple_repeat(int a)
 
 int main()
 {
-	plan(78);
+	plan(79);
 
     int i = 10;
     signed char j = 1;
@@ -297,6 +297,13 @@ int main()
 		double a,b,c,d = a = b = c = 42;
 		is_eq(a,42);
 		is_eq(d,42);
+	}
+	{
+		int yy = 0;
+		if ((yy = simple_repeat(42)) > 3)
+		{
+			pass("ok")
+		}
 	}
 
 	done_testing();
