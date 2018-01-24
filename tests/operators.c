@@ -33,7 +33,7 @@ int simple_repeat(int a)
 
 int main()
 {
-	plan(74);
+	plan(78);
 
     int i = 10;
     signed char j = 1;
@@ -283,7 +283,18 @@ int main()
 		is_eq(d,42);
 	}
 	{
+		double a,b,c,d;
+		a=b=c=d=42;
+		is_eq(a,42);
+		is_eq(d,42);
+	}
+	{
 		int a,b,c,d = a = b = c = 42;
+		is_eq(a,42);
+		is_eq(d,42);
+	}
+	{
+		double a,b,c,d = a = b = c = 42;
 		is_eq(a,42);
 		is_eq(d,42);
 	}
