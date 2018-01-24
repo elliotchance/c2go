@@ -116,6 +116,11 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 	preStmts []goast.Stmt,
 	postStmts []goast.Stmt,
 	err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot transpileToExpr. err = %v", err)
+		}
+	}()
 	if node == nil {
 		panic(node)
 	}

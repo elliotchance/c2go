@@ -225,7 +225,6 @@ func transpileUnaryOperatorAmpersant(n *ast.UnaryOperator, p *program.Program) (
 	}
 
 	if types.IsFunction(eType) {
-		err = fmt.Errorf("function pointer is not supported")
 		return
 	}
 

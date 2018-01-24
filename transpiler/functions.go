@@ -42,7 +42,8 @@ func getFunctionBody(n *ast.FunctionDecl) *ast.CompoundStmt {
 // either way the function is registered internally) but we do not do anything
 // because Go does not use or have any use for forward declarations of
 // functions.
-func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (decls []goast.Decl, err error) {
+func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (
+	decls []goast.Decl, err error) {
 	var body *goast.BlockStmt
 
 	// This is set at the start of the function declaration so when the
