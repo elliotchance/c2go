@@ -507,6 +507,13 @@ func atomicOperation(n ast.Node, p *program.Program) (
 		} else {
 			varName = vv.Name
 		}
+
+		var exprResolveType string
+		exprResolveType, err = types.ResolveType(p, v.Type)
+		if err != nil {
+			return
+		}
+
 		// operators: ++, --
 		if v.IsPrefix {
 			// Example:
@@ -515,7 +522,7 @@ func atomicOperation(n ast.Node, p *program.Program) (
 			expr = util.NewAnonymousFunction(append(preStmts, &goast.ExprStmt{expr}),
 				nil,
 				util.NewIdent(varName),
-				exprType)
+				exprResolveType)
 			preStmts = nil
 			break
 		}
@@ -525,7 +532,7 @@ func atomicOperation(n ast.Node, p *program.Program) (
 		expr = util.NewAnonymousFunction(preStmts,
 			[]goast.Stmt{&goast.ExprStmt{expr}},
 			util.NewIdent(varName),
-			exprType)
+			exprResolveType)
 		preStmts = nil
 
 	case *ast.CompoundAssignOperator:
@@ -538,10 +545,17 @@ func atomicOperation(n ast.Node, p *program.Program) (
 		} else {
 			varName = vv.Name
 		}
+
+		var exprResolveType string
+		exprResolveType, err = types.ResolveType(p, v.Type)
+		if err != nil {
+			return
+		}
+
 		expr = util.NewAnonymousFunction(append(preStmts, &goast.ExprStmt{expr}),
 			nil,
 			util.NewIdent(varName),
-			exprType)
+			exprResolveType)
 		preStmts = nil
 
 	case *ast.ParenExpr:
@@ -596,7 +610,14 @@ func atomicOperation(n ast.Node, p *program.Program) (
 				break
 			}
 
-			e, _, newPre, newPost, _ := atomicOperation(v.Children()[1], p)
+			var exprResolveType string
+			exprResolveType, err = types.ResolveType(p, v.Type)
+			if err != nil {
+				return
+			}
+
+			e, eType1, newPre, newPost, _ := atomicOperation(v.Children()[1], p)
+			types.CastExpr(p, e, eType1, v.Type)
 			body := combineStmts(&goast.ExprStmt{e}, newPre, newPost)
 
 			body = []goast.Stmt{&goast.ExprStmt{
@@ -608,12 +629,6 @@ func atomicOperation(n ast.Node, p *program.Program) (
 			}}
 
 			expr, exprType, _, _, _ = atomicOperation(v.Children()[0], p)
-
-			var exprResolveType string
-			exprResolveType, err = types.ResolveType(p, v.Type)
-			if err != nil {
-				return
-			}
 
 			preStmts = nil
 			postStmts = nil
