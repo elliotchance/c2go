@@ -207,30 +207,6 @@ func NewBinaryExpr(left goast.Expr, operator token.Token, right goast.Expr,
 		Op: operator,
 		Y:  right,
 	}
-
-	// Wrap the assignment operator in a closure if we must.
-	if !stmt {
-		switch operator {
-		case token.ASSIGN,
-			token.ADD_ASSIGN,
-			token.SUB_ASSIGN,
-			token.MUL_ASSIGN,
-			token.QUO_ASSIGN,
-			token.REM_ASSIGN,
-			token.AND_ASSIGN,
-			token.OR_ASSIGN,
-			token.XOR_ASSIGN,
-			token.SHL_ASSIGN,
-			token.SHR_ASSIGN,
-			token.AND_NOT_ASSIGN:
-			returnStmt := &goast.ReturnStmt{
-				Results: []goast.Expr{left},
-			}
-
-			b = NewFuncClosure(returnType, NewExprStmt(b), returnStmt)
-		}
-	}
-
 	return b
 }
 

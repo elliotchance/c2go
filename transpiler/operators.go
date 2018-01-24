@@ -549,34 +549,71 @@ func atomicOperation(n ast.Node, p *program.Program) (
 		return atomicOperation(v.Children()[0], p)
 
 	case *ast.BinaryOperator:
-		if v.Operator != "," {
-			break
-		}
-		var varName string
-		if vv, ok := v.Children()[1].(*ast.ImplicitCastExpr); ok {
-			if vvv, ok := vv.Children()[0].(*ast.DeclRefExpr); ok {
-				varName = vvv.Name
+		switch v.Operator {
+		case ",":
+			var varName string
+			if vv, ok := v.Children()[1].(*ast.ImplicitCastExpr); ok {
+				if vvv, ok := vv.Children()[0].(*ast.DeclRefExpr); ok {
+					varName = vvv.Name
+				}
 			}
-		}
-		if varName == "" {
-			break
-		}
-		// `-BinaryOperator 0x3c42440 <col:19, col:32> 'int' ','
-		//   |-BinaryOperator 0x3c423d8 <col:19, col:30> 'int' '='
-		//   | |-DeclRefExpr 0x3c42390 <col:19> 'int' lvalue Var 0x3c3cf60 'iterator' 'int'
-		//   | `-IntegerLiteral 0x3c423b8 <col:30> 'int' 0
-		//   `-ImplicitCastExpr 0x3c42428 <col:32> 'int' <LValueToRValue>
-		//     `-DeclRefExpr 0x3c42400 <col:32> 'int' lvalue Var 0x3c3cf60 'iterator' 'int'
-		e, _, newPre, newPost, _ := transpileToExpr(v.Children()[0], p, false)
-		body := combineStmts(&goast.ExprStmt{e}, newPre, newPost)
+			if varName == "" {
+				break
+			}
+			// `-BinaryOperator 0x3c42440 <col:19, col:32> 'int' ','
+			//   |-BinaryOperator 0x3c423d8 <col:19, col:30> 'int' '='
+			//   | |-DeclRefExpr 0x3c42390 <col:19> 'int' lvalue Var 0x3c3cf60 'iterator' 'int'
+			//   | `-IntegerLiteral 0x3c423b8 <col:30> 'int' 0
+			//   `-ImplicitCastExpr 0x3c42428 <col:32> 'int' <LValueToRValue>
+			//     `-DeclRefExpr 0x3c42400 <col:32> 'int' lvalue Var 0x3c3cf60 'iterator' 'int'
+			e, _, newPre, newPost, _ := transpileToExpr(v.Children()[0], p, false)
+			body := combineStmts(&goast.ExprStmt{e}, newPre, newPost)
 
-		e, exprType, _, _, _ = atomicOperation(v.Children()[1], p)
-		expr = util.NewAnonymousFunction(body,
-			nil,
-			util.NewIdent(varName),
-			exprType)
-		preStmts = nil
-		postStmts = nil
+			e, exprType, _, _, _ = atomicOperation(v.Children()[1], p)
+			expr = util.NewAnonymousFunction(body,
+				nil,
+				util.NewIdent(varName),
+				exprType)
+			preStmts = nil
+			postStmts = nil
+			break
+
+		case "=":
+			// Example
+			// VarDecl 0x328dc50 <col:3, col:29> col:13 used d 'int' cinit
+			// `-BinaryOperator 0x328dd98 <col:17, col:29> 'int' '='
+			//   |-DeclRefExpr 0x328dcb0 <col:17> 'int' lvalue Var 0x328dae8 'a' 'int'
+			//   `-BinaryOperator 0x328dd70 <col:21, col:29> 'int' '='
+			//     |-DeclRefExpr 0x328dcd8 <col:21> 'int' lvalue Var 0x328db60 'b' 'int'
+			//     `-BinaryOperator 0x328dd48 <col:25, col:29> 'int' '='
+			//       |-DeclRefExpr 0x328dd00 <col:25> 'int' lvalue Var 0x328dbd8 'c' 'int'
+			//       `-IntegerLiteral 0x328dd28 <col:29> 'int' 42
+			var varName string
+			if vv, ok := v.Children()[0].(*ast.DeclRefExpr); ok {
+				varName = vv.Name
+			}
+			if varName == "" {
+				break
+			}
+
+			e, _, newPre, newPost, _ := atomicOperation(v.Children()[1], p)
+			body := combineStmts(&goast.ExprStmt{e}, newPre, newPost)
+
+			body = []goast.Stmt{&goast.ExprStmt{&goast.BinaryExpr{
+				X:  util.NewIdent(varName),
+				Op: token.ASSIGN,
+				Y:  e,
+			}}}
+
+			expr, exprType, _, _, _ = atomicOperation(v.Children()[0], p)
+			preStmts = nil
+			postStmts = nil
+
+			expr = util.NewAnonymousFunction(body,
+				nil,
+				util.NewIdent(varName),
+				exprType)
+		}
 	}
 
 	return

@@ -117,7 +117,7 @@ var temp = func() %s {
 		return expr, va.Type, nil, nil, nil
 	}
 
-	defaultValue, defaultValueType, newPre, newPost, err := transpileToExpr(a.Children()[0], p, false)
+	defaultValue, defaultValueType, newPre, newPost, err := atomicOperation(a.Children()[0], p)
 	if err != nil {
 		return nil, defaultValueType, newPre, newPost, err
 	}
