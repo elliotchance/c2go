@@ -486,3 +486,45 @@ func convertToWithoutAssign(operator token.Token) token.Token {
 	}
 	panic(fmt.Sprintf("not support operator: %v", operator))
 }
+
+func atomicOperation(n ast.Node, p *program.Program) (
+	expr goast.Expr, exprType string, preStmts, postStmts []goast.Stmt, err error) {
+
+	expr, exprType, preStmts, postStmts, err = transpileToExpr(n, p, false)
+
+	switch v := n.(type) {
+	case *ast.UnaryOperator:
+		switch v.Operator {
+		case "&", "*", "!":
+			break
+		}
+		var varName string
+		if vv, ok := v.Children()[0].(*ast.DeclRefExpr); !ok {
+			break
+		} else {
+			varName = vv.Name
+		}
+		// operators: ++, --
+		if v.IsPrefix {
+			// Example:
+			// UnaryOperator 0x3001768 <col:204, col:206> 'int' prefix '++'
+			// `-DeclRefExpr 0x3001740 <col:206> 'int' lvalue Var 0x303e888 'current_test' 'int'
+			expr = util.NewAnonymousFunction(append(preStmts, &goast.ExprStmt{expr}),
+				nil,
+				util.NewIdent(varName),
+				exprType)
+			preStmts = nil
+			break
+		}
+		// Example:
+		// UnaryOperator 0x3001768 <col:204, col:206> 'int' postfix '++'
+		// `-DeclRefExpr 0x3001740 <col:206> 'int' lvalue Var 0x303e888 'current_test' 'int'
+		expr = util.NewAnonymousFunction(preStmts,
+			[]goast.Stmt{&goast.ExprStmt{expr}},
+			util.NewIdent(varName),
+			exprType)
+		preStmts = nil
+	}
+
+	return
+}

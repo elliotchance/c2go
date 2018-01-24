@@ -393,3 +393,43 @@ func NewGoExpr(expr string) goast.Expr {
 
 	return e
 }
+
+// NewAnonymousFunction - create a new anonymous function.
+// Example:
+// func() returnType{
+//		defer func(){
+//			deferBody
+//		}()
+// 		body
+//		return returnValue
+// }
+func NewAnonymousFunction(body, deferBody []goast.Stmt,
+	returnValue goast.Expr,
+	returnType string) *goast.CallExpr {
+
+	if deferBody != nil {
+		body = append([]goast.Stmt{&goast.DeferStmt{
+			Defer: 1,
+			Call: &goast.CallExpr{
+				Fun: &goast.FuncLit{
+					Type: &goast.FuncType{},
+					Body: &goast.BlockStmt{List: deferBody},
+				},
+				Lparen: 1,
+			},
+		}}, body...)
+	}
+
+	return &goast.CallExpr{Fun: &goast.FuncLit{
+		Type: &goast.FuncType{
+			Results: &goast.FieldList{List: []*goast.Field{
+				&goast.Field{Type: goast.NewIdent(returnType)},
+			}},
+		},
+		Body: &goast.BlockStmt{
+			List: append(body, &goast.ReturnStmt{
+				Results: []goast.Expr{returnValue},
+			}),
+		},
+	}}
+}

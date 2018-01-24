@@ -28,7 +28,7 @@ int sDiv(char *opt) {
 
 int main()
 {
-	plan(58);
+	plan(61);
 
     int i = 10;
     signed char j = 1;
@@ -206,13 +206,13 @@ int main()
 
 	// checking is_eq is no need, because if "(void)(az)" not transpile,
 	// then go build return fail - value is not used
-	diag("CStyleCast <ToVoid>")
+	diag("CStyleCast <ToVoid>");
 	{ char            **az; (void)(az); }
 	{ double     *const*az; (void)(az); }
 	{ int             **az; (void)(az); }
 	{ float   *volatile*az; (void)(az); }
 	
-	diag("CStyleCast <ToVoid> with comma")
+	diag("CStyleCast <ToVoid> with comma");
 	{ unsigned int *ui; (void)(empty(),ui);}
 	{ 
 		long int *li;
@@ -221,7 +221,7 @@ int main()
 		is_eq(counter_li,1);
 	}
 
-	diag("switch with initialization")
+	diag("switch with initialization");
 	switch(0)
 	{
 		int ii;
@@ -235,11 +235,26 @@ int main()
 		case 1:	{ ia = 60; is_eq(ia,60); }
 	}
 
-	diag("Binary operators for definition function")
+	diag("Binary operators for definition function");
 	is_eq(sAdd("rrr"),15);
 	is_eq(sMul("rrr"),36);
 	is_eq(sMin("rrrrrrrrrrrrr"),1);
 	is_eq(sDiv("rrrrrrrrrrrr"),1);
 	
+	diag("Operators +=, -=, *= , /= ... inside []");
+	{
+		int a[3];
+		a[0] = 5;
+		a[1] = 9;
+		a[2] = -13;
+		int iterator = 0;
+		is_eq(a[iterator++],  5);
+		is_eq(a[iterator]  ,  9);
+		is_eq(a[++iterator],-13);
+		/* is_eq(a[iterator-=2], 5); */
+		/* is_eq(a[iterator+=1], 9); */
+		/* is_eq(a[(iterator = 0,iterator)] , 5); */
+	}
+
 	done_testing();
 }

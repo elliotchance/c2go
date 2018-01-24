@@ -297,18 +297,17 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program) 
 	}()
 
 	children := n.Children()
+
 	expression, expressionType, newPre, newPost, err := transpileToExpr(children[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
-
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	index, _, newPre, newPost, err := transpileToExpr(children[1], p, false)
+	index, _, newPre, newPost, err := atomicOperation(children[1], p)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
-
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	theType, err = types.GetDereferenceType(expressionType)
