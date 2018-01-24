@@ -469,11 +469,15 @@ func transpileToNode(node ast.Node, p *program.Program) (decls []goast.Decl, err
 		if len(decls) > 0 {
 			if _, ok := decls[0].(*goast.FuncDecl); ok {
 				decls[0].(*goast.FuncDecl).Doc = p.GetMessageComments()
-				decls[0].(*goast.FuncDecl).Doc.List = append(decls[0].(*goast.FuncDecl).Doc.List,
-					p.GetComments(node.Position())...)
-				decls[0].(*goast.FuncDecl).Doc.List = append([]*goast.Comment{&goast.Comment{
-					Text: fmt.Sprintf("// %s - transpiled function from file : %s , line : %d", decls[0].(*goast.FuncDecl).Name.Name, n.Pos.File, n.Pos.Line),
-				}}, decls[0].(*goast.FuncDecl).Doc.List...)
+				decls[0].(*goast.FuncDecl).Doc.List =
+					append(decls[0].(*goast.FuncDecl).Doc.List,
+						p.GetComments(node.Position())...)
+				decls[0].(*goast.FuncDecl).Doc.List =
+					append([]*goast.Comment{&goast.Comment{
+						Text: fmt.Sprintf("// %s - transpiled function from %s",
+							decls[0].(*goast.FuncDecl).Name.Name,
+							node.Position().GetSimpleLocation()),
+					}}, decls[0].(*goast.FuncDecl).Doc.List...)
 			}
 		}
 
