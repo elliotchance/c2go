@@ -28,7 +28,7 @@ int sDiv(char *opt) {
 
 int main()
 {
-	plan(61);
+	plan(64);
 
     int i = 10;
     signed char j = 1;
@@ -251,9 +251,11 @@ int main()
 		is_eq(a[iterator++],  5);
 		is_eq(a[iterator]  ,  9);
 		is_eq(a[++iterator],-13);
-		/* is_eq(a[iterator-=2], 5); */
-		/* is_eq(a[iterator+=1], 9); */
-		/* is_eq(a[(iterator = 0,iterator)] , 5); */
+		is_eq(a[iterator-=2], 5);
+		is_eq(a[iterator+=1], 9);
+		is_eq(a[(iterator = 0,iterator  )] ,   5);
+		/* is_eq(a[(iterator = 0,iterator++)] ,   5); */
+		/* is_eq(a[(iterator = 1,++iterator)] , -13); */
 	}
 
 	done_testing();

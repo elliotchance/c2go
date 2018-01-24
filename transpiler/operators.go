@@ -491,6 +491,9 @@ func atomicOperation(n ast.Node, p *program.Program) (
 	expr goast.Expr, exprType string, preStmts, postStmts []goast.Stmt, err error) {
 
 	expr, exprType, preStmts, postStmts, err = transpileToExpr(n, p, false)
+	if err != nil {
+		return
+	}
 
 	switch v := n.(type) {
 	case *ast.UnaryOperator:
@@ -524,6 +527,56 @@ func atomicOperation(n ast.Node, p *program.Program) (
 			util.NewIdent(varName),
 			exprType)
 		preStmts = nil
+
+	case *ast.CompoundAssignOperator:
+		// CompoundAssignOperator 0x32911c0 <col:18, col:28> 'int' '-=' ComputeLHSTy='int' ComputeResultTy='int'
+		// |-DeclRefExpr 0x3291178 <col:18> 'int' lvalue Var 0x328df60 'iterator' 'int'
+		// `-IntegerLiteral 0x32911a0 <col:28> 'int' 2
+		var varName string
+		if vv, ok := v.Children()[0].(*ast.DeclRefExpr); !ok {
+			break
+		} else {
+			varName = vv.Name
+		}
+		expr = util.NewAnonymousFunction(append(preStmts, &goast.ExprStmt{expr}),
+			nil,
+			util.NewIdent(varName),
+			exprType)
+		preStmts = nil
+
+	case *ast.ParenExpr:
+		// ParenExpr 0x3c42468 <col:18, col:40> 'int'
+		return atomicOperation(v.Children()[0], p)
+
+	case *ast.BinaryOperator:
+		if v.Operator != "," {
+			break
+		}
+		var varName string
+		if vv, ok := v.Children()[1].(*ast.ImplicitCastExpr); ok {
+			if vvv, ok := vv.Children()[0].(*ast.DeclRefExpr); ok {
+				varName = vvv.Name
+			}
+		}
+		if varName == "" {
+			break
+		}
+		// `-BinaryOperator 0x3c42440 <col:19, col:32> 'int' ','
+		//   |-BinaryOperator 0x3c423d8 <col:19, col:30> 'int' '='
+		//   | |-DeclRefExpr 0x3c42390 <col:19> 'int' lvalue Var 0x3c3cf60 'iterator' 'int'
+		//   | `-IntegerLiteral 0x3c423b8 <col:30> 'int' 0
+		//   `-ImplicitCastExpr 0x3c42428 <col:32> 'int' <LValueToRValue>
+		//     `-DeclRefExpr 0x3c42400 <col:32> 'int' lvalue Var 0x3c3cf60 'iterator' 'int'
+		e, _, newPre, newPost, _ := transpileToExpr(v.Children()[0], p, false)
+		body := combineStmts(&goast.ExprStmt{e}, newPre, newPost)
+
+		e, exprType, _, _, _ = atomicOperation(v.Children()[1], p)
+		expr = util.NewAnonymousFunction(body,
+			nil,
+			util.NewIdent(varName),
+			exprType)
+		preStmts = nil
+		postStmts = nil
 	}
 
 	return
