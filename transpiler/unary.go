@@ -118,6 +118,23 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program, operato
 		return
 	}
 
+	if v, ok := n.Children()[0].(*ast.DeclRefExpr); ok {
+		switch n.Operator {
+		case "++":
+			return &goast.BinaryExpr{
+				X:  util.NewIdent(v.Name),
+				Op: token.ADD_ASSIGN,
+				Y:  &goast.BasicLit{Kind: token.INT, Value: "1"},
+			}, n.Type, nil, nil, nil
+		case "--":
+			return &goast.BinaryExpr{
+				X:  util.NewIdent(v.Name),
+				Op: token.SUB_ASSIGN,
+				Y:  &goast.BasicLit{Kind: token.INT, Value: "1"},
+			}, n.Type, nil, nil, nil
+		}
+	}
+
 	binaryOperator := "+="
 	if operator == token.DEC {
 		binaryOperator = "-="
