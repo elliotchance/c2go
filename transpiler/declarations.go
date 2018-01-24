@@ -171,6 +171,12 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 				}
 			}
 
+		case *ast.FullComment:
+			// We haven't Go ast struct for easy inject a comments.
+			// All comments are added like CommentsGroup.
+			// So, we can ignore that comment, because all comments
+			// will be added by another way.
+
 		default:
 			message := fmt.Sprintf("could not parse %v", c)
 			p.AddMessage(p.GenerateWarningMessage(errors.New(message), c))
