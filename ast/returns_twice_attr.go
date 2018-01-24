@@ -1,5 +1,7 @@
 package ast
 
+// ReturnsTwiceAttr is a type of attribute that is optionally attached to a variable
+// or struct field definition.
 type ReturnsTwiceAttr struct {
 	Addr       Address
 	Pos        Position

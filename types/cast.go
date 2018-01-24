@@ -402,11 +402,11 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 	leftName := fromType
 	rightName := toType
 
-	if strings.Index(leftName, ".") != -1 {
+	if strings.Contains(leftName, ".") {
 		parts := strings.Split(leftName, ".")
 		leftName = parts[len(parts)-1]
 	}
-	if strings.Index(rightName, ".") != -1 {
+	if strings.Contains(rightName, ".") {
 		parts := strings.Split(rightName, ".")
 		rightName = parts[len(parts)-1]
 	}

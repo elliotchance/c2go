@@ -1,5 +1,6 @@
 package ast
 
+// ReturnStmt is node represent 'return'
 type ReturnStmt struct {
 	Addr       Address
 	Pos        Position

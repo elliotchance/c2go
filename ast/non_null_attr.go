@@ -6,6 +6,8 @@ import (
 	"github.com/elliotchance/c2go/util"
 )
 
+// NonNullAttr is a type of attribute that is optionally attached to a variable
+// or struct field definition.
 type NonNullAttr struct {
 	Addr       Address
 	Pos        Position

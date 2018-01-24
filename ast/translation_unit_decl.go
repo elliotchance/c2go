@@ -1,5 +1,6 @@
 package ast
 
+// TranslationUnitDecl is node represents a translation unit declaration.
 type TranslationUnitDecl struct {
 	Addr       Address
 	ChildNodes []Node

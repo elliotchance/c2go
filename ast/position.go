@@ -6,6 +6,7 @@ import (
 	"github.com/elliotchance/c2go/util"
 )
 
+// Position is type of position in source code
 type Position struct {
 	File      string // The relative or absolute file path.
 	Line      int    // Start line

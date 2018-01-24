@@ -1,5 +1,6 @@
 package ast
 
+// DoStmt is node represent 'do'
 type DoStmt struct {
 	Addr       Address
 	Pos        Position

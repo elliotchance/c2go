@@ -4,6 +4,7 @@ import (
 	"strings"
 )
 
+// TypedefDecl is node represents a typedef declaration.
 type TypedefDecl struct {
 	Addr         Address
 	Pos          Position

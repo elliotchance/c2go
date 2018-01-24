@@ -295,20 +295,19 @@ func transpileToStmts(node ast.Node, p *program.Program) (stmts []goast.Stmt, er
 			err = nil // Error is ignored
 		}
 		return
-	default:
-		var (
-			stmt      goast.Stmt
-			preStmts  []goast.Stmt
-			postStmts []goast.Stmt
-		)
-		stmt, preStmts, postStmts, err = transpileToStmt(node, p)
-		if err != nil {
-			p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Error in DeclStmt: %v", err), n))
-			err = nil // Error is ignored
-		}
-		return combineStmts(stmt, preStmts, postStmts), err
 	}
-	return
+
+	var (
+		stmt      goast.Stmt
+		preStmts  []goast.Stmt
+		postStmts []goast.Stmt
+	)
+	stmt, preStmts, postStmts, err = transpileToStmt(node, p)
+	if err != nil {
+		p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Error in DeclStmt: %v", err), node))
+		err = nil // Error is ignored
+	}
+	return combineStmts(stmt, preStmts, postStmts), err
 }
 
 func transpileToStmt(node ast.Node, p *program.Program) (

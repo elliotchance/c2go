@@ -1,5 +1,6 @@
 package ast
 
+// BreakStmt is node represent 'break'
 type BreakStmt struct {
 	Addr       Address
 	Pos        Position

@@ -358,7 +358,7 @@ func IsLastArray(s string) bool {
 }
 
 func IsTypedefFunction(p *program.Program, s string) bool {
-	s = string(s[0 : len(s)-len(" *")])
+	s = s[0 : len(s)-len(" *")]
 	if v, ok := p.TypedefType[s]; ok && IsFunction(v) {
 		return true
 	}

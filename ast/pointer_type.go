@@ -1,5 +1,6 @@
 package ast
 
+// PointerType is pointer type
 type PointerType struct {
 	Addr       Address
 	Type       string
