@@ -22,7 +22,7 @@ type Position struct {
 }
 
 // GetSimpleLocation - return a string like : "file:line" in
-// accoring to position
+// according to position
 // Example : " /tmp/1.c:200 "
 func (p Position) GetSimpleLocation() (loc string) {
 	file := p.File
