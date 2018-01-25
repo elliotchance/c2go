@@ -52,29 +52,6 @@ func transpileBinaryOperatorComma(n *ast.BinaryOperator, p *program.Program) (
 	return right[len(right)-1], preStmts, nil
 }
 
-/*
-func findUnion(node ast.Node) (unionNode ast.Node, haveMemberExprWithUnion bool) {
-	switch chi := node.(type) {
-	case *ast.MemberExpr:
-		if strings.HasPrefix(chi.Type, "union ") {
-			haveMemberExprWithUnion = true
-			unionNode = node
-			return
-		}
-		return findUnion(node.Children()[0])
-	case *ast.DeclRefExpr:
-		if strings.HasPrefix(chi.Type, "union ") {
-			haveMemberExprWithUnion = true
-			unionNode = node
-			return
-		}
-	default:
-		return findUnion(chi.Children()[0])
-	}
-	return nil, false
-}
-*/
-
 func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsStmt bool) (
 	expr goast.Expr, eType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 	defer func() {
@@ -322,92 +299,6 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 				right = util.NewNil()
 			}
 
-			/*
-				unionNode, haveMemberExprWithUnion := findUnion(n.Children()[0])
-
-				fmt.Printf("u : %#v\n", unionNode)
-				/*
-				   	union UPNTF u;
-				   	u.f1 = union_function;
-				   |   |-BinaryOperator 0x2e53538 <line:183:2, col:9> 'int (*)(int)' '='
-				   |   | |-MemberExpr 0x2e534c0 <col:2, col:4> 'int (*)(int)' lvalue .f1 0x2e52fc0
-				   |   | | `-DeclRefExpr 0x2e53498 <col:2> 'union UPNTF':'union UPNTF' lvalue Var 0x2e53420 'u' 'union UPNTF':'union UPNTF'
-				   |   | `-ImplicitCastExpr 0x2e53520 <col:9> 'int (*)(int)' <FunctionToPointerDecay>
-				   |   |   `-DeclRefExpr 0x2e534f8 <col:9> 'int (int)' Function 0x2e53190 'union_function' 'int (int)'
-
-
-				   	SHA sha;
-				   	sha.uuu = 15;
-				   	is_eq(sha.uuu,15);
-				   	for (int i=0;i<25;i++){
-				   		sha.u.s[i] = (ii)(0);
-				   |   |   |-BinaryOperator 0x2e570e8 <line:205:3, col:22> 'ii':'int' '='
-				   |   |   | |-ArraySubscriptExpr 0x2e57018 <col:3, col:12> 'ii':'int' lvalue
-				   |   |   | | |-ImplicitCastExpr 0x2e56fe8 <col:3, col:9> 'ii *' <ArrayToPointerDecay>
-				   |   |   | | | `-MemberExpr 0x2e56f60 <col:3, col:9> 'ii [25]' lvalue .s 0x2e559a8
-				   |   |   | | |   `-MemberExpr 0x2e56f28 <col:3, col:7> 'union (anonymous union at ./tests/union.c:192:3)':'union SHA::(anonymous at ./tests/union.c:192:3)' lvalue .u 0x2e55b00
-				   |   |   | | |     `-DeclRefExpr 0x2e56f00 <col:3> 'SHA':'struct SHA' lvalue Var 0x2e55ce0 'sha' 'SHA':'struct SHA'
-				   |   |   | | `-ImplicitCastExpr 0x2e57000 <col:11> 'int' <LValueToRValue>
-				   |   |   | |   `-DeclRefExpr 0x2e56f98 <col:11> 'int' lvalue Var 0x2e56d98 'i' 'int'
-				   |   |   | `-CStyleCastExpr 0x2e570c0 <col:16, col:22> 'ii':'int' <NoOp>
-				   |   |   |   `-ParenExpr 0x2e570a0 <col:20, col:22> 'int'
-				   |   |   |     `-IntegerLiteral 0x2e57040 <col:21> 'int' 0
-
-				   func (self *BSunionSatStestsSunionPcD192D3E) GetS() (res []int) { /// MUST ii
-				   	self.assign(&res)
-				   	return
-				   }
-			*/
-
-			/*
-				// Construct code for assigning value to an union field
-				if memberExpr, ok := n.Children()[0].(*ast.MemberExpr); ok {
-					ref := memberExpr.GetDeclRefExpr()
-					if ref != nil {
-						union := p.GetStruct(ref.Type)
-						if union == nil {
-							union = p.GetStruct("union " + ref.Type)
-						}
-						if union != nil && union.IsUnion {
-							attrType, err := types.ResolveType(p, ref.Type)
-							if err != nil {
-								p.AddMessage(p.GenerateWarningMessage(err, memberExpr))
-							}
-
-							funcName := getFunctionNameForUnionSetter(ref.Name, attrType, memberExpr.Name)
-							resExpr := util.NewCallExpr(funcName, right)
-							resType := types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType)
-
-							return resExpr, resType, preStmts, postStmts, nil
-						}
-					}
-					// union inside struct
-					if un, ok := memberExpr.Children()[0].(*ast.MemberExpr); ok {
-						un.Type = types.GenerateCorrectType(un.Type)
-						un.Type2 = types.GenerateCorrectType(un.Type2)
-						union := p.GetStruct(un.Type)
-						if union != nil && union.IsUnion {
-							if str, ok := un.Children()[0].(*ast.DeclRefExpr); ok {
-								funcName := getFunctionNameForUnionSetter("", memberExpr.Type, memberExpr.Name)
-								funcName = str.Name + "." + un.Name + funcName
-								resExpr := &goast.CallExpr{
-									Fun:  goast.NewIdent(funcName),
-									Args: []goast.Expr{right},
-								}
-								resType := types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType)
-
-								return resExpr, resType, preStmts, postStmts, nil
-							}
-						}
-					}
-
-					// struct inside union
-					if haveMemberExprWithUnion {
-						p.AddMessage(p.GenerateWarningMessage(
-							fmt.Errorf("Binary operation with union not support. AST node with union : %v", unionNode), n))
-					}
-				}
-			*/
 		}
 	}
 
