@@ -494,12 +494,17 @@ func atomicOperation(n ast.Node, p *program.Program) (
 	if err != nil {
 		return
 	}
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot create atomicOperation. err = %v", err)
+		}
+	}()
 
 	switch v := n.(type) {
 	case *ast.UnaryOperator:
 		switch v.Operator {
 		case "&", "*", "!":
-			break
+			return
 		}
 		var varName string
 		if vv, ok := v.Children()[0].(*ast.DeclRefExpr); !ok {
@@ -562,6 +567,30 @@ func atomicOperation(n ast.Node, p *program.Program) (
 		// ParenExpr 0x3c42468 <col:18, col:40> 'int'
 		return atomicOperation(v.Children()[0], p)
 
+	case *ast.ImplicitCastExpr:
+		if _, ok := v.Children()[0].(*ast.MemberExpr); ok {
+			return
+		}
+		if _, ok := v.Children()[0].(*ast.IntegerLiteral); ok {
+			return
+		}
+
+		expr, exprType, preStmts, postStmts, err = atomicOperation(v.Children()[0], p)
+		if err != nil {
+			return nil, "", nil, nil, err
+		}
+		if exprType == types.NullPointer {
+			return
+		}
+		if !types.IsFunction(exprType) && v.Kind != ast.ImplicitCastExprArrayToPointerDecay {
+			expr, err = types.CastExpr(p, expr, exprType, v.Type)
+			if err != nil {
+				return nil, "", nil, nil, err
+			}
+			exprType = v.Type
+		}
+		return
+
 	case *ast.BinaryOperator:
 		switch v.Operator {
 		case ",":
@@ -572,7 +601,7 @@ func atomicOperation(n ast.Node, p *program.Program) (
 				}
 			}
 			if varName == "" {
-				break
+				return
 			}
 			// `-BinaryOperator 0x3c42440 <col:19, col:32> 'int' ','
 			//   |-BinaryOperator 0x3c423d8 <col:19, col:30> 'int' '='
@@ -593,7 +622,17 @@ func atomicOperation(n ast.Node, p *program.Program) (
 			break
 
 		case "=":
-			// Example
+			// Find ast.DeclRefExpr in Children[0]
+			decl, ok := GetDeclRefExpr(v.Children()[0])
+			if !ok {
+				return
+			}
+			// BinaryOperator 0x2a230c0 <col:8, col:13> 'int' '='
+			// |-UnaryOperator 0x2a23080 <col:8, col:9> 'int' lvalue prefix '*'
+			// | `-ImplicitCastExpr 0x2a23068 <col:9> 'int *' <LValueToRValue>
+			// |   `-DeclRefExpr 0x2a23040 <col:9> 'int *' lvalue Var 0x2a22f20 'a' 'int *'
+			// `-IntegerLiteral 0x2a230a0 <col:13> 'int' 42
+
 			// VarDecl 0x328dc50 <col:3, col:29> col:13 used d 'int' cinit
 			// `-BinaryOperator 0x328dd98 <col:17, col:29> 'int' '='
 			//   |-DeclRefExpr 0x328dcb0 <col:17> 'int' lvalue Var 0x328dae8 'a' 'int'
@@ -602,13 +641,8 @@ func atomicOperation(n ast.Node, p *program.Program) (
 			//     `-BinaryOperator 0x328dd48 <col:25, col:29> 'int' '='
 			//       |-DeclRefExpr 0x328dd00 <col:25> 'int' lvalue Var 0x328dbd8 'c' 'int'
 			//       `-IntegerLiteral 0x328dd28 <col:29> 'int' 42
-			var varName string
-			if vv, ok := v.Children()[0].(*ast.DeclRefExpr); ok {
-				varName = vv.Name
-			}
-			if varName == "" {
-				break
-			}
+
+			varName := decl.Name
 
 			var exprResolveType string
 			exprResolveType, err = types.ResolveType(p, v.Type)
@@ -616,33 +650,55 @@ func atomicOperation(n ast.Node, p *program.Program) (
 				return
 			}
 
-			e, eType1, newPre, newPost, _ := atomicOperation(v.Children()[1], p)
-			types.CastExpr(p, e, eType1, v.Type)
+			e, _, newPre, newPost, _ := transpileToExpr(v, p, false)
 			body := combineStmts(&goast.ExprStmt{e}, newPre, newPost)
-
-			body = []goast.Stmt{&goast.ExprStmt{
-				&goast.BinaryExpr{
-					X:  util.NewIdent(varName),
-					Op: token.ASSIGN,
-					Y:  e,
-				},
-			}}
 
 			expr, exprType, _, _, _ = atomicOperation(v.Children()[0], p)
 
 			preStmts = nil
 			postStmts = nil
 
+			var returnValue goast.Expr = util.NewIdent(varName)
+			if types.IsPointer(decl.Type) {
+				returnValue = &goast.IndexExpr{
+					X: returnValue,
+					Index: &goast.BasicLit{
+						Kind:  token.INT,
+						Value: "0",
+					},
+				}
+			}
+
 			expr = util.NewAnonymousFunction(body,
 				nil,
-				util.NewIdent(varName),
+				returnValue,
 				exprResolveType)
 			expr = &goast.ParenExpr{
 				X:      expr,
 				Lparen: 1,
 			}
 		}
+
 	}
 
 	return
+}
+
+// findDeclRefExpr - find ast DeclRefExpr
+// Examples of input ast trees:
+// UnaryOperator 0x2a23080 <col:8, col:9> 'int' lvalue prefix '*'
+// `-ImplicitCastExpr 0x2a23068 <col:9> 'int *' <LValueToRValue>
+//   `-DeclRefExpr 0x2a23040 <col:9> 'int *' lvalue Var 0x2a22f20 'a' 'int *'
+//
+// DeclRefExpr 0x328dd00 <col:25> 'int' lvalue Var 0x328dbd8 'c' 'int'
+func GetDeclRefExpr(n ast.Node) (*ast.DeclRefExpr, bool) {
+	switch v := n.(type) {
+	case *ast.DeclRefExpr:
+		return v, true
+	case *ast.ImplicitCastExpr:
+		return GetDeclRefExpr(n.Children()[0])
+	case *ast.UnaryOperator:
+		return GetDeclRefExpr(n.Children()[0])
+	}
+	return nil, false
 }

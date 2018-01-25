@@ -65,7 +65,9 @@ func TestIntegrationScripts(t *testing.T) {
 		separator    = string(os.PathSeparator)
 	)
 
-	t.Parallel()
+	// Parallel is not acceptable, before solving issue:
+	// https://github.com/elliotchance/c2go/issues/376
+	// t.Parallel()
 
 	for _, file := range files {
 		t.Run(file, func(t *testing.T) {
@@ -466,7 +468,9 @@ func TestCodeQuality(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	t.Parallel()
+	// Parallel is not acceptable, before solving issue:
+	// https://github.com/elliotchance/c2go/issues/376
+	// t.Parallel()
 
 	suffix := ".expected.c"
 

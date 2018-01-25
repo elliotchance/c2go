@@ -31,7 +31,17 @@ var structFieldTranslations = map[string]map[string]string{
 }
 
 func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (
-	*goast.Ident, string, error) {
+	expr *goast.Ident, exprType string, err error) {
+
+	if n.For == "EnumConstant" {
+		// clang don`t show enum constant with enum type,
+		// so we have to use hack for repair the type
+		if v, ok := p.EnumConstantToEnum[n.Name]; ok {
+			expr, exprType, err = util.NewIdent(n.Name), v, nil
+			return
+		}
+	}
+
 	theType := n.Type
 
 	// FIXME: This is for linux to make sure the globals have the right type.
