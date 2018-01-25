@@ -18,23 +18,23 @@ import (
 	"go/token"
 )
 
-// func getMemberName(firstChild ast.Node) (name string, ok bool) {
-// 	switch fc := firstChild.(type) {
-// 	case *ast.MemberExpr:
-// 		return fc.Name, true
-//
-// 	case *ast.ParenExpr:
-// 		return getMemberName(fc.Children()[0])
-//
-// 	case *ast.ImplicitCastExpr:
-// 		return getMemberName(fc.Children()[0])
-//
-// 	case *ast.CStyleCastExpr:
-// 		return getMemberName(fc.Children()[0])
-//
-// 	}
-// 	return "", false
-// }
+func getMemberName(firstChild ast.Node) (name string, ok bool) {
+	switch fc := firstChild.(type) {
+	case *ast.MemberExpr:
+		return fc.Name, true
+
+	case *ast.ParenExpr:
+		return getMemberName(fc.Children()[0])
+
+	case *ast.ImplicitCastExpr:
+		return getMemberName(fc.Children()[0])
+
+	case *ast.CStyleCastExpr:
+		return getMemberName(fc.Children()[0])
+
+	}
+	return "", false
+}
 
 func getName(p *program.Program, firstChild ast.Node) string {
 	switch fc := firstChild.(type) {
@@ -248,14 +248,18 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 		if len(n.Children()) > 0 {
 			if v, ok := n.Children()[0].(*ast.ImplicitCastExpr); ok && (types.IsFunction(v.Type) || types.IsTypedefFunction(p, v.Type)) {
 				t := v.Type
-				if v, ok := p.TypedefType[t]; ok {
-					t = v
-				} else {
-					if types.IsTypedefFunction(p, t) {
-						t = t[0 : len(t)-len(" *")]
-						t, _ = p.TypedefType[t]
+				// if v, ok := p.TypedefType[t]; ok {
+				// 	t = v
+				// } else {
+				if types.IsTypedefFunction(p, t) {
+					t = t[0 : len(t)-len(" *")]
+					// t, _ = p.TypedefType[t]
+					t, ok = p.GetBaseTypeOfTypedef(t)
+					if !ok {
+						panic("Undefine state")
 					}
 				}
+				// }
 				fields, returns, err := types.ParseFunction(t)
 				if err != nil {
 					p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Cannot resolve function : %v", err), n))

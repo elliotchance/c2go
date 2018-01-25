@@ -383,11 +383,11 @@ func IsTypedefFunction(p *program.Program, s string) bool {
 	// <<<<<<< HEAD
 	// 	if v, ok := p.TypedefType[s]; ok && IsFunction(v) {
 	// =======
-	s = string(s[0 : len(s)-len(" *")])
-	if v, ok := p.GetBaseTypeOfTypedef(s); ok && IsFunction(v) {
-		// >>>>>>> cfe24a7a6f04c514ada01b75345c3b3526dc88a8
-		return true
-	}
+	// s = string(s[0 : len(s)-len(" *")])
+	// if v, ok := p.GetBaseTypeOfTypedef(s); ok && IsFunction(v) {
+	// 	// >>>>>>> cfe24a7a6f04c514ada01b75345c3b3526dc88a8
+	// 	return true
+	// }
 	s = string(s[0 : len(s)-len(" *")])
 	if v, ok := p.GetBaseTypeOfTypedef(s); ok && IsFunction(v) {
 		return true
