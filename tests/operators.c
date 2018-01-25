@@ -259,8 +259,6 @@ int main()
 		is_eq(a[iterator-=2], 5);
 		is_eq(a[iterator+=1], 9);
 		is_eq(a[(iterator = 0,iterator  )] ,   5);
-		/* is_eq(a[(iterator = 0,iterator++)] ,   5); */
-		/* is_eq(a[(iterator = 1,++iterator)] , -13); */
 		is_eq(simple_repeat((iterator = 42, iterator)),42);
 		is_eq(simple_repeat((iterator = 42, ++iterator, iterator)),43);
 		int b = 0;

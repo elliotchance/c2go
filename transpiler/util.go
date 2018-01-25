@@ -4,15 +4,14 @@ package transpiler
 
 import (
 	goast "go/ast"
+	"reflect"
 )
 
 func isNil(stmt goast.Stmt) bool {
-	if stmt != nil &&
-		stmt != (*goast.IfStmt)(nil) &&
-		stmt != (goast.Stmt)(nil) {
-		return false
+	if stmt == nil {
+		return true
 	}
-	return true
+	return reflect.ValueOf(stmt).IsNil()
 }
 
 func convertDeclToStmt(decls []goast.Decl) (stmts []goast.Stmt) {
