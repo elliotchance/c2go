@@ -18,23 +18,23 @@ import (
 	"go/token"
 )
 
-func getMemberName(firstChild ast.Node) (name string, ok bool) {
-	switch fc := firstChild.(type) {
-	case *ast.MemberExpr:
-		return fc.Name, true
-
-	case *ast.ParenExpr:
-		return getMemberName(fc.Children()[0])
-
-	case *ast.ImplicitCastExpr:
-		return getMemberName(fc.Children()[0])
-
-	case *ast.CStyleCastExpr:
-		return getMemberName(fc.Children()[0])
-
-	}
-	return "", false
-}
+// func getMemberName(firstChild ast.Node) (name string, ok bool) {
+// 	switch fc := firstChild.(type) {
+// 	case *ast.MemberExpr:
+// 		return fc.Name, true
+//
+// 	case *ast.ParenExpr:
+// 		return getMemberName(fc.Children()[0])
+//
+// 	case *ast.ImplicitCastExpr:
+// 		return getMemberName(fc.Children()[0])
+//
+// 	case *ast.CStyleCastExpr:
+// 		return getMemberName(fc.Children()[0])
+//
+// 	}
+// 	return "", false
+// }
 
 func getName(p *program.Program, firstChild ast.Node) string {
 	switch fc := firstChild.(type) {

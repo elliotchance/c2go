@@ -3,7 +3,6 @@ package transpiler
 import (
 	"bytes"
 	"html/template"
-	"strings"
 
 	goast "go/ast"
 	"go/format"
@@ -17,8 +16,9 @@ func transpileUnion(name string, size int, fields []*goast.Field) (
 	_ []goast.Decl, err error) {
 
 	type field struct {
-		Name      string
-		TypeField string
+		Name          string
+		PositionField int
+		TypeField     string
 	}
 
 	type union struct {
@@ -55,12 +55,7 @@ type {{ .Name }} struct{
 		}
 		f.TypeField = buf.String()
 
-		// capitalization first letter
-		name := strings.ToUpper(string(f.Name[0]))
-		if len(f.Name) > 1 {
-			name += f.Name[1:]
-		}
-		f.Name = name
+		f.PositionField = i
 
 		un.Fields = append(un.Fields, f)
 	}
@@ -156,4 +151,45 @@ func getUnionVariable(goType string, union goast.Expr) goast.Expr {
 	// 	}
 	// 	panic(fmt.Errorf("That MemberExpr is not union"))
 	// >>>>>>> step
+	// }
+	//
+	// func isUnionMemberExpr(p *program.Program, n *ast.MemberExpr) (IsUnion bool) {
+	// 	if len(n.Children()) > 0 {
+	// 		if v, ok := n.Children()[0].(*ast.MemberExpr); ok {
+	// 			if p.IsUnion(v.Type) {
+	// 				IsUnion = true
+	// 			}
+	// 		}
+	// 		if v, ok := n.Children()[0].(*ast.DeclRefExpr); ok {
+	// 			if p.IsUnion(v.Type) {
+	// 				IsUnion = true
+	// 			}
+	// 		}
+	// 		if v, ok := n.Children()[0].(*ast.ImplicitCastExpr); ok {
+	// 			if p.IsUnion(v.Type) {
+	// 				IsUnion = true
+	// 			}
+	// 		}
+	// 	}
+	// 	return
+	// }
+	//
+	// func unionVariable(p *program.Program, n *ast.MemberExpr, x goast.Expr) (
+	// 	_ goast.Expr, cType string, ok bool) {
+	// 	if isUnionMemberExpr(p, n) {
+	// 		cType := n.Type
+	// 		var goType string
+	// 		var err error
+	// 		if types.IsFunction(cType) {
+	// 			goType, err = types.ResolveFunction(p, cType)
+	// 			p.AddMessage(p.GenerateWarningMessage(err, n))
+	// 		} else {
+	// 			goType, err = types.ResolveType(p, cType)
+	// 			p.AddMessage(p.GenerateWarningMessage(err, n))
+	// 		}
+	// 		return getUnionVariable(goType, x),
+	// 			n.Type, true
+	// 	}
+	// 	panic(fmt.Errorf("That MemberExpr is not union"))
+	// >>>>>>> cfe24a7a6f04c514ada01b75345c3b3526dc88a8
 }

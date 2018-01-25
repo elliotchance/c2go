@@ -37,40 +37,41 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program, operato
 	// BinaryExpr with the same functionality.
 
 	// Construct code for assigning value to an union field
-	memberExpr, ok := n.Children()[0].(*ast.MemberExpr)
-	if ok {
-		ref := memberExpr.GetDeclRefExpr()
-		if ref != nil {
-			binaryOperator := token.ADD
-			if operator == token.DEC {
-				binaryOperator = token.SUB
-			}
-
-			// TODO: Is this duplicate code in operators.go?
-			union := p.GetStruct(ref.Type)
-			if union != nil && union.IsUnion {
-				attrType, err := types.ResolveType(p, ref.Type)
-				if err != nil {
-					p.AddMessage(p.GenerateWarningMessage(err, memberExpr))
+	/*
+		memberExpr, ok := n.Children()[0].(*ast.MemberExpr)
+		if ok {
+			ref := memberExpr.GetDeclRefExpr()
+			if ref != nil {
+				binaryOperator := token.ADD
+				if operator == token.DEC {
+					binaryOperator = token.SUB
 				}
+					// TODO: Is this duplicate code in operators.go?
+					union := p.GetStruct(ref.Type)
+					if union != nil && union.IsUnion {
+						attrType, err := types.ResolveType(p, ref.Type)
+						if err != nil {
+							p.AddMessage(p.GenerateWarningMessage(err, memberExpr))
+						}
 
-				// Method names
-				getterName := getFunctionNameForUnionGetter(ref.Name, attrType, memberExpr.Name)
-				setterName := getFunctionNameForUnionSetter(ref.Name, attrType, memberExpr.Name)
+						// Method names
+						getterName := getFunctionNameForUnionGetter(ref.Name, attrType, memberExpr.Name)
+						setterName := getFunctionNameForUnionSetter(ref.Name, attrType, memberExpr.Name)
 
-				// Call-Expression argument
-				argLHS := util.NewCallExpr(getterName)
-				argOp := binaryOperator
-				argRHS := util.NewIntLit(1)
-				argValue := util.NewBinaryExpr(argLHS, argOp, argRHS, "interface{}", false)
+						// Call-Expression argument
+						argLHS := util.NewCallExpr(getterName)
+						argOp := binaryOperator
+						argRHS := util.NewIntLit(1)
+						argValue := util.NewBinaryExpr(argLHS, argOp, argRHS, "interface{}", false)
 
-				// Make Go expression
-				resExpr := util.NewCallExpr(setterName, argValue)
+						// Make Go expression
+						resExpr := util.NewCallExpr(setterName, argValue)
 
-				return resExpr, n.Type, nil, nil, nil
+						return resExpr, n.Type, nil, nil, nil
+					}
 			}
 		}
-	}
+	*/
 
 	if types.IsPointer(n.Type) {
 		switch operator {

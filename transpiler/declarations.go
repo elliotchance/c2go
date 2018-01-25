@@ -533,11 +533,19 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 		return
 	}
 
+	// <<<<<<< HEAD
 	t := n.Type
 	if len(t) > 1 {
 		t = n.Type[0 : len(n.Type)-len(" *")]
 	}
 	_, isTypedefType := p.TypedefType[t]
+	// =======
+	// 	var t string = n.Type
+	// 	// if len(t) > 1 {
+	// 	// 	t = n.Type[0 : len(n.Type)-len(" *")]
+	// 	// }
+	// 	_, isTypedefType := p.GetBaseTypeOfTypedef(t)
+	// >>>>>>> cfe24a7a6f04c514ada01b75345c3b3526dc88a8
 
 	if !isTypedefType {
 		theType, err = types.ResolveType(p, n.Type)

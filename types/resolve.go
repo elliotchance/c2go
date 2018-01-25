@@ -187,11 +187,15 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 		return ResolveType(p, "int")
 	}
 
-	if v, ok := p.TypedefType[s]; ok {
-		if IsFunction(v) {
-			// typedef function
-			return s, nil
-		}
+	// <<<<<<< HEAD
+	// 	if v, ok := p.TypedefType[s]; ok {
+	// 		if IsFunction(v) {
+	// 			// typedef function
+	// 			return s, nil
+	// 		}
+	// =======
+	if v, ok := p.GetBaseTypeOfTypedef(s); ok {
+		// >>>>>>> cfe24a7a6f04c514ada01b75345c3b3526dc88a8
 		return ResolveType(p, v)
 	}
 
@@ -376,7 +380,12 @@ func IsLastArray(s string) bool {
 
 // IsTypedefFunction - return true if that type is typedef of function.
 func IsTypedefFunction(p *program.Program, s string) bool {
-	if v, ok := p.TypedefType[s]; ok && IsFunction(v) {
+	// <<<<<<< HEAD
+	// 	if v, ok := p.TypedefType[s]; ok && IsFunction(v) {
+	// =======
+	s = string(s[0 : len(s)-len(" *")])
+	if v, ok := p.GetBaseTypeOfTypedef(s); ok && IsFunction(v) {
+		// >>>>>>> cfe24a7a6f04c514ada01b75345c3b3526dc88a8
 		return true
 	}
 	s = string(s[0 : len(s)-len(" *")])
