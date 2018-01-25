@@ -240,7 +240,7 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 	}
 
 	// I have no idea how to handle this yet.
-	if strings.Index(s, "anonymous union") != -1 {
+	if strings.Contains(s, "anonymous union") {
 		return "interface{}", errors.New("probably an incorrect type translation 3")
 	}
 
@@ -328,24 +328,13 @@ func ResolveFunction(p *program.Program, s string) (fields []string, returns []s
 
 // IsFunction - return true if string is function like "void (*)(void)"
 func IsFunction(s string) bool {
-	var counter int
-	for i := range []byte(s) {
-		if s[i] == '(' {
-			counter++
-		}
-	}
-	if counter > 0 {
-		return true
-	}
-	return false
+	s = strings.Replace(s, "(*)", "", -1)
+	return strings.Contains(s, "(")
 }
 
 // IsPointer - check type is pointer
 func IsPointer(s string) bool {
-	if strings.ContainsAny(s, "*[]") {
-		return true
-	}
-	return false
+	return strings.ContainsAny(s, "*[]")
 }
 
 // IsLastArray - check type have array '[]'
@@ -361,6 +350,7 @@ func IsLastArray(s string) bool {
 	return false
 }
 
+// IsTypedefFunction - return true if that type is typedef of function.
 func IsTypedefFunction(p *program.Program, s string) bool {
 	if v, ok := p.TypedefType[s]; ok && IsFunction(v) {
 		return true
@@ -398,9 +388,8 @@ func ParseFunction(s string) (f []string, r []string, err error) {
 			if len(parts) != 2 {
 				err = fmt.Errorf("Cannot parse (separation on parts) : %v", s)
 				return
-			} else {
-				part = "(" + parts[1]
 			}
+			part = "(" + parts[1]
 		} else {
 			part = parts[1]
 		}

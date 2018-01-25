@@ -220,9 +220,7 @@ func NewIdent(name string) *goast.Ident {
 	}
 
 	// Remove const prefix as it has no equivalent in Go.
-	if strings.HasPrefix(name, "const ") {
-		name = name[6:]
-	}
+	name = strings.TrimPrefix(name, "const ")
 
 	if !IsAValidFunctionName(name) {
 		// Normally we do not panic because we want the transpiler to recover as
@@ -312,6 +310,8 @@ func ConvertFunctionNameFromCtoGo(name string) string {
 	return name
 }
 
+// CreateSliceFromReference - create a slice, like :
+// (*[1]int)(unsafe.Pointer(&a))[:]
 func CreateSliceFromReference(goType string, expr goast.Expr) *goast.SliceExpr {
 	// If the Go type is blank it means that the C type is 'void'.
 	if goType == "" {
@@ -338,6 +338,8 @@ func CreateSliceFromReference(goType string, expr goast.Expr) *goast.SliceExpr {
 	}
 }
 
+// NewFuncType - create a new function type, example:
+// func ...(fieldList)(returnType)
 func NewFuncType(fieldList *goast.FieldList, returnType string, addDefaultReturn bool) *goast.FuncType {
 	returnTypes := []*goast.Field{}
 	if returnType != "" {

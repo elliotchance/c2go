@@ -419,7 +419,7 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 		util.GetExportedName(leftName), util.GetExportedName(rightName))
 
 	// FIXME: This is a hack to get SQLite3 to transpile.
-	if strings.Index(functionName, "RowSetEntry") > -1 {
+	if strings.Contains(functionName, "RowSetEntry") {
 		functionName = "FIXME111"
 	}
 
