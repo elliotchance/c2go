@@ -181,7 +181,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 		// from n.Children()[1]
 		if len(newPre) > 0 || len(newPost) > 0 {
 			p.AddMessage(p.GenerateWarningMessage(
-				fmt.Errorf("Not support lenght pre or post stmts: {%d,%d}", len(newPre), len(newPost)), n))
+				fmt.Errorf("Not support length pre or post stmts: {%d,%d}", len(newPre), len(newPost)), n))
 		}
 		return stmts, st, preStmts, postStmts, nil
 	}
@@ -434,7 +434,7 @@ func foundCallExpr(n ast.Node) *ast.CallExpr {
 // In the case of calloc() it will return a new BinaryExpr that multiplies both
 // arguments.
 func getAllocationSizeNode(p *program.Program, node ast.Node) ast.Node {
-	var expr *ast.CallExpr = foundCallExpr(node)
+	expr := foundCallExpr(node)
 
 	if expr == nil || expr == (*ast.CallExpr)(nil) {
 		return nil

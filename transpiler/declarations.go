@@ -16,7 +16,7 @@ import (
 	"github.com/elliotchance/c2go/util"
 )
 
-func NewFunctionField(p *program.Program, name, cType string) (_ *goast.Field, err error) {
+func newFunctionField(p *program.Program, name, cType string) (_ *goast.Field, err error) {
 	if name == "" {
 		err = fmt.Errorf("Name of function field cannot be empty")
 		return
@@ -57,9 +57,10 @@ func NewFunctionField(p *program.Program, name, cType string) (_ *goast.Field, e
 
 	return field, nil
 }
+
 func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (field *goast.Field, err error) {
 	if types.IsFunction(n.Type) {
-		field, err = NewFunctionField(p, n.Name, n.Type)
+		field, err = newFunctionField(p, n.Name, n.Type)
 		if err == nil {
 			return
 		}
@@ -243,7 +244,7 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 
 	if types.IsFunction(n.Type) {
 		var field *goast.Field
-		field, err = NewFunctionField(p, n.Name, n.Type)
+		field, err = newFunctionField(p, n.Name, n.Type)
 		if err != nil {
 			p.AddMessage(p.GenerateWarningMessage(err, n))
 		} else {
@@ -526,7 +527,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 		return
 	}
 
-	var t string = n.Type
+	t := n.Type
 	if len(t) > 1 {
 		t = n.Type[0 : len(n.Type)-len(" *")]
 	}

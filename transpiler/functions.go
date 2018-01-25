@@ -239,7 +239,7 @@ func getFieldList(f *ast.FunctionDecl, p *program.Program) (_ *goast.FieldList, 
 	for _, n := range f.Children() {
 		if v, ok := n.(*ast.ParmVarDecl); ok {
 			if types.IsFunction(v.Type) {
-				field, err := NewFunctionField(p, v.Name, v.Type)
+				field, err := newFunctionField(p, v.Name, v.Type)
 				if err != nil {
 					p.AddMessage(p.GenerateWarningMessage(err, v))
 					continue

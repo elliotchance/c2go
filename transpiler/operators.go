@@ -67,10 +67,10 @@ func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program
 	if err != nil {
 		return
 	}
-	// Theorephly, lenght is must be zero
+	// Theorephly, length is must be zero
 	if len(newPre) > 0 || len(newPost) > 0 {
 		p.AddMessage(p.GenerateWarningMessage(
-			fmt.Errorf("lenght of pre or post in body must be zero. {%d,%d}", len(newPre), len(newPost)), n))
+			fmt.Errorf("length of pre or post in body must be zero. {%d,%d}", len(newPre), len(newPost)), n))
 	}
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
@@ -231,12 +231,12 @@ func pointerArithmetic(p *program.Program,
 
 	{
 		var buf bytes.Buffer
-		printer.Fprint(&buf, token.NewFileSet(), left)
+		_ = printer.Fprint(&buf, token.NewFileSet(), left)
 		s.Name = buf.String()
 	}
 	{
 		var buf bytes.Buffer
-		printer.Fprint(&buf, token.NewFileSet(), right)
+		_ = printer.Fprint(&buf, token.NewFileSet(), right)
 		s.Condition = buf.String()
 	}
 	s.Type = resolvedLeftType[2:]
@@ -619,11 +619,11 @@ func atomicOperation(n ast.Node, p *program.Program) (
 				exprType)
 			preStmts = nil
 			postStmts = nil
-			break
+			return
 
 		case "=":
 			// Find ast.DeclRefExpr in Children[0]
-			decl, ok := GetDeclRefExpr(v.Children()[0])
+			decl, ok := getDeclRefExpr(v.Children()[0])
 			if !ok {
 				return
 			}
@@ -684,21 +684,21 @@ func atomicOperation(n ast.Node, p *program.Program) (
 	return
 }
 
-// findDeclRefExpr - find ast DeclRefExpr
+// getDeclRefExpr - find ast DeclRefExpr
 // Examples of input ast trees:
 // UnaryOperator 0x2a23080 <col:8, col:9> 'int' lvalue prefix '*'
 // `-ImplicitCastExpr 0x2a23068 <col:9> 'int *' <LValueToRValue>
 //   `-DeclRefExpr 0x2a23040 <col:9> 'int *' lvalue Var 0x2a22f20 'a' 'int *'
 //
 // DeclRefExpr 0x328dd00 <col:25> 'int' lvalue Var 0x328dbd8 'c' 'int'
-func GetDeclRefExpr(n ast.Node) (*ast.DeclRefExpr, bool) {
+func getDeclRefExpr(n ast.Node) (*ast.DeclRefExpr, bool) {
 	switch v := n.(type) {
 	case *ast.DeclRefExpr:
 		return v, true
 	case *ast.ImplicitCastExpr:
-		return GetDeclRefExpr(n.Children()[0])
+		return getDeclRefExpr(n.Children()[0])
 	case *ast.UnaryOperator:
-		return GetDeclRefExpr(n.Children()[0])
+		return getDeclRefExpr(n.Children()[0])
 	}
 	return nil, false
 }

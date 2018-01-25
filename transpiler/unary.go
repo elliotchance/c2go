@@ -24,7 +24,7 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program, operato
 	}()
 
 	if !(operator == token.INC || operator == token.DEC) {
-		err = fmt.Errorf("Not acceptable operator '%v'.", operator)
+		err = fmt.Errorf("not acceptable operator '%v'", operator)
 		return
 	}
 
@@ -324,7 +324,7 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 
 			case *ast.MemberExpr:
 				// check - if member of union
-				var a ast.Node = n.Children()[i]
+				a := n.Children()[i]
 				var isUnion bool
 				for {
 					switch vv := a.Children()[0].(type) {
@@ -402,7 +402,7 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 						break
 					}
 					parents = append(parents, v)
-					var deep bool = true
+					deep := true
 					if vv, ok := v.(*ast.ImplicitCastExpr); ok && types.IsCInteger(vv.Type) {
 						deep = false
 					}

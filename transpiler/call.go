@@ -67,7 +67,7 @@ func getName(p *program.Program, firstChild ast.Node) string {
 	case *ast.ArraySubscriptExpr:
 		expr, _, _, _, _ := transpileArraySubscriptExpr(fc, p)
 		var buf bytes.Buffer
-		printer.Fprint(&buf, token.NewFileSet(), expr)
+		_ = printer.Fprint(&buf, token.NewFileSet(), expr)
 		return buf.String()
 
 	default:
@@ -178,19 +178,19 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 		}
 
 		var compareFunc string
-		if v, ok := element[3].(*goast.Ident); !ok {
+		if v, ok := element[3].(*goast.Ident); ok {
+			compareFunc = v.Name
+		} else {
 			return nil, "", nil, nil,
 				fmt.Errorf("golang ast for compare function have type %T, expect ast.Ident", element[3])
-		} else {
-			compareFunc = v.Name
 		}
 
 		var varName string
-		if v, ok := element[0].(*goast.Ident); !ok {
+		if v, ok := element[0].(*goast.Ident); ok {
+			varName = v.Name
+		} else {
 			return nil, "", nil, nil,
 				fmt.Errorf("golang ast for variable name have type %T, expect ast.Ident", element[3])
-		} else {
-			varName = v.Name
 		}
 
 		p.AddImport("sort")
