@@ -1,5 +1,6 @@
 package ast
 
+// DeclStmt is node represents a declaration in a statement list.
 type DeclStmt struct {
 	Addr       Address
 	Pos        Position

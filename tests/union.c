@@ -76,6 +76,7 @@ void union_inside_struct()
 	is_eq(sha2.u2.i2, 4);
 	is_eq(sha2.u2.d2, 4);
 	is_eq(sha2.ff2 , 12.444);
+	pass("ok");
 }
 
 typedef union myunion myunion;
@@ -187,7 +188,7 @@ void union_func_pointers()
 
 int main()
 {
-    plan(33);
+    plan(34);
 
     union programming variable;
 

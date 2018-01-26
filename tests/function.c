@@ -92,9 +92,15 @@ RE* empty_return_struct2(int a){
 	else          { exit2(-1);}
 }
 
+typedef int (* operators)(int a,int b);
+int call_a_func(operators call_this) {
+    int output = call_this(5, 8);
+    return output;
+}
+
 int main()
 {
-    plan(40);
+    plan(42);
 
     pass("%s", "Main function.");
 
@@ -189,6 +195,15 @@ int main()
 	}
 	{
 		is_eq((*(empty_return_struct2(6))).re,1);
+	}
+
+	diag("typedef function");
+	{
+		int result = call_a_func(&mul);
+		is_eq(result,40);
+	}
+	{
+		is_eq(call_a_func(&mul),40);
 	}
 
     done_testing();

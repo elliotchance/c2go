@@ -6,6 +6,9 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"go/format"
+	"go/parser"
+	"go/token"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -62,7 +65,9 @@ func TestIntegrationScripts(t *testing.T) {
 		separator    = string(os.PathSeparator)
 	)
 
-	t.Parallel()
+	// Parallel is not acceptable, before solving issue:
+	// https://github.com/elliotchance/c2go/issues/376
+	// t.Parallel()
 
 	for _, file := range files {
 		t.Run(file, func(t *testing.T) {
@@ -455,4 +460,88 @@ func TestComments(t *testing.T) {
 	if len(comms) != amountComments {
 		t.Fatalf("Expect %d comments, but found %d commnets", amountComments, len(comms))
 	}
+}
+
+func TestCodeQuality(t *testing.T) {
+	files, err := filepath.Glob("tests/code_quality/*.c")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Parallel is not acceptable, before solving issue:
+	// https://github.com/elliotchance/c2go/issues/376
+	// t.Parallel()
+
+	suffix := ".expected.c"
+
+	for i, file := range files {
+		if strings.HasSuffix(file, suffix) {
+			continue
+		}
+		t.Run(file, func(t *testing.T) {
+			dir, err := ioutil.TempDir("", fmt.Sprintf("c2go_code_quality_%d_", i))
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer os.RemoveAll(dir) // clean up
+
+			var args = DefaultProgramArgs()
+			args.inputFiles = []string{file}
+			args.outputFile = path.Join(dir, "main.go")
+			args.packageName = "code_quality"
+			args.outputAsTest = false
+
+			// testing
+			err = Start(args)
+			if err != nil {
+				t.Fatalf(err.Error())
+			}
+
+			goActual, err := cleaningGoCode(args.outputFile)
+			if err != nil {
+				t.Fatalf(err.Error())
+			}
+
+			goExpect, err := cleaningGoCode(file[:len(file)-2] + suffix)
+			if err != nil {
+				t.Fatalf(err.Error())
+			}
+
+			if bytes.Compare(goActual, goExpect) != 0 {
+				fmt.Println("actual   : ", string(goActual))
+				fmt.Println("expected : ", string(goExpect))
+
+				t.Errorf("Code quality error for : %s", file)
+			}
+		})
+	}
+}
+
+func cleaningGoCode(fileName string) (dat []byte, err error) {
+	// read file
+	dat, err = ioutil.ReadFile(fileName)
+	if err != nil {
+		return
+	}
+
+	// remove comments
+	fset := token.NewFileSet() // positions are relative to fset
+	f, err := parser.ParseFile(fset, "", string(dat), 0)
+	if err != nil {
+		return
+	}
+
+	var buf bytes.Buffer
+	err = format.Node(&buf, fset, f)
+	if err != nil {
+		return
+	}
+
+	// remove all spaces and tabs
+	dat = bytes.Replace(buf.Bytes(), []byte{' '}, []byte{}, -1)
+	dat = bytes.Replace(dat, []byte{'\n'}, []byte{}, -1)
+	dat = bytes.Replace(dat, []byte{'\t'}, []byte{}, -1)
+	dat = bytes.Replace(dat, []byte{'\r'}, []byte{}, -1)
+
+	return
 }

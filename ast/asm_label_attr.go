@@ -1,5 +1,6 @@
 package ast
 
+// AsmLabelAttr is a type of attribute for assembler label
 type AsmLabelAttr struct {
 	Addr         Address
 	Pos          Position

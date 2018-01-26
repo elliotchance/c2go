@@ -2,6 +2,7 @@ package ast
 
 import "strings"
 
+// IndirectFieldDecl is node represents a indirect field declaration.
 type IndirectFieldDecl struct {
 	Addr       Address
 	Pos        Position

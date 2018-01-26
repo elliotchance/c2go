@@ -1,5 +1,6 @@
 package ast
 
+// LabelStmt is node represent a label
 type LabelStmt struct {
 	Addr       Address
 	Pos        Position

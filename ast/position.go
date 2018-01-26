@@ -2,10 +2,12 @@ package ast
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/elliotchance/c2go/util"
 )
 
+// Position is type of position in source code
 type Position struct {
 	File      string // The relative or absolute file path.
 	Line      int    // Start line
@@ -17,6 +19,17 @@ type Position struct {
 	// debugging. We could derive this value from the other properties to save
 	// on a bit of memory, but let worry about that later.
 	StringValue string
+}
+
+// GetSimpleLocation - return a string like : "file:line" in
+// according to position
+// Example : " /tmp/1.c:200 "
+func (p Position) GetSimpleLocation() (loc string) {
+	file := p.File
+	if f, err := filepath.Abs(p.File); err != nil {
+		file = f
+	}
+	return fmt.Sprintf(" %s:%d ", file, p.Line)
 }
 
 func NewPositionFromString(s string) Position {

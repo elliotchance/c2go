@@ -1,5 +1,6 @@
 package ast
 
+// ForStmt is node represent 'for'
 type ForStmt struct {
 	Addr       Address
 	Pos        Position

@@ -4,6 +4,7 @@ import (
 	"strings"
 )
 
+// VarDecl is node represents a variable declaration.
 type VarDecl struct {
 	Addr         Address
 	Pos          Position

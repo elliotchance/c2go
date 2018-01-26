@@ -1,5 +1,6 @@
 package ast
 
+// GCCAsmStmt is node represent gcc assembler
 type GCCAsmStmt struct {
 	Addr       Address
 	Pos        Position

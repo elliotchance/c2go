@@ -1,5 +1,7 @@
 package ast
 
+// UnusedAttr is a type of attribute that is optionally attached to a variable
+// or struct field definition.
 type UnusedAttr struct {
 	Addr       Address
 	Pos        Position
