@@ -87,6 +87,9 @@ var simpleResolveTypes = map[string]string{
 	"lldiv_t":    "github.com/elliotchance/c2go/noarch.LldivT",
 	"time_t":     "github.com/elliotchance/c2go/noarch.TimeT",
 
+	// time.h
+	"tm": "github.com/elliotchance/c2go/noarch.Tm",
+
 	// Darwin specific
 	"__darwin_ct_rune_t": "github.com/elliotchance/c2go/darwin.CtRuneT",
 	"fpos_t":             "int",
@@ -210,13 +213,12 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 		if s[len(s)-1] == '*' {
 			s = s[start : len(s)-2]
 
-			for _, v := range simpleResolveTypes {
-				if v == s {
-					return "[]" + p.ImportType(simpleResolveTypes[s]), nil
-				}
+			rt, err := ResolveType(p, s)
+			if err != nil {
+				return "", err
 			}
 
-			return "[]" + strings.TrimSpace(s), nil
+			return "[]" + strings.TrimSpace(rt), nil
 		}
 
 		s = s[start:]
@@ -251,7 +253,6 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 		// the name and the "*". If there is an extra space it will be trimmed
 		// off.
 		t, err := ResolveType(p, strings.TrimSpace(s[:len(s)-1]))
-
 		// Pointers are always converted into slices, except with some specific
 		// entities that are shared in the Go libraries.
 		prefix := "*"
