@@ -1,5 +1,6 @@
 package ast
 
+// IncompleteArrayType is incomplete array type
 type IncompleteArrayType struct {
 	Addr       Address
 	Type       string

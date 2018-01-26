@@ -147,6 +147,9 @@ func internalTypeToExpr(t string) goast.Expr {
 // The function name is checked with IsAValidFunctionName and will panic if the
 // function name is deemed to be not valid.
 func NewCallExpr(functionName string, args ...goast.Expr) *goast.CallExpr {
+	for i := range args {
+		PanicIfNil(args[i], "Argument of function is cannot be nil")
+	}
 	return &goast.CallExpr{
 		Fun:  typeToExpr(functionName),
 		Args: args,
@@ -204,30 +207,6 @@ func NewBinaryExpr(left goast.Expr, operator token.Token, right goast.Expr,
 		Op: operator,
 		Y:  right,
 	}
-
-	// Wrap the assignment operator in a closure if we must.
-	if !stmt {
-		switch operator {
-		case token.ASSIGN,
-			token.ADD_ASSIGN,
-			token.SUB_ASSIGN,
-			token.MUL_ASSIGN,
-			token.QUO_ASSIGN,
-			token.REM_ASSIGN,
-			token.AND_ASSIGN,
-			token.OR_ASSIGN,
-			token.XOR_ASSIGN,
-			token.SHL_ASSIGN,
-			token.SHR_ASSIGN,
-			token.AND_NOT_ASSIGN:
-			returnStmt := &goast.ReturnStmt{
-				Results: []goast.Expr{left},
-			}
-
-			b = NewFuncClosure(returnType, NewExprStmt(b), returnStmt)
-		}
-	}
-
 	return b
 }
 
@@ -241,9 +220,7 @@ func NewIdent(name string) *goast.Ident {
 	}
 
 	// Remove const prefix as it has no equivalent in Go.
-	if strings.HasPrefix(name, "const ") {
-		name = name[6:]
-	}
+	name = strings.TrimPrefix(name, "const ")
 
 	if !IsAValidFunctionName(name) {
 		// Normally we do not panic because we want the transpiler to recover as
@@ -333,6 +310,8 @@ func ConvertFunctionNameFromCtoGo(name string) string {
 	return name
 }
 
+// CreateSliceFromReference - create a slice, like :
+// (*[1]int)(unsafe.Pointer(&a))[:]
 func CreateSliceFromReference(goType string, expr goast.Expr) *goast.SliceExpr {
 	// If the Go type is blank it means that the C type is 'void'.
 	if goType == "" {
@@ -359,6 +338,8 @@ func CreateSliceFromReference(goType string, expr goast.Expr) *goast.SliceExpr {
 	}
 }
 
+// NewFuncType - create a new function type, example:
+// func ...(fieldList)(returnType)
 func NewFuncType(fieldList *goast.FieldList, returnType string, addDefaultReturn bool) *goast.FuncType {
 	returnTypes := []*goast.Field{}
 	if returnType != "" {
@@ -389,4 +370,44 @@ func NewGoExpr(expr string) goast.Expr {
 	}
 
 	return e
+}
+
+// NewAnonymousFunction - create a new anonymous function.
+// Example:
+// func() returnType{
+//		defer func(){
+//			deferBody
+//		}()
+// 		body
+//		return returnValue
+// }
+func NewAnonymousFunction(body, deferBody []goast.Stmt,
+	returnValue goast.Expr,
+	returnType string) *goast.CallExpr {
+
+	if deferBody != nil {
+		body = append([]goast.Stmt{&goast.DeferStmt{
+			Defer: 1,
+			Call: &goast.CallExpr{
+				Fun: &goast.FuncLit{
+					Type: &goast.FuncType{},
+					Body: &goast.BlockStmt{List: deferBody},
+				},
+				Lparen: 1,
+			},
+		}}, body...)
+	}
+
+	return &goast.CallExpr{Fun: &goast.FuncLit{
+		Type: &goast.FuncType{
+			Results: &goast.FieldList{List: []*goast.Field{
+				&goast.Field{Type: goast.NewIdent(returnType)},
+			}},
+		},
+		Body: &goast.BlockStmt{
+			List: append(body, &goast.ReturnStmt{
+				Results: []goast.Expr{returnValue},
+			}),
+		},
+	}}
 }

@@ -44,7 +44,7 @@ func (p *Program) AddImports(importPaths ...string) {
 // Will import "github.com/elliotchance/c2go/darwin" and return (value of t)
 // "darwin.CtRuneT".
 func (p *Program) ImportType(name string) string {
-	if strings.Index(name, ".") != -1 {
+	if strings.Contains(name, ".") {
 		parts := strings.Split(name, ".")
 		p.AddImport(strings.Join(parts[:len(parts)-1], "."))
 

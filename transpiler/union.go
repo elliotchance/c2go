@@ -77,7 +77,7 @@ func (self *{{ $.Name }}) Set{{ .Name }} (v {{ .TypeField }}) {{ .TypeField }}{
 		f.Name = fields[i].Names[0].Name
 
 		var buf bytes.Buffer
-		err := format.Node(&buf, token.NewFileSet(), fields[i].Type)
+		err = format.Node(&buf, token.NewFileSet(), fields[i].Type)
 		if err != nil {
 			panic(err)
 		}

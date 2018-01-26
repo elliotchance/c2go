@@ -3,7 +3,7 @@
 
 int main()
 {
-    plan(5);
+    plan(6);
 	
 	int i = 0;
 
@@ -21,5 +21,13 @@ int main()
 		pass("%s", "second do statement");
 	} while(i < 3);
 
+	diag("check while");
+	i = 1000;
+	do {
+		i--;
+		if (i < 10) { break; }
+	} while ((i /= 10) > 0);
+	is_eq( i , 8 );
+	
 	done_testing();
 }

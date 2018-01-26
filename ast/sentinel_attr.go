@@ -6,6 +6,8 @@ import (
 	"github.com/elliotchance/c2go/util"
 )
 
+// SentinelAttr is a type of attribute that is optionally attached to a variable
+// or struct field definition.
 type SentinelAttr struct {
 	Addr       Address
 	Pos        Position

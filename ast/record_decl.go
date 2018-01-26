@@ -4,6 +4,7 @@ import (
 	"strings"
 )
 
+// RecordDecl is node represents a record declaration.
 type RecordDecl struct {
 	Addr       Address
 	Pos        Position

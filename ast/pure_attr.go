@@ -1,5 +1,7 @@
 package ast
 
+// PureAttr is a type of attribute that is optionally attached to a variable
+// or struct field definition.
 type PureAttr struct {
 	Addr       Address
 	Pos        Position

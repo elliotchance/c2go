@@ -1,5 +1,6 @@
 package ast
 
+// Typedef struct
 type Typedef struct {
 	Addr       Address
 	Type       string

@@ -1,5 +1,7 @@
 package ast
 
+// ModeAttr is a type of attribute that is optionally attached to a variable
+// or struct field definition.
 type ModeAttr struct {
 	Addr       Address
 	Pos        Position
