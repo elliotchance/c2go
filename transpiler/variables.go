@@ -40,6 +40,17 @@ var structFieldTranslations = map[string]map[string]string{
 		"tm_yday":   "Tm_yday",
 		"tm_is_dst": "Tm_isdst",
 	},
+	"struct tm": {
+		"tm_sec":    "Tm_sec",
+		"tm_min":    "Tm_min",
+		"tm_hour":   "Tm_hour",
+		"tm_mday":   "Tm_mday",
+		"tm_mon":    "Tm_mon",
+		"tm_year":   "Tm_year",
+		"tm_wday":   "Tm_wday",
+		"tm_yday":   "Tm_yday",
+		"tm_is_dst": "Tm_isdst",
+	},
 }
 
 func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (
