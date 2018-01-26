@@ -577,6 +577,8 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 			err = nil // Error is ignored
 		}
 
+		// |-DeclStmt 0x3510368 <line:29:2, col:28>
+		// | `-VarDecl 0x3510308 <col:2, col:27> col:11 used tcs 'testCase [amount_cases]'
 		defaultValue = []goast.Expr{
 			util.NewCallExpr(
 				"make",

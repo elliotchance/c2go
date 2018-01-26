@@ -33,6 +33,12 @@ var structFieldTranslations = map[string]map[string]string{
 func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (
 	expr *goast.Ident, exprType string, err error) {
 
+	if p.IsBuiltInVariable(n.Name) {
+		v := p.GetBuiltInVariableDefinition(n.Name)
+		p.AddImport(v.GetPackage())
+		return goast.NewIdent(v.GoName), v.Ctype, nil
+	}
+
 	if n.For == "EnumConstant" {
 		// clang don`t show enum constant with enum type,
 		// so we have to use hack for repair the type

@@ -25,7 +25,11 @@ import (
 type programOut struct {
 	stdout bytes.Buffer
 	stderr bytes.Buffer
-	isZero bool
+	err    error
+}
+
+func (p *programOut) isZero() bool {
+	return p.err == nil
 }
 
 // TestIntegrationScripts tests all programs in the tests directory.
@@ -98,7 +102,7 @@ func TestIntegrationScripts(t *testing.T) {
 			cmd.Stdout = &cProgram.stdout
 			cmd.Stderr = &cProgram.stderr
 			err = cmd.Run()
-			cProgram.isZero = err == nil
+			cProgram.err = err
 
 			// Check for special exit codes that signal that tests have failed.
 			if exitError, ok := err.(*exec.ExitError); ok {
@@ -147,7 +151,7 @@ func TestIntegrationScripts(t *testing.T) {
 			cmd.Stdout = &goProgram.stdout
 			cmd.Stderr = &goProgram.stderr
 			err = cmd.Run()
-			goProgram.isZero = err == nil
+			goProgram.err = err
 
 			// Check stderr. "go test" will produce warnings when packages are
 			// not referenced as dependencies. We need to strip out these
@@ -227,11 +231,13 @@ func TestIntegrationScripts(t *testing.T) {
 			goOut := strings.Join(goOutLines[1:len(goOutLines)-removeLinesFromEnd], "\n") + "\n"
 
 			// Check if both exit codes are zero (or non-zero)
-			if cProgram.isZero != goProgram.isZero {
+			if cProgram.isZero() != goProgram.isZero() {
 				t.Fatalf("Exit statuses did not match.\n%s", util.ShowDiff(cOut, goOut))
 			}
 
 			if cOut != goOut {
+				fmt.Printf("Result of C  compilation: %v\n", cProgram.err)
+				fmt.Printf("Result of Go compilation: %v\n", goProgram.err)
 				t.Fatalf(util.ShowDiff(cOut, goOut))
 			}
 
