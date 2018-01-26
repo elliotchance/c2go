@@ -237,6 +237,9 @@ var builtInFunctionDefinitions = []string{
 	// I'm not sure which header file these comes from?
 	"uint32 __builtin_bswap32(uint32) -> darwin.BSwap32",
 	"uint64 __builtin_bswap64(uint64) -> darwin.BSwap64",
+
+	// unistd.h
+	"int getopt(int, char *const *, const char *) -> noarch.Getopt",
 }
 
 // GetFunctionDefinition will return nil if the function does not exist (is not
