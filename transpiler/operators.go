@@ -575,6 +575,55 @@ func atomicOperation(n ast.Node, p *program.Program) (
 			return
 		}
 
+		// for case : overflow char
+		// ImplicitCastExpr 0x2027358 <col:6, col:7> 'char' <IntegralCast>
+		// `-UnaryOperator 0x2027338 <col:6, col:7> 'int' prefix '-'
+		//   `-IntegerLiteral 0x2027318 <col:7> 'int' 1
+		//
+		// another example :
+		// ImplicitCastExpr 0x2982630 <col:11, col:14> 'char' <IntegralCast>
+		// `-ParenExpr 0x2982610 <col:11, col:14> 'int'
+		//   `-UnaryOperator 0x29825f0 <col:12, col:13> 'int' prefix '-'
+		//     `-IntegerLiteral 0x29825d0 <col:13> 'int' 1
+		if v.Type == "char" {
+			if len(v.Children()) == 1 {
+				var findUnaryWithInteger func(ast.Node)
+				var found bool
+				var u *ast.UnaryOperator
+
+				findUnaryWithInteger = func(node ast.Node) {
+					switch n := node.(type) {
+					case *ast.UnaryOperator:
+						found = true
+						u = n
+					case *ast.ParenExpr:
+						findUnaryWithInteger(n.Children()[0])
+					}
+				}
+
+				findUnaryWithInteger(n.Children()[0])
+
+				if found {
+					if u.IsPrefix && u.Type == "int" && u.Operator == "-" {
+						if _, ok := u.Children()[0].(*ast.IntegerLiteral); ok {
+							return transpileToExpr(&ast.BinaryOperator{
+								Type:     "int",
+								Type2:    "int",
+								Operator: "+",
+								ChildNodes: []ast.Node{
+									u,
+									&ast.IntegerLiteral{
+										Type:  "int",
+										Value: "256",
+									},
+								},
+							}, p, false)
+						}
+					}
+				}
+			}
+		}
+
 		expr, exprType, preStmts, postStmts, err = atomicOperation(v.Children()[0], p)
 		if err != nil {
 			return nil, "", nil, nil, err

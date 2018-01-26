@@ -27,15 +27,31 @@ void test_castbool()
 
 void char_overflow()
 {
-	char c;
-	c = -1;
+	{
+	char c;	c = -1;
 	unsigned char u = c;
 	is_eq(u, 256-1);
+	}
+	{
+	char c = -1;
+	unsigned char u = c;
+	is_eq(u, 256-1);
+	}
+	{
+	char c = (-1);
+	unsigned char u = c;
+	is_eq(u, 256-1);
+	}
+	{
+	char c = (((-1)));
+	unsigned char u = c;
+	is_eq(u, 256-1);
+	}
 }
 
 int main()
 {
-    plan(24);
+    plan(27);
 
     START_TEST(cast)
     START_TEST(castbool)
