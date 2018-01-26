@@ -25,9 +25,17 @@ void test_castbool()
     is_eq((i1==1) && (i2==1) && (i3==1) && (i4==0) && (i5==0), 1);
 }
 
+void char_overflow()
+{
+	char c;
+	c = -1;
+	unsigned char u = c;
+	is_eq(u, 256-1);
+}
+
 int main()
 {
-    plan(23);
+    plan(24);
 
     START_TEST(cast)
     START_TEST(castbool)
@@ -110,6 +118,8 @@ int main()
 		void * ptr3 = &tLong;
 		is_eq(*(long *) ptr3, 556);
 	}
+
+	char_overflow();
 
     done_testing();
 }
