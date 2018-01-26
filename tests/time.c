@@ -37,12 +37,36 @@ void test_ctime()
     is_streq(s, "Fri Dec 31 HH:mm:58 1999\n");
 }
 
+void test_mktime()
+{
+  time_t rawtime;
+  struct tm * timeinfo;
+  int year, month ,day;
+
+  year  = 2000;
+  month = 5;
+  day   = 20;
+
+  /* get current timeinfo and modify it to the user's choice */
+  time ( &rawtime );
+  timeinfo = localtime ( &rawtime );
+  timeinfo->tm_year = year - 1900;
+  timeinfo->tm_mon = month - 1;
+  timeinfo->tm_mday = day;
+
+  /* call mktime: timeinfo->tm_wday will be set */
+  mktime ( timeinfo );
+
+  is_eq(timeinfo->tm_wday,6);
+}
+
 int main()
 {
-    plan(5);
+    plan(6);
 
-    START_TEST(time)
-    START_TEST(ctime)
+    START_TEST(time);
+    START_TEST(ctime);
+	START_TEST(mktime);
 
     done_testing();
 }
