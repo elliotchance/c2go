@@ -42,7 +42,8 @@ func getFunctionBody(n *ast.FunctionDecl) *ast.CompoundStmt {
 // either way the function is registered internally) but we do not do anything
 // because Go does not use or have any use for forward declarations of
 // functions.
-func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (decls []goast.Decl, err error) {
+func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (
+	decls []goast.Decl, err error) {
 	var body *goast.BlockStmt
 
 	// This is set at the start of the function declaration so when the
@@ -238,7 +239,7 @@ func getFieldList(f *ast.FunctionDecl, p *program.Program) (_ *goast.FieldList, 
 	for _, n := range f.Children() {
 		if v, ok := n.(*ast.ParmVarDecl); ok {
 			if types.IsFunction(v.Type) {
-				field, err := NewFunctionField(p, v.Name, v.Type)
+				field, err := newFunctionField(p, v.Name, v.Type)
 				if err != nil {
 					p.AddMessage(p.GenerateWarningMessage(err, v))
 					continue
@@ -279,16 +280,26 @@ func getFieldList(f *ast.FunctionDecl, p *program.Program) (_ *goast.FieldList, 
 }
 
 func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (
-	goast.Stmt, []goast.Stmt, []goast.Stmt, error) {
+	_ goast.Stmt, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot transpileReturnStmt. err = %v", err)
+		}
+	}()
 	// There may not be a return value. Then we don't have to both ourselves
 	// with all the rest of the logic below.
 	if len(n.Children()) == 0 {
 		return &goast.ReturnStmt{}, nil, nil, nil
 	}
 
-	e, eType, preStmts, postStmts, err := transpileToExpr(n.Children()[0], p, false)
+	var eType string
+	var e goast.Expr
+	e, eType, preStmts, postStmts, err = transpileToExpr(n.Children()[0], p, false)
 	if err != nil {
 		return nil, nil, nil, err
+	}
+	if e == nil {
+		return nil, nil, nil, fmt.Errorf("Expr is nil")
 	}
 
 	f := program.GetFunctionDefinition(p.Function.Name)

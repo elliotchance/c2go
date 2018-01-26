@@ -1,5 +1,6 @@
 package ast
 
+// CompoundAssignOperator is type of compound assign operator
 type CompoundAssignOperator struct {
 	Addr                  Address
 	Pos                   Position

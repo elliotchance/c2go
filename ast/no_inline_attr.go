@@ -1,5 +1,7 @@
 package ast
 
+// NoInlineAttr is a type of attribute that is optionally attached to a variable
+// or struct field definition.
 type NoInlineAttr struct {
 	Addr       Address
 	Pos        Position

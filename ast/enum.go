@@ -1,5 +1,6 @@
 package ast
 
+// Enum struct
 type Enum struct {
 	Addr       Address
 	Name       string

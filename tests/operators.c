@@ -26,9 +26,18 @@ int sDiv(char *opt) {
     return l;
 }
 
+int simple_repeat(int a)
+{
+	return a;
+}
+
+double * return_null(){
+	return NULL;
+}
+
 int main()
 {
-	plan(58);
+	plan(86);
 
     int i = 10;
     signed char j = 1;
@@ -206,13 +215,13 @@ int main()
 
 	// checking is_eq is no need, because if "(void)(az)" not transpile,
 	// then go build return fail - value is not used
-	diag("CStyleCast <ToVoid>")
+	diag("CStyleCast <ToVoid>");
 	{ char            **az; (void)(az); }
 	{ double     *const*az; (void)(az); }
 	{ int             **az; (void)(az); }
 	{ float   *volatile*az; (void)(az); }
 	
-	diag("CStyleCast <ToVoid> with comma")
+	diag("CStyleCast <ToVoid> with comma");
 	{ unsigned int *ui; (void)(empty(),ui);}
 	{ 
 		long int *li;
@@ -221,7 +230,7 @@ int main()
 		is_eq(counter_li,1);
 	}
 
-	diag("switch with initialization")
+	diag("switch with initialization");
 	switch(0)
 	{
 		int ii;
@@ -235,11 +244,100 @@ int main()
 		case 1:	{ ia = 60; is_eq(ia,60); }
 	}
 
-	diag("Binary operators for definition function")
+	diag("Binary operators for definition function");
 	is_eq(sAdd("rrr"),15);
 	is_eq(sMul("rrr"),36);
 	is_eq(sMin("rrrrrrrrrrrrr"),1);
 	is_eq(sDiv("rrrrrrrrrrrr"),1);
 	
+	diag("Operators +=, -=, *= , /= ... inside []");
+	{
+		int a[3];
+		a[0] = 5;
+		a[1] = 9;
+		a[2] = -13;
+		int iterator = 0;
+		is_eq(a[iterator++],  5);
+		is_eq(a[iterator]  ,  9);
+		is_eq(a[++iterator],-13);
+		is_eq(a[iterator-=2], 5);
+		is_eq(a[iterator+=1], 9);
+		is_eq(a[(iterator = 0,iterator  )] ,   5);
+		is_eq(simple_repeat((iterator = 42, iterator)),42);
+		is_eq(simple_repeat((iterator = 42, ++iterator, iterator)),43);
+		int b = 0;
+		for ( iterator = 0; b++, iterator < 2; iterator ++, iterator --, iterator ++)
+		{
+			pass("iterator in for");
+		}
+		is_eq(b,3);
+		iterator = 0;
+		if (i++ > 0)
+		{
+			pass("i++ > 0 is pass");
+		}
+	}
+	diag("Equals a=b=c=...");
+	{
+		int a,b,c,d;
+		a=b=c=d=42;
+		is_eq(a,42);
+		is_eq(d,42);
+	}
+	{
+		double a,b,c,d;
+		a=b=c=d=42;
+		is_eq(a,42);
+		is_eq(d,42);
+	}
+	{
+		int a,b,c,d = a = b = c = 42;
+		is_eq(a,42);
+		is_eq(d,42);
+	}
+	{
+		double a,b,c,d = a = b = c = 42;
+		is_eq(a,42);
+		is_eq(d,42);
+	}
+	{
+		double a[3];
+		a[0] = a[1] = a[2] = -13;
+		is_eq(a[0],-13);
+		is_eq(a[2],-13);
+	}
+	{
+		double a[3];
+		a[0] = a[1] = a[2] = -13;
+		double b[3];
+		b[0] = b[1] = b[2] = 5;
+
+		b[0] = a[0] = 42;
+		is_eq(a[0], 42);
+		is_eq(b[0], 42);
+	}
+	{
+		double v1 = 12;
+		int    v2 = -6;
+		double *b = &v1;
+		int    *a = &v2;
+		*b = *a = 42;
+		is_eq(*a, 42);
+		is_eq(*b, 42);
+	}
+	{
+		int yy = 0;
+		if ((yy = simple_repeat(42)) > 3)
+		{
+			pass("ok")
+		}
+	}
+	diag("pointer in IF");
+	double *cd;
+	if ( (cd = return_null()) == NULL ){
+		pass("ok");
+	}
+	(void)(cd);
+
 	done_testing();
 }

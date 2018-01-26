@@ -1,5 +1,6 @@
 package ast
 
+// FunctionProtoType is function proto type
 type FunctionProtoType struct {
 	Addr       Address
 	Type       string

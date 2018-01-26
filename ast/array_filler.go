@@ -1,5 +1,6 @@
 package ast
 
+// ArrayFiller is type of array filler
 type ArrayFiller struct {
 	ChildNodes []Node
 }

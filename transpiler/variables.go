@@ -31,7 +31,17 @@ var structFieldTranslations = map[string]map[string]string{
 }
 
 func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (
-	*goast.Ident, string, error) {
+	expr *goast.Ident, exprType string, err error) {
+
+	if n.For == "EnumConstant" {
+		// clang don`t show enum constant with enum type,
+		// so we have to use hack for repair the type
+		if v, ok := p.EnumConstantToEnum[n.Name]; ok {
+			expr, exprType, err = util.NewIdent(n.Name), v, nil
+			return
+		}
+	}
+
 	theType := n.Type
 
 	// FIXME: This is for linux to make sure the globals have the right type.
@@ -43,13 +53,18 @@ func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (
 }
 
 func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
-	[]goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
+	_ []goast.Expr, _ string, _ []goast.Stmt, _ []goast.Stmt, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot getDefaultValueForVar : err = %v", err)
+		}
+	}()
 	if len(a.Children()) == 0 {
 		return nil, "", nil, nil, nil
 	}
 
 	// Memory allocation is translated into the Go-style.
-	if allocSize := getAllocationSizeNode(a.Children()[0]); allocSize != nil {
+	if allocSize := getAllocationSizeNode(p, a.Children()[0]); allocSize != nil {
 		// type
 		var t string
 		if v, ok := a.Children()[0].(*ast.ImplicitCastExpr); ok {
@@ -112,7 +127,7 @@ var temp = func() %s {
 		return expr, va.Type, nil, nil, nil
 	}
 
-	defaultValue, defaultValueType, newPre, newPost, err := transpileToExpr(a.Children()[0], p, false)
+	defaultValue, defaultValueType, newPre, newPost, err := atomicOperation(a.Children()[0], p)
 	if err != nil {
 		return nil, defaultValueType, newPre, newPost, err
 	}
@@ -292,18 +307,17 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program) 
 	}()
 
 	children := n.Children()
+
 	expression, expressionType, newPre, newPost, err := transpileToExpr(children[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
-
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	index, _, newPre, newPost, err := transpileToExpr(children[1], p, false)
+	index, _, newPre, newPost, err := atomicOperation(children[1], p)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
-
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	theType, err = types.GetDereferenceType(expressionType)

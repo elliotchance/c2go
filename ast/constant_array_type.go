@@ -4,6 +4,7 @@ import (
 	"github.com/elliotchance/c2go/util"
 )
 
+// ConstantArrayType is constant array type
 type ConstantArrayType struct {
 	Addr       Address
 	Type       string

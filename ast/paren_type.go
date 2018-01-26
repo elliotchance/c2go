@@ -1,5 +1,6 @@
 package ast
 
+// ParenType is paren type
 type ParenType struct {
 	Addr       Address
 	Type       string

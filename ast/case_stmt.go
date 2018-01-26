@@ -1,5 +1,6 @@
 package ast
 
+// CaseStmt is node represent 'case'
 type CaseStmt struct {
 	Addr       Address
 	Pos        Position

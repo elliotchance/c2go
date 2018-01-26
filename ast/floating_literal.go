@@ -8,6 +8,7 @@ import (
 	"github.com/elliotchance/c2go/cc"
 )
 
+// FloatingLiteral is type of float literal
 type FloatingLiteral struct {
 	Addr       Address
 	Pos        Position

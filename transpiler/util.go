@@ -4,7 +4,15 @@ package transpiler
 
 import (
 	goast "go/ast"
+	"reflect"
 )
+
+func isNil(stmt goast.Stmt) bool {
+	if stmt == nil {
+		return true
+	}
+	return reflect.ValueOf(stmt).IsNil()
+}
 
 func convertDeclToStmt(decls []goast.Decl) (stmts []goast.Stmt) {
 	for i := range decls {
@@ -29,7 +37,7 @@ func combinePreAndPostStmts(
 // nilFilterStmts - remove nil stmt from slice
 func nilFilterStmts(stmts []goast.Stmt) (out []goast.Stmt) {
 	for _, stmt := range stmts {
-		if stmt != nil && stmt != (*goast.IfStmt)(nil) && stmt != (goast.Stmt)(nil) {
+		if !isNil(stmt) {
 			out = append(out, stmt)
 		}
 	}
@@ -42,7 +50,7 @@ func combineStmts(stmt goast.Stmt, preStmts, postStmts []goast.Stmt) (stmts []go
 	if preStmts != nil {
 		stmts = append(stmts, preStmts...)
 	}
-	if stmt != nil {
+	if !isNil(stmt) {
 		stmts = append(stmts, stmt)
 	}
 	postStmts = nilFilterStmts(postStmts)
