@@ -1,9 +1,5 @@
 package noarch
 
-import (
-	"strings"
-)
-
 // See documentation:
 // https://www.gnu.org/software/libc/manual/html_node/Using-Getopt.html#Using-Getopt
 
@@ -33,70 +29,14 @@ var Optind int = 1 /* index into parent argv vector */
 // variable. You can use this for providing your own diagnostic messages.
 var Optopt int /* character checked for validity */
 
-var sp = 1
-
-const EOF = -1
+// Optreset - created for test, reset internal values
+var OptReset int = 0
 
 // Getopt - is implementation of function "getopt" from "unistd.h"
 // The getopt function gets the next option argument from the argument list
 // specified by the argv and argc arguments. Normally these values come
 // directly from the arguments received by main.
-func Getopt(argc int, argv [][]byte, options []byte) int {
-	// Source prototype see :
-	// http://web.mit.edu/ghudson/dev/third/krb5/src/util/windows/getopt.c
-	var c int
-	var cp int
-
-	if sp == 1 {
-		if Optind >= argc ||
-			(len(argv[0]) > 0 && argv[Optind][0] != '-') ||
-			len(argv[0]) == 1 {
-			return EOF
-		} else if string(argv[Optind]) == "--" {
-			Optind++
-			return EOF
-		}
-	}
-	c = int(argv[Optind][sp])
-	Optopt = c
-	cp = strings.Index(string(options), string(c))
-	if c == ':' || cp == -1 {
-		if Opterr != 0 {
-			println(": illegal option --", string(c))
-		}
-		sp++
-		if len(argv[Optind]) == sp {
-			Optind++
-			sp = 1
-		}
-		return '?'
-	}
-	cp++
-	if cp < len(options) && options[cp] == ':' {
-		if len(argv[Optind]) > sp+1 {
-			Optarg = argv[Optind][sp+1 : sp+2]
-			Optind++
-		} else {
-			Optind++
-			if Optind >= argc {
-				if Opterr != 0 {
-					println(": option requires an argument --", string(c))
-				}
-				sp = 1
-				return '?'
-			} else {
-				Optarg = argv[Optind]
-				Optind++
-			}
-		}
-		sp = 1
-	} else {
-		sp++
-		if len(argv[Optind]) == sp {
-			sp = 1
-			Optind++
-		}
-		Optarg = []byte("")
-	}
-	return int(c)
+func Getopt(argc int, argv [][]byte, options []byte) (out int) {
+	// TODO: add algorithm
+	return -1
 }
