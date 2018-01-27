@@ -1,5 +1,6 @@
 package ast
 
+// DefaultStmt is node represent 'default'
 type DefaultStmt struct {
 	Addr       Address
 	Pos        Position

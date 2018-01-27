@@ -4,6 +4,7 @@ import (
 	"strings"
 )
 
+// ParmVarDecl is node represents a parameter of variable declaration.
 type ParmVarDecl struct {
 	Addr         Address
 	Pos          Position

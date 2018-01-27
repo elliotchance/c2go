@@ -3,6 +3,7 @@
 package transpiler
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
@@ -13,10 +14,29 @@ import (
 
 	goast "go/ast"
 	"go/parser"
+	"go/printer"
 	"go/token"
 )
 
-func getName(firstChild ast.Node) string {
+func getMemberName(firstChild ast.Node) (name string, ok bool) {
+	switch fc := firstChild.(type) {
+	case *ast.MemberExpr:
+		return fc.Name, true
+
+	case *ast.ParenExpr:
+		return getMemberName(fc.Children()[0])
+
+	case *ast.ImplicitCastExpr:
+		return getMemberName(fc.Children()[0])
+
+	case *ast.CStyleCastExpr:
+		return getMemberName(fc.Children()[0])
+
+	}
+	return "", false
+}
+
+func getName(p *program.Program, firstChild ast.Node) string {
 	switch fc := firstChild.(type) {
 	case *ast.DeclRefExpr:
 		return fc.Name
@@ -33,23 +53,29 @@ func getName(firstChild ast.Node) string {
 		return fc.Name
 
 	case *ast.ParenExpr:
-		return getName(fc.Children()[0])
+		return getName(p, fc.Children()[0])
 
 	case *ast.UnaryOperator:
-		return getName(fc.Children()[0])
+		return getName(p, fc.Children()[0])
 
 	case *ast.ImplicitCastExpr:
-		return getName(fc.Children()[0])
+		return getName(p, fc.Children()[0])
 
 	case *ast.CStyleCastExpr:
-		return getName(fc.Children()[0])
+		return getName(p, fc.Children()[0])
+
+	case *ast.ArraySubscriptExpr:
+		expr, _, _, _, _ := transpileArraySubscriptExpr(fc, p)
+		var buf bytes.Buffer
+		_ = printer.Fprint(&buf, token.NewFileSet(), expr)
+		return buf.String()
 
 	default:
-		panic(fmt.Sprintf("cannot CallExpr on: %#v", fc))
+		panic(fmt.Sprintf("cannot getName for: %#v", fc))
 	}
 }
 
-func getNameOfFunctionFromCallExpr(n *ast.CallExpr) (string, error) {
+func getNameOfFunctionFromCallExpr(p *program.Program, n *ast.CallExpr) (string, error) {
 	// The first child will always contain the name of the function being
 	// called.
 	firstChild, ok := n.Children()[0].(*ast.ImplicitCastExpr)
@@ -58,7 +84,7 @@ func getNameOfFunctionFromCallExpr(n *ast.CallExpr) (string, error) {
 		return "", err
 	}
 
-	return getName(firstChild.Children()[0]), nil
+	return getName(p, firstChild.Children()[0]), nil
 }
 
 // transpileCallExpr transpiles expressions that calls a function, for example:
@@ -76,7 +102,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 		}
 	}()
 
-	functionName, err := getNameOfFunctionFromCallExpr(n)
+	functionName, err := getNameOfFunctionFromCallExpr(p, n)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
@@ -152,19 +178,19 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 		}
 
 		var compareFunc string
-		if v, ok := element[3].(*goast.Ident); !ok {
+		if v, ok := element[3].(*goast.Ident); ok {
+			compareFunc = v.Name
+		} else {
 			return nil, "", nil, nil,
 				fmt.Errorf("golang ast for compare function have type %T, expect ast.Ident", element[3])
-		} else {
-			compareFunc = v.Name
 		}
 
 		var varName string
-		if v, ok := element[0].(*goast.Ident); !ok {
+		if v, ok := element[0].(*goast.Ident); ok {
+			varName = v.Name
+		} else {
 			return nil, "", nil, nil,
 				fmt.Errorf("golang ast for variable name have type %T, expect ast.Ident", element[3])
-		} else {
-			varName = v.Name
 		}
 
 		p.AddImport("sort")
@@ -217,9 +243,13 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 		if len(n.Children()) > 0 {
 			if v, ok := n.Children()[0].(*ast.ImplicitCastExpr); ok && (types.IsFunction(v.Type) || types.IsTypedefFunction(p, v.Type)) {
 				t := v.Type
-				if types.IsTypedefFunction(p, t) {
-					t = t[0 : len(t)-len(" *")]
-					t, _ = p.TypedefType[t]
+				if v, ok := p.TypedefType[t]; ok {
+					t = v
+				} else {
+					if types.IsTypedefFunction(p, t) {
+						t = t[0 : len(t)-len(" *")]
+						t, _ = p.TypedefType[t]
+					}
 				}
 				fields, returns, err := types.ParseFunction(t)
 				if err != nil {
@@ -338,6 +368,11 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 				}
 			}
 
+			if realArg == nil {
+				return nil, "", preStmts, postStmts,
+					fmt.Errorf("Real argument is nil in function : %s", functionName)
+			}
+
 			realArgs = append(realArgs, realArg)
 		}
 	} else {
@@ -354,6 +389,11 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 				if p.AddMessage(p.GenerateWarningMessage(err, n)) {
 					a = util.NewNil()
 				}
+			}
+
+			if a == nil {
+				return nil, "", preStmts, postStmts,
+					fmt.Errorf("Argument is nil in function : %s", functionName)
 			}
 
 			realArgs = append(realArgs, a)

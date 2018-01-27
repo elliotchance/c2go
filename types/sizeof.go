@@ -119,7 +119,7 @@ func SizeOf(p *program.Program, cType string) (size int, err error) {
 	}
 
 	// Function pointers are one byte?
-	if strings.Index(cType, "(") >= 0 {
+	if strings.Contains(cType, "(") {
 		return 1, nil
 	}
 

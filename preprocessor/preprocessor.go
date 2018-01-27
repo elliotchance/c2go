@@ -51,7 +51,6 @@ func (e *entity) parseComments(comments *[]program.Comment) {
 			})
 		}
 	}
-	return
 }
 
 // isSame - check is Same entities

@@ -72,10 +72,10 @@ func findUnion(node ast.Node) (unionNode ast.Node, haveMemberExprWithUnion bool)
 }
 
 func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsStmt bool) (
-	_ goast.Expr, resultType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+	expr goast.Expr, eType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 	defer func() {
 		if err != nil {
-			err = fmt.Errorf("Cannot transpile BinaryOperator with type '%s' : result type = {%s}. Error: %v", n.Type, resultType, err)
+			err = fmt.Errorf("Cannot transpile BinaryOperator with type '%s' : result type = {%s}. Error: %v", n.Type, eType, err)
 			p.AddMessage(p.GenerateWarningMessage(err, n))
 		}
 	}()
@@ -181,19 +181,19 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 		// from n.Children()[1]
 		if len(newPre) > 0 || len(newPost) > 0 {
 			p.AddMessage(p.GenerateWarningMessage(
-				fmt.Errorf("Not support lenght pre or post stmts: {%d,%d}", len(newPre), len(newPost)), n))
+				fmt.Errorf("Not support length pre or post stmts: {%d,%d}", len(newPre), len(newPost)), n))
 		}
 		return stmts, st, preStmts, postStmts, nil
 	}
 
-	left, leftType, newPre, newPost, err := transpileToExpr(n.Children()[0], p, false)
+	left, leftType, newPre, newPost, err := atomicOperation(n.Children()[0], p)
 	if err != nil {
 		return nil, "unknown52", nil, nil, err
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	right, rightType, newPre, newPost, err := transpileToExpr(n.Children()[1], p, false)
+	right, rightType, newPre, newPost, err := atomicOperation(n.Children()[1], p)
 	if err != nil {
 		return nil, "unknown53", nil, nil, err
 	}
@@ -240,7 +240,35 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 			leftType, preStmts, postStmts, nil
 	}
 
-	if operator == token.NEQ || operator == token.EQL || operator == token.LSS || operator == token.GTR || operator == token.AND || operator == token.ADD || operator == token.SUB || operator == token.MUL || operator == token.QUO || operator == token.REM {
+	// pointer arithmetic
+	if types.IsPointer(n.Type) {
+		if operator == token.ADD || operator == token.SUB {
+			if types.IsPointer(leftType) {
+				expr, eType, newPre, newPost, err =
+					pointerArithmetic(p, left, leftType, right, rightType, operator)
+			} else {
+				expr, eType, newPre, newPost, err =
+					pointerArithmetic(p, right, rightType, left, leftType, operator)
+			}
+			if err != nil {
+				return
+			}
+			if expr == nil {
+				return nil, "", nil, nil, fmt.Errorf("Expr is nil")
+			}
+			preStmts, postStmts =
+				combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
+			return
+		}
+	}
+
+	if operator == token.NEQ || operator == token.EQL ||
+		operator == token.LSS || operator == token.GTR ||
+		operator == token.AND || operator == token.ADD ||
+		operator == token.SUB || operator == token.MUL ||
+		operator == token.QUO || operator == token.REM {
+
 		// We may have to cast the right side to the same type as the left
 		// side. This is a bit crude because we should make a better
 		// decision of which type to cast to instead of only using the type
@@ -254,7 +282,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 
 	if operator == token.ASSIGN {
 		// Memory allocation is translated into the Go-style.
-		allocSize := getAllocationSizeNode(n.Children()[1])
+		allocSize := getAllocationSizeNode(p, n.Children()[1])
 
 		if allocSize != nil {
 			right, newPre, newPost, err = generateAlloc(p, allocSize, leftType)
@@ -405,14 +433,14 @@ func foundCallExpr(n ast.Node) *ast.CallExpr {
 //
 // In the case of calloc() it will return a new BinaryExpr that multiplies both
 // arguments.
-func getAllocationSizeNode(node ast.Node) ast.Node {
-	var expr *ast.CallExpr = foundCallExpr(node)
+func getAllocationSizeNode(p *program.Program, node ast.Node) ast.Node {
+	expr := foundCallExpr(node)
 
 	if expr == nil || expr == (*ast.CallExpr)(nil) {
 		return nil
 	}
 
-	functionName, _ := getNameOfFunctionFromCallExpr(expr)
+	functionName, _ := getNameOfFunctionFromCallExpr(p, expr)
 
 	if functionName == "malloc" {
 		// Is 1 always the body in this case? Might need to be more careful

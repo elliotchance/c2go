@@ -1,5 +1,6 @@
 package ast
 
+// UnaryOperator is type of unary operator
 type UnaryOperator struct {
 	Addr       Address
 	Pos        Position

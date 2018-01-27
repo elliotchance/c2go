@@ -1,5 +1,6 @@
 package ast
 
+// ContinueStmt is node represent 'continue'
 type ContinueStmt struct {
 	Addr       Address
 	Pos        Position

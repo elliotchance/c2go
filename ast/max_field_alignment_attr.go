@@ -2,6 +2,8 @@ package ast
 
 import "github.com/elliotchance/c2go/util"
 
+// MaxFieldAlignmentAttr is a type of attribute that is optionally attached to a variable
+// or struct field definition.
 type MaxFieldAlignmentAttr struct {
 	Addr       Address
 	Pos        Position

@@ -1,5 +1,6 @@
 package ast
 
+// CompoundStmt is node represents a compound of nodes
 type CompoundStmt struct {
 	Addr       Address
 	Pos        Position

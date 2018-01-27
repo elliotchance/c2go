@@ -1,5 +1,6 @@
 package ast
 
+// EnumConstantDecl is node represents a enum constant declaration.
 type EnumConstantDecl struct {
 	Addr       Address
 	Pos        Position

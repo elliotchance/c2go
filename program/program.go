@@ -175,7 +175,7 @@ func (p *Program) AddMessage(message string) bool {
 		// Warning collapsing for minimaze warnings
 		warning := "// Warning"
 		if strings.HasPrefix(p.messages[last], warning) {
-			l := string(p.messages[last][len(warning):])
+			l := p.messages[last][len(warning):]
 			if strings.HasSuffix(p.messages[new], l) {
 				p.messages[last] = p.messages[new]
 				p.messages = p.messages[0:new]
@@ -210,7 +210,7 @@ func (p *Program) GetComments(n ast.Position) (out []*goast.Comment) {
 		if p.Comments[i].File == n.File {
 			if beginLine < p.Comments[i].Line && p.Comments[i].Line <= lastLine {
 				out = append(out, &goast.Comment{
-					Text: string(p.Comments[i].Comment),
+					Text: p.Comments[i].Comment,
 				})
 			}
 		}
@@ -293,13 +293,14 @@ func (p *Program) GetNextIdentifier(prefix string) string {
 func (p *Program) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString(`/* Package main - transpiled by c2go
+	buf.WriteString(fmt.Sprintf(`/*
+	Package main - transpiled by c2go version: %s
 
 	If you have found any issues, please raise an issue at:
 	https://github.com/elliotchance/c2go/
 */
 
-`)
+`, Version))
 
 	// First write all the messages. The double newline afterwards is important
 	// so that the package statement has a newline above it so that the warnings
@@ -357,7 +358,7 @@ func (p *Program) String() string {
 		// Looking at the full output of the AST (thousands of lines) and
 		// looking at those line numbers should give you a good idea where the
 		// error is coming from; by looking at the parents of the bad lines.
-		goast.Print(p.FileSet, p.File)
+		_ = goast.Print(p.FileSet, p.File)
 
 		panic(err)
 	}
@@ -367,7 +368,7 @@ func (p *Program) String() string {
 		for i := range p.Comments {
 			if p.Comments[i].File == file {
 				if beginLine < p.Comments[i].Line {
-					buf.WriteString(p.Comments[i].Comment)
+					buf.WriteString(fmt.Sprintln(p.Comments[i].Comment))
 				}
 			}
 		}

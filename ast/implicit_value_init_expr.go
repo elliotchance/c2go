@@ -1,5 +1,6 @@
 package ast
 
+// ImplicitValueInitExpr is expression
 type ImplicitValueInitExpr struct {
 	Addr       Address
 	Pos        Position
