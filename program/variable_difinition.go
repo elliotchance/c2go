@@ -49,6 +49,13 @@ var builtInVariableDefinitions = []VariableDefinition{
 		GoName:  "noarch.Optind",
 		GoType:  "int",
 	},
+	{
+		Headers: []string{"unistd.h"},
+		Cname:   "optopt",
+		Ctype:   "int",
+		GoName:  "noarch.Optopt",
+		GoType:  "int",
+	},
 }
 
 // GetBuiltInVariableDefinition - return true and var difinition if that
