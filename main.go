@@ -48,6 +48,7 @@ type ProgramArgs struct {
 	clangFlags  []string
 	outputFile  string
 	packageName string
+	analyze     bool
 
 	// A private option to output the Go as a *_test.go file.
 	outputAsTest bool
@@ -61,6 +62,7 @@ func DefaultProgramArgs() ProgramArgs {
 		packageName:  "main",
 		clangFlags:   []string{},
 		outputAsTest: false,
+		analyze:      false,
 	}
 }
 
@@ -171,6 +173,22 @@ func buildTree(nodes []treeNode, depth int) []ast.Node {
 	return results
 }
 
+// analyze
+func analyze(args ProgramArgs) (err error) {
+	// check compilation C version by clang
+	// create a temp folder
+	// copy C code in temp folder
+	// check compilation copy of C source by clang
+	// inject indicators in C code
+	// execute C version and save
+	// remember time of execution
+	// transpilation to Go
+	// execute Go version of program
+	// break if time of work is more then 5 x (execution by C)
+	// compare indicator list of Go and C programs
+	return
+}
+
 // Start begins transpiling an input file.
 func Start(args ProgramArgs) (err error) {
 	if args.verbose {
@@ -181,7 +199,7 @@ func Start(args ProgramArgs) (err error) {
 		return fmt.Errorf("The $GOPATH must be set")
 	}
 
-	// 1. Compile it first (checking for errors)
+	// Compile it first (checking for errors)
 	for _, in := range args.inputFiles {
 		_, err := os.Stat(in)
 		if err != nil {
@@ -189,9 +207,14 @@ func Start(args ProgramArgs) (err error) {
 		}
 	}
 
-	// 2. Preprocess
+	// Preprocess
 	if args.verbose {
 		fmt.Println("Running clang preprocessor...")
+	}
+
+	// Analyze, if exist
+	if args.analyze {
+		return analyze(args)
 	}
 
 	pp, comments, err := preprocessor.Analyze(args.inputFiles, args.clangFlags)
@@ -214,11 +237,12 @@ func Start(args ProgramArgs) (err error) {
 		return fmt.Errorf("writing to %s failed: %v", ppFilePath, err)
 	}
 
-	// 3. Generate JSON from AST
+	// Generate JSON from AST
 	if args.verbose {
 		fmt.Println("Running clang for AST tree...")
 	}
-	astPP, err := exec.Command("clang", "-Xclang", "-ast-dump", "-fsyntax-only", "-fno-color-diagnostics", ppFilePath).Output()
+	astPP, err := exec.Command("clang", "-Xclang", "-ast-dump",
+		"-fsyntax-only", "-fno-color-diagnostics", ppFilePath).Output()
 	if err != nil {
 		// If clang fails it still prints out the AST, so we have to run it
 		// again to get the real error.
@@ -327,14 +351,19 @@ func init() {
 }
 
 var (
-	versionFlag       = flag.Bool("v", false, "print the version and exit")
+	versionFlag = flag.Bool("v", false, "print the version and exit")
+
+	// Transpilation flags
 	transpileCommand  = flag.NewFlagSet("transpile", flag.ContinueOnError)
 	verboseFlag       = transpileCommand.Bool("V", false, "print progress as comments")
 	outputFlag        = transpileCommand.String("o", "", "output Go generated code to the specified file")
 	packageFlag       = transpileCommand.String("p", "main", "set the name of the generated package")
 	transpileHelpFlag = transpileCommand.Bool("h", false, "print help information")
-	astCommand        = flag.NewFlagSet("ast", flag.ContinueOnError)
-	astHelpFlag       = astCommand.Bool("h", false, "print help information")
+	analyzeFlag       = transpileCommand.Bool("a", false, "compare C and Go version of program")
+
+	// Ast flags
+	astCommand  = flag.NewFlagSet("ast", flag.ContinueOnError)
+	astHelpFlag = astCommand.Bool("h", false, "print help information")
 )
 
 func main() {
@@ -350,7 +379,8 @@ func runCommand() int {
 		usage := "Usage: %s [-v] [<command>] [<flags>] file1.c ...\n\n"
 		usage += "Commands:\n"
 		usage += "  transpile\ttranspile an input C source file or files to Go\n"
-		usage += "  ast\t\tprint AST before translated Go code\n\n"
+		usage += "  ast\t\tprint AST before translated Go code\n"
+		usage += "\n"
 
 		usage += "Flags:\n"
 		fmt.Fprintf(stderr, usage, os.Args[0])
@@ -409,6 +439,7 @@ func runCommand() int {
 		args.packageName = *packageFlag
 		args.verbose = *verboseFlag
 		args.clangFlags = clangFlags
+		args.analyze = *analyzeFlag
 	default:
 		flag.Usage()
 		return 1
