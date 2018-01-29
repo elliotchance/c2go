@@ -2,7 +2,6 @@ package noarch
 
 import (
 	"bytes"
-	"unsafe"
 )
 
 // Strlen returns the length of a string.
@@ -87,10 +86,10 @@ func Strchr(str []byte, ch int) []byte {
 	i := 0
 	for {
 		if str[i] == '\x00' {
-			return nil
+			break
 		}
 		if int(str[i]) == ch {
-			return (*[1]byte)(unsafe.Pointer(&str[i]))[:]
+			return str[i:]
 		}
 		i++
 	}
