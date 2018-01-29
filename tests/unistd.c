@@ -21,11 +21,6 @@ struct testCase
 
 int main()
 {
-	plan(0);
-	done_testing();
-
-	// TODO : add algorithm https://github.com/elliotchance/c2go/issues/587 
-	/*
 	plan(40);
 
 	// Amount test cases
@@ -59,14 +54,14 @@ int main()
 	tcs[2].argc = 2;
 	{
 		char *v0 = "programName";
-		char *v1 = "-ab";
+		char *v1 = "-a";
 		char *c[2];
 		c[0] = v0;
 		c[1] = v1;
 		tcs[2].argv = (char**)c;
 	}
 	tcs[2].aflag = 1;
-	tcs[2].bflag = 1;
+	tcs[2].bflag = 0;
 	tcs[2].cvalue = NULL;
 
 	// case 3
@@ -194,8 +189,7 @@ int main()
 		int c = 0;
 
 		opterr = 1;
-		optind = 1;
-		optreset = 1;
+		optind = 0;// reset 
 		while ((c = getopt (tcs[i].argc, tcs[i].argv, "abc:")) != -1)
 			switch (c)
 			{
@@ -221,8 +215,9 @@ int main()
 			}
 		}
 		pass(cvalue);
+
+		(void)(cvalue);
 	}
 
     done_testing();
-	*/
 }

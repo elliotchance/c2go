@@ -3,7 +3,6 @@ package noarch
 import (
 	"fmt"
 	"os"
-	"unicode"
 	"unsafe"
 )
 
@@ -37,34 +36,17 @@ var Optind int = 1 /* index into parent argv vector */
 var Optopt int /* character checked for validity */
 
 // Optreset - created for test, reset internal values
-var OptReset int = 0
+// var OptReset int = 0
 
 // Getopt - is implementation of function "getopt" from "unistd.h"
 // The getopt function gets the next option argument from the argument list
 // specified by the argv and argc arguments. Normally these values come
 // directly from the arguments received by main.
-// func Getopt(argc int, argv [][]byte, options []byte) int {
-// 	defer func() {
-// 		Optind++
-// 	}()
-// 	if argc <= Optind {
-// 		return -1
-// 	}
-// 	// TODO: create correct algorithm
-// 	if argv != nil {
-// 		if len(argv) > 0 {
-// 			if len(argv[Optind]) > 0 {
-// 				if argv[Optind][0] == '-' {
-// 					return int(argv[Optind][1])
-// 				}
-// 			}
-// 		}
-// 	}
-//
-// 	return -1
-// }
+func Getopt(argc int, argv [][]byte, optstring []byte) (res int) {
+	defer func() {
+		Optind++
+	}()
 
-func Getopt(argc int, argv [][]byte, optstring []byte) int {
 	var Optpos int = 1
 	var arg []byte
 	_ = argc
@@ -80,14 +62,15 @@ func Getopt(argc int, argv [][]byte, optstring []byte) int {
 		Optind += 1
 		return -1
 	} else {
-		if arg == nil || int(arg[0]) != int('-') || !unicode.IsNumber(rune(arg[1])) /*isalnum(arg[1]) */ {
+		if arg == nil || arg[0] != '-' /* || !unicode.IsNumber(rune(arg[1])) */ {
 			return -1
 		} else {
 			var opt []byte = Strchr(optstring, int(arg[Optpos]))
 			Optopt = int(arg[Optpos])
 			if opt == nil {
 				if Opterr != 0 && int(optstring[0]) != int(':') {
-					fmt.Fprintf(os.Stderr, "%s: illegal option: %c\n", argv[0], Optopt)
+					// Not added for tests
+					// fmt.Fprintf(os.Stderr, "%s: illegal option: %c\n", argv[0], Optopt)
 				}
 				return int('?')
 			} else {

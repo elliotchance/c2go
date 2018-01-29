@@ -163,7 +163,7 @@ func TestIntegrationScripts(t *testing.T) {
 			goProgramStderr = r.ReplaceAllString(goProgramStderr, "")
 
 			if cProgramStderr != goProgramStderr {
-				t.Fatalf("Expected %s\nGot: %s", cProgramStderr, goProgramStderr)
+				t.Fatalf("Expected \"%v\"\nGot: \"%v\"", cProgramStderr, goProgramStderr)
 			}
 
 			// Check stdout
