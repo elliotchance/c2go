@@ -27,7 +27,6 @@ import (
 	"errors"
 
 	"github.com/elliotchance/c2go/ast"
-	"github.com/elliotchance/c2go/indicator"
 	"github.com/elliotchance/c2go/preprocessor"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/transpiler"
@@ -349,7 +348,7 @@ func analyze(args ProgramArgs) (err error) {
 	// found location for injection and
 	// inject indicators in C code
 	fmt.Printf("# Inject in C code\n")
-	err = indicator.InjectInC(tree, inputFiles)
+	err = InjectInC(tree, inputFiles)
 	if err != nil {
 		return
 	}
