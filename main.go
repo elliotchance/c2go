@@ -173,19 +173,124 @@ func buildTree(nodes []treeNode, depth int) []ast.Node {
 	return results
 }
 
+func copyFile(src string, dst string) (err error) {
+	// Read all content of src to data
+	data, err := ioutil.ReadFile(src)
+	if err != nil {
+		return
+	}
+	// Write data to dst
+	return ioutil.WriteFile(dst, data, 0644)
+}
+
 // analyze
 func analyze(args ProgramArgs) (err error) {
-	// check compilation C version by clang
 	// create a temp folder
+	dir, err := ioutil.TempDir("", "analyze")
+	if err != nil {
+		return fmt.Errorf("Cannot create temp folder: %v", err)
+	}
+	// Don't remove temp folder, for detail analyze of report
+	// defer os.RemoveAll(dir)
+
+	// check compilation C version by clang
+	// Example : clang file.c -S -O3 -o
+	{
+		arguments = args.inputFiles
+		arguments = append(arguments, args.clangFlags...)
+		out := dir + "/cProgram1"
+		arguments = append(arguments, "-o", out)
+		fmt.Printf("# Compilation C program : %s\n", out)
+		_, err := exec.Command("clang", arguments).Output()
+		if err != nil {
+			return
+		}
+	}
+
 	// copy C code in temp folder
+	var inputFiles []string
+	for i := range args.inputFiles {
+		file := args.inputFiles[i]
+		inputFiles = append(inputFiles, file)
+		fmt.Printf("# Copy file %s to %s\n", args.inputFiles[i], file)
+		err = copyFile(args.inputFiles[i], file)
+		if err != nil {
+			return
+		}
+	}
+
 	// check compilation copy of C source by clang
+	{
+		arguments = inputFiles
+		arguments = append(arguments, args.clangFlags...)
+		out := dir + "/cProgram2"
+		arguments = append(arguments, "-o", out)
+		fmt.Printf("# Compilation C program : %s\n", out)
+		_, err := exec.Command("clang", arguments).Output()
+		if err != nil {
+			return
+		}
+	}
+
+	// get AST tree
+	fmt.Printf("# Generate AST tree\n")
+	var tree []ast.Node
+	{
+		pp, _, err := preprocessor.Analyze(inputFiles, args.clangFlags)
+		if err != nil {
+			return err
+		}
+
+		dir, err := ioutil.TempDir("", "c2go")
+		if err != nil {
+			return fmt.Errorf("Cannot create temp folder: %v", err)
+		}
+		defer os.RemoveAll(dir) // clean up
+
+		ppFilePath := path.Join(dir, "pp.c")
+		err = ioutil.WriteFile(ppFilePath, pp, 0644)
+		if err != nil {
+			return
+		}
+
+		astPP, err := exec.Command("clang", "-Xclang", "-ast-dump",
+			"-fsyntax-only", "-fno-color-diagnostics", ppFilePath).Output()
+		if err != nil {
+			return
+		}
+
+		nodes := convertLinesToNodesParallel(readAST(astPP))
+
+		// build tree
+		tree = buildTree(nodes, 0)
+		ast.FixPositions(tree)
+	}
+
+	// found location for injection and
 	// inject indicators in C code
-	// execute C version and save
+	fmt.Printf("# Inject in C code\n")
+	err = indicator.InjectInC(tree, inputFiles)
+	if err != nil {
+		return
+	}
+
+	// execute C version and save and
 	// remember time of execution
+
 	// transpilation to Go
-	// execute Go version of program
+	args.analyze = false
+	args.inputFiles = inputFiles
+	args.outputFile = dir + "/main.go"
+	err = Start(args)
+	if err != nil {
+		return
+	}
+
+	// execute Go version of program and
 	// break if time of work is more then 5 x (execution by C)
+
 	// compare indicator list of Go and C programs
+
 	return
 }
 
