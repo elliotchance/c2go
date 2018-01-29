@@ -65,7 +65,7 @@ var builtInVariableDefinitions = []VariableDefinition{
 	},
 }
 
-// GetBuiltInVariableDefinition - return true and var difinition if that
+// GetBuiltInVariableDefinition - return true and var definition if that
 // variable "name" is built-in variable of some C header
 func (p *Program) GetBuiltInVariableDefinition(name string) (
 	_ VariableDefinition, ok bool) {
