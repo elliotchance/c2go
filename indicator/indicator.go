@@ -25,10 +25,12 @@ func InjectInC(tree []ast.Node, inputFiles []string) (err error) {
 		for i := range tree[0].Children() {
 			n := tree[0].Children()[i]
 			if fd, ok := n.(*ast.FunctionDecl); ok {
-				if co, ok := fd.Children()[0].(*ast.CompoundStmt); ok {
-					if strings.Contains(inputFiles[j], fd.Pos.File) {
-						fmt.Printf("# Found function : %s\n", fd.Name)
-						functionDeclPos = append(functionDeclPos, co.Pos)
+				if len(fd.Children()) > 0 {
+					if co, ok := fd.Children()[0].(*ast.CompoundStmt); ok {
+						if strings.Contains(inputFiles[j], fd.Pos.File) {
+							fmt.Printf("# Found function : %s\n", fd.Name)
+							functionDeclPos = append(functionDeclPos, co.Pos)
+						}
 					}
 				}
 			}
@@ -48,7 +50,7 @@ func InjectInC(tree []ast.Node, inputFiles []string) (err error) {
 			line := scanner.Text()
 			line = strings.TrimSpace(line)
 			if linePos == 0 {
-				buf.WriteString("#include <stdio.h>")
+				buf.WriteString("#include <stdio.h>\n\n")
 			}
 			buf.WriteString(line)
 			if len(line) > 0 {

@@ -30,6 +30,7 @@ import (
 	"github.com/elliotchance/c2go/preprocessor"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/transpiler"
+	"github.com/elliotchance/c2go/util"
 )
 
 var stderr io.Writer = os.Stderr
@@ -297,6 +298,7 @@ func analyze(args ProgramArgs) (err error) {
 
 	// execute C version and save and
 	// remember time of execution
+	var cRes string
 	{
 		fmt.Printf("# Result of C program\n")
 		var sout, serr bytes.Buffer
@@ -312,7 +314,7 @@ func analyze(args ProgramArgs) (err error) {
 			fmt.Println("out = ", string(sout.String()))
 			return
 		}
-		fmt.Println("out = ", string(sout.String()))
+		cRes = sout.String()
 	}
 
 	// transpilation to Go
@@ -326,6 +328,7 @@ func analyze(args ProgramArgs) (err error) {
 
 	// execute Go version of program and
 	// break if time of work is more then 5 x (execution by C)
+	var goRes string
 	{
 		fmt.Printf("# Result of Go program\n")
 		var sout, serr bytes.Buffer
@@ -341,10 +344,11 @@ func analyze(args ProgramArgs) (err error) {
 			fmt.Println("out = ", string(sout.String()))
 			return
 		}
-		fmt.Println("out = ", string(sout.String()))
+		goRes = sout.String()
 	}
 
 	// compare indicator list of Go and C programs
+	fmt.Println(util.ShowDiff(cRes, goRes))
 
 	return
 }
