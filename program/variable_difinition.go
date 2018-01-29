@@ -49,28 +49,32 @@ var builtInVariableDefinitions = []VariableDefinition{
 		GoName:  "noarch.Optind",
 		GoType:  "int",
 	},
+	{
+		Headers: []string{"unistd.h"},
+		Cname:   "optopt",
+		Ctype:   "int",
+		GoName:  "noarch.Optopt",
+		GoType:  "int",
+	},
+	{
+		Headers: []string{"unistd.h"},
+		Cname:   "optreset",
+		Ctype:   "int",
+		GoName:  "noarch.Optreset",
+		GoType:  "int",
+	},
 }
 
-// IsBuiltInVariable - return true if that variable "name" is built-in
-// variable of some C header
-func (p *Program) IsBuiltInVariable(name string) bool {
+// GetBuiltInVariableDefinition - return true and var difinition if that
+// variable "name" is built-in variable of some C header
+func (p *Program) GetBuiltInVariableDefinition(name string) (
+	_ VariableDefinition, ok bool) {
 	for i := range builtInVariableDefinitions {
 		// TODO : add checking - if user C source have
 		// included header
 		if builtInVariableDefinitions[i].Cname == name {
-			return true
+			return builtInVariableDefinitions[i], true
 		}
 	}
-	return false
-}
-
-func (p *Program) GetBuiltInVariableDefinition(name string) *VariableDefinition {
-	for i := range builtInVariableDefinitions {
-		// TODO : add checking - if user C source have
-		// included header
-		if builtInVariableDefinitions[i].Cname == name {
-			return &builtInVariableDefinitions[i]
-		}
-	}
-	return nil
+	return
 }
