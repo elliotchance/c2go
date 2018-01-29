@@ -10,6 +10,7 @@ import (
 var functionDeclPos []ast.Position
 
 func InjectInC(tree []ast.Node, inputFiles []string) (err error) {
+	functionDeclPos = make([]ast.Position, 0, 10)
 	for j := range inputFiles {
 		fmt.Printf("# File : %s\n", inputFiles[j])
 		for i := range tree[0].Children() {
