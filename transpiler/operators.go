@@ -248,7 +248,7 @@ func pointerArithmetic(p *program.Program,
 
 	src := `package main
 func main(){
-	a := (*(*[1]{{ .Type }})(unsafe.Pointer(uintptr(unsafe.Pointer(&{{ .Name }}[0])) {{ .Operator }} (uintptr)({{ .Condition }})*unsafe.Sizeof({{ .Name }}[0]))))[:]
+	a := (*(*[10000000]{{ .Type }})(unsafe.Pointer(uintptr(unsafe.Pointer(&{{ .Name }}[0])) {{ .Operator }} (uintptr)({{ .Condition }})*unsafe.Sizeof({{ .Name }}[0]))))[:]
 }`
 	tmpl := template.Must(template.New("").Parse(src))
 	var source bytes.Buffer
@@ -659,7 +659,7 @@ func atomicOperation(n ast.Node, p *program.Program) (
 			postStmts = nil
 
 			var returnValue goast.Expr = util.NewIdent(varName)
-			if types.IsPointer(decl.Type) {
+			if types.IsPointer(decl.Type) && !types.IsPointer(v.Type) {
 				returnValue = &goast.IndexExpr{
 					X: returnValue,
 					Index: &goast.BasicLit{

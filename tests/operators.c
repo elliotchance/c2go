@@ -31,9 +31,13 @@ int simple_repeat(int a)
 	return a;
 }
 
+double * return_null(){
+	return NULL;
+}
+
 int main()
 {
-	plan(85);
+	plan(86);
 
     int i = 10;
     signed char j = 1;
@@ -328,6 +332,12 @@ int main()
 			pass("ok")
 		}
 	}
+	diag("pointer in IF");
+	double *cd;
+	if ( (cd = return_null()) == NULL ){
+		pass("ok");
+	}
+	(void)(cd);
 
 	done_testing();
 }

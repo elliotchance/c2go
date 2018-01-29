@@ -186,7 +186,7 @@ int main()
 		char *cvalue = NULL;
 		int c = 0;
 
-		opterr = 0;
+		opterr = 1;
 		optind = 1;
 		while ((c = getopt (tcs[i].argc, tcs[i].argv, "abc:")) != -1)
 			switch (c)
