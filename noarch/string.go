@@ -2,6 +2,7 @@ package noarch
 
 import (
 	"bytes"
+	"unsafe"
 )
 
 // Strlen returns the length of a string.
@@ -78,4 +79,20 @@ func Strcat(dest, src []byte) []byte {
 // Compares the C string str1 to the C string str2.
 func Strcmp(str1, str2 []byte) int {
 	return bytes.Compare([]byte(CStringToString(str1)), []byte(CStringToString(str2)))
+}
+
+// Strchr - Locate first occurrence of character in string
+// See: http://www.cplusplus.com/reference/cstring/strchr/
+func Strchr(str []byte, ch int) []byte {
+	i := 0
+	for {
+		if str[i] == '\x00' {
+			return nil
+		}
+		if int(str[i]) == ch {
+			return (*[1]byte)(unsafe.Pointer(&str[i]))[:]
+		}
+		i++
+	}
+	return nil
 }
