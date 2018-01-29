@@ -624,7 +624,7 @@ func atomicOperation(n ast.Node, p *program.Program) (
 			postStmts = nil
 
 			var returnValue goast.Expr = util.NewIdent(varName)
-			if types.IsPointer(decl.Type) {
+			if types.IsPointer(decl.Type) && !types.IsPointer(v.Type) {
 				returnValue = &goast.IndexExpr{
 					X: returnValue,
 					Index: &goast.BasicLit{

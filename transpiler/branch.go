@@ -550,6 +550,14 @@ func createIfWithNotConditionAndBreak(condition ast.Node) (ifStmt ast.IfStmt) {
 	case *ast.BinaryOperator:
 		par.Type = con.Type
 		unitary.Type = con.Type
+
+	case *ast.ImplicitCastExpr:
+		par.Type = con.Type
+		unitary.Type = con.Type
+
+	case *ast.CStyleCastExpr:
+		par.Type = con.Type
+		unitary.Type = con.Type
 	}
 	par.AddChild(condition)
 	unitary.Operator = "!"

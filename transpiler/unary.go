@@ -91,6 +91,69 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program, operato
 		}
 	}
 
+	if types.IsPointer(n.Type) {
+		switch operator {
+		case token.INC:
+			operator = token.ADD
+		case token.DEC:
+			operator = token.SUB
+		}
+		if _, ok := n.Children()[0].(*ast.DeclRefExpr); !ok {
+			err = fmt.Errorf("Unsupported type %T", n.Children()[0])
+			return
+		}
+
+		var left goast.Expr
+		var leftType string
+		var newPre, newPost []goast.Stmt
+		left, leftType, newPre, newPost, err = transpileToExpr(n.Children()[0], p, false)
+		if err != nil {
+			return
+		}
+
+		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
+		rightType := "int"
+		right := &goast.BasicLit{
+			Kind:  token.INT,
+			Value: "1",
+		}
+
+		expr, eType, newPre, newPost, err = pointerArithmetic(p, left, leftType, right, rightType, operator)
+		if err != nil {
+			return
+		}
+		if expr == nil {
+			return nil, "", nil, nil, fmt.Errorf("Expr is nil")
+		}
+
+		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
+		expr = &goast.BinaryExpr{
+			X:  goast.NewIdent(getName(p, n.Children()[0])),
+			Op: token.ASSIGN,
+			Y:  expr,
+		}
+		return
+	}
+
+	if v, ok := n.Children()[0].(*ast.DeclRefExpr); ok {
+		switch n.Operator {
+		case "++":
+			return &goast.BinaryExpr{
+				X:  util.NewIdent(v.Name),
+				Op: token.ADD_ASSIGN,
+				Y:  &goast.BasicLit{Kind: token.INT, Value: "1"},
+			}, n.Type, nil, nil, nil
+		case "--":
+			return &goast.BinaryExpr{
+				X:  util.NewIdent(v.Name),
+				Op: token.SUB_ASSIGN,
+				Y:  &goast.BasicLit{Kind: token.INT, Value: "1"},
+			}, n.Type, nil, nil, nil
+		}
+	}
+
 	binaryOperator := "+="
 	if operator == token.DEC {
 		binaryOperator = "-="
