@@ -39,31 +39,31 @@ type {{ .Name }} struct{
 	arr      [{{ .Size }}]byte
 }
 
-func (self *{{ .Name }}) cast(t reflect.Type) reflect.Value {
-	return reflect.NewAt(t, unsafe.Pointer(&self.arr[0]))
+func (unionVar*{{ .Name }}) cast(t reflect.Type) reflect.Value {
+	return reflect.NewAt(t, unsafe.Pointer(&unionVar.arr[0]))
 }
 
-func (self *{{ .Name }}) assign(v interface{}){
+func (unionVar*{{ .Name }}) assign(v interface{}){
 	value := reflect.ValueOf(v).Elem()
-	value.Set(self.cast(value.Type()).Elem())
+	value.Set(unionVar.cast(value.Type()).Elem())
 }
 
-func (self *{{ .Name }}) UntypedSet(v interface{}){
+func (unionVar*{{ .Name }}) UntypedSet(v interface{}){
 	value := reflect.ValueOf(v)
-	self.cast(value.Type()).Elem().Set(value)
+	unionVar.cast(value.Type()).Elem().Set(value)
 }
 
 {{ range .Fields }}
 // Get{{ .Name }} - return value of {{ .Name }}
-func (self *{{ $.Name }}) Get{{ .Name }} () (res {{ .TypeField }}){
-	self.assign(&res)
+func (unionVar*{{ $.Name }}) Get{{ .Name }} () (res {{ .TypeField }}){
+	unionVar.assign(&res)
 	return
 }
 
 // Set{{ .Name }} - set value of {{ .Name }}
-func (self *{{ $.Name }}) Set{{ .Name }} (v {{ .TypeField }}) {{ .TypeField }}{
-	self.value = v // added for avoid GC removing pointers in union
-	self.UntypedSet(v)
+func (unionVar*{{ $.Name }}) Set{{ .Name }} (v {{ .TypeField }}) {{ .TypeField }}{
+	unionVar.value = v // added for avoid GC removing pointers in union
+	unionVar.UntypedSet(v)
 	return v
 }
 {{ end }}

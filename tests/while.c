@@ -3,7 +3,7 @@
 
 int main()
 {
-    plan(6);
+    plan(7);
 
     int value = 1;
 
@@ -30,6 +30,25 @@ int main()
 	value = 1;
 	while((value--,value));
 	is_eq(value , 0);
+
+	diag("while with star");
+	{
+	int * ok;
+	int value2;
+	ok = & value2;
+	*ok = 1;
+	int iterator = 0;
+	do{
+		if (iterator == 1){
+			*ok = 0;
+		}
+		iterator ++;
+		if (iterator >10){
+			break;
+		}
+	}while(*ok);
+	is_eq(*ok, 0);
+	}
 
     done_testing();
 }
