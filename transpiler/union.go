@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"strings"
 
 	goast "go/ast"
 	"go/format"
@@ -84,6 +85,12 @@ type {{ .Name }} struct{
 // ((*(*[100]uint8)(unsafe.Pointer(&sha.u.memory)))[:])[0]
 // ((*(*[ 25]int  )(unsafe.Pointer(&sha.u.memory)))[:])[0]
 func getUnionVariable(goType string, union goast.Expr) goast.Expr {
+	goType = strings.TrimSpace(goType)
+	if len(goType) > 2 {
+		if goType[0] == '[' && goType[1] == ']' {
+			goType = goType[:1] + "1000000" + goType[1:]
+		}
+	}
 	return &goast.StarExpr{
 		X: &goast.CallExpr{
 			Fun: &goast.ParenExpr{
