@@ -25,6 +25,7 @@ import (
 	"errors"
 
 	"github.com/elliotchance/c2go/ast"
+	"github.com/elliotchance/c2go/indicator"
 	"github.com/elliotchance/c2go/preprocessor"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/transpiler"
@@ -196,12 +197,12 @@ func analyze(args ProgramArgs) (err error) {
 	// check compilation C version by clang
 	// Example : clang file.c -S -O3 -o
 	{
-		arguments = args.inputFiles
+		arguments := args.inputFiles
 		arguments = append(arguments, args.clangFlags...)
 		out := dir + "/cProgram1"
 		arguments = append(arguments, "-o", out)
 		fmt.Printf("# Compilation C program : %s\n", out)
-		_, err := exec.Command("clang", arguments).Output()
+		_, err = exec.Command("clang", arguments...).Output()
 		if err != nil {
 			return
 		}
@@ -210,7 +211,10 @@ func analyze(args ProgramArgs) (err error) {
 	// copy C code in temp folder
 	var inputFiles []string
 	for i := range args.inputFiles {
-		file := args.inputFiles[i]
+		file := dir + "/" + args.inputFiles[i]
+		if args.inputFiles[i][0] == '.' {
+			file = dir + args.inputFiles[i][1:]
+		}
 		inputFiles = append(inputFiles, file)
 		fmt.Printf("# Copy file %s to %s\n", args.inputFiles[i], file)
 		err = copyFile(args.inputFiles[i], file)
@@ -221,12 +225,12 @@ func analyze(args ProgramArgs) (err error) {
 
 	// check compilation copy of C source by clang
 	{
-		arguments = inputFiles
+		arguments := inputFiles
 		arguments = append(arguments, args.clangFlags...)
 		out := dir + "/cProgram2"
 		arguments = append(arguments, "-o", out)
 		fmt.Printf("# Compilation C program : %s\n", out)
-		_, err := exec.Command("clang", arguments).Output()
+		_, err = exec.Command("clang", arguments...).Output()
 		if err != nil {
 			return
 		}
@@ -236,12 +240,14 @@ func analyze(args ProgramArgs) (err error) {
 	fmt.Printf("# Generate AST tree\n")
 	var tree []ast.Node
 	{
-		pp, _, err := preprocessor.Analyze(inputFiles, args.clangFlags)
+		var pp []byte
+		pp, _, err = preprocessor.Analyze(inputFiles, args.clangFlags)
 		if err != nil {
 			return err
 		}
 
-		dir, err := ioutil.TempDir("", "c2go")
+		var dir string
+		dir, err = ioutil.TempDir("", "c2go")
 		if err != nil {
 			return fmt.Errorf("Cannot create temp folder: %v", err)
 		}
@@ -253,7 +259,8 @@ func analyze(args ProgramArgs) (err error) {
 			return
 		}
 
-		astPP, err := exec.Command("clang", "-Xclang", "-ast-dump",
+		var astPP []byte
+		astPP, err = exec.Command("clang", "-Xclang", "-ast-dump",
 			"-fsyntax-only", "-fno-color-diagnostics", ppFilePath).Output()
 		if err != nil {
 			return
