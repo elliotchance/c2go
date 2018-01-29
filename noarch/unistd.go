@@ -3,7 +3,6 @@ package noarch
 import (
 	"fmt"
 	"os"
-	"unsafe"
 )
 
 // See documentation:
@@ -76,7 +75,7 @@ func Getopt(argc int, argv [][]byte, optstring []byte) (res int) {
 			} else {
 				if int(opt[1]) == int(':') {
 					if arg[Optpos+1] != 0 {
-						Optarg = (*(*[1000000]byte)(unsafe.Pointer(uintptr(unsafe.Pointer(&(*(*[1]byte)(unsafe.Pointer(uintptr(unsafe.Pointer(&arg[0])) + (uintptr)(Optpos)*unsafe.Sizeof(arg[0]))))[:][0])) + (uintptr)(1)*unsafe.Sizeof((*(*[100000]byte)(unsafe.Pointer(uintptr(unsafe.Pointer(&arg[0])) + (uintptr)(Optpos)*unsafe.Sizeof(arg[0]))))[:][0]))))[:]
+						Optarg = arg[1+Optpos:]
 						Optind += 1
 						Optpos = 1
 						return Optopt
