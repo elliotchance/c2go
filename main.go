@@ -11,6 +11,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"io"
@@ -281,8 +282,38 @@ func analyze(args ProgramArgs) (err error) {
 		return
 	}
 
+	// compile C code with injections
+	{
+		arguments := inputFiles
+		arguments = append(arguments, args.clangFlags...)
+		out := dir + "/cProgram3"
+		arguments = append(arguments, "-o", out)
+		fmt.Printf("# Compilation C program : %s\n", out)
+		_, err = exec.Command("clang", arguments...).Output()
+		if err != nil {
+			return
+		}
+	}
+
 	// execute C version and save and
 	// remember time of execution
+	{
+		fmt.Printf("# Result of C program\n")
+		var sout, serr bytes.Buffer
+		cmd := exec.Command(dir + "/cProgram3")
+		cmd.Stdout = &sout
+		cmd.Stderr = &serr
+		err = cmd.Run()
+		if sout.Len() > 0 && err != nil {
+			err = nil
+		}
+		if err != nil {
+			fmt.Println("err = ", string(serr.String()))
+			fmt.Println("out = ", string(sout.String()))
+			return
+		}
+		fmt.Println("out = ", string(sout.String()))
+	}
 
 	// transpilation to Go
 	args.analyze = false
@@ -295,6 +326,23 @@ func analyze(args ProgramArgs) (err error) {
 
 	// execute Go version of program and
 	// break if time of work is more then 5 x (execution by C)
+	{
+		fmt.Printf("# Result of Go program\n")
+		var sout, serr bytes.Buffer
+		cmd := exec.Command("go", "run", dir+"/main.go")
+		cmd.Stdout = &sout
+		cmd.Stderr = &serr
+		err = cmd.Run()
+		if sout.Len() > 0 && err != nil {
+			err = nil
+		}
+		if err != nil {
+			fmt.Println("err = ", string(serr.String()))
+			fmt.Println("out = ", string(sout.String()))
+			return
+		}
+		fmt.Println("out = ", string(sout.String()))
+	}
 
 	// compare indicator list of Go and C programs
 
