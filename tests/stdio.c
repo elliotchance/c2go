@@ -12,7 +12,7 @@
     test_##t();
 
 // size of that file
-int filesize = 10121;
+int filesize = 10276;
 
 void test_putchar()
 {
@@ -497,11 +497,22 @@ void test_eof()
 	if ( c == (char)(EOF) ) {
 		pass("ok");
 	}
+	char a[1];
+	a[0] = 's';
+	if ( a[0] != EOF ) {
+		pass("ok");
+	}
+	a[0] = EOF;
+	if ( a[0] != EOF ) {
+		fail("EOF == EOF - fail");
+	} else {
+		pass("ok");
+	}
 }
 
 int main()
 {
-    plan(52);
+    plan(54);
 
     START_TEST(putchar)
     START_TEST(puts)
