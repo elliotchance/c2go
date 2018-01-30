@@ -12,7 +12,7 @@
     test_##t();
 
 // size of that file
-int filesize = 9979;
+int filesize = 10121;
 
 void test_putchar()
 {
@@ -488,9 +488,20 @@ void test_vsnprintf()
 	is_eq(s,19+8+5);
 }
 
+void test_eof()
+{
+	if ( (int)(EOF) == -1 ) {
+		pass("ok");
+	}
+	char c = EOF;
+	if ( c == (char)(EOF) ) {
+		pass("ok");
+	}
+}
+
 int main()
 {
-    plan(50);
+    plan(52);
 
     START_TEST(putchar)
     START_TEST(puts)
@@ -523,6 +534,7 @@ int main()
     START_TEST(snprintf)
     START_TEST(vsprintf)
     START_TEST(vsnprintf)
+	START_TEST(eof)
 
     done_testing();
 }
