@@ -12,7 +12,7 @@
     test_##t();
 
 // size of that file
-int filesize = 9979;
+int filesize = 10434;
 
 void test_putchar()
 {
@@ -134,6 +134,7 @@ void test_tmpnam()
 
 void test_fclose()
 {
+	remove("/tmp/myfile.txt");
     FILE *pFile;
     pFile = fopen("/tmp/myfile.txt", "w");
     fputs("fclose example", pFile);
@@ -159,6 +160,7 @@ void test_fflush()
 
 void test_fprintf()
 {
+	remove("/tmp/myfile1.txt");
     FILE *pFile;
     int n;
     char *name = "John Smith";
@@ -178,21 +180,42 @@ void test_fprintf()
 
 void test_fscanf()
 {
+	remove("/tmp/myfile2.txt");
+
     char str[80];
     float f;
+	int i;
     FILE *pFile;
 
     pFile = fopen("/tmp/myfile2.txt", "w+");
     is_not_null(pFile);
 
-    fprintf(pFile, "%f %s", 3.1416, "PI");
+    fprintf(pFile, "%f %s %d", 3.1416, "PI", 42);
     rewind(pFile);
     fscanf(pFile, "%f", &f);
     fscanf(pFile, "%s", str);
+    fscanf(pFile, "%d", &i);
     fclose(pFile);
+	pFile = NULL;
 
     is_eq(f, 3.1416);
     is_streq(str, "PI");
+	is_eq(i,42);
+
+	// read again
+    FILE *pFile2;
+    pFile2 = fopen("/tmp/myfile2.txt", "r");
+    is_not_null(pFile2);
+
+    fscanf(pFile2, "%f", &f);
+    fscanf(pFile2, "%s", str);
+    fscanf(pFile2, "%d", &i);
+    fclose(pFile2);
+	pFile2 = NULL;
+
+    is_eq(f, 3.1416);
+    is_streq(str, "PI");
+	is_eq(i,42);
     
 	// remove temp file
     is_eq(remove("/tmp/myfile2.txt"),0)
@@ -490,7 +513,7 @@ void test_vsnprintf()
 
 int main()
 {
-    plan(50);
+    plan(55);
 
     START_TEST(putchar)
     START_TEST(puts)
