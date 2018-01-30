@@ -187,7 +187,7 @@ func InjectInC(tree []ast.Node, inputFiles []string) (err error) {
 	for j := range inputFiles {
 		// find functions
 		fmt.Printf("# File : %s\n", inputFiles[j])
-		functionDeclPos := make([]ast.Position, 0, 10)
+		var functionDeclPos []ast.Position
 		for i := range tree[0].Children() {
 			n := tree[0].Children()[i]
 			if fd, ok := n.(*ast.FunctionDecl); ok {
@@ -241,7 +241,7 @@ func InjectInC(tree []ast.Node, inputFiles []string) (err error) {
 		if err != nil {
 			return
 		}
-		fmt.Println(buf.String())
+		// fmt.Println(buf.String())
 	}
 	return nil
 }
@@ -268,18 +268,19 @@ func debug(args ProgramArgs) (err error) {
 
 	// check compilation C version by clang
 	// Example : clang file.c -S -O3 -o
-	{
-		arguments := args.inputFiles
-		arguments = append(arguments, args.clangFlags...)
-		out := dir + "/cProgram1"
-		arguments = append(arguments, "-o", out)
-		fmt.Printf("# Compilation C program : %s\n", out)
-		_, err = exec.Command("clang", arguments...).Output()
-		if err != nil {
-			return
+	/*
+		{
+			arguments := args.inputFiles
+			arguments = append(arguments, args.clangFlags...)
+			out := dir + "/cProgram1"
+			arguments = append(arguments, "-o", out)
+			fmt.Printf("# Compilation C program : %s\n", out)
+			_, err = exec.Command("clang", arguments...).Output()
+			if err != nil {
+				return
+			}
 		}
-	}
-
+	*/
 	// copy C code in temp folder
 	// Example of input files:
 	// /folder/src/1.c
@@ -293,36 +294,41 @@ func debug(args ProgramArgs) (err error) {
 	// /tmp/3.c
 	var inputFiles []string
 	{
-		c := strings.LastIndex(args.inputFiles[0], "/")
-		if c < 0 {
-			c = 0
-		}
-		for i := range args.inputFiles {
-			if len(args.inputFiles[i]) < c+1 {
-				return fmt.Errorf("Cannot found pattern of source")
+		/*
+			c := strings.LastIndex(args.inputFiles[0], "/")
+			if c < 0 {
+				c = 0
 			}
-			file := dir + "/" + args.inputFiles[i][c+1:]
-			inputFiles = append(inputFiles, file)
-			fmt.Printf("# Copy file %s to %s\n", args.inputFiles[i], file)
-			err = copyFile(args.inputFiles[i], file)
+			for i := range args.inputFiles {
+				if len(args.inputFiles[i]) < c+1 {
+					return fmt.Errorf("Cannot found pattern of source")
+				}
+				file := dir + "/" + args.inputFiles[i][c+1:]
+				inputFiles = append(inputFiles, file)
+				fmt.Printf("# Copy file %s to %s\n", args.inputFiles[i], file)
+				err = copyFile(args.inputFiles[i], file)
+				if err != nil {
+					return
+				}
+			}
+		*/
+		inputFiles = args.inputFiles
+	}
+
+	// check compilation copy of C source by clang
+	/*
+		{
+			arguments := inputFiles
+			arguments = append(arguments, args.clangFlags...)
+			out := dir + "/cProgram2"
+			arguments = append(arguments, "-o", out)
+			fmt.Printf("# Compilation C program : %s\n", out)
+			_, err = exec.Command("clang", arguments...).Output()
 			if err != nil {
 				return
 			}
 		}
-	}
-
-	// check compilation copy of C source by clang
-	{
-		arguments := inputFiles
-		arguments = append(arguments, args.clangFlags...)
-		out := dir + "/cProgram2"
-		arguments = append(arguments, "-o", out)
-		fmt.Printf("# Compilation C program : %s\n", out)
-		_, err = exec.Command("clang", arguments...).Output()
-		if err != nil {
-			return
-		}
-	}
+	*/
 
 	// get AST tree
 	fmt.Printf("# Generate AST tree\n")
@@ -344,6 +350,7 @@ func debug(args ProgramArgs) (err error) {
 		ppFilePath := path.Join(dir, "pp.c")
 		err = ioutil.WriteFile(ppFilePath, pp, 0644)
 		if err != nil {
+			fmt.Println("Error in pp.c")
 			return
 		}
 
@@ -351,6 +358,7 @@ func debug(args ProgramArgs) (err error) {
 		astPP, err = exec.Command("clang", "-Xclang", "-ast-dump",
 			"-fsyntax-only", "-fno-color-diagnostics", ppFilePath).Output()
 		if err != nil {
+			fmt.Println("Error in ASTPP")
 			return
 		}
 
@@ -370,17 +378,19 @@ func debug(args ProgramArgs) (err error) {
 	}
 
 	// compile C code with injections
-	{
-		arguments := inputFiles
-		arguments = append(arguments, args.clangFlags...)
-		out := dir + "/cProgram3"
-		arguments = append(arguments, "-o", out)
-		fmt.Printf("# Compilation C program : %s\n", out)
-		_, err = exec.Command("clang", arguments...).Output()
-		if err != nil {
-			return
+	/*
+		{
+			arguments := inputFiles
+			arguments = append(arguments, args.clangFlags...)
+			out := dir + "/cProgram3"
+			arguments = append(arguments, "-o", out)
+			fmt.Printf("# Compilation C program : %s\n", out)
+			_, err = exec.Command("clang", arguments...).Output()
+			if err != nil {
+				return
+			}
 		}
-	}
+	*/
 
 	// execute C version and save and
 	// remember time of execution
