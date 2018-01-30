@@ -51,7 +51,7 @@ type ProgramArgs struct {
 	clangFlags  []string
 	outputFile  string
 	packageName string
-	analyze     bool
+	debug       bool
 
 	// A private option to output the Go as a *_test.go file.
 	outputAsTest bool
@@ -65,7 +65,7 @@ func DefaultProgramArgs() ProgramArgs {
 		packageName:  "main",
 		clangFlags:   []string{},
 		outputAsTest: false,
-		analyze:      false,
+		debug:        false,
 	}
 }
 
@@ -256,8 +256,8 @@ func copyFile(src string, dst string) (err error) {
 	return ioutil.WriteFile(dst, data, 0644)
 }
 
-// analyze
-func analyze(args ProgramArgs) (err error) {
+// debug
+func debug(args ProgramArgs) (err error) {
 	// create a temp folder
 	dir, err := ioutil.TempDir("", "analyze")
 	if err != nil {
@@ -281,17 +281,33 @@ func analyze(args ProgramArgs) (err error) {
 	}
 
 	// copy C code in temp folder
+	// Example of input files:
+	// /folder/src/1.c
+	// /folder/src/2.c
+	// /folder/src/3.c
+	// Common pattern:
+	// /folder/src/
+	// After:
+	// /tmp/1.c
+	// /tmp/2.c
+	// /tmp/3.c
 	var inputFiles []string
-	for i := range args.inputFiles {
-		file := dir + "/" + args.inputFiles[i]
-		if args.inputFiles[i][0] == '.' {
-			file = dir + args.inputFiles[i][1:]
+	{
+		c := strings.LastIndex(args.inputFiles[0], "/")
+		if c < 0 {
+			c = 0
 		}
-		inputFiles = append(inputFiles, file)
-		fmt.Printf("# Copy file %s to %s\n", args.inputFiles[i], file)
-		err = copyFile(args.inputFiles[i], file)
-		if err != nil {
-			return
+		for i := range args.inputFiles {
+			if len(args.inputFiles[i]) < c+1 {
+				return fmt.Errorf("Cannot found pattern of source")
+			}
+			file := dir + "/" + args.inputFiles[i][c+1:]
+			inputFiles = append(inputFiles, file)
+			fmt.Printf("# Copy file %s to %s\n", args.inputFiles[i], file)
+			err = copyFile(args.inputFiles[i], file)
+			if err != nil {
+				return
+			}
 		}
 	}
 
@@ -388,7 +404,7 @@ func analyze(args ProgramArgs) (err error) {
 	}
 
 	// transpilation to Go
-	args.analyze = false
+	args.debug = false
 	args.inputFiles = inputFiles
 	args.outputFile = dir + "/main.go"
 	err = Start(args)
@@ -447,8 +463,8 @@ func Start(args ProgramArgs) (err error) {
 	}
 
 	// Analyze, if exist
-	if args.analyze {
-		return analyze(args)
+	if args.debug {
+		return debug(args)
 	}
 
 	pp, comments, err := preprocessor.Analyze(args.inputFiles, args.clangFlags)
@@ -593,7 +609,7 @@ var (
 	outputFlag        = transpileCommand.String("o", "", "output Go generated code to the specified file")
 	packageFlag       = transpileCommand.String("p", "main", "set the name of the generated package")
 	transpileHelpFlag = transpileCommand.Bool("h", false, "print help information")
-	analyzeFlag       = transpileCommand.Bool("a", false, "compare C and Go version of program")
+	debugFlag         = transpileCommand.Bool("debug", false, "add debug information for comparing C and Go version of program")
 
 	// Ast flags
 	astCommand  = flag.NewFlagSet("ast", flag.ContinueOnError)
@@ -673,7 +689,7 @@ func runCommand() int {
 		args.packageName = *packageFlag
 		args.verbose = *verboseFlag
 		args.clangFlags = clangFlags
-		args.analyze = *analyzeFlag
+		args.debug = *debugFlag
 	default:
 		flag.Usage()
 		return 1
