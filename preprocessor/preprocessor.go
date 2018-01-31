@@ -4,7 +4,11 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"os/exec"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"text/scanner"
 
@@ -150,7 +154,8 @@ func Analyze(inputFiles, clangFlags []string) (pp []byte, comments []program.Com
 func analyzeFiles(inputFiles, clangFlags []string) (items []entity, err error) {
 	// See : https://clang.llvm.org/docs/CommandGuide/clang.html
 	// clang -E <file>    Run the preprocessor stage.
-	out, err := getPreprocessSources(inputFiles, clangFlags)
+	var out bytes.Buffer
+	out, err = getPreprocessSources(inputFiles, clangFlags)
 	if err != nil {
 		return
 	}
@@ -196,31 +201,62 @@ func analyzeFiles(inputFiles, clangFlags []string) (items []entity, err error) {
 // See : https://clang.llvm.org/docs/CommandGuide/clang.html
 // clang -E <file>    Run the preprocessor stage.
 func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, err error) {
-	var stderr bytes.Buffer
-	for _, inputFile := range inputFiles {
-		if inputFile[len(inputFile)-1] != 'c' {
-			continue
-		}
-
-		var args []string
-		args = append(args, "-E", "-C")
-		args = append(args, clangFlags...)
-		args = append(args, inputFile)
-
-		var outFile bytes.Buffer
-		cmd := exec.Command("clang", args...)
-		cmd.Stdout = &outFile
-		cmd.Stderr = &stderr
-		err = cmd.Run()
-		if err != nil {
-			err = fmt.Errorf("preprocess for file: %s\nfailed: %v\nStdErr = %v", inputFile, err, stderr.String())
-			return
-		}
-		_, err = out.Write(outFile.Bytes())
-		if err != nil {
-			return
-		}
+	// get temp dir
+	dir, err := ioutil.TempDir("", "c2go-union")
+	if err != nil {
+		return
 	}
+	defer func() { _ = os.RemoveAll(dir) }()
+
+	// file name union file
+	var unionFileName = dir + "/" + "unionFileName.c"
+
+	// create a body for union file
+	var unionBody string
+	for i := range inputFiles {
+		var absPath string
+		absPath, err = filepath.Abs(inputFiles[i])
+		if err != nil {
+			return
+		}
+		unionBody += fmt.Sprintf("#include \"%s\"\n", absPath)
+	}
+
+	// write a union file
+	err = ioutil.WriteFile(unionFileName, []byte(unionBody), 0644)
+	if err != nil {
+		return
+	}
+
+	// Add open source defines
+	if runtime.GOOS == "darwin" {
+		clangFlags = append(clangFlags, "-D_XOPEN_SOURCE")
+	} else {
+		clangFlags = append(clangFlags, "-D_GNU_SOURCE")
+	}
+
+	// preprocessor clang
+	var stderr bytes.Buffer
+
+	var args []string
+	args = append(args, "-E", "-C")
+	args = append(args, clangFlags...)
+	args = append(args, unionFileName) // All inputFiles
+
+	var outFile bytes.Buffer
+	cmd := exec.Command("clang", args...)
+	cmd.Stdout = &outFile
+	cmd.Stderr = &stderr
+	err = cmd.Run()
+	if err != nil {
+		err = fmt.Errorf("preprocess for file: %v\nfailed: %v\nStdErr = %v", inputFiles, err, stderr.String())
+		return
+	}
+	_, err = out.Write(outFile.Bytes())
+	if err != nil {
+		return
+	}
+
 	return
 }
 
@@ -232,6 +268,12 @@ func GetIncludeListWithUserSource(inputFiles, clangFlags []string) (lines []stri
 	var out bytes.Buffer
 	var stderr bytes.Buffer
 	var args []string
+	for i := range inputFiles {
+		inputFiles[i], err = filepath.Abs(inputFiles[i])
+		if err != nil {
+			return
+		}
+	}
 	args = append(args, "-MM", "-c")
 	args = append(args, inputFiles...)
 	args = append(args, clangFlags...)

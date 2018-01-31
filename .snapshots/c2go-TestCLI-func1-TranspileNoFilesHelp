@@ -1,5 +1,6 @@
 (*bytes.Buffer)(Usage: test transpile [-V] [-o file.go] [-p package] file1.c ...
   -V	print progress as comments
+  -a	compare C and Go version of program
   -clang-flag value
     	Pass arguments to clang. You may provide multiple -clang-flag items.
   -h	print help information

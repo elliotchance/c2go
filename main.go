@@ -11,6 +11,8 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
 	"flag"
 	"fmt"
 	"io"
@@ -28,6 +30,7 @@ import (
 	"github.com/elliotchance/c2go/preprocessor"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/transpiler"
+	"github.com/elliotchance/c2go/util"
 )
 
 var stderr io.Writer = os.Stderr
@@ -48,6 +51,7 @@ type ProgramArgs struct {
 	clangFlags  []string
 	outputFile  string
 	packageName string
+	debug       bool
 
 	// A private option to output the Go as a *_test.go file.
 	outputAsTest bool
@@ -61,6 +65,7 @@ func DefaultProgramArgs() ProgramArgs {
 		packageName:  "main",
 		clangFlags:   []string{},
 		outputAsTest: false,
+		debug:        false,
 	}
 }
 
@@ -171,6 +176,279 @@ func buildTree(nodes []treeNode, depth int) []ast.Node {
 	return results
 }
 
+var uniqIterator int
+
+func getInjectCode() string {
+	uniqIterator++
+	return fmt.Sprintf("printf(\"%d \\n\");", uniqIterator)
+}
+
+func InjectInC(tree []ast.Node, inputFiles []string) (err error) {
+	for j := range inputFiles {
+		// find functions
+		fmt.Printf("# File : %s\n", inputFiles[j])
+		var functionDeclPos []ast.Position
+		for i := range tree[0].Children() {
+			n := tree[0].Children()[i]
+			if fd, ok := n.(*ast.FunctionDecl); ok {
+				if len(fd.Children()) > 0 {
+					if co, ok := fd.Children()[0].(*ast.CompoundStmt); ok {
+						if strings.Contains(inputFiles[j], fd.Pos.File) {
+							fmt.Printf("# Found function : %s\n", fd.Name)
+							functionDeclPos = append(functionDeclPos, co.Pos)
+						}
+					}
+				}
+			}
+		}
+		// inject
+		var base []byte
+		base, err = ioutil.ReadFile(inputFiles[j])
+		if err != nil {
+			return
+		}
+		r := bytes.NewReader(base)
+		scanner := bufio.NewScanner(r)
+		scanner.Split(bufio.ScanLines)
+		var buf bytes.Buffer
+		var linePos int
+		for scanner.Scan() {
+			line := scanner.Text()
+			line = strings.TrimSpace(line)
+			if linePos == 0 {
+				buf.WriteString("#include <stdio.h>\n\n")
+			}
+			buf.WriteString(line)
+			if len(line) > 0 {
+				if line[len(line)-1] == ';' {
+					var isInsideFunc bool
+					for i := range functionDeclPos {
+						if functionDeclPos[i].Line <= linePos && linePos < functionDeclPos[i].LineEnd {
+							isInsideFunc = true
+							break
+						}
+					}
+					if isInsideFunc {
+						buf.WriteString(getInjectCode())
+					}
+				}
+			}
+			buf.WriteByte('\n')
+			linePos++
+		}
+		// Write data to dst
+		err = ioutil.WriteFile(inputFiles[j], buf.Bytes(), 0644)
+		if err != nil {
+			return
+		}
+		// fmt.Println(buf.String())
+	}
+	return nil
+}
+
+func copyFile(src string, dst string) (err error) {
+	// Read all content of src to data
+	data, err := ioutil.ReadFile(src)
+	if err != nil {
+		return
+	}
+	// Write data to dst
+	return ioutil.WriteFile(dst, data, 0644)
+}
+
+// debug
+func debug(args ProgramArgs) (err error) {
+	// create a temp folder
+	dir, err := ioutil.TempDir("", "analyze")
+	if err != nil {
+		return fmt.Errorf("Cannot create temp folder: %v", err)
+	}
+	// Don't remove temp folder, for detail analyze of report
+	// defer os.RemoveAll(dir)
+
+	// check compilation C version by clang
+	// Example : clang file.c -S -O3 -o
+	/*
+		{
+			arguments := args.inputFiles
+			arguments = append(arguments, args.clangFlags...)
+			out := dir + "/cProgram1"
+			arguments = append(arguments, "-o", out)
+			fmt.Printf("# Compilation C program : %s\n", out)
+			_, err = exec.Command("clang", arguments...).Output()
+			if err != nil {
+				return
+			}
+		}
+	*/
+	// copy C code in temp folder
+	// Example of input files:
+	// /folder/src/1.c
+	// /folder/src/2.c
+	// /folder/src/3.c
+	// Common pattern:
+	// /folder/src/
+	// After:
+	// /tmp/1.c
+	// /tmp/2.c
+	// /tmp/3.c
+	var inputFiles []string
+	{
+		/*
+			c := strings.LastIndex(args.inputFiles[0], "/")
+			if c < 0 {
+				c = 0
+			}
+			for i := range args.inputFiles {
+				if len(args.inputFiles[i]) < c+1 {
+					return fmt.Errorf("Cannot found pattern of source")
+				}
+				file := dir + "/" + args.inputFiles[i][c+1:]
+				inputFiles = append(inputFiles, file)
+				fmt.Printf("# Copy file %s to %s\n", args.inputFiles[i], file)
+				err = copyFile(args.inputFiles[i], file)
+				if err != nil {
+					return
+				}
+			}
+		*/
+		inputFiles = args.inputFiles
+	}
+
+	// check compilation copy of C source by clang
+	/*
+		{
+			arguments := inputFiles
+			arguments = append(arguments, args.clangFlags...)
+			out := dir + "/cProgram2"
+			arguments = append(arguments, "-o", out)
+			fmt.Printf("# Compilation C program : %s\n", out)
+			_, err = exec.Command("clang", arguments...).Output()
+			if err != nil {
+				return
+			}
+		}
+	*/
+
+	// get AST tree
+	fmt.Printf("# Generate AST tree\n")
+	var tree []ast.Node
+	{
+		var pp []byte
+		pp, _, err = preprocessor.Analyze(inputFiles, args.clangFlags)
+		if err != nil {
+			return err
+		}
+
+		var dir string
+		dir, err = ioutil.TempDir("", "c2go")
+		if err != nil {
+			return fmt.Errorf("Cannot create temp folder: %v", err)
+		}
+		defer os.RemoveAll(dir) // clean up
+
+		ppFilePath := path.Join(dir, "pp.c")
+		err = ioutil.WriteFile(ppFilePath, pp, 0644)
+		if err != nil {
+			fmt.Println("Error in pp.c")
+			return
+		}
+
+		var astPP []byte
+		astPP, err = exec.Command("clang", "-Xclang", "-ast-dump",
+			"-fsyntax-only", "-fno-color-diagnostics", ppFilePath).Output()
+		if err != nil {
+			fmt.Println("Error in ASTPP")
+			return
+		}
+
+		nodes := convertLinesToNodesParallel(readAST(astPP))
+
+		// build tree
+		tree = buildTree(nodes, 0)
+		ast.FixPositions(tree)
+	}
+
+	// found location for injection and
+	// inject indicators in C code
+	fmt.Printf("# Inject in C code\n")
+	err = InjectInC(tree, inputFiles)
+	if err != nil {
+		return
+	}
+
+	// compile C code with injections
+	/*
+		{
+			arguments := inputFiles
+			arguments = append(arguments, args.clangFlags...)
+			out := dir + "/cProgram3"
+			arguments = append(arguments, "-o", out)
+			fmt.Printf("# Compilation C program : %s\n", out)
+			_, err = exec.Command("clang", arguments...).Output()
+			if err != nil {
+				return
+			}
+		}
+	*/
+
+	// execute C version and save and
+	// remember time of execution
+	var cRes string
+	{
+		fmt.Printf("# Result of C program\n")
+		var sout, serr bytes.Buffer
+		cmd := exec.Command(dir + "/cProgram3")
+		cmd.Stdout = &sout
+		cmd.Stderr = &serr
+		err = cmd.Run()
+		if sout.Len() > 0 && err != nil {
+			err = nil
+		}
+		if err != nil {
+			fmt.Println("err = ", string(serr.String()))
+			fmt.Println("out = ", string(sout.String()))
+			return
+		}
+		cRes = sout.String()
+	}
+
+	// transpilation to Go
+	args.debug = false
+	args.inputFiles = inputFiles
+	args.outputFile = dir + "/main.go"
+	err = Start(args)
+	if err != nil {
+		return
+	}
+
+	// execute Go version of program and
+	// break if time of work is more then 5 x (execution by C)
+	var goRes string
+	{
+		fmt.Printf("# Result of Go program\n")
+		var sout, serr bytes.Buffer
+		cmd := exec.Command("go", "run", dir+"/main.go")
+		cmd.Stdout = &sout
+		cmd.Stderr = &serr
+		err = cmd.Run()
+		if sout.Len() > 0 && err != nil {
+			err = nil
+		}
+		if err != nil {
+			fmt.Println("err = ", string(serr.String()))
+			fmt.Println("out = ", string(sout.String()))
+			return
+		}
+		goRes = sout.String()
+	}
+
+	// compare indicator list of Go and C programs
+	fmt.Println(util.ShowDiff(cRes, goRes))
+
+	return
+}
+
 // Start begins transpiling an input file.
 func Start(args ProgramArgs) (err error) {
 	if args.verbose {
@@ -181,7 +459,7 @@ func Start(args ProgramArgs) (err error) {
 		return fmt.Errorf("The $GOPATH must be set")
 	}
 
-	// 1. Compile it first (checking for errors)
+	// Compile it first (checking for errors)
 	for _, in := range args.inputFiles {
 		_, err := os.Stat(in)
 		if err != nil {
@@ -189,9 +467,14 @@ func Start(args ProgramArgs) (err error) {
 		}
 	}
 
-	// 2. Preprocess
+	// Preprocess
 	if args.verbose {
 		fmt.Println("Running clang preprocessor...")
+	}
+
+	// Analyze, if exist
+	if args.debug {
+		return debug(args)
 	}
 
 	pp, comments, err := preprocessor.Analyze(args.inputFiles, args.clangFlags)
@@ -214,11 +497,12 @@ func Start(args ProgramArgs) (err error) {
 		return fmt.Errorf("writing to %s failed: %v", ppFilePath, err)
 	}
 
-	// 3. Generate JSON from AST
+	// Generate JSON from AST
 	if args.verbose {
 		fmt.Println("Running clang for AST tree...")
 	}
-	astPP, err := exec.Command("clang", "-Xclang", "-ast-dump", "-fsyntax-only", "-fno-color-diagnostics", ppFilePath).Output()
+	astPP, err := exec.Command("clang", "-Xclang", "-ast-dump",
+		"-fsyntax-only", "-fno-color-diagnostics", ppFilePath).Output()
 	if err != nil {
 		// If clang fails it still prints out the AST, so we have to run it
 		// again to get the real error.
@@ -327,14 +611,19 @@ func init() {
 }
 
 var (
-	versionFlag       = flag.Bool("v", false, "print the version and exit")
+	versionFlag = flag.Bool("v", false, "print the version and exit")
+
+	// Transpilation flags
 	transpileCommand  = flag.NewFlagSet("transpile", flag.ContinueOnError)
 	verboseFlag       = transpileCommand.Bool("V", false, "print progress as comments")
 	outputFlag        = transpileCommand.String("o", "", "output Go generated code to the specified file")
 	packageFlag       = transpileCommand.String("p", "main", "set the name of the generated package")
 	transpileHelpFlag = transpileCommand.Bool("h", false, "print help information")
-	astCommand        = flag.NewFlagSet("ast", flag.ContinueOnError)
-	astHelpFlag       = astCommand.Bool("h", false, "print help information")
+	debugFlag         = transpileCommand.Bool("debug", false, "add debug information for comparing C and Go version of program")
+
+	// Ast flags
+	astCommand  = flag.NewFlagSet("ast", flag.ContinueOnError)
+	astHelpFlag = astCommand.Bool("h", false, "print help information")
 )
 
 func main() {
@@ -350,7 +639,8 @@ func runCommand() int {
 		usage := "Usage: %s [-v] [<command>] [<flags>] file1.c ...\n\n"
 		usage += "Commands:\n"
 		usage += "  transpile\ttranspile an input C source file or files to Go\n"
-		usage += "  ast\t\tprint AST before translated Go code\n\n"
+		usage += "  ast\t\tprint AST before translated Go code\n"
+		usage += "\n"
 
 		usage += "Flags:\n"
 		fmt.Fprintf(stderr, usage, os.Args[0])
@@ -409,6 +699,7 @@ func runCommand() int {
 		args.packageName = *packageFlag
 		args.verbose = *verboseFlag
 		args.clangFlags = clangFlags
+		args.debug = *debugFlag
 	default:
 		flag.Usage()
 		return 1
