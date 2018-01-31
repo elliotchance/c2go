@@ -12,7 +12,7 @@
     test_##t();
 
 // size of that file
-int filesize = 10712;
+int filesize = 10578;
 
 void test_putchar()
 {
@@ -191,9 +191,7 @@ void test_fscanf()
     pFile = fopen("/tmp/myfile2.txt", "w+");
     is_not_null(pFile);
 
-    // TODO : See https://github.com/elliotchance/c2go/issues/607
-    // fprintf(pFile, "%f \r\n %s %d %s", 3.1416, "PI", 42, "end");
-    fprintf(pFile, "%f      %s %d %s", 3.1416, "PI", 42, "end");
+    fprintf(pFile, "%f \r\n %s %d %s", 3.1416, "PI", 42, "end");
     rewind(pFile);
     fscanf(pFile, "%f", &f);
     fscanf(pFile, "%s", str);

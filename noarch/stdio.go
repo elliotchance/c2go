@@ -397,7 +397,11 @@ func Fprintf(f *File, format []byte, args ...interface{}) int {
 func Fscanf(f *File, format []byte, args ...interface{}) int {
 	realArgs := prepareArgsForScanf(args)
 
-	n, err := fmt.Fscanf(f.OsFile, CStringToString(format), realArgs...)
+	// format is ignored
+	// See https://github.com/elliotchance/c2go/issues/607
+	_ = format
+
+	n, err := fmt.Fscan(f.OsFile, realArgs...)
 	if err != nil {
 		return -1
 	}
