@@ -12,7 +12,7 @@
     test_##t();
 
 // size of that file
-int filesize = 10434;
+int filesize = 10578;
 
 void test_putchar()
 {
@@ -183,6 +183,7 @@ void test_fscanf()
 	remove("/tmp/myfile2.txt");
 
     char str[80];
+    char end[80];
     float f;
 	int i;
     FILE *pFile;
@@ -190,17 +191,19 @@ void test_fscanf()
     pFile = fopen("/tmp/myfile2.txt", "w+");
     is_not_null(pFile);
 
-    fprintf(pFile, "%f %s %d", 3.1416, "PI", 42);
+    fprintf(pFile, "%f \r\n %s %d %s", 3.1416, "PI", 42, "end");
     rewind(pFile);
     fscanf(pFile, "%f", &f);
     fscanf(pFile, "%s", str);
     fscanf(pFile, "%d", &i);
+    fscanf(pFile, "%s", end);
     fclose(pFile);
 	pFile = NULL;
 
     is_eq(f, 3.1416);
     is_streq(str, "PI");
 	is_eq(i,42);
+    is_streq(end,"end");
 
 	// read again
     FILE *pFile2;
@@ -210,12 +213,14 @@ void test_fscanf()
     fscanf(pFile2, "%f", &f);
     fscanf(pFile2, "%s", str);
     fscanf(pFile2, "%d", &i);
+    fscanf(pFile2, "%s", end);
     fclose(pFile2);
 	pFile2 = NULL;
 
     is_eq(f, 3.1416);
     is_streq(str, "PI");
 	is_eq(i,42);
+    is_streq(end,"end");
     
 	// remove temp file
     is_eq(remove("/tmp/myfile2.txt"),0)
@@ -513,7 +518,7 @@ void test_vsnprintf()
 
 int main()
 {
-    plan(55);
+    plan(57);
 
     START_TEST(putchar)
     START_TEST(puts)
