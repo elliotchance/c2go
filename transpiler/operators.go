@@ -248,7 +248,7 @@ func pointerArithmetic(p *program.Program,
 
 	src := `package main
 func main(){
-	a := (*(*[1]{{ .Type }})(unsafe.Pointer(uintptr(unsafe.Pointer(&{{ .Name }}[0])) {{ .Operator }} (uintptr)({{ .Condition }})*unsafe.Sizeof({{ .Name }}[0]))))[:]
+	a := (*(*[1000000000]{{ .Type }})(unsafe.Pointer(uintptr(unsafe.Pointer(&{{ .Name }}[0])) {{ .Operator }} (uintptr)({{ .Condition }})*unsafe.Sizeof({{ .Name }}[0]))))[:]
 }`
 	tmpl := template.Must(template.New("").Parse(src))
 	var source bytes.Buffer

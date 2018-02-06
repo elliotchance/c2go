@@ -69,13 +69,17 @@ func Fopen(filePath, mode []byte) *File {
 	// https://github.com/elliotchance/c2go/issues/89
 	switch CStringToString(mode) {
 	case "r":
-		file, err = os.Open(sFilePath)
+		file, err = os.OpenFile(sFilePath, os.O_RDONLY, 0655)
 	case "r+":
-		file, err = os.OpenFile(sFilePath, os.O_RDWR, 0)
+		file, err = os.OpenFile(sFilePath, os.O_RDWR, 0655)
+	case "a":
+		file, err = os.OpenFile(sFilePath, os.O_WRONLY|os.O_APPEND, 0655)
+	case "a+":
+		file, err = os.OpenFile(sFilePath, os.O_RDWR|os.O_APPEND, 0655)
 	case "w":
-		file, err = os.Create(sFilePath)
+		file, err = os.OpenFile(sFilePath, os.O_RDWR|os.O_CREATE, 0655)
 	case "w+":
-		file, err = os.OpenFile(sFilePath, os.O_RDWR|os.O_CREATE, 0)
+		file, err = os.OpenFile(sFilePath, os.O_RDWR|os.O_CREATE, 0655)
 	default:
 		panic(fmt.Sprintf("unsupported file mode: %s", mode))
 	}
@@ -393,7 +397,11 @@ func Fprintf(f *File, format []byte, args ...interface{}) int {
 func Fscanf(f *File, format []byte, args ...interface{}) int {
 	realArgs := prepareArgsForScanf(args)
 
-	n, err := fmt.Fscanf(f.OsFile, CStringToString(format), realArgs...)
+	// format is ignored
+	// See https://github.com/elliotchance/c2go/issues/607
+	_ = format
+
+	n, err := fmt.Fscan(f.OsFile, realArgs...)
 	if err != nil {
 		return -1
 	}
