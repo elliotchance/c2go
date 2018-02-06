@@ -5,7 +5,7 @@
 
 union programming
 {
-    float constant;
+    int  constant;
     char *pointer;
 };
 
@@ -17,8 +17,8 @@ union programming init_var()
     variable.pointer = s;
     is_streq(variable.pointer, "Programming in Software Development.");
 
-    variable.constant = 1.23;
-    is_eq(variable.constant, 1.23);
+    variable.constant = 123;
+    is_eq(variable.constant, 123);
 
     return variable;
 }
@@ -26,9 +26,9 @@ union programming init_var()
 void pass_by_ref(union programming *addr)
 {
     char *s = "Show string member.";
-    float v = 1.23+4.56;
+    int v = 123+456;
 
-    addr->constant += 4.56;
+    addr->constant += 456;
     is_eq(addr->constant, v);
 
     addr->pointer = s;
@@ -39,7 +39,7 @@ void var_by_val(union programming value)
 {
     value.constant++;
 
-    is_eq(value.constant, 2.23);
+    is_eq(value.constant, 124);
 }
 
 struct SHA3 {

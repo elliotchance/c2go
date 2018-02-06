@@ -296,8 +296,31 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 	return "interface{}", errors.New(errMsg)
 }
 
-// ResolveFunction determines the Go type from a C type.
-func ResolveFunction(p *program.Program, s string) (fields []string, returns []string, err error) {
+// ResolveType determines the Go type from a C type.
+func ResolveFunction(p *program.Program, s string) (goType string, err error) {
+	var f, r []string
+	f, r, err = SeparateFunction(p, s)
+	goType = "func("
+	for i := range f {
+		goType += fmt.Sprintf("%s", f[i])
+		if i < len(f)-1 {
+			goType += " , "
+		}
+	}
+	goType += ")("
+	for i := range r {
+		goType += fmt.Sprintf("%s", r[i])
+		if i < len(r)-1 {
+			goType += " , "
+		}
+	}
+	goType += ")"
+	return
+}
+
+// SeparateFunction separate a function C type to Go types parts.
+func SeparateFunction(p *program.Program, s string) (
+	fields []string, returns []string, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("Cannot resolve function '%s' : %v", s, err)

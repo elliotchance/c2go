@@ -42,15 +42,16 @@ func getName(p *program.Program, firstChild ast.Node) string {
 		return fc.Name
 
 	case *ast.MemberExpr:
-		if types.IsFunction(fc.Type) {
-			if decl, ok := fc.Children()[0].(*ast.DeclRefExpr); ok {
-				if strings.Contains(decl.Type, "union ") {
-					return getFunctionNameForUnionGetter(decl.Name, "", fc.Name) + "()"
-				}
-				return decl.Name + "." + fc.Name
-			}
+		if isUnionMemberExpr(p, fc) {
+			lhs, _, _, _, _ := transpileToExpr(fc, p, false)
+			var buf bytes.Buffer
+			printer.Fprint(&buf, token.NewFileSet(), lhs)
+			return buf.String()
 		}
-		return fc.Name
+		if len(fc.Children()) == 0 {
+			return fc.Name
+		}
+		return getName(p, fc.Children()[0]) + "." + fc.Name
 
 	case *ast.ParenExpr:
 		return getName(p, fc.Children()[0])
@@ -394,6 +395,20 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 			if a == nil {
 				return nil, "", preStmts, postStmts,
 					fmt.Errorf("Argument is nil in function : %s", functionName)
+			}
+
+			if len(functionDef.ArgumentTypes) > i {
+				if !types.IsPointer(functionDef.ArgumentTypes[i]) {
+					if strings.HasPrefix(functionDef.ArgumentTypes[i], "union ") {
+						a = &goast.CallExpr{
+							Fun: &goast.SelectorExpr{
+								X:   a,
+								Sel: goast.NewIdent("copy"),
+							},
+							Lparen: 1,
+						}
+					}
+				}
 			}
 
 			realArgs = append(realArgs, a)
