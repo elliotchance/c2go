@@ -46,7 +46,6 @@ func getName(p *program.Program, firstChild ast.Node) string {
 			lhs, _, _, _, _ := transpileToExpr(fc, p, false)
 			var buf bytes.Buffer
 			printer.Fprint(&buf, token.NewFileSet(), lhs)
-			fmt.Println("buf  = ", buf.String())
 			return buf.String()
 		}
 		if len(fc.Children()) == 0 {

@@ -319,7 +319,6 @@ func ResolveFunction(p *program.Program, s string) (goType string, err error) {
 		}
 	}
 	goType += ")"
-	fmt.Println("out = ", goType)
 	return
 }
 

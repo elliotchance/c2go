@@ -335,7 +335,7 @@ func CreateSliceFromReference(goType string, expr goast.Expr) *goast.SliceExpr {
 	//
 	return &goast.SliceExpr{
 		X: NewCallExpr(
-			fmt.Sprintf("(*[1]%s)", goType),
+			fmt.Sprintf("(*[1000000]%s)", goType),
 			NewCallExpr("unsafe.Pointer", &goast.UnaryExpr{
 				X:  expr,
 				Op: token.AND,
