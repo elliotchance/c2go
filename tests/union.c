@@ -186,6 +186,52 @@ void union_func_pointers()
 	is_eq(u.f2(21), 22);
 }
 
+/* TODO : Fail tests
+union array_union
+{
+	float a[2];
+	float b[2];
+};
+
+void union_array()
+{
+	union array_union arr;
+	arr.a[0] = 12;
+	arr.b[1] = 14;
+	is_eq( arr.a[0] , 12);
+	is_eq( arr.a[1] , 14);
+	is_eq( arr.b[0] , 12);
+	is_eq( arr.b[1] , 14);
+}
+
+typedef int ii;
+typedef struct SHA SHA;
+struct SHA{
+  union {
+    ii            s[25];
+    unsigned char x[100];
+  } u;
+  unsigned uuu;
+};
+
+void union_arr_in_str()
+{
+	SHA sha;
+	sha.uuu = 15;
+	is_eq(sha.uuu,15);
+	for (int i = 0 ; i< 25;i++)
+		sha.u.s[0] = 0;
+	is_eq(sha.u.s[0],0);
+	is_true(sha.u.x[0] == 0);
+	for (int i=0;i<6;i++){
+		sha.u.s[i] = (ii)(4);
+		sha.u.s[i] = (ii)(42) + sha.u.s[i];
+	}
+	is_eq(sha.u.s[5],46);
+	is_true(sha.u.x[0] != 0);
+}
+*/
+
 int main()
 {
     plan(34);
@@ -201,6 +247,8 @@ int main()
 	union_inside_struct2();
 	union_pointers();
 	union_func_pointers();
+	// TODO : union_array();
+	// TODO : union_arr_in_str();
 
     done_testing();
 }
