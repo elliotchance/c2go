@@ -399,6 +399,8 @@ func ParseFunction(s string) (f []string, r []string, err error) {
 		}
 	}()
 
+	s = strings.TrimSpace(s)
+
 	if !IsFunction(s) {
 		err = fmt.Errorf("Is not function : %s", s)
 		return
