@@ -87,6 +87,12 @@ func internalTypeToExpr(t string) goast.Expr {
 		}
 	}
 
+	// For big type members
+	// Example : sqlite3Config.m.xRoundup
+	if strings.Count(t, ".") > 0 {
+		return &goast.ParenExpr{X: goast.NewIdent(t)}
+	}
+
 	// Parenthesis Expression
 	if strings.HasPrefix(t, "(") && strings.HasSuffix(t, ")") {
 		return &goast.ParenExpr{
