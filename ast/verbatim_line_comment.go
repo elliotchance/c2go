@@ -5,17 +5,12 @@ type VerbatimLineComment struct {
 	Addr       Address
 	Pos        Position
 	Text       string
-	Name       string
-	CloseName  string
 	ChildNodes []Node
 }
 
 func parseVerbatimLineComment(line string) *VerbatimLineComment {
 	groups := groupsFromRegex(
-		`<(?P<position>.*)>
-		( Text="(?P<text>.*?)")?
-		( Name="(?P<name>.*?)")?
-		( CloseName="(?P<close_name>.*?)")?`,
+		`<(?P<position>.*)> Text="(?P<text>.*)"`,
 		line,
 	)
 
@@ -23,8 +18,6 @@ func parseVerbatimLineComment(line string) *VerbatimLineComment {
 		Addr:       ParseAddress(groups["address"]),
 		Pos:        NewPositionFromString(groups["position"]),
 		Text:       groups["text"],
-		Name:       groups["name"],
-		CloseName:  groups["close_name"],
 		ChildNodes: []Node{},
 	}
 }
