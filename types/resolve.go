@@ -174,6 +174,12 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 		return "int", nil
 	}
 
+	// For function
+	if IsFunction(s) {
+		g, e := resolveFunction(p, s)
+		return g, e
+	}
+
 	// The simple resolve types are the types that we know there is an exact Go
 	// equivalent. For example float, int, etc.
 	for k, v := range simpleResolveTypes {
@@ -296,8 +302,8 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 	return "interface{}", errors.New(errMsg)
 }
 
-// ResolveType determines the Go type from a C type.
-func ResolveFunction(p *program.Program, s string) (goType string, err error) {
+// resolveType determines the Go type from a C type.
+func resolveFunction(p *program.Program, s string) (goType string, err error) {
 	var f, r []string
 	f, r, err = SeparateFunction(p, s)
 	goType = "func("
@@ -397,25 +403,36 @@ func ParseFunction(s string) (f []string, r []string, err error) {
 		err = fmt.Errorf("Is not function : %s", s)
 		return
 	}
-	i := strings.Index(s, "(")
-	if i == -1 {
-		err = fmt.Errorf("Cannot parse (index of function): %v", s)
-		return
-	}
-	r = append(r, s[0:i])
 	var part string
 	{
-		parts := strings.Split(s, "(*)")
-		if len(parts) != 2 {
-			parts := strings.Split(s, " (")
-			if len(parts) != 2 {
-				err = fmt.Errorf("Cannot parse (separation on parts) : %v", s)
+		// Example of function types :
+		// int (*)(int, float)
+		// int (int, float)
+		// int (*)(int (*)(int))
+		if s[len(s)-1] != ')' {
+			err = fmt.Errorf("function type |%s| haven't last symbol ')'", s)
+			return
+		}
+		counter := 1
+		var pos int
+		for i := len(s) - 2; i >= 0; i-- {
+			if i == 0 {
+				err = fmt.Errorf("Don't found '(' in type : %s", s)
 				return
 			}
-			part = "(" + parts[1]
-		} else {
-			part = parts[1]
+			if s[i] == ')' {
+				counter++
+			}
+			if s[i] == '(' {
+				counter--
+			}
+			if counter == 0 {
+				pos = i
+				break
+			}
 		}
+		r = append(r, strings.Replace(s[:pos], "(*)", "", -1))
+		part = s[pos:]
 	}
 	inside := strings.TrimSpace(part)
 	if inside == "" {

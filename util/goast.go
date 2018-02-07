@@ -154,6 +154,14 @@ func internalTypeToExpr(t string) goast.Expr {
 		}
 	}
 
+	// For function type
+	// Example :
+	// func()
+	// func(int)()
+	if strings.Contains(t, "()") && strings.Contains(t, "func") {
+		return goast.NewIdent(t)
+	}
+
 	// This may panic, and so it will be handled by typeToExpr().
 	return NewIdent(t)
 }

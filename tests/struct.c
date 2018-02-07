@@ -102,9 +102,34 @@ void struct_with_rec_fuction()
 	is_eq(j_function(NULL, 4.0),-1);
 }
 
+struct FinFinS {
+	double d;
+	int (*f)(int(*)(int));
+};
+
+int FinF1(int a)
+{
+	return a+1;
+}
+
+int FinF2(int (*f)(int))
+{
+	int g = 45;
+	return f(g);
+}
+
+void func_in_func_in_struct()
+{
+	diag("function in function in struct");
+	struct FinFinS ffs;
+	ffs.f = FinF2;
+	int res = ffs.f(FinF1) ;
+	is_eq(res , 46);
+}
+
 int main()
 {
-    plan(51);
+    plan(52);
 
     struct programming variable;
     char *s = "Programming in Software Development.";
@@ -346,6 +371,8 @@ int main()
 		is_eq((*(*tt.left).right).varTI, 4.1);
 		is_eq((*tt.right ).varTI, 4.1);
 	}
+
+	func_in_func_in_struct();
 
     done_testing();
 }

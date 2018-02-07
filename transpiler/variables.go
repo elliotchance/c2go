@@ -430,5 +430,5 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	return &goast.SelectorExpr{
 		X:   x,
 		Sel: util.NewIdent(rhs),
-	}, n.Type /*rhsType*/, preStmts, postStmts, nil
+	}, n.Type, preStmts, postStmts, nil
 }
