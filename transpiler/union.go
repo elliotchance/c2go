@@ -2,6 +2,7 @@ package transpiler
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 	"strings"
 
@@ -10,15 +11,19 @@ import (
 	"go/parser"
 	"go/token"
 
-	"fmt"
+	"github.com/elliotchance/c2go/ast"
+	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/types"
+	"github.com/elliotchance/c2go/util"
 )
 
 func transpileUnion(name string, size int, fields []*goast.Field) (
 	_ []goast.Decl, err error) {
 
 	type field struct {
-		Name      string
-		TypeField string
+		Name          string
+		PositionField int
+		TypeField     string
 	}
 
 	type union struct {
@@ -35,38 +40,10 @@ import(
 )
 
 type {{ .Name }} struct{
-	value    interface{}
-	arr      [{{ .Size }}]byte
+	memory [{{ .Size }}]byte
+	pointer interface{}
 }
 
-func (unionVar*{{ .Name }}) cast(t reflect.Type) reflect.Value {
-	return reflect.NewAt(t, unsafe.Pointer(&unionVar.arr[0]))
-}
-
-func (unionVar*{{ .Name }}) assign(v interface{}){
-	value := reflect.ValueOf(v).Elem()
-	value.Set(unionVar.cast(value.Type()).Elem())
-}
-
-func (unionVar*{{ .Name }}) UntypedSet(v interface{}){
-	value := reflect.ValueOf(v)
-	unionVar.cast(value.Type()).Elem().Set(value)
-}
-
-{{ range .Fields }}
-// Get{{ .Name }} - return value of {{ .Name }}
-func (unionVar*{{ $.Name }}) Get{{ .Name }} () (res {{ .TypeField }}){
-	unionVar.assign(&res)
-	return
-}
-
-// Set{{ .Name }} - set value of {{ .Name }}
-func (unionVar*{{ $.Name }}) Set{{ .Name }} (v {{ .TypeField }}) {{ .TypeField }}{
-	unionVar.value = v // added for avoid GC removing pointers in union
-	unionVar.UntypedSet(v)
-	return v
-}
-{{ end }}
 `
 	// Generate structure of union
 	var un union
@@ -83,12 +60,7 @@ func (unionVar*{{ $.Name }}) Set{{ .Name }} (v {{ .TypeField }}) {{ .TypeField }
 		}
 		f.TypeField = buf.String()
 
-		// capitalization first letter
-		name := strings.ToUpper(string(f.Name[0]))
-		if len(f.Name) > 1 {
-			name += f.Name[1:]
-		}
-		f.Name = name
+		f.PositionField = i
 
 		un.Fields = append(un.Fields, f)
 	}
@@ -110,18 +82,130 @@ func (unionVar*{{ $.Name }}) Set{{ .Name }} (v {{ .TypeField }}) {{ .TypeField }
 	return f.Decls[1:], nil
 }
 
-func getFunctionNameForUnion(verb, variableName, variableType, attributeName string) string {
-	if strings.HasPrefix(variableType, "[]") {
-		return fmt.Sprintf("%s[0].%s%s", variableName, verb, strings.Title(attributeName))
+// ((*(*[100]uint8)(unsafe.Pointer(&sha.u.memory)))[:])[0]
+// ((*(*[ 25]int  )(unsafe.Pointer(&sha.u.memory)))[:])[0]
+func getUnionVariable(goType string, union goast.Expr) goast.Expr {
+	goType = strings.TrimSpace(goType)
+	if len(goType) > 2 {
+		if goType[0] == '[' && goType[1] == ']' {
+			goType = goType[:1] + "1000000" + goType[1:]
+		}
 	}
-
-	return fmt.Sprintf("%s.%s%s", variableName, verb, strings.Title(attributeName))
+	return &goast.StarExpr{
+		X: &goast.CallExpr{
+			Fun: &goast.ParenExpr{
+				Lparen: 1,
+				X: &goast.StarExpr{
+					X: goast.NewIdent(goType),
+					//X: &goast.ArrayType{Elt: goast.NewIdent(goType)},
+				},
+			},
+			Lparen: 1,
+			Args: []goast.Expr{&goast.CallExpr{
+				Fun: &goast.SelectorExpr{
+					X:   goast.NewIdent("unsafe"),
+					Sel: goast.NewIdent("Pointer"),
+				},
+				Lparen: 1,
+				Args: []goast.Expr{
+					&goast.UnaryExpr{
+						Op: token.AND,
+						X: &goast.SelectorExpr{
+							X:   union,
+							Sel: util.NewIdent("memory"),
+						},
+					},
+				},
+			}},
+		},
+	}
 }
 
-func getFunctionNameForUnionGetter(variableName, variableType, attributeName string) string {
-	return getFunctionNameForUnion("Get", variableName, variableType, attributeName)
+// <<<<<<< 809e28306caf2b0723251597b3420b5d9601eea2
+// =======
+// }
+//
+func isUnionMemberExpr(p *program.Program, n *ast.MemberExpr) (IsUnion bool) {
+	if len(n.Children()) > 0 {
+		if v, ok := n.Children()[0].(*ast.MemberExpr); ok {
+			if p.IsUnion(v.Type) {
+				IsUnion = true
+			}
+		}
+		if v, ok := n.Children()[0].(*ast.DeclRefExpr); ok {
+			if p.IsUnion(v.Type) {
+				IsUnion = true
+			}
+		}
+		if v, ok := n.Children()[0].(*ast.ImplicitCastExpr); ok {
+			if p.IsUnion(v.Type) {
+				IsUnion = true
+			}
+		}
+	}
+	return
 }
 
-func getFunctionNameForUnionSetter(variableName, variableType, attributeName string) string {
-	return getFunctionNameForUnion("Set", variableName, variableType, attributeName)
+// func isUnionMemberExpr(p *program.Program, n *ast.MemberExpr) (IsUnion bool) {
+// 	if len(n.Children()) > 0 {
+// 		if v, ok := n.Children()[0].(*ast.MemberExpr); ok {
+// 			if p.IsUnion(v.Type) {
+// 				IsUnion = true
+// 			}
+// 		}
+// 		if v, ok := n.Children()[0].(*ast.DeclRefExpr); ok {
+// 			if p.IsUnion(v.Type) {
+// 				IsUnion = true
+// 			}
+// 		}
+// 		if v, ok := n.Children()[0].(*ast.ImplicitCastExpr); ok {
+// 			if p.IsUnion(v.Type) {
+// 				IsUnion = true
+// 			}
+// 		}
+// 	}
+// 	return
+// }
+//
+// func unionVariable(p *program.Program, n *ast.MemberExpr, x goast.Expr) (
+// 	_ goast.Expr, cType string, ok bool) {
+// 	if isUnionMemberExpr(p, n) {
+// 		cType := n.Type
+// 		var goType string
+// 		var err error
+// 		if types.IsFunction(cType) {
+// 			goType, err = types.ResolveFunction(p, cType)
+// 			p.AddMessage(p.GenerateWarningMessage(err, n))
+// 		} else {
+// 			goType, err = types.ResolveType(p, cType)
+// 			p.AddMessage(p.GenerateWarningMessage(err, n))
+// 		}
+// 		return getUnionVariable(goType, x),
+// 			n.Type, true
+// 	}
+// 	panic(fmt.Errorf("That MemberExpr is not union"))
+// >>>>>>> step
+// }
+//
+
+func unionVariable(p *program.Program, n *ast.MemberExpr, x goast.Expr) (
+	_ goast.Expr, cType string, ok bool) {
+	if isUnionMemberExpr(p, n) {
+		cType := n.Type
+		var goType string
+		var err error
+		if types.IsFunction(cType) {
+			goType, err = types.ResolveFunction(p, cType)
+			p.AddMessage(p.GenerateWarningMessage(err, n))
+		} else {
+			goType, err = types.ResolveType(p, cType)
+			p.AddMessage(p.GenerateWarningMessage(err, n))
+		}
+		return getUnionVariable(goType, x),
+			n.Type, true
+	}
+	panic(fmt.Errorf("That MemberExpr is not union"))
 }
+
+// >>>>>>> cfe24a7a6f04c514ada01b75345c3b3526dc88a8
+// }

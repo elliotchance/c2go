@@ -332,12 +332,14 @@ int main()
 			pass("ok")
 		}
 	}
+	{
 	diag("pointer in IF");
 	double *cd;
 	if ( (cd = return_null()) == NULL ){
 		pass("ok");
 	}
 	(void)(cd);
+	}
 
 	done_testing();
 }

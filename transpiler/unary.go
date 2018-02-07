@@ -28,47 +28,66 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program, operato
 		return
 	}
 
-	// Unfortunately we cannot use the Go increment operators because we are not
-	// providing any position information for tokens. This means that the ++/--
-	// would be placed before the expression and would be invalid in Go.
-	//
-	// Until it can be properly fixed (can we trick Go into to placing it after
-	// the expression with a magic position?) we will have to return a
-	// BinaryExpr with the same functionality.
+	if types.IsPointer(n.Type) {
+		switch operator {
+		case token.INC:
+			operator = token.ADD
+		case token.DEC:
+			operator = token.SUB
+		}
+		if _, ok := n.Children()[0].(*ast.DeclRefExpr); !ok {
+			err = fmt.Errorf("Unsupported type %T", n.Children()[0])
+			return
+		}
 
-	// Construct code for assigning value to an union field
-	memberExpr, ok := n.Children()[0].(*ast.MemberExpr)
-	if ok {
-		ref := memberExpr.GetDeclRefExpr()
-		if ref != nil {
-			binaryOperator := token.ADD
-			if operator == token.DEC {
-				binaryOperator = token.SUB
-			}
+		var left goast.Expr
+		var leftType string
+		var newPre, newPost []goast.Stmt
+		left, leftType, newPre, newPost, err = transpileToExpr(n.Children()[0], p, false)
+		if err != nil {
+			return
+		}
 
-			// TODO: Is this duplicate code in operators.go?
-			union := p.GetStruct(ref.Type)
-			if union != nil && union.IsUnion {
-				attrType, err := types.ResolveType(p, ref.Type)
-				if err != nil {
-					p.AddMessage(p.GenerateWarningMessage(err, memberExpr))
-				}
+		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-				// Method names
-				getterName := getFunctionNameForUnionGetter(ref.Name, attrType, memberExpr.Name)
-				setterName := getFunctionNameForUnionSetter(ref.Name, attrType, memberExpr.Name)
+		rightType := "int"
+		right := &goast.BasicLit{
+			Kind:  token.INT,
+			Value: "1",
+		}
 
-				// Call-Expression argument
-				argLHS := util.NewCallExpr(getterName)
-				argOp := binaryOperator
-				argRHS := util.NewIntLit(1)
-				argValue := util.NewBinaryExpr(argLHS, argOp, argRHS, "interface{}", false)
+		expr, eType, newPre, newPost, err = pointerArithmetic(p, left, leftType, right, rightType, operator)
+		if err != nil {
+			return
+		}
+		if expr == nil {
+			return nil, "", nil, nil, fmt.Errorf("Expr is nil")
+		}
 
-				// Make Go expression
-				resExpr := util.NewCallExpr(setterName, argValue)
+		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-				return resExpr, n.Type, nil, nil, nil
-			}
+		expr = &goast.BinaryExpr{
+			X:  goast.NewIdent(getName(p, n.Children()[0])),
+			Op: token.ASSIGN,
+			Y:  expr,
+		}
+		return
+	}
+
+	if v, ok := n.Children()[0].(*ast.DeclRefExpr); ok {
+		switch n.Operator {
+		case "++":
+			return &goast.BinaryExpr{
+				X:  util.NewIdent(v.Name),
+				Op: token.ADD_ASSIGN,
+				Y:  &goast.BasicLit{Kind: token.INT, Value: "1"},
+			}, n.Type, nil, nil, nil
+		case "--":
+			return &goast.BinaryExpr{
+				X:  util.NewIdent(v.Name),
+				Op: token.SUB_ASSIGN,
+				Y:  &goast.BasicLit{Kind: token.INT, Value: "1"},
+			}, n.Type, nil, nil, nil
 		}
 	}
 

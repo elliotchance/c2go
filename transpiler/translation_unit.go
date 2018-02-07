@@ -9,7 +9,9 @@ import (
 	"github.com/elliotchance/c2go/types"
 )
 
-func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl) (decls []goast.Decl, err error) {
+func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl) (
+	decls []goast.Decl, preStmts, postStmts []goast.Stmt, err error) {
+
 	for i := 0; i < len(n.Children()); i++ {
 		switch v := n.Children()[i].(type) {
 		case *ast.RecordDecl:
@@ -19,6 +21,9 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 			if len(v.Children()) == 0 {
 				if i+1 < len(n.Children()) {
 					if vv, ok := n.Children()[i+1].(*ast.TypedefDecl); ok {
+
+						p.AddTypedefType(vv.Name, vv.Type)
+
 						if isSameTypedefNames(vv) {
 							i++
 							continue
@@ -44,10 +49,13 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 					var recordDecl ast.RecordDecl
 					recordDecl.Name = nameTypedefStruct
 					recordDecl.Kind = "struct"
-					if strings.Contains(vv.Type, "union ") {
+					if strings.HasPrefix(vv.Type, "union ") {
 						recordDecl.Kind = "union"
 					}
 					recordDecl.ChildNodes = fields
+
+					p.AddTypedefType(vv.Name, vv.Type)
+
 					var d []goast.Decl
 					d, err = transpileRecordDecl(p, &recordDecl)
 					if err != nil {
@@ -65,13 +73,15 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 			}
 		default:
 			var d []goast.Decl
-			d, err = transpileToNode(n.Children()[i], p)
+			var newPre, newPost []goast.Stmt
+			d, newPre, newPost, err = transpileToNode(n.Children()[i], p)
 			if err != nil {
 				p.AddMessage(p.GenerateErrorMessage(err, n))
 				err = nil
 			} else {
 				decls = append(decls, d...)
 			}
+			preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 		}
 	}
 	return

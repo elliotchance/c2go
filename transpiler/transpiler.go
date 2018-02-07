@@ -29,10 +29,16 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 	}
 
 	// Now begin building the Go AST.
-	decls, err := transpileToNode(root, p)
+	decls, preStmts, postStmts, err := transpileToNode(root, p)
 	if err != nil {
-		p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Error of transpiling: err = %v", err), root))
+		p.AddMessage(p.GenerateErrorMessage(
+			fmt.Errorf("Error of transpiling: err = %v", err), root))
 		err = nil // Error is ignored
+	}
+	if len(preStmts) > 0 || len(postStmts) > 0 {
+		p.AddMessage(p.GenerateErrorMessage(
+			fmt.Errorf("Not acceptable stmt is more zero : %d, %d",
+				len(preStmts) > 0, len(postStmts)), root))
 	}
 	p.File.Decls = append(p.File.Decls, decls...)
 
@@ -341,6 +347,7 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 
 		stmt = &goast.EmptyStmt{}
 		return
+
 	case *ast.DeclStmt:
 		var stmts []goast.Stmt
 		stmts, err = transpileDeclStmt(n, p)
@@ -399,7 +406,9 @@ func transpileToStmt(node ast.Node, p *program.Program) (
 	return
 }
 
-func transpileToNode(node ast.Node, p *program.Program) (decls []goast.Decl, err error) {
+func transpileToNode(node ast.Node, p *program.Program) (
+	decls []goast.Decl, preStmts, postStmts []goast.Stmt, err error) {
+
 	defer func() {
 		if err != nil {
 			p.AddMessage(p.GenerateErrorMessage(err, node))
@@ -409,7 +418,7 @@ func transpileToNode(node ast.Node, p *program.Program) (decls []goast.Decl, err
 
 	switch n := node.(type) {
 	case *ast.TranslationUnitDecl:
-		decls, err = transpileTranslationUnitDecl(p, n)
+		decls, preStmts, postStmts, err = transpileTranslationUnitDecl(p, n)
 
 	case *ast.FunctionDecl:
 		decls, err = transpileFunctionDecl(n, p)
@@ -435,7 +444,7 @@ func transpileToNode(node ast.Node, p *program.Program) (decls []goast.Decl, err
 		decls, err = transpileRecordDecl(p, n)
 
 	case *ast.VarDecl:
-		decls, _, err = transpileVarDecl(p, n)
+		decls, _, preStmts, postStmts, err = transpileVarDecl(p, n)
 
 	case *ast.EnumDecl:
 		decls, err = transpileEnumDecl(p, n)

@@ -88,11 +88,11 @@ type Program struct {
 	// value="exist ot not"
 	EnumTypedefName map[string]bool
 
-	// TypedefType - map for type alias, for example:
+	// typedefType - map for type alias, for example:
 	// C  : typedef int INT;
 	// Map: key = INT, value = int
 	// Important: key and value are C types
-	TypedefType map[string]string
+	typedefType map[string]string
 
 	// Comments
 	Comments []Comment
@@ -127,10 +127,10 @@ func NewProgram() *Program {
 			},
 
 			// Pos:ast.Position{File:"/usr/include/xlocale.h", Line:27
-			"struct __locale_struct *": {
-				Name:    "struct __locale_struct *",
-				IsUnion: false,
-			},
+			// "struct __locale_struct *": {
+			// 	Name:    "struct __locale_struct *",
+			// 	IsUnion: false,
+			// },
 
 			// Pos:ast.Position{File:"/usr/include/x86_64-linux-gnu/sys/time.h", Line:61
 			"struct timezone *__restrict": {
@@ -144,7 +144,7 @@ func NewProgram() *Program {
 		GlobalVariables:    map[string]string{},
 		EnumConstantToEnum: map[string]string{},
 		EnumTypedefName:    map[string]bool{},
-		TypedefType:        map[string]string{},
+		typedefType:        map[string]string{},
 		commentLine:        map[string]int{},
 	}
 }

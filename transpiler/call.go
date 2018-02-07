@@ -42,15 +42,16 @@ func getName(p *program.Program, firstChild ast.Node) string {
 		return fc.Name
 
 	case *ast.MemberExpr:
-		if types.IsFunction(fc.Type) {
-			if decl, ok := fc.Children()[0].(*ast.DeclRefExpr); ok {
-				if strings.Contains(decl.Type, "union ") {
-					return getFunctionNameForUnionGetter(decl.Name, "", fc.Name) + "()"
-				}
-				return decl.Name + "." + fc.Name
-			}
+		if isUnionMemberExpr(p, fc) {
+			lhs, _, _, _, _ := transpileToExpr(fc, p, false)
+			var buf bytes.Buffer
+			printer.Fprint(&buf, token.NewFileSet(), lhs)
+			return buf.String()
 		}
-		return fc.Name
+		if len(fc.Children()) == 0 {
+			return fc.Name
+		}
+		return getName(p, fc.Children()[0]) + "." + fc.Name
 
 	case *ast.ParenExpr:
 		return getName(p, fc.Children()[0])
@@ -95,7 +96,10 @@ func getNameOfFunctionFromCallExpr(p *program.Program, n *ast.CallExpr) (string,
 // returned by the function) and any error. If there is an error returned you
 // can assume the first two arguments will not contain any useful information.
 func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
-	_ *goast.CallExpr, resultType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+	_ *goast.CallExpr, resultType string,
+	preStmts []goast.Stmt, postStmts []goast.Stmt,
+	err error) {
+
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("Error in transpileCallExpr : %v", err)
@@ -243,14 +247,18 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 		if len(n.Children()) > 0 {
 			if v, ok := n.Children()[0].(*ast.ImplicitCastExpr); ok && (types.IsFunction(v.Type) || types.IsTypedefFunction(p, v.Type)) {
 				t := v.Type
-				if v, ok := p.TypedefType[t]; ok {
-					t = v
-				} else {
-					if types.IsTypedefFunction(p, t) {
-						t = t[0 : len(t)-len(" *")]
-						t, _ = p.TypedefType[t]
+				// if v, ok := p.TypedefType[t]; ok {
+				// 	t = v
+				// } else {
+				if types.IsTypedefFunction(p, t) {
+					t = t[0 : len(t)-len(" *")]
+					// t, _ = p.TypedefType[t]
+					t, ok = p.GetBaseTypeOfTypedef(t)
+					if !ok {
+						panic("Undefine state")
 					}
 				}
+				// }
 				fields, returns, err := types.ParseFunction(t)
 				if err != nil {
 					p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Cannot resolve function : %v", err), n))
