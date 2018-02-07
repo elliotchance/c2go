@@ -90,6 +90,14 @@ func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (field *goast.Fiel
 		name += "_"
 	}
 
+	arrayType, arraySize := types.GetArrayTypeAndSize(n.Type)
+	if arraySize != -1 {
+		fieldType, err = types.ResolveType(p, arrayType)
+		p.AddMessage(p.GenerateWarningMessage(err, n))
+		fieldType = fmt.Sprintf("[%d]%s", arraySize, fieldType)
+		err = nil
+	}
+
 	return &goast.Field{
 		Names: []*goast.Ident{util.NewIdent(name)},
 		Type:  util.NewTypeIdent(fieldType),

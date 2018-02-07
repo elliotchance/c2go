@@ -202,7 +202,6 @@ void union_array()
 	is_eq( arr.b[0] , 12);
 	is_eq( arr.b[1] , 14);
 }
-/* TODO : Fail tests
 
 typedef int ii;
 typedef struct SHA SHA;
@@ -230,11 +229,10 @@ void union_arr_in_str()
 	is_eq(sha.u.s[5],46);
 	is_true(sha.u.x[0] != 0);
 }
-*/
 
 int main()
 {
-    plan(39);
+    plan(43);
 
     union programming variable;
 
@@ -248,7 +246,7 @@ int main()
 	union_pointers();
 	union_func_pointers();
 	union_array();
-	// TODO : union_arr_in_str();
+	union_arr_in_str();
 
     done_testing();
 }
