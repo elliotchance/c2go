@@ -85,30 +85,7 @@ func (p *Program) IsUnion(cType string) bool {
 	return false
 }
 
-func (p *Program) AddTypedefType(cTypedef, cBase string) {
-	if cTypedef == "" {
-		panic(fmt.Errorf("Type cannot be empty"))
-	}
-	if cBase == "" {
-		panic(fmt.Errorf("Type cannot be empty"))
-	}
-	if cTypedef == cBase {
-		p.AddMessage(p.GenerateWarningMessage(
-			fmt.Errorf("typedef type is indentical: %s", cTypedef), nil))
-	}
-	if _, ok := p.TypedefType[cTypedef]; ok {
-		p.AddMessage(p.GenerateWarningMessage(
-			fmt.Errorf("typedef type is added : %s", cTypedef), &ast.TypedefType{}))
-	}
-	if "struct "+cTypedef == cBase {
-		return
-	}
-	if "union "+cTypedef == cBase {
-		return
-	}
-	p.TypedefType[cTypedef] = cBase
-}
-
+// GetBaseTypeOfTypedef - return typedef type
 func (p *Program) GetBaseTypeOfTypedef(cTypedef string) (
 	cBase string, ok bool) {
 

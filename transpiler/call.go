@@ -45,7 +45,10 @@ func getName(p *program.Program, firstChild ast.Node) string {
 		if isUnionMemberExpr(p, fc) {
 			lhs, _, _, _, _ := transpileToExpr(fc, p, false)
 			var buf bytes.Buffer
-			printer.Fprint(&buf, token.NewFileSet(), lhs)
+			err := printer.Fprint(&buf, token.NewFileSet(), lhs)
+			if err != nil {
+				panic(err)
+			}
 			return buf.String()
 		}
 		if len(fc.Children()) == 0 {

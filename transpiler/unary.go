@@ -91,6 +91,14 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program, operato
 		}
 	}
 
+	// Unfortunately we cannot use the Go increment operators because we are not
+	// providing any position information for tokens. This means that the ++/--
+	// would be placed before the expression and would be invalid in Go.
+	//
+	// Until it can be properly fixed (can we trick Go into to placing it after
+	// the expression with a magic position?) we will have to return a
+	// BinaryExpr with the same functionality.
+
 	binaryOperator := "+="
 	if operator == token.DEC {
 		binaryOperator = "-="
