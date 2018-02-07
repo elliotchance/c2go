@@ -148,7 +148,16 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 				if inField, ok := n.Children()[pos+1].(*ast.FieldDecl); ok {
 					inField.Type = types.GenerateCorrectType(inField.Type)
 					inField.Type2 = types.GenerateCorrectType(inField.Type2)
-					field.Name = string(([]byte(inField.Type))[len("struct "):])
+
+					field.Name = inField.Type
+
+					if strings.HasPrefix(field.Name, "const ") {
+						field.Name = field.Name[len("const "):]
+					}
+
+					if strings.HasPrefix(field.Name, "struct ") {
+						field.Name = field.Name[len("struct "):]
+					}
 
 					if field.Name[len(field.Name)-1] == '*' {
 						// star in struct
