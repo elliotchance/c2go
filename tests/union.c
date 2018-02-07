@@ -230,9 +230,28 @@ void union_arr_in_str()
 	is_true(sha.u.x[0] != 0);
 }
 
+
+union un_struct{
+	struct {
+		short a;
+		short b;
+	} str;
+	long l;
+};
+
+void union_with_struct()
+{
+	union un_struct u;
+	u.str.a = 12;
+	u.str.b = 45;
+	is_eq(u.str.a, 12);
+	is_eq(u.str.b, 45);
+	is_true( u.l > 0 );
+}
+
 int main()
 {
-    plan(43);
+    plan(46);
 
     union programming variable;
 
@@ -247,6 +266,7 @@ int main()
 	union_func_pointers();
 	union_array();
 	union_arr_in_str();
+	union_with_struct();
 
     done_testing();
 }
