@@ -67,6 +67,12 @@ func internalTypeToExpr(t string) goast.Expr {
 	}
 
 	// function return a function
+	// Example : (*u.f1())
+	if strings.HasSuffix(t, "()") && strings.Contains(t, ".") && strings.Contains(t, "*") {
+		return goast.NewIdent(t)
+	}
+
+	// function return a function
 	// Example : u.GetF1()
 	if strings.HasSuffix(t, "()") && strings.Contains(t, ".") {
 		i := strings.Index(t, ".")
@@ -228,18 +234,16 @@ func NewIdent(name string) *goast.Ident {
 	// Remove const prefix as it has no equivalent in Go.
 	name = strings.TrimPrefix(name, "const ")
 
-	// JUST FOR DEBUG
-	//
-	// if !IsAValidFunctionName(name) {
-	// 	// Normally we do not panic because we want the transpiler to recover as
-	// 	// much as possible so that we always get Go output - even if it's
-	// 	// wrong. However, in this case we must panic because we know that this
-	// 	// identity will cause the AST renderer in Go to panic with a very
-	// 	// unhelpful error message.
-	// 	//
-	// 	// Panic now so that we can see where the bad identifier is coming from.
-	// 	panic(fmt.Sprintf("invalid identity: '%s'", name))
-	// }
+	if !IsAValidFunctionName(name) {
+		// Normally we do not panic because we want the transpiler to recover as
+		// much as possible so that we always get Go output - even if it's
+		// wrong. However, in this case we must panic because we know that this
+		// identity will cause the AST renderer in Go to panic with a very
+		// unhelpful error message.
+		//
+		// Panic now so that we can see where the bad identifier is coming from.
+		panic(fmt.Sprintf("invalid identity: '%s'", name))
+	}
 
 	return goast.NewIdent(name)
 }
