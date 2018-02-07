@@ -240,6 +240,8 @@ func Parse(fullline string) Node {
 		return parseVarDecl(line)
 	case "VerbatimBlockComment":
 		return parseVerbatimBlockComment(line)
+	case "VerbatimBlockLineComment":
+		return parseVerbatimBlockLineComment(line)
 	case "VerbatimLineComment":
 		return parseVerbatimLineComment(line)
 	case "VisibilityAttr":
