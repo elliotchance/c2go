@@ -37,7 +37,7 @@ double * return_null(){
 
 int main()
 {
-	plan(86);
+	plan(87);
 
     int i = 10;
     signed char j = 1;
@@ -338,6 +338,17 @@ int main()
 		pass("ok");
 	}
 	(void)(cd);
+	
+	diag("increment for char");
+	{
+		char N = 'g';
+		int aaa = 0;
+		if ( (aaa++,N--,aaa+=3,N) == 102)
+		{
+			pass("ok");
+		}
+		(void)(aaa);
+	}
 
 	done_testing();
 }
