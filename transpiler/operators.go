@@ -613,12 +613,22 @@ func atomicOperation(n ast.Node, p *program.Program) (
 			body := combineStmts(&goast.ExprStmt{e}, newPre, newPost)
 
 			e, exprType, _, _, _ = atomicOperation(v.Children()[1], p)
+
+			var tt string
+			if tt, err = types.ResolveType(p, exprType); err == nil {
+				exprType = tt
+			} else {
+				p.AddMessage(p.GenerateWarningMessage(err, v))
+				err = nil
+			}
+
 			expr = util.NewAnonymousFunction(body,
 				nil,
 				util.NewIdent(varName),
 				exprType)
 			preStmts = nil
 			postStmts = nil
+			exprType = v.Type
 			return
 
 		case "=":
