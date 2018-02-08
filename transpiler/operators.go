@@ -821,12 +821,18 @@ func atomicOperation(n ast.Node, p *program.Program) (
 				}},
 			})
 
+			var exprResolveType string
+			exprResolveType, err = types.ResolveType(p, v.Type)
+			if err != nil {
+				return
+			}
+
 			expr = util.NewAnonymousFunction(body, postStmts,
 				&goast.UnaryExpr{
 					Op: token.MUL,
 					X:  util.NewIdent(varName),
 				},
-				exprType)
+				exprResolveType)
 			preStmts = nil
 			postStmts = nil
 			exprType = v.Type
