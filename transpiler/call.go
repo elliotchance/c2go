@@ -36,25 +36,34 @@ func getMemberName(firstChild ast.Node) (name string, ok bool) {
 	return "", false
 }
 
-func getName(p *program.Program, firstChild ast.Node) string {
+func getName(p *program.Program, firstChild ast.Node) (name string, err error) {
 	switch fc := firstChild.(type) {
 	case *ast.DeclRefExpr:
-		return fc.Name
+		return fc.Name, nil
 
 	case *ast.MemberExpr:
 		if isUnionMemberExpr(p, fc) {
-			lhs, _, _, _, _ := transpileToExpr(fc, p, false)
-			var buf bytes.Buffer
-			err := printer.Fprint(&buf, token.NewFileSet(), lhs)
+			var expr goast.Expr
+			expr, _, _, _, err = transpileToExpr(fc, p, false)
 			if err != nil {
-				panic(err)
+				return
 			}
-			return buf.String()
+			var buf bytes.Buffer
+			err = printer.Fprint(&buf, token.NewFileSet(), expr)
+			if err != nil {
+				return
+			}
+			return buf.String(), nil
 		}
 		if len(fc.Children()) == 0 {
-			return fc.Name
+			return fc.Name, nil
 		}
-		return getName(p, fc.Children()[0]) + "." + fc.Name
+		var n string
+		n, err = getName(p, fc.Children()[0])
+		if err != nil {
+			return
+		}
+		return n + "." + fc.Name, nil
 
 	case *ast.ParenExpr:
 		return getName(p, fc.Children()[0])
@@ -69,14 +78,20 @@ func getName(p *program.Program, firstChild ast.Node) string {
 		return getName(p, fc.Children()[0])
 
 	case *ast.ArraySubscriptExpr:
-		expr, _, _, _, _ := transpileArraySubscriptExpr(fc, p)
+		var expr goast.Expr
+		expr, _, _, _, err = transpileArraySubscriptExpr(fc, p)
+		if err != nil {
+			return
+		}
 		var buf bytes.Buffer
-		_ = printer.Fprint(&buf, token.NewFileSet(), expr)
-		return buf.String()
-
-	default:
-		panic(fmt.Sprintf("cannot getName for: %#v", fc))
+		err = printer.Fprint(&buf, token.NewFileSet(), expr)
+		if err != nil {
+			return
+		}
+		return buf.String(), nil
 	}
+
+	return "", fmt.Errorf("cannot getName for: %#v", firstChild)
 }
 
 func getNameOfFunctionFromCallExpr(p *program.Program, n *ast.CallExpr) (string, error) {
@@ -88,7 +103,7 @@ func getNameOfFunctionFromCallExpr(p *program.Program, n *ast.CallExpr) (string,
 		return "", err
 	}
 
-	return getName(p, firstChild.Children()[0]), nil
+	return getName(p, firstChild.Children()[0])
 }
 
 // transpileCallExpr transpiles expressions that calls a function, for example:

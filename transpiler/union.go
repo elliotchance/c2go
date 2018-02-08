@@ -2,6 +2,7 @@ package transpiler
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 
 	goast "go/ast"
@@ -69,7 +70,8 @@ func (unionVar * {{ $.Name }}) {{ .Name }}() (*{{ .TypeField }}){
 		var buf bytes.Buffer
 		err = format.Node(&buf, token.NewFileSet(), fields[i].Type)
 		if err != nil {
-			panic(err)
+			err = fmt.Errorf("cannot parse type '%s' : %v", fields[i].Type, err)
+			return
 		}
 		f.TypeField = buf.String()
 
@@ -80,14 +82,16 @@ func (unionVar * {{ $.Name }}) {{ .Name }}() (*{{ .TypeField }}){
 	var source bytes.Buffer
 	err = tmpl.Execute(&source, un)
 	if err != nil {
-		panic(err)
+		err = fmt.Errorf("cannot execute template \"%s\" for data %v : %v", source.String(), un, err)
+		return
 	}
 
 	// Create the AST by parsing src.
 	fset := token.NewFileSet() // positions are relative to fset
 	f, err := parser.ParseFile(fset, "", source.String(), 0)
 	if err != nil {
-		panic(err)
+		err = fmt.Errorf("cannot parse source \"%s\" : %v", source.String(), err)
+		return
 	}
 
 	return f.Decls[1:], nil
