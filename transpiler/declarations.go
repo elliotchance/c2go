@@ -119,8 +119,7 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 	var fields []*goast.Field
 
 	for pos := range n.Children() {
-		c := n.Children()[pos]
-		switch field := c.(type) {
+		switch field := n.Children()[pos].(type) {
 		case *ast.FieldDecl:
 			field.Type = types.GenerateCorrectType(field.Type)
 			field.Type2 = types.GenerateCorrectType(field.Type2)
@@ -145,13 +144,26 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 					decls = append(decls, declUnion...)
 				}
 			} else if field.Kind == "struct" &&
-				len(field.Children()) > 0 &&
-				field.Name == "" &&
 				pos+2 <= len(n.Children()) {
 				if inField, ok := n.Children()[pos+1].(*ast.FieldDecl); ok {
 					inField.Type = types.GenerateCorrectType(inField.Type)
 					inField.Type2 = types.GenerateCorrectType(inField.Type2)
-					field.Name = string(([]byte(inField.Type))[len("struct "):])
+
+					field.Name = inField.Type
+
+					if strings.HasPrefix(field.Name, "const ") {
+						field.Name = field.Name[len("const "):]
+					}
+
+					if strings.HasPrefix(field.Name, "struct ") {
+						field.Name = field.Name[len("struct "):]
+					}
+
+					if field.Name[len(field.Name)-1] == '*' {
+						// star in struct
+						field.Name = field.Name[:len(field.Name)-len(" *")]
+					}
+
 					if strings.Contains(field.Name, "[") {
 						p.AddMessage(p.GenerateWarningMessage(
 							fmt.Errorf("Not acceptable name of struct %s", field.Name), n))
@@ -167,8 +179,8 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 			} else {
 				decls, err = transpileRecordDecl(p, field)
 				if err != nil {
-					message := fmt.Sprintf("could not parse %v", c)
-					p.AddMessage(p.GenerateWarningMessage(errors.New(message), c))
+					message := fmt.Sprintf("could not parse %v", field)
+					p.AddMessage(p.GenerateWarningMessage(errors.New(message), field))
 				}
 			}
 
@@ -179,8 +191,8 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 			// will be added by another way.
 
 		default:
-			message := fmt.Sprintf("could not parse %v", c)
-			p.AddMessage(p.GenerateWarningMessage(errors.New(message), c))
+			message := fmt.Sprintf("could not parse %v", field)
+			p.AddMessage(p.GenerateWarningMessage(errors.New(message), field))
 		}
 	}
 
@@ -192,7 +204,8 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 	}
 	if s.IsUnion {
 		// Union size
-		size, err := types.SizeOf(p, "union "+name)
+		var size int
+		size, err = types.SizeOf(p, "union "+name)
 
 		// In normal case no error is returned,
 		if err != nil {
@@ -211,21 +224,22 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 			}
 			decls = append(decls, d...)
 		}
-	} else {
-		decls = append(decls, &goast.GenDecl{
-			Tok: token.TYPE,
-			Specs: []goast.Spec{
-				&goast.TypeSpec{
-					Name: util.NewIdent(name),
-					Type: &goast.StructType{
-						Fields: &goast.FieldList{
-							List: fields,
-						},
+		return
+	}
+
+	decls = append(decls, &goast.GenDecl{
+		Tok: token.TYPE,
+		Specs: []goast.Spec{
+			&goast.TypeSpec{
+				Name: util.NewIdent(name),
+				Type: &goast.StructType{
+					Fields: &goast.FieldList{
+						List: fields,
 					},
 				},
 			},
-		})
-	}
+		},
+	})
 
 	return
 }
