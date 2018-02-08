@@ -174,6 +174,12 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 		return "int", nil
 	}
 
+	// FIXME: I have no idea, how to solve.
+	if strings.Contains(s, "__locale_data") {
+		s = strings.Replace(s, "struct __locale_data", "int", -1)
+		s = strings.Replace(s, "__locale_data", "int", -1)
+	}
+
 	// For function
 	if IsFunction(s) {
 		g, e := resolveFunction(p, s)
