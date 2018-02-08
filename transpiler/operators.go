@@ -779,19 +779,6 @@ func atomicOperation(n ast.Node, p *program.Program) (
 			//   |   | `-DeclRefExpr 0x35b94d0 <col:36> 'struct struct_I_A4 [2]' lvalue Var 0x35b88d8 'siia' 'struct struct_I_A4 [2]'
 			//   |   `-IntegerLiteral 0x35b94f8 <col:41> 'int' 0
 			//   `-IntegerLiteral 0x35b9590 <col:51> 'int' 1
-			// if _, ok := v.Children()[1].(*ast.CompoundAssignOperator); ok {
-			// 	fmt.Println("-----------------------")
-			// 	fmt.Println(ast.TypesTree(v))
-			// 	comp := v.Children()[1]
-			// 	v.Children()[1] = &ast.BinaryOperator{
-			// 		Operator: ",",
-			// 		Type:     v.Type,
-			// 	}
-			// 	v.Children()[1].AddChild(comp)
-			// 	v.Children()[1].AddChild(comp.Children()[0])
-			// 	fmt.Println(ast.TypesTree(v))
-			// 	return atomicOperation(v, p)
-			// }
 
 			// `-BinaryOperator 0x3c42440 <col:19, col:32> 'int' ','
 			//   |-BinaryOperator 0x3c423d8 <col:19, col:30> 'int' '='
@@ -806,14 +793,23 @@ func atomicOperation(n ast.Node, p *program.Program) (
 				return
 			}
 
-			body := combineStmts(&goast.ExprStmt{expr}, preStmts, postStmts)
+			inBody := combineStmts(&goast.ExprStmt{expr}, preStmts, postStmts)
+			preStmts = nil
+			postStmts = nil
 
 			expr, exprType, preStmts, postStmts, err = atomicOperation(v.Children()[1], p)
 			if err != nil {
 				return
 			}
 
-			body = append(body, preStmts...)
+			if v, ok := expr.(*goast.CallExpr); ok {
+				if vv, ok := v.Fun.(*goast.FuncLit); ok {
+					vv.Body.List = append(inBody, vv.Body.List...)
+					break
+				}
+			}
+
+			body := append(inBody, preStmts...)
 			preStmts = nil
 
 			body = append(body, &goast.AssignStmt{

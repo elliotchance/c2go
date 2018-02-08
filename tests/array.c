@@ -195,7 +195,7 @@ double *dvector(long nl, long nh)
 
 int main()
 {
-    plan(122);
+    plan(132);
 
     START_TEST(intarr);
     START_TEST(doublearr);
@@ -533,7 +533,6 @@ int main()
 		siia[0].pos = 2;
 		is_eq(siia[0].arr[siia[0].pos --  ] , 25.);
 	}
-	/*
 	diag("Increment inside array 4");
 	{
 		struct struct_I_A4{
@@ -570,12 +569,11 @@ int main()
 		is_eq(t,4);
 		(void)(t);
 	}
-	*/
 	diag("Increment inside array 5");
 	{
 		struct struct_I_A5{
 			double * arr  ;
-			int    pos    ;
+			int      pos  ;
 		} ;
 		struct struct_I_A5 siia[2];
 		{
@@ -607,14 +605,29 @@ int main()
 		is_eq(t,4);
 		(void)(t);
 	}
-	/*
 	diag("Increment inside array 6");
 	{
 		struct struct_I_A6{
-			double arr [5];
-			int    pos [1];
+			double * arr ;
+			int    * pos ;
 		} ;
 		struct struct_I_A6 siia[2];
+		{
+			double t_arr [5];
+			siia[0].arr = t_arr;
+		}
+		{
+			double t_arr [5];
+			siia[1].arr = t_arr;
+		}
+		{
+			int t_pos[1];
+			siia[0].pos = t_pos;
+		}
+		{
+			int t_pos[1];
+			siia[1].pos = t_pos;
+		}
 		int t = 0;
 
 		siia[0].arr[0] = 45.;
@@ -636,7 +649,6 @@ int main()
 		is_eq(t,4);
 		(void)(t);
 	}
-	*/
 
     done_testing();
 }
