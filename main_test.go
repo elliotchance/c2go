@@ -158,6 +158,14 @@ func TestIntegrationScripts(t *testing.T) {
 			r := util.GetRegex("warning: no packages being tested depend on .+\n")
 			goProgramStderr = r.ReplaceAllString(goProgramStderr, "")
 
+			// It is need only for "tests/assert.c"
+			// for change absolute path to local path
+			currentDir, err := os.Getwd()
+			if err != nil {
+				t.Fatal("Cannot get currently dir")
+			}
+			goProgramStderr = strings.Replace(goProgramStderr, currentDir+"/", "", -1)
+
 			if cProgramStderr != goProgramStderr {
 				t.Fatalf("Expected %s\nGot: %s", cProgramStderr, goProgramStderr)
 			}
