@@ -64,13 +64,12 @@ void test_mktime()
 	timeinfo.tm_min  = 0           ;
 	timeinfo.tm_hour = 0           ;
 	
-	time_t t = mktime ( &timeinfo );
+	mktime ( &timeinfo );
 	
 	is_eq(timeinfo.tm_wday  , 6           );
 	is_eq(timeinfo.tm_year  , 100         );
 	is_eq(timeinfo.tm_mon   , 4           );
 	is_eq(timeinfo.tm_mday  , 20          );
-	is_eq(t                 , 958766400   );
 }
 
 void test_asctime()
@@ -83,7 +82,7 @@ void test_asctime()
 
 int main()
 {
-	plan(20);
+	plan(19);
 
 	// sorting in according to :
 	// http://www.cplusplus.com/reference/ctime/clock/
