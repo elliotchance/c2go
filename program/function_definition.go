@@ -236,6 +236,7 @@ var builtInFunctionDefinitions = []string{
 	"char* ctime(const time_t *) -> noarch.Ctime",
 	"struct tm * localtime(const time_t *) -> noarch.LocalTime",
 	"time_t mktime(struct tm *) -> noarch.Mktime",
+	"char * asctime(struct tm *) -> noarch.Asctime",
 
 	// I'm not sure which header file these comes from?
 	"uint32 __builtin_bswap32(uint32) -> darwin.BSwap32",

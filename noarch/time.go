@@ -1,6 +1,9 @@
 package noarch
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // TimeT is the representation of "time_t".
 // For historical reasons, it is generally implemented as an integral value
@@ -90,4 +93,21 @@ func Mktime(tm []Tm) TimeT {
 	tm[0].Tm_wday = int(t.Weekday())
 
 	return TimeT(int32(t.Unix()))
+}
+
+// constants for asctime
+var wday_name = [...]string{"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"}
+var mon_name = [...]string{
+	"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+	"Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+}
+
+// Asctime - Convert tm structure to string
+func Asctime(tm []Tm) []byte {
+	return []byte(fmt.Sprintf("%.3s %.3s%3d %.2d:%.2d:%.2d %d\n",
+		wday_name[tm[0].Tm_wday],
+		mon_name[tm[0].Tm_mon],
+		tm[0].Tm_mday, tm[0].Tm_hour,
+		tm[0].Tm_min, tm[0].Tm_sec,
+		1900+tm[0].Tm_year))
 }

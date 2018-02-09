@@ -73,14 +73,29 @@ void test_mktime()
 	is_eq(t                 , 958766400   );
 }
 
+void test_asctime()
+{
+	time_t rawtime = 80000;
+	struct tm * timeinfo;
+	timeinfo = localtime ( &rawtime );
+	is_streq(asctime(timeinfo) , "Fri Jan  2 01:13:20 1970\n" );
+}
+
 int main()
 {
-	plan(19);
-	
-	START_TEST(time      );
+	plan(20);
+
+	// sorting in according to :
+	// http://www.cplusplus.com/reference/ctime/clock/
+	START_TEST(asctime   );
+	// TODO : START_TEST(clock     );
 	START_TEST(ctime     );
+	// TODO : START_TEST(difftime  );
+	// TODO : START_TEST(gmtime    );
 	START_TEST(localtime );
 	START_TEST(mktime    );
+	// TODO : START_TEST(strftime  );
+	START_TEST(time      );
 	
 	done_testing();
 }
