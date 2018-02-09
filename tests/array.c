@@ -1,6 +1,7 @@
 // Array examples
 
 #include "tests.h"
+#include <stdlib.h>
 
 #define START_TEST(t) \
     diag(#t);         \
@@ -193,9 +194,25 @@ double *dvector(long nl, long nh)
 	return v-nl+1;
 }
 
+void test_pointer_arith_size_t()
+{
+	size_t size = 1;
+	char *left_ptr;
+	char arr[3];
+	arr[0] = 'a';
+	arr[1] = 'b';
+	arr[2] = 'c';
+	left_ptr = &arr;
+	is_eq(*left_ptr , arr[0]);
+	left_ptr  = left_ptr + size;
+	is_eq(*left_ptr , arr[1]);
+	left_ptr += size;
+	is_eq(*left_ptr , arr[2]);
+}
+
 int main()
 {
-    plan(104);
+    plan(107);
 
     START_TEST(intarr);
     START_TEST(doublearr);
@@ -435,6 +452,8 @@ int main()
 		is_eq(arr[9],42.0);
 		(void)(arr);
 	}
+
+	test_pointer_arith_size_t();
 
     done_testing();
 }

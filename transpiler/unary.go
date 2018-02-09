@@ -403,10 +403,10 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 					}
 					parents = append(parents, v)
 					deep := true
-					if vv, ok := v.(*ast.ImplicitCastExpr); ok && types.IsCInteger(vv.Type) {
+					if vv, ok := v.(*ast.ImplicitCastExpr); ok && types.IsCInteger(p, vv.Type) {
 						deep = false
 					}
-					if vv, ok := v.(*ast.CStyleCastExpr); ok && types.IsCInteger(vv.Type) {
+					if vv, ok := v.(*ast.CStyleCastExpr); ok && types.IsCInteger(p, vv.Type) {
 						deep = false
 					}
 					if deep {
