@@ -235,6 +235,7 @@ var builtInFunctionDefinitions = []string{
 	"time_t time(time_t *) -> noarch.Time",
 	"char* ctime(const time_t *) -> noarch.Ctime",
 	"struct tm * localtime(const time_t *) -> noarch.LocalTime",
+	"struct tm * gmtime(const time_t *) -> noarch.Gmtime",
 	"time_t mktime(struct tm *) -> noarch.Mktime",
 	"char * asctime(struct tm *) -> noarch.Asctime",
 

@@ -37,19 +37,19 @@ void test_ctime()
     is_streq(s, "Fri Dec 31 HH:mm:58 1999\n");
 }
 
-void test_localtime()
+void test_gmtime()
 {
 	struct tm * timeinfo;
 	time_t      rawtime = 80000;
-	timeinfo = localtime ( &rawtime );
+	timeinfo = gmtime ( &rawtime );
 	is_eq( timeinfo-> tm_sec	,  20 );
 	is_eq( timeinfo-> tm_min	,  13 );
-	is_eq( timeinfo-> tm_hour	,  1  );
-	is_eq( timeinfo-> tm_mday	,  2  );
+	is_eq( timeinfo-> tm_hour	,  22 );
+	is_eq( timeinfo-> tm_mday	,  1  );
 	is_eq( timeinfo-> tm_mon	,  0  );
 	is_eq( timeinfo-> tm_year	,  70 );
-	is_eq( timeinfo-> tm_wday	,  5  );
-	is_eq( timeinfo-> tm_yday	,  1  );
+	is_eq( timeinfo-> tm_wday	,  4  );
+	is_eq( timeinfo-> tm_yday	,  0  );
 	is_eq( timeinfo-> tm_isdst	,  0  );
 }
 
@@ -77,8 +77,8 @@ void test_asctime()
 {
 	time_t rawtime = 80000;
 	struct tm * timeinfo;
-	timeinfo = localtime ( &rawtime );
-	is_streq(asctime(timeinfo) , "Fri Jan  2 01:13:20 1970\n" );
+	timeinfo = gmtime ( &rawtime );
+	is_streq(asctime(timeinfo) , "Thu Jan  1 22:13:20 1970\n" );
 }
 
 int main()
@@ -91,8 +91,8 @@ int main()
 	// TODO : START_TEST(clock     );
 	START_TEST(ctime     );
 	// TODO : START_TEST(difftime  );
-	// TODO : START_TEST(gmtime    );
-	START_TEST(localtime );
+	START_TEST(gmtime    );
+	// TODO : START_TEST(localtime );
 	START_TEST(mktime    );
 	// TODO : START_TEST(strftime  );
 	START_TEST(time      );
