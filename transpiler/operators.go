@@ -487,6 +487,16 @@ func convertToWithoutAssign(operator token.Token) token.Token {
 	panic(fmt.Sprintf("not support operator: %v", operator))
 }
 
+func findUnaryWithInteger(node ast.Node) (*ast.UnaryOperator, bool) {
+	switch n := node.(type) {
+	case *ast.UnaryOperator:
+		return n, true
+	case *ast.ParenExpr:
+		return findUnaryWithInteger(n.Children()[0])
+	}
+	return nil, false
+}
+
 func atomicOperation(n ast.Node, p *program.Program) (
 	expr goast.Expr, exprType string, preStmts, postStmts []goast.Stmt, err error) {
 
@@ -587,23 +597,7 @@ func atomicOperation(n ast.Node, p *program.Program) (
 		//     `-IntegerLiteral 0x29825d0 <col:13> 'int' 1
 		if v.Type == "char" {
 			if len(v.Children()) == 1 {
-				var findUnaryWithInteger func(ast.Node)
-				var found bool
-				var u *ast.UnaryOperator
-
-				findUnaryWithInteger = func(node ast.Node) {
-					switch n := node.(type) {
-					case *ast.UnaryOperator:
-						found = true
-						u = n
-					case *ast.ParenExpr:
-						findUnaryWithInteger(n.Children()[0])
-					}
-				}
-
-				findUnaryWithInteger(n.Children()[0])
-
-				if found {
+				if u, ok := findUnaryWithInteger(n.Children()[0]); ok {
 					if u.IsPrefix && u.Type == "int" && u.Operator == "-" {
 						if _, ok := u.Children()[0].(*ast.IntegerLiteral); ok {
 							return transpileToExpr(&ast.BinaryOperator{
