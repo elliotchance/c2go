@@ -210,9 +210,20 @@ void test_pointer_arith_size_t()
 	is_eq(*left_ptr , arr[2]);
 }
 
+void test_pointer_minus_pointer()
+{
+	char *left_ptr;
+	char *right_ptr;
+	char arr[30];
+	left_ptr  = &arr[0];
+	right_ptr = &arr[20];
+
+	is_eq(right_ptr - left_ptr, 20);
+}
+
 int main()
 {
-    plan(107);
+    plan(108);
 
     START_TEST(intarr);
     START_TEST(doublearr);
@@ -454,6 +465,7 @@ int main()
 	}
 
 	test_pointer_arith_size_t();
+	test_pointer_minus_pointer();
 
     done_testing();
 }
