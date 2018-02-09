@@ -183,9 +183,19 @@ float * next_pointer(float *v)
 	return p - p + v + l;
 }
 
+double *dvector(long nl, long nh)
+{
+	double *v;
+	v=(double *)malloc((size_t) ((nh-nl+1+1)*sizeof(double)));
+	for (int i=0;i<nh-nl;i++){
+		*(v + i) = 42.0;
+	}
+	return v-nl+1;
+}
+
 int main()
 {
-    plan(101);
+    plan(104);
 
     START_TEST(intarr);
     START_TEST(doublearr);
@@ -416,6 +426,14 @@ int main()
 		*(v+0) = 5;
 		*(v+1) = 6;
 		is_eq(*(next_pointer(v)),6);
+	}
+	diag("create array");
+	{
+		double * arr = dvector(1,12);
+		is_not_null(arr);
+		is_eq(arr[1],42.0);
+		is_eq(arr[9],42.0);
+		(void)(arr);
 	}
 
     done_testing();
