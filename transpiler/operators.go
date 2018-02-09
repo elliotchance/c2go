@@ -496,22 +496,107 @@ func atomicOperation(n ast.Node, p *program.Program) (
 	}
 	defer func() {
 		if err != nil {
-			err = fmt.Errorf("Cannot create atomicOperation. err = %v", err)
+			err = fmt.Errorf("Cannot create atomicOperation |%T|. err = %v", n, err)
 		}
 	}()
 
 	switch v := n.(type) {
 	case *ast.UnaryOperator:
 		switch v.Operator {
-		case "&", "*", "!":
+		case "&", "*", "!", "-":
 			return
 		}
-		var varName string
-		if vv, ok := v.Children()[0].(*ast.DeclRefExpr); !ok {
-			break
-		} else {
-			varName = vv.Name
+		// UnaryOperator 0x252d798 <col:17, col:18> 'double' prefix '-'
+		// `-FloatingLiteral 0x252d778 <col:18> 'double' 0.000000e+00
+		if _, ok := v.Children()[0].(*ast.IntegerLiteral); ok {
+			return
 		}
+		if _, ok := v.Children()[0].(*ast.FloatingLiteral); ok {
+			return
+		}
+
+		// UnaryOperator 0x3001768 <col:204, col:206> 'int' prefix '++'
+		// `-DeclRefExpr 0x3001740 <col:206> 'int' lvalue Var 0x303e888 'current_test' 'int'
+		// OR
+		// UnaryOperator 0x3001768 <col:204, col:206> 'int' postfix '++'
+		// `-DeclRefExpr 0x3001740 <col:206> 'int' lvalue Var 0x303e888 'current_test' 'int'
+		var varName string
+		if vv, ok := v.Children()[0].(*ast.DeclRefExpr); ok {
+			varName = vv.Name
+
+			var exprResolveType string
+			exprResolveType, err = types.ResolveType(p, v.Type)
+			if err != nil {
+				return
+			}
+
+			// operators: ++, --
+			if v.IsPrefix {
+				// Example:
+				// UnaryOperator 0x3001768 <col:204, col:206> 'int' prefix '++'
+				// `-DeclRefExpr 0x3001740 <col:206> 'int' lvalue Var 0x303e888 'current_test' 'int'
+				expr = util.NewAnonymousFunction(append(preStmts, &goast.ExprStmt{expr}),
+					nil,
+					util.NewIdent(varName),
+					exprResolveType)
+				preStmts = nil
+				break
+			}
+			// Example:
+			// UnaryOperator 0x3001768 <col:204, col:206> 'int' postfix '++'
+			// `-DeclRefExpr 0x3001740 <col:206> 'int' lvalue Var 0x303e888 'current_test' 'int'
+			expr = util.NewAnonymousFunction(preStmts,
+				[]goast.Stmt{&goast.ExprStmt{expr}},
+				util.NewIdent(varName),
+				exprResolveType)
+			preStmts = nil
+
+			break
+		}
+
+		// UnaryOperator 0x358d470 <col:28, col:40> 'int' postfix '++'
+		// `-MemberExpr 0x358d438 <col:28, col:36> 'int' lvalue .pos 0x358b538
+		//   `-ArraySubscriptExpr 0x358d410 <col:28, col:34> 'struct struct_I_A':'struct struct_I_A' lvalue
+		//     |-ImplicitCastExpr 0x358d3f8 <col:28> 'struct struct_I_A *' <ArrayToPointerDecay>
+		//     | `-DeclRefExpr 0x358d3b0 <col:28> 'struct struct_I_A [2]' lvalue Var 0x358b6e8 'siia' 'struct struct_I_A [2]'
+		//     `-IntegerLiteral 0x358d3d8 <col:33> 'int' 0
+		varName = "tempVar"
+
+		expr, exprType, preStmts, postStmts, err = transpileToExpr(v.Children()[0], p, false)
+		if err != nil {
+			return
+		}
+
+		body := append(preStmts, &goast.AssignStmt{
+			Lhs: []goast.Expr{util.NewIdent(varName)},
+			Tok: token.DEFINE,
+			Rhs: []goast.Expr{&goast.UnaryExpr{
+				Op: token.AND,
+				X:  expr,
+			}},
+		})
+
+		deferBody := postStmts
+		postStmts = nil
+		preStmts = nil
+
+		switch v.Operator {
+		case "++":
+			expr = &goast.BinaryExpr{
+				X:  &goast.StarExpr{X: util.NewIdent(varName)},
+				Op: token.ADD_ASSIGN,
+				Y:  &goast.BasicLit{Kind: token.INT, Value: "1"},
+			}
+		case "--":
+			expr = &goast.BinaryExpr{
+				X:  &goast.StarExpr{X: util.NewIdent(varName)},
+				Op: token.SUB_ASSIGN,
+				Y:  &goast.BasicLit{Kind: token.INT, Value: "1"},
+			}
+		}
+
+		body = append(body, preStmts...)
+		deferBody = append(deferBody, postStmts...)
 
 		var exprResolveType string
 		exprResolveType, err = types.ResolveType(p, v.Type)
@@ -524,32 +609,111 @@ func atomicOperation(n ast.Node, p *program.Program) (
 			// Example:
 			// UnaryOperator 0x3001768 <col:204, col:206> 'int' prefix '++'
 			// `-DeclRefExpr 0x3001740 <col:206> 'int' lvalue Var 0x303e888 'current_test' 'int'
-			expr = util.NewAnonymousFunction(append(preStmts, &goast.ExprStmt{expr}),
-				nil,
-				util.NewIdent(varName),
+			expr = util.NewAnonymousFunction(append(body, &goast.ExprStmt{expr}), deferBody,
+				&goast.StarExpr{
+					X: util.NewIdent(varName),
+				},
 				exprResolveType)
 			preStmts = nil
+			postStmts = nil
 			break
 		}
 		// Example:
 		// UnaryOperator 0x3001768 <col:204, col:206> 'int' postfix '++'
 		// `-DeclRefExpr 0x3001740 <col:206> 'int' lvalue Var 0x303e888 'current_test' 'int'
-		expr = util.NewAnonymousFunction(preStmts,
-			[]goast.Stmt{&goast.ExprStmt{expr}},
-			util.NewIdent(varName),
+		expr = util.NewAnonymousFunction(body, append(deferBody, &goast.ExprStmt{expr}),
+			&goast.StarExpr{
+				X: util.NewIdent(varName),
+			},
 			exprResolveType)
 		preStmts = nil
+		postStmts = nil
 
 	case *ast.CompoundAssignOperator:
 		// CompoundAssignOperator 0x32911c0 <col:18, col:28> 'int' '-=' ComputeLHSTy='int' ComputeResultTy='int'
 		// |-DeclRefExpr 0x3291178 <col:18> 'int' lvalue Var 0x328df60 'iterator' 'int'
 		// `-IntegerLiteral 0x32911a0 <col:28> 'int' 2
-		var varName string
-		if vv, ok := v.Children()[0].(*ast.DeclRefExpr); !ok {
-			break
-		} else {
+		if vv, ok := v.Children()[0].(*ast.DeclRefExpr); ok {
+			var varName string
 			varName = vv.Name
+
+			var exprResolveType string
+			exprResolveType, err = types.ResolveType(p, v.Type)
+			if err != nil {
+				return
+			}
+
+			expr = util.NewAnonymousFunction(append(preStmts, &goast.ExprStmt{expr}),
+				postStmts,
+				util.NewIdent(varName),
+				exprResolveType)
+			preStmts = nil
+			postStmts = nil
+			break
 		}
+		// CompoundAssignOperator 0x27906c8 <line:450:2, col:6> 'double' '+=' ComputeLHSTy='double' ComputeResultTy='double'
+		// |-UnaryOperator 0x2790670 <col:2, col:3> 'double' lvalue prefix '*'
+		// | `-ImplicitCastExpr 0x2790658 <col:3> 'double *' <LValueToRValue>
+		// |   `-DeclRefExpr 0x2790630 <col:3> 'double *' lvalue Var 0x2790570 'p' 'double *'
+		// `-IntegerLiteral 0x32911a0 <col:28> 'int' 2
+		if vv, ok := v.Children()[0].(*ast.UnaryOperator); ok && vv.IsPrefix && vv.Operator == "*" {
+			if vvv, ok := vv.Children()[0].(*ast.ImplicitCastExpr); ok {
+				if vvvv, ok := vvv.Children()[0].(*ast.DeclRefExpr); ok {
+					if types.IsPointer(vvvv.Type) {
+						var varName string
+						varName = vvvv.Name
+
+						var exprResolveType string
+						exprResolveType, err = types.ResolveType(p, v.Type)
+						if err != nil {
+							return
+						}
+
+						expr = util.NewAnonymousFunction(append(preStmts, &goast.ExprStmt{expr}),
+							postStmts,
+							&goast.UnaryExpr{
+								Op: token.AND,
+								X:  util.NewIdent(varName),
+							},
+							exprResolveType)
+						preStmts = nil
+						postStmts = nil
+						break
+					}
+				}
+			}
+		}
+
+		// CompoundAssignOperator 0x32911c0 <col:18, col:28> 'int' '-=' ComputeLHSTy='int' ComputeResultTy='int'
+		// |-DeclRefExpr 0x3291178 <col:18> 'int' lvalue Var 0x328df60 'iterator' 'int'
+		// `-IntegerLiteral 0x32911a0 <col:28> 'int' 2
+		varName := "tempVar"
+		expr, exprType, preStmts, postStmts, err = transpileToExpr(v.Children()[0], p, false)
+		if err != nil {
+			return
+		}
+		body := append(preStmts, &goast.AssignStmt{
+			Lhs: []goast.Expr{util.NewIdent(varName)},
+			Tok: token.DEFINE,
+			Rhs: []goast.Expr{&goast.UnaryExpr{
+				Op: token.AND,
+				X:  expr,
+			}},
+		})
+		preStmts = nil
+
+		// CompoundAssignOperator 0x27906c8 <line:450:2, col:6> 'double' '+=' ComputeLHSTy='double' ComputeResultTy='double'
+		// |-UnaryOperator 0x2790670 <col:2, col:3> 'double' lvalue prefix '*'
+		// | `-ImplicitCastExpr 0x2790658 <col:3> 'double *' <LValueToRValue>
+		// |   `-DeclRefExpr 0x2790630 <col:3> 'double *' lvalue Var 0x2790570 'p' 'double *'
+		// `-ImplicitCastExpr 0x27906b0 <col:6> 'double' <IntegralToFloating>
+		//   `-IntegerLiteral 0x2790690 <col:6> 'int' 1
+		var newPre, newPost []goast.Stmt
+		expr, exprType, newPre, newPost, err = atomicOperation(v.Children()[1], p)
+		if err != nil {
+			return
+		}
+		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 		var exprResolveType string
 		exprResolveType, err = types.ResolveType(p, v.Type)
@@ -557,11 +721,22 @@ func atomicOperation(n ast.Node, p *program.Program) (
 			return
 		}
 
-		expr = util.NewAnonymousFunction(append(preStmts, &goast.ExprStmt{expr}),
-			nil,
-			util.NewIdent(varName),
+		body = append(preStmts, body...)
+		body = append(body, &goast.AssignStmt{
+			Lhs: []goast.Expr{&goast.StarExpr{
+				X: util.NewIdent(varName),
+			}},
+			Tok: getTokenForOperator(v.Opcode),
+			Rhs: []goast.Expr{expr},
+		})
+
+		expr = util.NewAnonymousFunction(body, postStmts,
+			&goast.StarExpr{
+				X: util.NewIdent(varName),
+			},
 			exprResolveType)
 		preStmts = nil
+		postStmts = nil
 
 	case *ast.ParenExpr:
 		// ParenExpr 0x3c42468 <col:18, col:40> 'int'
@@ -594,38 +769,70 @@ func atomicOperation(n ast.Node, p *program.Program) (
 	case *ast.BinaryOperator:
 		switch v.Operator {
 		case ",":
-			var varName string
-			if vv, ok := v.Children()[1].(*ast.ImplicitCastExpr); ok {
-				if vvv, ok := vv.Children()[0].(*ast.DeclRefExpr); ok {
-					varName = vvv.Name
-				}
-			}
-			if varName == "" {
-				return
-			}
+			// BinaryOperator 0x35b95e8 <col:29, col:51> 'int' ','
+			// |-UnaryOperator 0x35b94b0 <col:29, col:31> 'int' postfix '++'
+			// | `-DeclRefExpr 0x35b9488 <col:29> 'int' lvalue Var 0x35b8dc8 't' 'int'
+			// `-CompoundAssignOperator 0x35b95b0 <col:36, col:51> 'int' '+=' ComputeLHSTy='int' ComputeResultTy='int'
+			//   |-MemberExpr 0x35b9558 <col:36, col:44> 'int' lvalue .pos 0x35b8730
+			//   | `-ArraySubscriptExpr 0x35b9530 <col:36, col:42> 'struct struct_I_A4':'struct struct_I_A4' lvalue
+			//   |   |-ImplicitCastExpr 0x35b9518 <col:36> 'struct struct_I_A4 *' <ArrayToPointerDecay>
+			//   |   | `-DeclRefExpr 0x35b94d0 <col:36> 'struct struct_I_A4 [2]' lvalue Var 0x35b88d8 'siia' 'struct struct_I_A4 [2]'
+			//   |   `-IntegerLiteral 0x35b94f8 <col:41> 'int' 0
+			//   `-IntegerLiteral 0x35b9590 <col:51> 'int' 1
+
 			// `-BinaryOperator 0x3c42440 <col:19, col:32> 'int' ','
 			//   |-BinaryOperator 0x3c423d8 <col:19, col:30> 'int' '='
 			//   | |-DeclRefExpr 0x3c42390 <col:19> 'int' lvalue Var 0x3c3cf60 'iterator' 'int'
 			//   | `-IntegerLiteral 0x3c423b8 <col:30> 'int' 0
 			//   `-ImplicitCastExpr 0x3c42428 <col:32> 'int' <LValueToRValue>
 			//     `-DeclRefExpr 0x3c42400 <col:32> 'int' lvalue Var 0x3c3cf60 'iterator' 'int'
-			e, _, newPre, newPost, _ := transpileToExpr(v.Children()[0], p, false)
-			body := combineStmts(&goast.ExprStmt{e}, newPre, newPost)
+			varName := "tempVar"
 
-			e, exprType, _, _, _ = atomicOperation(v.Children()[1], p)
-
-			var tt string
-			if tt, err = types.ResolveType(p, exprType); err == nil {
-				exprType = tt
-			} else {
-				p.AddMessage(p.GenerateWarningMessage(err, v))
-				err = nil
+			expr, exprType, preStmts, postStmts, err = transpileToExpr(v.Children()[0], p, false)
+			if err != nil {
+				return
 			}
 
-			expr = util.NewAnonymousFunction(body,
-				nil,
-				util.NewIdent(varName),
-				exprType)
+			inBody := combineStmts(&goast.ExprStmt{expr}, preStmts, postStmts)
+			preStmts = nil
+			postStmts = nil
+
+			expr, exprType, preStmts, postStmts, err = atomicOperation(v.Children()[1], p)
+			if err != nil {
+				return
+			}
+
+			if v, ok := expr.(*goast.CallExpr); ok {
+				if vv, ok := v.Fun.(*goast.FuncLit); ok {
+					vv.Body.List = append(inBody, vv.Body.List...)
+					break
+				}
+			}
+
+			body := append(inBody, preStmts...)
+			preStmts = nil
+
+			body = append(body, &goast.AssignStmt{
+				Lhs: []goast.Expr{util.NewIdent(varName)},
+				Tok: token.DEFINE,
+				Rhs: []goast.Expr{&goast.UnaryExpr{
+					Op: token.AND,
+					X:  expr,
+				}},
+			})
+
+			var exprResolveType string
+			exprResolveType, err = types.ResolveType(p, v.Type)
+			if err != nil {
+				return
+			}
+
+			expr = util.NewAnonymousFunction(body, postStmts,
+				&goast.UnaryExpr{
+					Op: token.MUL,
+					X:  util.NewIdent(varName),
+				},
+				exprResolveType)
 			preStmts = nil
 			postStmts = nil
 			exprType = v.Type

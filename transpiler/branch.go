@@ -321,7 +321,7 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 
 		// The last parameter must be false because we are transpiling an
 		// expression - assignment operators need to be wrapped in closures.
-		condition, conditionType, newPre, newPost, err = transpileToExpr(children[2], p, false)
+		condition, conditionType, newPre, newPost, err = atomicOperation(children[2], p)
 		if err != nil {
 			return nil, nil, nil, err
 		}
