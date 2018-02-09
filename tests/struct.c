@@ -160,9 +160,23 @@ void struct_in_struct_with_star()
 	is_eq(in.star_con->sa,45);
 }
 
+union STRS{
+	double d;
+	struct {
+		double d;
+	} T;
+};
+
+void struct_inside_union()
+{
+	union STRS s;
+	s.T.d = 10.0;
+	is_true(s.d != 0);
+}
+
 int main()
 {
-    plan(56);
+    plan(57);
 
     struct programming variable;
     char *s = "Programming in Software Development.";
@@ -408,6 +422,8 @@ int main()
 	struct_in_struct_with_star();
 
 	func_in_func_in_struct();
+
+	struct_inside_union();
 
     done_testing();
 }
