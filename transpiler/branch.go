@@ -110,6 +110,11 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
 
 		if elseBody != nil {
 			r.Else = elseBody
+			if _, ok := children[3].(*ast.IfStmt); ok {
+				if len(elseBody.List) == 1 {
+					r.Else = elseBody.List[0]
+				}
+			}
 		} else {
 			return nil, nil, nil, fmt.Errorf("Body of Else in If cannot be nil")
 		}
