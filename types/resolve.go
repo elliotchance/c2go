@@ -213,12 +213,12 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 		if s[len(s)-1] == '*' {
 			s = s[start : len(s)-2]
 
-			rt, err := ResolveType(p, s)
-			if err != nil {
-				return "", err
+			for k := range simpleResolveTypes {
+				if k == s {
+					return "[]" + p.ImportType(simpleResolveTypes[s]), nil
+				}
 			}
-
-			return "[]" + strings.TrimSpace(rt), nil
+			return "[]" + strings.TrimSpace(s), nil
 		}
 
 		s = s[start:]
