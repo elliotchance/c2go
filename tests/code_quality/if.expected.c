@@ -14,10 +14,8 @@ func if_1() {
 	var c int = 4
 	if a > b {
 		return
-	} else {
-		if c <= a {
-			a = 0
-		}
+	} else if c <= a {
+		a = 0
 	}
 	_ = (a)
 	_ = (b)
