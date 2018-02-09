@@ -102,9 +102,42 @@ void struct_with_rec_fuction()
 	is_eq(j_function(NULL, 4.0),-1);
 }
 
+struct info {
+	struct deep_info{
+		int a, b, c;
+	} con;
+	struct star_deep_info{
+		int sa, sb, sc;
+	} * star_con;
+};
+
+void struct_in_struct_with_star()
+{
+	diag("struct in struct with star");
+	struct info in;
+	
+	in.con.a = 45;
+	is_eq(in.con.a,45);
+
+	struct star_deep_info st;
+	in.star_con = &st;
+
+	in.star_con->sa = 45;
+	is_eq(in.star_con->sa,45);
+	
+	struct info in2;
+	
+	struct star_deep_info st2;
+	in2.star_con = &st2;
+
+	in2.star_con->sa = 46;
+	is_eq(in2.star_con->sa,46);
+	is_eq(in.star_con->sa,45);
+}
+
 int main()
 {
-    plan(51);
+    plan(55);
 
     struct programming variable;
     char *s = "Programming in Software Development.";
@@ -346,6 +379,8 @@ int main()
 		is_eq((*(*tt.left).right).varTI, 4.1);
 		is_eq((*tt.right ).varTI, 4.1);
 	}
+	
+	struct_in_struct_with_star();
 
     done_testing();
 }

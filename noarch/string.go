@@ -79,3 +79,19 @@ func Strcat(dest, src []byte) []byte {
 func Strcmp(str1, str2 []byte) int {
 	return bytes.Compare([]byte(CStringToString(str1)), []byte(CStringToString(str2)))
 }
+
+// Strchr - Locate first occurrence of character in string
+// See: http://www.cplusplus.com/reference/cstring/strchr/
+func Strchr(str []byte, ch int) []byte {
+	i := 0
+	for {
+		if str[i] == '\x00' {
+			break
+		}
+		if int(str[i]) == ch {
+			return str[i:]
+		}
+		i++
+	}
+	return nil
+}
