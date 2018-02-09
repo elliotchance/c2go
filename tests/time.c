@@ -37,38 +37,50 @@ void test_ctime()
     is_streq(s, "Fri Dec 31 HH:mm:58 1999\n");
 }
 
-// Prepared test mktime
-/*
+void test_localtime()
+{
+	struct tm * timeinfo;
+	time_t      rawtime = 80000;
+	timeinfo = localtime ( &rawtime );
+	is_eq( timeinfo-> tm_sec	,  20 );
+	is_eq( timeinfo-> tm_min	,  13 );
+	is_eq( timeinfo-> tm_hour	,  1  );
+	is_eq( timeinfo-> tm_mday	,  2  );
+	is_eq( timeinfo-> tm_mon	,  0  );
+	is_eq( timeinfo-> tm_year	,  70 );
+	is_eq( timeinfo-> tm_wday	,  5  );
+	is_eq( timeinfo-> tm_yday	,  1  );
+	is_eq( timeinfo-> tm_isdst	,  0  );
+}
+
 void test_mktime()
 {
-  time_t rawtime;
-  struct tm * timeinfo;
-  int year, month ,day;
-
-  year  = 2000;
-  month = 5;
-  day   = 20;
-
-  // get current timeinfo and modify it to the user's choice
-  time ( &rawtime );
-  timeinfo = localtime ( &rawtime );
-  timeinfo->tm_year = year - 1900;
-  timeinfo->tm_mon = month - 1;
-  timeinfo->tm_mday = day;
-
-  // call mktime: timeinfo->tm_wday will be set
-  mktime ( timeinfo );
-
-  is_eq(timeinfo->tm_wday,5);
+	struct tm  timeinfo;
+	
+	timeinfo.tm_year = 2000  - 1900;
+	timeinfo.tm_mon  = 5     - 1   ;
+	timeinfo.tm_mday = 20          ;
+	timeinfo.tm_sec  = 0           ;
+	timeinfo.tm_min  = 0           ;
+	timeinfo.tm_hour = 0           ;
+	
+	time_t t = mktime ( &timeinfo );
+	
+	is_eq(timeinfo.tm_wday  , 6           );
+	is_eq(timeinfo.tm_year  , 100         );
+	is_eq(timeinfo.tm_mon   , 4           );
+	is_eq(timeinfo.tm_mday  , 20          );
+	is_eq(t                 , 958766400   );
 }
-*/
 
 int main()
 {
-    plan(5);
-
-    START_TEST(time);
-    START_TEST(ctime);
-
-    done_testing();
+	plan(19);
+	
+	START_TEST(time      );
+	START_TEST(ctime     );
+	START_TEST(localtime );
+	START_TEST(mktime    );
+	
+	done_testing();
 }
