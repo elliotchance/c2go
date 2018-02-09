@@ -63,7 +63,7 @@ func internalTypeToExpr(t string) goast.Expr {
 	// For union function variable
 	// *(*func(int)(int))(unsafe.Pointer(&u.memory))
 	if strings.Contains(t, "unsafe.Pointer") && strings.Contains(t, "func") {
-		return &goast.ParenExpr{X: goast.NewIdent(t)}
+		return goast.NewIdent(t)
 	}
 
 	// function return a function
@@ -90,7 +90,7 @@ func internalTypeToExpr(t string) goast.Expr {
 	// For big type members
 	// Example : sqlite3Config.m.xRoundup
 	if strings.Count(t, ".") > 0 {
-		return &goast.ParenExpr{X: goast.NewIdent(t)}
+		return goast.NewIdent(t)
 	}
 
 	// Parenthesis Expression
