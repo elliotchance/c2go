@@ -7,7 +7,7 @@ int d(int v){
 
 int main()
 {
-    plan(6);
+    plan(7);
 
     int x = 1;
 
@@ -42,6 +42,19 @@ int main()
 	int ii = 5;
 	if ((ii = d(ii)) != (-1)){
 		is_eq(ii,10)
+	}
+	
+	diag("if - else");
+	{
+		int a = 10;
+		int b = 5 ;
+		int c = 0 ;
+		if ( a < b )
+		{
+		} else if (b > c)
+		{
+			pass("ok");
+		}
 	}
 
     done_testing();
