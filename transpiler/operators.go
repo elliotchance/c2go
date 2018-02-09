@@ -248,7 +248,7 @@ func pointerArithmetic(p *program.Program,
 
 	src := `package main
 func main(){
-	a := (*(*[10000000]{{ .Type }})(unsafe.Pointer(uintptr(unsafe.Pointer(&{{ .Name }}[0])) {{ .Operator }} (uintptr)({{ .Condition }})*unsafe.Sizeof({{ .Name }}[0]))))[:]
+	a := (*(*[1000000000]{{ .Type }})(unsafe.Pointer(uintptr(unsafe.Pointer(&{{ .Name }}[0])) {{ .Operator }} (uintptr)({{ .Condition }})*unsafe.Sizeof({{ .Name }}[0]))))[:]
 }`
 	tmpl := template.Must(template.New("").Parse(src))
 	var source bytes.Buffer
@@ -613,12 +613,22 @@ func atomicOperation(n ast.Node, p *program.Program) (
 			body := combineStmts(&goast.ExprStmt{e}, newPre, newPost)
 
 			e, exprType, _, _, _ = atomicOperation(v.Children()[1], p)
+
+			var tt string
+			if tt, err = types.ResolveType(p, exprType); err == nil {
+				exprType = tt
+			} else {
+				p.AddMessage(p.GenerateWarningMessage(err, v))
+				err = nil
+			}
+
 			expr = util.NewAnonymousFunction(body,
 				nil,
 				util.NewIdent(varName),
 				exprType)
 			preStmts = nil
 			postStmts = nil
+			exprType = v.Type
 			return
 
 		case "=":
