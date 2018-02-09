@@ -33,17 +33,18 @@ var resolveTestCases = []resolveTestCase{
 func TestResolve(t *testing.T) {
 	p := program.NewProgram()
 
-	for _, testCase := range resolveTestCases {
-		goType, err := types.ResolveType(p, testCase.cType)
-		if err != nil {
-			t.Error(err)
-			continue
-		}
+	for i, testCase := range resolveTestCases {
+		t.Run(fmt.Sprintf("Test %d : %s", i, testCase.cType), func(t *testing.T) {
+			goType, err := types.ResolveType(p, testCase.cType)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		if goType != testCase.goType {
-			t.Errorf("Expected '%s' -> '%s', got '%s'",
-				testCase.cType, testCase.goType, goType)
-		}
+			if goType != testCase.goType {
+				t.Errorf("Expected '%s' -> '%s', got '%s'",
+					testCase.cType, testCase.goType, goType)
+			}
+		})
 	}
 }
 
