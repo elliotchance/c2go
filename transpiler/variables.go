@@ -3,6 +3,7 @@ package transpiler
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
@@ -27,6 +28,17 @@ var structFieldTranslations = map[string]map[string]string{
 	"lldiv_t": {
 		"quot": "Quot",
 		"rem":  "Rem",
+	},
+	"struct tm": {
+		"tm_sec":   "Tm_sec",
+		"tm_min":   "Tm_min",
+		"tm_hour":  "Tm_hour",
+		"tm_mday":  "Tm_mday",
+		"tm_mon":   "Tm_mon",
+		"tm_year":  "Tm_year",
+		"tm_wday":  "Tm_wday",
+		"tm_yday":  "Tm_yday",
+		"tm_isdst": "Tm_isdst",
 	},
 }
 
@@ -420,6 +432,10 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	}
 
 	// Check for member name translation.
+	lhsType = strings.TrimSpace(lhsType)
+	if lhsType[len(lhsType)-1] == '*' {
+		lhsType = lhsType[:len(lhsType)-len(" *")]
+	}
 	if member, ok := structFieldTranslations[lhsType]; ok {
 		if alias, ok := member[rhs]; ok {
 			rhs = alias

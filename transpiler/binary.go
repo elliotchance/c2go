@@ -82,6 +82,47 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 
 	operator := getTokenForOperator(n.Operator)
 
+	// Char overflow
+	// BinaryOperator 0x2b74458 <line:506:7, col:18> 'int' '!='
+	// |-ImplicitCastExpr 0x2b74440 <col:7, col:10> 'int' <IntegralCast>
+	// | `-ImplicitCastExpr 0x2b74428 <col:7, col:10> 'char' <LValueToRValue>
+	// |   `-...
+	// `-ParenExpr 0x2b74408 <col:15, col:18> 'int'
+	//   `-UnaryOperator 0x2b743e8 <col:16, col:17> 'int' prefix '-'
+	//     `-IntegerLiteral 0x2b743c8 <col:17> 'int' 1
+	if n.Operator == "!=" {
+		var leftOk bool
+		if l0, ok := n.ChildNodes[0].(*ast.ImplicitCastExpr); ok && l0.Type == "int" {
+			if len(l0.ChildNodes) > 0 {
+				if l1, ok := l0.ChildNodes[0].(*ast.ImplicitCastExpr); ok && l1.Type == "char" {
+					leftOk = true
+				}
+			}
+		}
+		if leftOk {
+			if r0, ok := n.ChildNodes[1].(*ast.ParenExpr); ok && r0.Type == "int" {
+				if len(r0.ChildNodes) > 0 {
+					if r1, ok := r0.ChildNodes[0].(*ast.UnaryOperator); ok && r1.IsPrefix && r1.Operator == "-" {
+						if r2, ok := r1.ChildNodes[0].(*ast.IntegerLiteral); ok && r2.Type == "int" {
+							r0.ChildNodes[0] = &ast.BinaryOperator{
+								Type:     "int",
+								Type2:    "int",
+								Operator: "+",
+								ChildNodes: []ast.Node{
+									r1,
+									&ast.IntegerLiteral{
+										Type:  "int",
+										Value: "256",
+									},
+								},
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
 	// Example of C code
 	// a = b = 1
 	// // Operation equal transpile from right to left

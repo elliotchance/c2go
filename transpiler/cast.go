@@ -63,6 +63,35 @@ func transpileCStyleCastExpr(n *ast.CStyleCastExpr, p *program.Program, exprIsSt
 			err = fmt.Errorf("Cannot transpileImplicitCastExpr. err = %v", err)
 		}
 	}()
+	// Char overflow
+	// example for byte(-1)
+	// CStyleCastExpr 0x365f628 <col:12, col:23> 'char' <IntegralCast>
+	// `-ParenExpr 0x365f608 <col:18, col:23> 'int'
+	//   `-ParenExpr 0x365f5a8 <col:19, col:22> 'int'
+	//     `-UnaryOperator 0x365f588 <col:20, col:21> 'int' prefix '-'
+	//       `-IntegerLiteral 0x365f568 <col:21> 'int' 1
+	if n.Type == "char" {
+		if par, ok := n.Children()[0].(*ast.ParenExpr); ok {
+			if par2, ok := par.Children()[0].(*ast.ParenExpr); ok {
+				if u, ok := par2.Children()[0].(*ast.UnaryOperator); ok && u.IsPrefix {
+					if _, ok := u.Children()[0].(*ast.IntegerLiteral); ok {
+						return transpileToExpr(&ast.BinaryOperator{
+							Type:     "int",
+							Type2:    "int",
+							Operator: "+",
+							ChildNodes: []ast.Node{
+								u,
+								&ast.IntegerLiteral{
+									Type:  "int",
+									Value: "256",
+								},
+							},
+						}, p, false)
+					}
+				}
+			}
+		}
+	}
 
 	if n.Kind == ast.CStyleCastExprNullToPointer {
 		expr = util.NewIdent("nil")
