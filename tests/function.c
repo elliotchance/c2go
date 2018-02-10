@@ -57,6 +57,7 @@ int init()       {return 42;}
 int len()        {return 42;}
 int copy()       {return 42;}
 int fmt()        {return 42;}
+int cap()        {return 42;}
 
 void exit2(int t){
 	(void)(t);
@@ -103,7 +104,7 @@ int call_a_func(operators call_this) {
 
 int main()
 {
-    plan(45);
+    plan(46);
 
     pass("%s", "Main function.");
 
@@ -170,6 +171,7 @@ int main()
 	is_eq( len()        , 42);
 	is_eq( copy()       , 42);
 	is_eq( fmt()        , 42);
+	is_eq( cap()        , 42);
 	
 	diag("Function pointer inside function")
 	is_eq(action(add2), add2(2,3,4));

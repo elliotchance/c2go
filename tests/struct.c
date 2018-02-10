@@ -137,7 +137,7 @@ void struct_in_struct_with_star()
 
 int main()
 {
-    plan(58);
+    plan(59);
 
     struct programming variable;
     char *s = "Programming in Software Development.";
@@ -339,6 +339,7 @@ int main()
 	{ struct len         {int i;}; struct len         UU;  UU.i = 5; is_eq(UU.i,5);}
 	{ struct copy        {int i;}; struct copy        UU;  UU.i = 5; is_eq(UU.i,5);}
 	{ struct fmt         {int i;}; struct fmt         UU;  UU.i = 5; is_eq(UU.i,5);}
+	{ struct cap         {int i;}; struct cap         UU;  UU.i = 5; is_eq(UU.i,5);}
 
 	// uncomment after success implementation of struct scope
 	// https://github.com/elliotchance/c2go/issues/368
