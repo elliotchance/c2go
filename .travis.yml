@@ -40,7 +40,11 @@ before_install:
 
   # gocovmerge is used to merge all the separate unit/integration test coverage
   # profiles.
-  - go get -u github.com/wadey/gocovmerge
+  - go get -u -v github.com/wadey/gocovmerge
+
+  # install gometalinter
+  - go get -u github.com/alecthomas/gometalinter
+  - gometalinter --install
 
 script:
   - . ./travis/$SCRIPT.sh

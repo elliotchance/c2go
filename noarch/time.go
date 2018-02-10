@@ -1,8 +1,16 @@
 package noarch
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // TimeT is the representation of "time_t".
+// For historical reasons, it is generally implemented as an integral value
+// representing the number of seconds elapsed
+// since 00:00 hours, Jan 1, 1970 UTC (i.e., a unix timestamp).
+// Although libraries may implement this type using alternative time
+// representations.
 type TimeT int32
 
 // NullToTimeT converts a NULL to an array of TimeT.
@@ -39,4 +47,83 @@ func Ctime(tloc []TimeT) []byte {
 // TimeTToFloat64 converts TimeT to a float64. It is used by the tests.
 func TimeTToFloat64(t TimeT) float64 {
 	return float64(t)
+}
+
+// Tm - base struct in "time.h"
+// Structure containing a calendar date and time broken down into its
+// components
+type Tm struct {
+	Tm_sec   int
+	Tm_min   int
+	Tm_hour  int
+	Tm_mday  int
+	Tm_mon   int
+	Tm_year  int
+	Tm_wday  int
+	Tm_yday  int
+	Tm_isdst int
+	// tm_gmtoff int32
+	// tm_zone   []byte
+}
+
+// Localtime - Convert time_t to tm as local time
+// Uses the value pointed by timer to fill a tm structure with the values that
+// represent the corresponding time, expressed for the local timezone.
+func LocalTime(timer []TimeT) (tm []Tm) {
+	t := time.Unix(int64(timer[0]), 0)
+	tm = make([]Tm, 1)
+	tm[0].Tm_sec = t.Second()
+	tm[0].Tm_min = t.Minute()
+	tm[0].Tm_hour = t.Hour()
+	tm[0].Tm_mday = t.Day()
+	tm[0].Tm_mon = int(t.Month()) - 1
+	tm[0].Tm_year = t.Year() - 1900
+	tm[0].Tm_wday = int(t.Weekday())
+	tm[0].Tm_yday = t.YearDay() - 1
+	return
+}
+
+// Gmtime - Convert time_t to tm as UTC time
+func Gmtime(timer []TimeT) (tm []Tm) {
+	t := time.Unix(int64(timer[0]), 0)
+	t = t.UTC()
+	tm = make([]Tm, 1)
+	tm[0].Tm_sec = t.Second()
+	tm[0].Tm_min = t.Minute()
+	tm[0].Tm_hour = t.Hour()
+	tm[0].Tm_mday = t.Day()
+	tm[0].Tm_mon = int(t.Month()) - 1
+	tm[0].Tm_year = t.Year() - 1900
+	tm[0].Tm_wday = int(t.Weekday())
+	tm[0].Tm_yday = t.YearDay() - 1
+	return
+}
+
+// Mktime - Convert tm structure to time_t
+// Returns the value of type time_t that represents the local time described
+// by the tm structure pointed by timeptr (which may be modified).
+func Mktime(tm []Tm) TimeT {
+	t := time.Date(tm[0].Tm_year+1900, time.Month(tm[0].Tm_mon)+1, tm[0].Tm_mday,
+		tm[0].Tm_hour, tm[0].Tm_min, tm[0].Tm_sec, 0, time.Now().Location())
+
+	tm[0].Tm_wday = int(t.Weekday())
+
+	return TimeT(int32(t.Unix()))
+}
+
+// constants for asctime
+var wday_name = [...]string{"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"}
+var mon_name = [...]string{
+	"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+	"Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+}
+
+// Asctime - Convert tm structure to string
+func Asctime(tm []Tm) []byte {
+	return []byte(fmt.Sprintf("%.3s %.3s%3d %.2d:%.2d:%.2d %d\n",
+		wday_name[tm[0].Tm_wday],
+		mon_name[tm[0].Tm_mon],
+		tm[0].Tm_mday, tm[0].Tm_hour,
+		tm[0].Tm_min, tm[0].Tm_sec,
+		1900+tm[0].Tm_year))
 }

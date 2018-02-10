@@ -12,7 +12,7 @@
     test_##t();
 
 // size of that file
-int filesize = 10578;
+int filesize = 10874;
 
 void test_putchar()
 {
@@ -516,9 +516,31 @@ void test_vsnprintf()
 	is_eq(s,19+8+5);
 }
 
+void test_eof()
+{
+	if ( (int)(EOF) == -1 ) {
+		pass("ok");
+	}
+	char c = EOF;
+	if ( c == (char)(EOF) ) {
+		pass("ok");
+	}
+	char a[1];
+	a[0] = 's';
+	if ( a[0] != EOF ) {
+		pass("ok");
+	}
+	a[0] = EOF;
+	if ( a[0] != EOF ) {
+		fail("EOF == EOF - fail");
+	} else {
+		pass("ok");
+	}
+}
+
 int main()
 {
-    plan(57);
+    plan(61);
 
     START_TEST(putchar)
     START_TEST(puts)
@@ -551,6 +573,7 @@ int main()
     START_TEST(snprintf)
     START_TEST(vsprintf)
     START_TEST(vsnprintf)
+	START_TEST(eof)
 
     done_testing();
 }

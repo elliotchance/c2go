@@ -3,7 +3,7 @@
 
 int main()
 {
-    plan(7);
+    plan(8);
 
     int value = 1;
 
@@ -50,5 +50,16 @@ int main()
 	is_eq(*ok, 0);
 	}
 
+	diag("while with --");
+	{
+		int T = 2;
+		int counter = 0;
+		while(T--){
+			if (counter > 50){
+				break;
+			}
+		};
+		is_eq(T,-1);
+	}
     done_testing();
 }
