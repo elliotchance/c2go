@@ -7,7 +7,7 @@ set -e
 go build
 
 
-# Variable for location of temp sqlite files
+# Variable for location of temp files
 export GLIBC_TEMP_FOLDER="/tmp/GLIBC"
 mkdir -p $GLIBC_TEMP_FOLDER
 
@@ -16,7 +16,7 @@ export GLIBC_VERSION=glibc-2.27
 export GLIBC_FILE="qsort"
 export GLIBC_FILE_LOCATION="stdlib"
 
-# Download/unpack SQLite if required.
+# Download/unpack if required.
 if [ ! -e $GLIBC_TEMP_FOLDER/$GLIBC_VERSION.tar.gz ]; then
     curl https://ftp.gnu.org/gnu/glibc/$GLIBC_VERSION.tar.gz > $GLIBC_TEMP_FOLDER/$GLIBC_VERSION.tar.gz
 	tar -xvzf $GLIBC_TEMP_FOLDER/$GLIBC_VERSION.tar.gz -C $GLIBC_TEMP_FOLDER/
