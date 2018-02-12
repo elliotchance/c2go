@@ -30,10 +30,6 @@ type FunctionDefinition struct {
 	Parameters       []int
 }
 
-var functionDefinitions map[string]FunctionDefinition
-
-var builtInFunctionDefinitionsHaveBeenLoaded = false
-
 // Each of the predefined function have a syntax that allows them to be easy to
 // read (and maintain). For example:
 //
@@ -259,7 +255,7 @@ var builtInFunctionDefinitions = map[string][]string{
 func (p *Program) GetFunctionDefinition(functionName string) *FunctionDefinition {
 	p.loadFunctionDefinitions()
 
-	if f, ok := functionDefinitions[functionName]; ok {
+	if f, ok := p.functionDefinitions[functionName]; ok {
 		return &f
 	}
 
@@ -271,7 +267,7 @@ func (p *Program) GetFunctionDefinition(functionName string) *FunctionDefinition
 func (p *Program) AddFunctionDefinition(f FunctionDefinition) {
 	p.loadFunctionDefinitions()
 
-	functionDefinitions[f.Name] = f
+	p.functionDefinitions[f.Name] = f
 }
 
 // dollarArgumentsToIntSlice converts a list of dollar arguments, like "$1, &2"
@@ -300,18 +296,19 @@ func dollarArgumentsToIntSlice(s string) []int {
 }
 
 func (p *Program) loadFunctionDefinitions() {
-	if builtInFunctionDefinitionsHaveBeenLoaded {
+	if p.builtInFunctionDefinitionsHaveBeenLoaded {
 		return
 	}
 
-	functionDefinitions = map[string]FunctionDefinition{}
-	builtInFunctionDefinitionsHaveBeenLoaded = true
+	p.functionDefinitions = map[string]FunctionDefinition{}
+	p.builtInFunctionDefinitionsHaveBeenLoaded = true
 
 	for k, v := range builtInFunctionDefinitions {
 		var isExist bool
 		for _, inc := range p.IncludeHeaders {
 			if strings.HasSuffix(inc.HeaderName, k) {
 				isExist = true
+				break
 			}
 		}
 		if !isExist {
