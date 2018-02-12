@@ -101,6 +101,9 @@ type Program struct {
 	// key    - filename
 	// value  - last comment inserted in Go code
 	commentLine map[string]int
+
+	// IncludeHeaders - list of C header
+	IncludeHeaders []IncludeHeader
 }
 
 // Comment - position of line comment '//...'
@@ -146,6 +149,7 @@ func NewProgram() *Program {
 		EnumTypedefName:    map[string]bool{},
 		TypedefType:        map[string]string{},
 		commentLine:        map[string]int{},
+		IncludeHeaders:     []IncludeHeader{},
 	}
 }
 

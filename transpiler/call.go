@@ -226,7 +226,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 
 	// Get the function definition from it's name. The case where it is not
 	// defined is handled below (we haven't seen the prototype yet).
-	functionDef := program.GetFunctionDefinition(functionName)
+	functionDef := p.GetFunctionDefinition(functionName)
 
 	if functionDef == nil {
 		// We do not have a prototype for the function, but we should not exit
