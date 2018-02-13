@@ -55,8 +55,8 @@ func GetExportedName(field string) string {
 	}
 
 	// NotFunc(int)()
-	field = strings.Replace(field, "(", "_", -1)
-	field = strings.Replace(field, ")", "_", -1)
+	field = strings.Replace(field, "(", "O", -1)
+	field = strings.Replace(field, ")", "O", -1)
 
 	return Ucfirst(strings.TrimLeft(field, "*_"))
 }
