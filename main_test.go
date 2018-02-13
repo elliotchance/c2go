@@ -201,10 +201,10 @@ func TestIntegrationScripts(t *testing.T) {
 						continue
 					}
 					fileLines := strings.Split(string(content), "\n")
-					fmt.Println("+========================+")
-					fmt.Println("File : ", filename)
+					t.Log("+========================+")
+					t.Logf("File : ", filename)
 					for i := linePosition - 10; i < linePosition && i < len(fileLines); i++ {
-						fmt.Printf("Line : %d : %s\n", fileLines[i])
+						t.Logf("Line : %d : %s\n", fileLines[i])
 					}
 				}
 				t.Fatalf("Expected %s\nGot: %s", cProgramStderr, goProgramStderr)
