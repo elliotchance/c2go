@@ -178,6 +178,7 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 	}
 
 	// FIXME: I have no idea, how to solve.
+	// See : https://github.com/elliotchance/c2go/issues/628
 	if strings.Contains(s, "__locale_data") {
 		s = strings.Replace(s, "struct __locale_data", "int", -1)
 		s = strings.Replace(s, "__locale_data", "int", -1)
