@@ -14,6 +14,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"syscall"
 	"testing"
@@ -167,6 +168,45 @@ func TestIntegrationScripts(t *testing.T) {
 			goProgramStderr = strings.Replace(goProgramStderr, currentDir+"/", "", -1)
 
 			if cProgramStderr != goProgramStderr {
+				// Add addition debug information for lines like:
+				// build/tests/cast/main_test.go:195:1: expected '}', found 'type'
+				buildPrefix := "/build/tests/"
+				lines := strings.Split(goProgramStderr, "\n")
+				for _, line := range lines {
+					line = strings.TrimSpace(line)
+					if !strings.HasPrefix(line, buildPrefix) {
+						continue
+					}
+					index := strings.Index(line, ":")
+					if index < 0 {
+						continue
+					}
+					filename := line[0:index]
+					if len(line) <= index+1 {
+						continue
+					}
+					line = line[index+1:]
+					index = strings.Index(line, ":")
+					if index < 0 {
+						continue
+					}
+					linePosition, err := strconv.Atoi(line[:index])
+					if err != nil {
+						err = nil
+						continue
+					}
+					content, err := ioutil.ReadFile(filename)
+					if err != nil {
+						err = nil
+						continue
+					}
+					fileLines := strings.Split(string(content), "\n")
+					fmt.Println("+========================+")
+					fmt.Println("File : ", filename)
+					for i := linePosition - 10; i < linePosition && i < len(fileLines); i++ {
+						fmt.Printf("Line : %d : %s\n", fileLines[i])
+					}
+				}
 				t.Fatalf("Expected %s\nGot: %s", cProgramStderr, goProgramStderr)
 			}
 
