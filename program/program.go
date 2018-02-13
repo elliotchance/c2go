@@ -212,8 +212,18 @@ func (p *Program) GetComments(n ast.Position) (out []*goast.Comment) {
 				out = append(out, &goast.Comment{
 					Text: p.Comments[i].Comment,
 				})
+				if p.Comments[i].Comment[0:2] == "/*" {
+					out = append(out, &goast.Comment{
+						Text: "// ",
+					})
+				}
 			}
 		}
+	}
+	if len(out) > 0 {
+		out = append(out, &goast.Comment{
+			Text: "// ",
+		})
 	}
 	p.commentLine[n.File] = lastLine
 	return
