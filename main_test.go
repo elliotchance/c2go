@@ -173,14 +173,11 @@ func TestIntegrationScripts(t *testing.T) {
 				buildPrefix := "build/tests/"
 				var output string
 				lines := strings.Split(goProgramStderr, "\n")
-				output += fmt.Sprintf("Amount of lines in goerr = %d\n",
-					len(lines))
 				for _, line := range lines {
 					line = strings.TrimSpace(line)
 					if !strings.HasPrefix(line, buildPrefix) {
 						continue
 					}
-					output += fmt.Sprintf("line : %s\n", line)
 					index := strings.Index(line, ":")
 					if index < 0 {
 						output += fmt.Sprintf("Cannot found symbol ':' in %s\n",
@@ -212,8 +209,12 @@ func TestIntegrationScripts(t *testing.T) {
 						continue
 					}
 					fileLines := strings.Split(string(content), "\n")
-					for i := linePosition - 10; i < linePosition && i < len(fileLines); i++ {
-						output += fmt.Sprintf("Line : %d : %s\n", fileLines[i])
+					start := linePosition - 20
+					if start < 0 {
+						start = 0
+					}
+					for i := start; i < linePosition && i < len(fileLines); i++ {
+						output += fmt.Sprintf("Line : %3d : %s\n", i, fileLines[i])
 					}
 				}
 				t.Fatalf("Expected %s\nGot: %s\nParts of code:\n%s",
