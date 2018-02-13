@@ -170,7 +170,7 @@ func TestIntegrationScripts(t *testing.T) {
 			if cProgramStderr != goProgramStderr {
 				// Add addition debug information for lines like:
 				// build/tests/cast/main_test.go:195:1: expected '}', found 'type'
-				buildPrefix := "/build/tests/"
+				buildPrefix := "build/tests/"
 				var output string
 				lines := strings.Split(goProgramStderr, "\n")
 				output += fmt.Sprintf("Amount of lines in goerr = %d\n",
