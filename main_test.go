@@ -171,6 +171,7 @@ func TestIntegrationScripts(t *testing.T) {
 				// Add addition debug information for lines like:
 				// build/tests/cast/main_test.go:195:1: expected '}', found 'type'
 				buildPrefix := "/build/tests/"
+				var output string
 				lines := strings.Split(goProgramStderr, "\n")
 				for _, line := range lines {
 					line = strings.TrimSpace(line)
@@ -201,13 +202,14 @@ func TestIntegrationScripts(t *testing.T) {
 						continue
 					}
 					fileLines := strings.Split(string(content), "\n")
-					t.Log("+========================+")
-					t.Logf("File : ", filename)
+					output += "+========================+\n"
+					output += fmt.Sprintf("File : %s\n", filename)
 					for i := linePosition - 10; i < linePosition && i < len(fileLines); i++ {
-						t.Logf("Line : %d : %s\n", fileLines[i])
+						output += fmt.Sprintf("Line : %d : %s\n", fileLines[i])
 					}
 				}
-				t.Fatalf("Expected %s\nGot: %s", cProgramStderr, goProgramStderr)
+				t.Fatalf("Expected %s\nGot: %s\nParts of code:\n%s",
+					cProgramStderr, goProgramStderr, output)
 			}
 
 			// Check stdout
