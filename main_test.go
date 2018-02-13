@@ -436,17 +436,14 @@ func TestExternalInclude(t *testing.T) {
 func TestComments(t *testing.T) {
 	var args = DefaultProgramArgs()
 	args.inputFiles = []string{"./tests/comment/main.c"}
-	dir, err := ioutil.TempDir("", "c2go_multi5")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dir) // clean up
+	dir := "./build/comment"
+	_ = os.Mkdir(dir, os.ModePerm)
 	args.outputFile = path.Join(dir, "comment.go")
 	args.packageName = "main"
 	args.outputAsTest = true
 
 	// testing
-	err = Start(args)
+	err := Start(args)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
