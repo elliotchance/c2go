@@ -54,6 +54,10 @@ int type()       {return 42;}
 int var()        {return 42;}
 int _()          {return 42;}
 int init()       {return 42;}
+int len()        {return 42;}
+int copy()       {return 42;}
+int fmt()        {return 42;}
+int cap()        {return 42;}
 
 void exit2(int t){
 	(void)(t);
@@ -92,9 +96,15 @@ RE* empty_return_struct2(int a){
 	else          { exit2(-1);}
 }
 
+typedef int (* operators)(int a,int b);
+int call_a_func(operators call_this) {
+    int output = call_this(5, 8);
+    return output;
+}
+
 int main()
 {
-    plan(40);
+    plan(46);
 
     pass("%s", "Main function.");
 
@@ -158,6 +168,10 @@ int main()
 	is_eq( var()        , 42);
 	is_eq( _()          , 42);
 	is_eq( init()       , 42);
+	is_eq( len()        , 42);
+	is_eq( copy()       , 42);
+	is_eq( fmt()        , 42);
+	is_eq( cap()        , 42);
 	
 	diag("Function pointer inside function")
 	is_eq(action(add2), add2(2,3,4));
@@ -189,6 +203,15 @@ int main()
 	}
 	{
 		is_eq((*(empty_return_struct2(6))).re,1);
+	}
+
+	diag("typedef function");
+	{
+		int result = call_a_func(&mul);
+		is_eq(result,40);
+	}
+	{
+		is_eq(call_a_func(&mul),40);
 	}
 
     done_testing();

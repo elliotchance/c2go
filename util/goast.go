@@ -4,6 +4,7 @@
 package util
 
 import (
+	"bytes"
 	"fmt"
 	goast "go/ast"
 	"go/parser"
@@ -45,84 +46,64 @@ func typeToExpr(t string) goast.Expr {
 	return internalTypeToExpr(t)
 }
 
-func internalTypeToExpr(t string) goast.Expr {
+func internalTypeToExpr(goType string) goast.Expr {
+
 	// I'm not sure if this is an error or not. It is caused by processing the
 	// resolved type of "void" which is "". It is used on functions to denote
 	// that it does not have a return type.
-	if t == "" {
+	if goType == "" {
 		return nil
 	}
 
-	// Empty Interface
-	if t == "interface{}" {
-		return &goast.InterfaceType{
-			Methods: &goast.FieldList{},
+	separator := make([]bool, len(goType)+1)
+	for i := range goType {
+		switch goType[i] {
+		case '.', '*', '(', ')', '-', '+', '&', '{', '}', ' ', '[', ']':
+			separator[i] = true
+			separator[i+1] = true
 		}
 	}
 
-	// Parenthesis Expression
-	if strings.HasPrefix(t, "(") && strings.HasSuffix(t, ")") {
-		return &goast.ParenExpr{
-			X: typeToExpr(t[1 : len(t)-1]),
+	// Specific case for 'interface{}'
+	// remove all separator inside that word
+	special := []byte("interface{}")
+
+	input := []byte(goType)
+again:
+	index := bytes.Index(input, special)
+	if index >= 0 {
+		for i := index + 1; i < index+len(special); i++ {
+			separator[i] = false
+		}
+		input = input[index+len(special)-1:]
+		goto again
+	}
+
+	separator[0] = true
+	separator[len(separator)-1] = true
+
+	// Separation string 'goType' to slice of bytes
+	var indexes []int
+	for i := range separator {
+		if separator[i] {
+			indexes = append(indexes, i)
+		}
+	}
+	var lines [][]byte
+	for i := 0; i < len(indexes)-1; i++ {
+		lines = append(lines, []byte(goType[indexes[i]:indexes[i+1]]))
+	}
+
+	// Checking
+	for i := range lines {
+		if IsGoKeyword(string(lines[i])) {
+			lines[i] = []byte(string(lines[i]) + "_")
 		}
 	}
 
-	// Pointer Type
-	if strings.HasPrefix(t, "*") {
-		return &goast.StarExpr{
-			X: typeToExpr(t[1:]),
-		}
-	}
+	goType = string(bytes.Join(lines, []byte("")))
 
-	// Slice
-	if strings.HasPrefix(t, "[]") {
-		return &goast.ArrayType{
-			Elt: typeToExpr(t[2:]),
-		}
-	}
-
-	// Selector: "type.identifier"
-	if strings.Contains(t, ".") {
-		i := strings.IndexByte(t, '.')
-
-		return &goast.SelectorExpr{
-			X:   typeToExpr(t[0:i]),
-			Sel: NewIdent(t[i+1:]),
-		}
-	}
-
-	// Array access
-	match := GetRegex(`(.+)\[(\d+)\]$`).FindStringSubmatch(t)
-	if match != nil {
-		return &goast.IndexExpr{
-			X: typeToExpr(match[1]),
-			// This should use NewIntLit, but it doesn't seem right to
-			// cast the string to an integer to have it converted back to
-			// as string.
-			Index: &goast.BasicLit{
-				Kind:  token.INT,
-				Value: match[2],
-			},
-		}
-	}
-
-	// Fixed Length Array
-	match = GetRegex(`^\[(\d+)\](.+)$`).FindStringSubmatch(t)
-	if match != nil {
-		return &goast.ArrayType{
-			Elt: typeToExpr(match[2]),
-			// This should use NewIntLit, but it doesn't seem right to
-			// cast the string to an integer to have it converted back to
-			// as string.
-			Len: &goast.BasicLit{
-				Kind:  token.INT,
-				Value: match[1],
-			},
-		}
-	}
-
-	// This may panic, and so it will be handled by typeToExpr().
-	return NewIdent(t)
+	return goast.NewIdent(goType)
 }
 
 // NewCallExpr creates a new *"go/ast".CallExpr with each of the arguments
@@ -132,6 +113,9 @@ func internalTypeToExpr(t string) goast.Expr {
 // The function name is checked with IsAValidFunctionName and will panic if the
 // function name is deemed to be not valid.
 func NewCallExpr(functionName string, args ...goast.Expr) *goast.CallExpr {
+	for i := range args {
+		PanicIfNil(args[i], "Argument of function is cannot be nil")
+	}
 	return &goast.CallExpr{
 		Fun:  typeToExpr(functionName),
 		Args: args,
@@ -189,30 +173,6 @@ func NewBinaryExpr(left goast.Expr, operator token.Token, right goast.Expr,
 		Op: operator,
 		Y:  right,
 	}
-
-	// Wrap the assignment operator in a closure if we must.
-	if !stmt {
-		switch operator {
-		case token.ASSIGN,
-			token.ADD_ASSIGN,
-			token.SUB_ASSIGN,
-			token.MUL_ASSIGN,
-			token.QUO_ASSIGN,
-			token.REM_ASSIGN,
-			token.AND_ASSIGN,
-			token.OR_ASSIGN,
-			token.XOR_ASSIGN,
-			token.SHL_ASSIGN,
-			token.SHR_ASSIGN,
-			token.AND_NOT_ASSIGN:
-			returnStmt := &goast.ReturnStmt{
-				Results: []goast.Expr{left},
-			}
-
-			b = NewFuncClosure(returnType, NewExprStmt(b), returnStmt)
-		}
-	}
-
 	return b
 }
 
@@ -226,9 +186,7 @@ func NewIdent(name string) *goast.Ident {
 	}
 
 	// Remove const prefix as it has no equivalent in Go.
-	if strings.HasPrefix(name, "const ") {
-		name = name[6:]
-	}
+	name = strings.TrimPrefix(name, "const ")
 
 	if !IsAValidFunctionName(name) {
 		// Normally we do not panic because we want the transpiler to recover as
@@ -318,6 +276,8 @@ func ConvertFunctionNameFromCtoGo(name string) string {
 	return name
 }
 
+// CreateSliceFromReference - create a slice, like :
+// (*[1]int)(unsafe.Pointer(&a))[:]
 func CreateSliceFromReference(goType string, expr goast.Expr) *goast.SliceExpr {
 	// If the Go type is blank it means that the C type is 'void'.
 	if goType == "" {
@@ -344,6 +304,8 @@ func CreateSliceFromReference(goType string, expr goast.Expr) *goast.SliceExpr {
 	}
 }
 
+// NewFuncType - create a new function type, example:
+// func ...(fieldList)(returnType)
 func NewFuncType(fieldList *goast.FieldList, returnType string, addDefaultReturn bool) *goast.FuncType {
 	returnTypes := []*goast.Field{}
 	if returnType != "" {
@@ -374,4 +336,44 @@ func NewGoExpr(expr string) goast.Expr {
 	}
 
 	return e
+}
+
+// NewAnonymousFunction - create a new anonymous function.
+// Example:
+// func() returnType{
+//		defer func(){
+//			deferBody
+//		}()
+// 		body
+//		return returnValue
+// }
+func NewAnonymousFunction(body, deferBody []goast.Stmt,
+	returnValue goast.Expr,
+	returnType string) *goast.CallExpr {
+
+	if deferBody != nil {
+		body = append(body, []goast.Stmt{&goast.DeferStmt{
+			Defer: 1,
+			Call: &goast.CallExpr{
+				Fun: &goast.FuncLit{
+					Type: &goast.FuncType{},
+					Body: &goast.BlockStmt{List: deferBody},
+				},
+				Lparen: 1,
+			},
+		}}...)
+	}
+
+	return &goast.CallExpr{Fun: &goast.FuncLit{
+		Type: &goast.FuncType{
+			Results: &goast.FieldList{List: []*goast.Field{
+				&goast.Field{Type: goast.NewIdent(returnType)},
+			}},
+		},
+		Body: &goast.BlockStmt{
+			List: append(body, &goast.ReturnStmt{
+				Results: []goast.Expr{returnValue},
+			}),
+		},
+	}}
 }

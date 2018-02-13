@@ -2,10 +2,12 @@ package ast
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/elliotchance/c2go/util"
 )
 
+// Position is type of position in source code
 type Position struct {
 	File      string // The relative or absolute file path.
 	Line      int    // Start line
@@ -17,6 +19,17 @@ type Position struct {
 	// debugging. We could derive this value from the other properties to save
 	// on a bit of memory, but let worry about that later.
 	StringValue string
+}
+
+// GetSimpleLocation - return a string like : "file:line" in
+// according to position
+// Example : " /tmp/1.c:200 "
+func (p Position) GetSimpleLocation() (loc string) {
+	file := p.File
+	if f, err := filepath.Abs(p.File); err != nil {
+		file = f
+	}
+	return fmt.Sprintf(" %s:%d ", file, p.Line)
 }
 
 func NewPositionFromString(s string) Position {
@@ -232,6 +245,8 @@ func setPosition(node Node, position Position) {
 		n.Pos = position
 	case *BinaryOperator:
 		n.Pos = position
+	case *BlockCommandComment:
+		n.Pos = position
 	case *BreakStmt:
 		n.Pos = position
 	case *CallExpr:
@@ -278,11 +293,17 @@ func setPosition(node Node, position Position) {
 		n.Pos = position
 	case *FormatAttr:
 		n.Pos = position
+	case *FullComment:
+		n.Pos = position
 	case *FunctionDecl:
 		n.Pos = position
 	case *ForStmt:
 		n.Pos = position
 	case *GCCAsmStmt:
+		n.Pos = position
+	case *HTMLStartTagComment:
+		n.Pos = position
+	case *HTMLEndTagComment:
 		n.Pos = position
 	case *GotoStmt:
 		n.Pos = position
@@ -295,6 +316,8 @@ func setPosition(node Node, position Position) {
 	case *IndirectFieldDecl:
 		n.Pos = position
 	case *InitListExpr:
+		n.Pos = position
+	case *InlineCommandComment:
 		n.Pos = position
 	case *IntegerLiteral:
 		n.Pos = position
@@ -317,6 +340,10 @@ func setPosition(node Node, position Position) {
 	case *OffsetOfExpr:
 		n.Pos = position
 	case *PackedAttr:
+		n.Pos = position
+	case *ParagraphComment:
+		n.Pos = position
+	case *ParamCommandComment:
 		n.Pos = position
 	case *ParenExpr:
 		n.Pos = position
@@ -342,6 +369,8 @@ func setPosition(node Node, position Position) {
 		n.Pos = position
 	case *SwitchStmt:
 		n.Pos = position
+	case *TextComment:
+		n.Pos = position
 	case *TransparentUnionAttr:
 		n.Pos = position
 	case *TypedefDecl:
@@ -355,6 +384,8 @@ func setPosition(node Node, position Position) {
 	case *VAArgExpr:
 		n.Pos = position
 	case *VarDecl:
+		n.Pos = position
+	case *VerbatimLineComment:
 		n.Pos = position
 	case *VisibilityAttr:
 		n.Pos = position

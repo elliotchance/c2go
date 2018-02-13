@@ -16,7 +16,7 @@ import (
 	"github.com/elliotchance/c2go/util"
 )
 
-func NewFunctionField(p *program.Program, name, cType string) (_ *goast.Field, err error) {
+func newFunctionField(p *program.Program, name, cType string) (_ *goast.Field, err error) {
 	if name == "" {
 		err = fmt.Errorf("Name of function field cannot be empty")
 		return
@@ -57,9 +57,10 @@ func NewFunctionField(p *program.Program, name, cType string) (_ *goast.Field, e
 
 	return field, nil
 }
+
 func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (field *goast.Field, err error) {
 	if types.IsFunction(n.Type) {
-		field, err = NewFunctionField(p, n.Name, n.Type)
+		field, err = newFunctionField(p, n.Name, n.Type)
 		if err == nil {
 			return
 		}
@@ -106,13 +107,6 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 	name = types.GenerateCorrectType(name)
 	p.DefineType(name)
 
-	s := program.NewStruct(n)
-	if s.IsUnion {
-		p.Unions["union "+s.Name] = s
-	} else {
-		p.Structs["struct "+s.Name] = s
-	}
-
 	// TODO: Some platform structs are ignored.
 	// https://github.com/elliotchance/c2go/issues/85
 	if name == "__locale_struct" ||
@@ -125,8 +119,7 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 	var fields []*goast.Field
 
 	for pos := range n.Children() {
-		c := n.Children()[pos]
-		switch field := c.(type) {
+		switch field := n.Children()[pos].(type) {
 		case *ast.FieldDecl:
 			field.Type = types.GenerateCorrectType(field.Type)
 			field.Type2 = types.GenerateCorrectType(field.Type2)
@@ -150,27 +143,73 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 					pos++
 					decls = append(decls, declUnion...)
 				}
+			} else if field.Kind == "struct" &&
+				pos+2 <= len(n.Children()) {
+				if inField, ok := n.Children()[pos+1].(*ast.FieldDecl); ok {
+					inField.Type = types.GenerateCorrectType(inField.Type)
+					inField.Type2 = types.GenerateCorrectType(inField.Type2)
+
+					field.Name = inField.Type
+
+					if strings.HasPrefix(field.Name, "const ") {
+						field.Name = field.Name[len("const "):]
+					}
+
+					if strings.HasPrefix(field.Name, "struct ") {
+						field.Name = field.Name[len("struct "):]
+					}
+
+					if field.Name[len(field.Name)-1] == '*' {
+						// star in struct
+						field.Name = field.Name[:len(field.Name)-len(" *")]
+					}
+
+					if strings.Contains(field.Name, "[") {
+						p.AddMessage(p.GenerateWarningMessage(
+							fmt.Errorf("Not acceptable name of struct %s", field.Name), n))
+						continue
+					}
+					declStruct, err := transpileRecordDecl(p, field)
+					if err != nil {
+						p.AddMessage(p.GenerateWarningMessage(err, field))
+					}
+					pos++
+					decls = append(decls, declStruct...)
+				}
 			} else {
 				decls, err = transpileRecordDecl(p, field)
 				if err != nil {
-					message := fmt.Sprintf("could not parse %v", c)
-					p.AddMessage(p.GenerateWarningMessage(errors.New(message), c))
+					message := fmt.Sprintf("could not parse %v", field)
+					p.AddMessage(p.GenerateWarningMessage(errors.New(message), field))
 				}
 			}
 
+		case *ast.FullComment:
+			// We haven't Go ast struct for easy inject a comments.
+			// All comments are added like CommentsGroup.
+			// So, we can ignore that comment, because all comments
+			// will be added by another way.
+
 		default:
-			message := fmt.Sprintf("could not parse %v", c)
-			p.AddMessage(p.GenerateWarningMessage(errors.New(message), c))
+			message := fmt.Sprintf("could not parse %v", field)
+			p.AddMessage(p.GenerateWarningMessage(errors.New(message), field))
 		}
 	}
 
+	s := program.NewStruct(n)
+	if s.IsUnion {
+		p.Unions["union "+s.Name] = s
+	} else {
+		p.Structs["struct "+s.Name] = s
+	}
 	if s.IsUnion {
 		// Union size
-		size, err := types.SizeOf(p, "union "+name)
+		var size int
+		size, err = types.SizeOf(p, "union "+name)
 
 		// In normal case no error is returned,
 		if err != nil {
-			// but if we catch one, send it as a aarning
+			// but if we catch one, send it as a warning
 			message := fmt.Sprintf("could not determine the size of type `union %s` for that reason: %s", name, err)
 			p.AddMessage(p.GenerateWarningMessage(errors.New(message), n))
 		} else {
@@ -179,23 +218,28 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 			p.AddImports("reflect", "unsafe")
 
 			// Declaration for implementing union type
-			decls = append(decls, transpileUnion(name, size, fields)...)
+			d, err2 := transpileUnion(name, size, fields)
+			if err2 != nil {
+				return nil, err2
+			}
+			decls = append(decls, d...)
 		}
-	} else {
-		decls = append(decls, &goast.GenDecl{
-			Tok: token.TYPE,
-			Specs: []goast.Spec{
-				&goast.TypeSpec{
-					Name: util.NewIdent(name),
-					Type: &goast.StructType{
-						Fields: &goast.FieldList{
-							List: fields,
-						},
+		return
+	}
+
+	decls = append(decls, &goast.GenDecl{
+		Tok: token.TYPE,
+		Specs: []goast.Spec{
+			&goast.TypeSpec{
+				Name: util.NewIdent(name),
+				Type: &goast.StructType{
+					Fields: &goast.FieldList{
+						List: fields,
 					},
 				},
 			},
-		})
-	}
+		},
+	})
 
 	return
 }
@@ -214,7 +258,7 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 
 	if types.IsFunction(n.Type) {
 		var field *goast.Field
-		field, err = NewFunctionField(p, n.Name, n.Type)
+		field, err = newFunctionField(p, n.Name, n.Type)
 		if err != nil {
 			p.AddMessage(p.GenerateWarningMessage(err, n))
 		} else {
@@ -342,7 +386,13 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 	return
 }
 
-func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, theType string, err error) {
+func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
+	decls []goast.Decl, theType string, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot transpileVarDecl : err = %v", err)
+		}
+	}()
 	// There may be some startup code for this global variable.
 	if p.Function == nil {
 		name := n.Name
@@ -491,7 +541,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (decls []goast.Decl, t
 		return
 	}
 
-	var t string = n.Type
+	t := n.Type
 	if len(t) > 1 {
 		t = n.Type[0 : len(n.Type)-len(" *")]
 	}

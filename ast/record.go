@@ -1,5 +1,6 @@
 package ast
 
+// Record struct
 type Record struct {
 	Addr       Address
 	Type       string

@@ -93,6 +93,21 @@ type Program struct {
 	// Map: key = INT, value = int
 	// Important: key and value are C types
 	TypedefType map[string]string
+
+	// Comments
+	Comments []Comment
+
+	// commentLine - a map with:
+	// key    - filename
+	// value  - last comment inserted in Go code
+	commentLine map[string]int
+}
+
+// Comment - position of line comment '//...'
+type Comment struct {
+	File    string
+	Line    int
+	Comment string
 }
 
 // NewProgram creates a new blank program.
@@ -130,6 +145,7 @@ func NewProgram() *Program {
 		EnumConstantToEnum: map[string]string{},
 		EnumTypedefName:    map[string]bool{},
 		TypedefType:        map[string]string{},
+		commentLine:        map[string]int{},
 	}
 }
 
@@ -159,7 +175,7 @@ func (p *Program) AddMessage(message string) bool {
 		// Warning collapsing for minimaze warnings
 		warning := "// Warning"
 		if strings.HasPrefix(p.messages[last], warning) {
-			l := string(p.messages[last][len(warning):])
+			l := p.messages[last][len(warning):]
 			if strings.HasSuffix(p.messages[new], l) {
 				p.messages[last] = p.messages[new]
 				p.messages = p.messages[0:new]
@@ -184,6 +200,33 @@ func (p *Program) GetMessageComments() (_ *goast.CommentGroup) {
 		p.messagePosition = len(p.messages)
 	}
 	return &group
+}
+
+// GetComments - return comments
+func (p *Program) GetComments(n ast.Position) (out []*goast.Comment) {
+	beginLine := p.commentLine[n.File]
+	lastLine := n.LineEnd
+	for i := range p.Comments {
+		if p.Comments[i].File == n.File {
+			if beginLine < p.Comments[i].Line && p.Comments[i].Line <= lastLine {
+				out = append(out, &goast.Comment{
+					Text: p.Comments[i].Comment,
+				})
+				if p.Comments[i].Comment[0:2] == "/*" {
+					out = append(out, &goast.Comment{
+						Text: "// ",
+					})
+				}
+			}
+		}
+	}
+	if len(out) > 0 {
+		out = append(out, &goast.Comment{
+			Text: "// ",
+		})
+	}
+	p.commentLine[n.File] = lastLine
+	return
 }
 
 // GetStruct returns a struct object (representing struct type or union type) or
@@ -260,13 +303,14 @@ func (p *Program) GetNextIdentifier(prefix string) string {
 func (p *Program) String() string {
 	var buf bytes.Buffer
 
-	buf.WriteString(`/* Package main - transpiled by c2go
+	buf.WriteString(fmt.Sprintf(`/*
+	Package main - transpiled by c2go version: %s
 
 	If you have found any issues, please raise an issue at:
 	https://github.com/elliotchance/c2go/
 */
 
-`)
+`, Version))
 
 	// First write all the messages. The double newline afterwards is important
 	// so that the package statement has a newline above it so that the warnings
@@ -324,10 +368,30 @@ func (p *Program) String() string {
 		// Looking at the full output of the AST (thousands of lines) and
 		// looking at those line numbers should give you a good idea where the
 		// error is coming from; by looking at the parents of the bad lines.
-		goast.Print(p.FileSet, p.File)
+		_ = goast.Print(p.FileSet, p.File)
 
 		panic(err)
 	}
 
-	return buf.String()
+	// Add comments at the end C file
+	for file, beginLine := range p.commentLine {
+		for i := range p.Comments {
+			if p.Comments[i].File == file {
+				if beginLine < p.Comments[i].Line {
+					buf.WriteString(fmt.Sprintln(p.Comments[i].Comment))
+				}
+			}
+		}
+	}
+
+	// simplify Go code. Example :
+	// Before:
+	// func compare(a interface {
+	// }, b interface {
+	// }) (c2goDefaultReturn int) {
+	// After :
+	// func compare(a interface {}, b interface {}) (c2goDefaultReturn int) {
+	reg := util.GetRegex("interface( )?{(\r*)\n(\t*)}")
+
+	return string(reg.ReplaceAll(buf.Bytes(), []byte("interface {}")))
 }

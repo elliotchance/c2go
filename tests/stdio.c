@@ -12,7 +12,7 @@
     test_##t();
 
 // size of that file
-int filesize = 9699;
+int filesize = 10874;
 
 void test_putchar()
 {
@@ -45,6 +45,17 @@ void test_printf()
     printf("# floats: %4.2f %+.0e %E \n", 3.1416, 3.1416, 3.1416);
     printf("# Width trick: %*d \n", 5, 10);
     printf("# %s \n", "A string");
+
+
+    int magnitude = 4;
+    char printfFormat[30] = "%0";
+    char magnitudeString[10];
+    sprintf(magnitudeString, "%d", magnitude);
+    strcat(printfFormat, magnitudeString);
+    strcat(printfFormat, "d  ");
+    printf("# ");
+    printf(printfFormat, 120);
+    printf(" \n");
 
     pass("%s", "printf");
 }
@@ -123,6 +134,7 @@ void test_tmpnam()
 
 void test_fclose()
 {
+	remove("/tmp/myfile.txt");
     FILE *pFile;
     pFile = fopen("/tmp/myfile.txt", "w");
     fputs("fclose example", pFile);
@@ -148,6 +160,7 @@ void test_fflush()
 
 void test_fprintf()
 {
+	remove("/tmp/myfile1.txt");
     FILE *pFile;
     int n;
     char *name = "John Smith";
@@ -167,21 +180,47 @@ void test_fprintf()
 
 void test_fscanf()
 {
+	remove("/tmp/myfile2.txt");
+
     char str[80];
+    char end[80];
     float f;
+	int i;
     FILE *pFile;
 
     pFile = fopen("/tmp/myfile2.txt", "w+");
     is_not_null(pFile);
 
-    fprintf(pFile, "%f %s", 3.1416, "PI");
+    fprintf(pFile, "%f \r\n %s %d %s", 3.1416, "PI", 42, "end");
     rewind(pFile);
     fscanf(pFile, "%f", &f);
     fscanf(pFile, "%s", str);
+    fscanf(pFile, "%d", &i);
+    fscanf(pFile, "%s", end);
     fclose(pFile);
+	pFile = NULL;
 
     is_eq(f, 3.1416);
     is_streq(str, "PI");
+	is_eq(i,42);
+    is_streq(end,"end");
+
+	// read again
+    FILE *pFile2;
+    pFile2 = fopen("/tmp/myfile2.txt", "r");
+    is_not_null(pFile2);
+
+    fscanf(pFile2, "%f", &f);
+    fscanf(pFile2, "%s", str);
+    fscanf(pFile2, "%d", &i);
+    fscanf(pFile2, "%s", end);
+    fclose(pFile2);
+	pFile2 = NULL;
+
+    is_eq(f, 3.1416);
+    is_streq(str, "PI");
+	is_eq(i,42);
+    is_streq(end,"end");
     
 	// remove temp file
     is_eq(remove("/tmp/myfile2.txt"),0)
@@ -477,9 +516,31 @@ void test_vsnprintf()
 	is_eq(s,19+8+5);
 }
 
+void test_eof()
+{
+	if ( (int)(EOF) == -1 ) {
+		pass("ok");
+	}
+	char c = EOF;
+	if ( c == (char)(EOF) ) {
+		pass("ok");
+	}
+	char a[1];
+	a[0] = 's';
+	if ( a[0] != EOF ) {
+		pass("ok");
+	}
+	a[0] = EOF;
+	if ( a[0] != EOF ) {
+		fail("EOF == EOF - fail");
+	} else {
+		pass("ok");
+	}
+}
+
 int main()
 {
-    plan(50);
+    plan(61);
 
     START_TEST(putchar)
     START_TEST(puts)
@@ -512,6 +573,7 @@ int main()
     START_TEST(snprintf)
     START_TEST(vsprintf)
     START_TEST(vsnprintf)
+	START_TEST(eof)
 
     done_testing();
 }

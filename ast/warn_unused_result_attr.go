@@ -1,5 +1,7 @@
 package ast
 
+// WarnUnusedResultAttr is a type of attribute that is optionally attached to a variable
+// or struct field definition.
 type WarnUnusedResultAttr struct {
 	Addr       Address
 	Pos        Position

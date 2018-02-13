@@ -1,5 +1,6 @@
 package ast
 
+// BuiltinType is builtin type
 type BuiltinType struct {
 	Addr       Address
 	Type       string

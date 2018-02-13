@@ -218,7 +218,12 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) (decls []goast.Decl,
 
 	// counter for replace iota
 	var counter int
-	for i, c := range n.Children() {
+	var i int
+	for _, c := range n.Children() {
+		if _, ok := c.(*ast.EnumConstantDecl); !ok {
+			// add for avoid comments elements
+			continue
+		}
 		e, newPre, newPost := transpileEnumConstantDecl(p, c.(*ast.EnumConstantDecl))
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
@@ -274,6 +279,9 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) (decls []goast.Decl,
 
 		// registration of enum constants
 		p.EnumConstantToEnum[e.Names[0].Name] = "enum " + n.Name
+
+		// calculate next position without comments
+		i++
 	}
 
 	// important value for creating (.....)

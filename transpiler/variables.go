@@ -3,6 +3,7 @@ package transpiler
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
@@ -28,10 +29,31 @@ var structFieldTranslations = map[string]map[string]string{
 		"quot": "Quot",
 		"rem":  "Rem",
 	},
+	"struct tm": {
+		"tm_sec":   "Tm_sec",
+		"tm_min":   "Tm_min",
+		"tm_hour":  "Tm_hour",
+		"tm_mday":  "Tm_mday",
+		"tm_mon":   "Tm_mon",
+		"tm_year":  "Tm_year",
+		"tm_wday":  "Tm_wday",
+		"tm_yday":  "Tm_yday",
+		"tm_isdst": "Tm_isdst",
+	},
 }
 
 func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (
-	*goast.Ident, string, error) {
+	expr *goast.Ident, exprType string, err error) {
+
+	if n.For == "EnumConstant" {
+		// clang don`t show enum constant with enum type,
+		// so we have to use hack for repair the type
+		if v, ok := p.EnumConstantToEnum[n.Name]; ok {
+			expr, exprType, err = util.NewIdent(n.Name), v, nil
+			return
+		}
+	}
+
 	theType := n.Type
 
 	// FIXME: This is for linux to make sure the globals have the right type.
@@ -43,9 +65,35 @@ func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (
 }
 
 func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
-	[]goast.Expr, string, []goast.Stmt, []goast.Stmt, error) {
+	_ []goast.Expr, _ string, _ []goast.Stmt, _ []goast.Stmt, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot getDefaultValueForVar : err = %v", err)
+		}
+	}()
 	if len(a.Children()) == 0 {
 		return nil, "", nil, nil, nil
+	}
+
+	// Memory allocation is translated into the Go-style.
+	if allocSize := getAllocationSizeNode(p, a.Children()[0]); allocSize != nil {
+		// type
+		var t string
+		if v, ok := a.Children()[0].(*ast.ImplicitCastExpr); ok {
+			t = v.Type
+		}
+		if v, ok := a.Children()[0].(*ast.CStyleCastExpr); ok {
+			t = v.Type
+		}
+		if t != "" {
+			right, newPre, newPost, err := generateAlloc(p, allocSize, t)
+			if err != nil {
+				p.AddMessage(p.GenerateWarningMessage(err, a))
+				return nil, "", nil, nil, err
+			}
+
+			return []goast.Expr{right}, t, newPre, newPost, nil
+		}
 	}
 
 	if va, ok := a.Children()[0].(*ast.VAArgExpr); ok {
@@ -91,7 +139,7 @@ var temp = func() %s {
 		return expr, va.Type, nil, nil, nil
 	}
 
-	defaultValue, defaultValueType, newPre, newPost, err := transpileToExpr(a.Children()[0], p, false)
+	defaultValue, defaultValueType, newPre, newPost, err := atomicOperation(a.Children()[0], p)
 	if err != nil {
 		return nil, defaultValueType, newPre, newPost, err
 	}
@@ -271,18 +319,17 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program) 
 	}()
 
 	children := n.Children()
+
 	expression, expressionType, newPre, newPost, err := transpileToExpr(children[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
-
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	index, _, newPre, newPost, err := transpileToExpr(children[1], p, false)
+	index, _, newPre, newPost, err := atomicOperation(children[1], p)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
-
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	theType, err = types.GetDereferenceType(expressionType)
@@ -322,6 +369,10 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	// added for support "struct typedef"
 	if structType == nil {
 		structType = p.GetStruct("struct " + lhsType)
+	}
+	// added for support "union typedef"
+	if structType == nil {
+		structType = p.GetStruct("union " + lhsType)
 	}
 	rhs := n.Name
 	rhsType := "void *"
@@ -381,6 +432,10 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	}
 
 	// Check for member name translation.
+	lhsType = strings.TrimSpace(lhsType)
+	if lhsType[len(lhsType)-1] == '*' {
+		lhsType = lhsType[:len(lhsType)-len(" *")]
+	}
 	if member, ok := structFieldTranslations[lhsType]; ok {
 		if alias, ok := member[rhs]; ok {
 			rhs = alias

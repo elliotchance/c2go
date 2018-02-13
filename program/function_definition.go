@@ -179,6 +179,8 @@ var builtInFunctionDefinitions = []string{
 
 	// string.h
 	"char* strcat(char *, const char *) -> noarch.Strcat",
+	"int strcmp(const char *, const char *) -> noarch.Strcmp",
+	"char * strchr(char *, int) -> noarch.Strchr",
 
 	"char* strcpy(const char*, char*) -> noarch.Strcpy",
 	// should be: "char* strncpy(const char*, char*, size_t) -> noarch.Strncpy",
@@ -232,6 +234,10 @@ var builtInFunctionDefinitions = []string{
 	// time.h
 	"time_t time(time_t *) -> noarch.Time",
 	"char* ctime(const time_t *) -> noarch.Ctime",
+	"struct tm * localtime(const time_t *) -> noarch.LocalTime",
+	"struct tm * gmtime(const time_t *) -> noarch.Gmtime",
+	"time_t mktime(struct tm *) -> noarch.Mktime",
+	"char * asctime(struct tm *) -> noarch.Asctime",
 
 	// I'm not sure which header file these comes from?
 	"uint32 __builtin_bswap32(uint32) -> darwin.BSwap32",

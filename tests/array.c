@@ -159,9 +159,43 @@ int arrayEx[4] = { 1, 2, 3, 4 };
 
 int ff(){ return 3;}
 
+double rep_double(double a)
+{
+	return a;
+}
+
+int rep_int(int a)
+{
+	return a;
+}
+
+void zero(int *a, int *b, int *c)
+{
+	*a = *b = *c = 0;
+}
+
+float * next_pointer(float *v)
+{
+	long l = 1;
+	long p = 2;
+	(void)(l);
+	(void)(p);
+	return p - p + v + l;
+}
+
+double *dvector(long nl, long nh)
+{
+	double *v;
+	v=(double *)malloc((size_t) ((nh-nl+1+1)*sizeof(double)));
+	for (int i=0;i<nh-nl;i++){
+		*(v + i) = 42.0;
+	}
+	return v-nl+1;
+}
+
 int main()
 {
-    plan(70);
+    plan(132);
 
     START_TEST(intarr);
     START_TEST(doublearr);
@@ -272,6 +306,349 @@ int main()
  		(void)(PPptr1);
  		(void)(PPptr2);
  	}
+	diag("Pointer to Pointer. 3");
+	{
+		int i = 50;
+		int ** ptr1;
+		int *  ptr2;
+		ptr2 = &i;
+		ptr1 = &ptr2;
+		is_eq(**ptr1, i);
+		is_eq(* ptr2, i);
+	}
+	diag("Pointer to Pointer. 4");
+	{
+		double arr[5] = {10.,20.,30.,40.,50.};
+		double *ptr ;
+		ptr = &arr;
+		is_eq(*ptr, 10.);
+		++ptr;
+		is_eq(*ptr, 20.);
+	}
+	diag("Pointer to Pointer. 5");
+	{
+		double arr[5] = {10.,20.,30.,40.,50.};
+		double *ptr ;
+		ptr = &arr;
+		is_eq(*ptr, 10.);
+		ptr += 1;
+		is_eq(*ptr, 20.);
+	}
+	diag("Pointer to Pointer. 6");
+	{
+		int arr[5] = {10,20,30,40,50};
+		int *ptr ;
+		ptr = &arr;
+		is_eq(*ptr, 10);
+		ptr = 1 + ptr;
+		is_eq(*ptr, 20);
+	}
+	diag("Pointer to Pointer. 7");
+	{
+		double arr[5] = {10.,20.,30.,40.,50.};
+		double *ptr ;
+		ptr = &arr;
+		is_eq(*ptr, 10.);
+		ptr = 1 + ptr;
+		is_eq(*ptr, 20.);
+	}
+	diag("Pointer to Pointer. 8");
+	{
+		double arr[5] = {10.,20.,30.,40.,50.};
+		double *ptr ;
+		ptr = &arr;
+		is_eq(*ptr, 10.);
+		ptr++;
+		is_eq(*ptr, 20.);
+	}
+	diag("Pointer to Pointer. 9");
+	{
+		double arr[5] = {10.,20.,30.,40.,50.};
+		double *ptr ;
+		ptr = &arr[2];
+		is_eq(*ptr, 30.);
+		ptr = ptr -1;
+		is_eq(*ptr, 20.);
+	}
+	diag("Pointer to Pointer. 10");
+	{
+		double arr[5] = {10.,20.,30.,40.,50.};
+		double *ptr ;
+		ptr = &arr[2];
+		is_eq(*ptr, 30.);
+		ptr -= 1;
+		is_eq(*ptr, 20.);
+	}
+	diag("Pointer to Pointer. 11");
+	{
+		double arr[5] = {10.,20.,30.,40.,50.};
+		double *ptr ;
+		ptr = &arr[2];
+		is_eq(*ptr, 30.);
+		ptr--;
+		is_eq(*ptr, 20.);
+	}
+	diag("Pointer to Pointer. 12");
+	{
+		double arr[5] = {10.,20.,30.,40.,50.};
+		double *ptr ;
+		int i = 0;
+		for (ptr = &arr[0]; i < 5; ptr++){
+			is_eq(*ptr,arr[i]);
+			i++;
+		}
+	}
+	diag("Operation += 1 for double array");
+	{
+		float **m;
+		m = (float **) malloc(5*sizeof(float*));
+		is_not_null(m);
+		m[0] = (float *) malloc(10*sizeof(float));
+		m[1] = (float *) malloc(10*sizeof(float));
+		m[0] += 1;
+		(void)(m);
+		pass("ok");
+	}
+	diag("*Pointer = 0");
+	{
+		int a,b,c;
+		a = b = c = 10;
+		is_eq(a , 10);
+		zero(&a,&b,&c);
+		is_eq(a , 0);
+		is_eq(b , 0);
+		is_eq(c , 0);
+		pass("ok");
+	}
+	diag("pointer + long");
+	{
+		float *v = (float *)malloc(5*sizeof(float));
+		*(v+0) = 5;
+		*(v+1) = 6;
+		is_eq(*(next_pointer(v)),6);
+	}
+	diag("create array");
+	{
+		double * arr = dvector(1,12);
+		is_not_null(arr);
+		is_eq(arr[1],42.0);
+		is_eq(arr[9],42.0);
+		(void)(arr);
+	}
+
+	diag("Increment inside array 1");
+	{
+		float f[4] = {1.2,2.3,3.4,4.5};
+		int iter = 0;
+		is_eq(f[iter++] , 1.2);
+		is_eq(f[iter+=1], 3.4);
+		is_eq(f[--iter] , 2.3);
+	}
+	diag("Increment inside array 2");
+	{
+		struct struct_I_A{
+			double * arr;
+			int    * pos;
+		} ;
+		struct struct_I_A siia[2];
+		{
+			double t_arr [5];
+			siia[0].arr = t_arr;
+		}
+		{
+			double t_arr [5];
+			siia[1].arr = t_arr;
+		}
+		{
+			int t_pos[1];
+			siia[0].pos = t_pos;
+		}
+		{
+			int t_pos[1];
+			siia[1].pos = t_pos;
+		}
+		int t = 0;
+		int ii,jj;
+		int one = 1;
+
+		siia[0].arr[0] = 45.;
+		siia[0].arr[1] = 35.;
+		siia[0].arr[2] = 25.;
+
+		siia[0].pos[0] = 0;
+		ii = -1;
+		jj = -1;
+		is_eq(siia[0].arr[(t ++, siia[jj += one].pos[ii += one] += one, siia[jj].pos[ii])] , 35.);
+
+		siia[0].pos[0] = 0;
+		ii = -1;
+		jj = -1;
+		is_eq(siia[0].arr[(t ++, siia[++ jj  ].pos[++ ii ] ++, siia[jj].pos[ii]  )] , 35.);
+
+		siia[0].pos[0] = 2;
+		ii = -1;
+		jj = -1;
+		is_eq(siia[0].arr[(t ++, siia[0].pos[ii += 1] -= 1, siia[0].pos[ii])] , 35.);
+
+		siia[0].pos[0] = 2;
+		ii = -1;
+		jj = -1;
+		is_eq(siia[0].arr[(t ++, siia[0].pos[ii += 1] -- , siia[0].pos[ii] )] , 35.);
+
+		is_eq(t,4);
+		(void)(t);
+	}
+	diag("Increment inside array 3");
+	{
+		struct struct_I_A3{
+			double*arr;
+			int    pos;
+		} ;
+		struct struct_I_A3 siia[2];
+		{
+			double t_arr [5];
+			siia[0].arr = t_arr;
+		}
+		{
+			double t_arr [5];
+			siia[1].arr = t_arr;
+		}
+
+		siia[0].arr[0] = 45.;
+		siia[0].arr[1] = 35.;
+		siia[0].arr[2] = 25.;
+
+		siia[0].pos = 0;
+		is_eq(siia[0].arr[siia[0].pos += 1] , 35.);
+
+		siia[0].pos = 0;
+		is_eq(siia[0].arr[siia[0].pos ++  ] , 45.);
+
+		siia[0].pos = 0;
+		is_eq(siia[0].arr[++ siia[0].pos  ] , 35.);
+
+		siia[0].pos = 2;
+		is_eq(siia[0].arr[siia[0].pos -= 1] , 35.);
+
+		siia[0].pos = 2;
+		is_eq(siia[0].arr[siia[0].pos --  ] , 25.);
+	}
+	diag("Increment inside array 4");
+	{
+		struct struct_I_A4{
+			double*arr    ;
+			int    pos    ;
+		} ;
+		struct struct_I_A4 siia[2];
+		{
+			double t_arr [5];
+			siia[0].arr = t_arr;
+		}
+		{
+			double t_arr [5];
+			siia[1].arr = t_arr;
+		}
+		int t = 0;
+
+		siia[0].arr[0] = 45.;
+		siia[0].arr[1] = 35.;
+		siia[0].arr[2] = 25.;
+
+		siia[0].pos = 0;
+		is_eq(siia[0].arr[(t ++ , siia[0].pos += 1)] , 35.);
+
+		siia[0].pos = 0;
+		is_eq(siia[0].arr[(t ++ ,siia[0].pos ++  )] , 45.);
+
+		siia[0].pos = 2;
+		is_eq(siia[0].arr[(t ++ ,siia[0].pos -= 1)] , 35.);
+
+		siia[0].pos = 2;
+		is_eq(siia[0].arr[(t ++, siia[0].pos --  )] , 25.);
+
+		is_eq(t,4);
+		(void)(t);
+	}
+	diag("Increment inside array 5");
+	{
+		struct struct_I_A5{
+			double * arr  ;
+			int      pos  ;
+		} ;
+		struct struct_I_A5 siia[2];
+		{
+			double t_arr [5];
+			siia[0].arr = t_arr;
+		}
+		{
+			double t_arr [5];
+			siia[1].arr = t_arr;
+		}
+		int t = 0;
+
+		siia[0].arr[0] = 45.;
+		siia[0].arr[1] = 35.;
+		siia[0].arr[2] = 25.;
+
+		siia[0].pos = 0;
+		is_eq(siia[0].arr[(t ++ , siia[0].pos += 1, siia[0].pos )] , 35.);
+
+		siia[0].pos = 0;
+		is_eq(siia[0].arr[(t ++ ,siia[0].pos ++   , siia[0].pos )] , 35.);
+
+		siia[0].pos = 2;
+		is_eq(siia[0].arr[(t ++ ,siia[0].pos -=  1, siia[0].pos )] , 35.);
+
+		siia[0].pos = 2;
+		is_eq(siia[0].arr[(t ++, siia[0].pos --   , siia[0].pos )] , 35.);
+
+		is_eq(t,4);
+		(void)(t);
+	}
+	diag("Increment inside array 6");
+	{
+		struct struct_I_A6{
+			double * arr ;
+			int    * pos ;
+		} ;
+		struct struct_I_A6 siia[2];
+		{
+			double t_arr [5];
+			siia[0].arr = t_arr;
+		}
+		{
+			double t_arr [5];
+			siia[1].arr = t_arr;
+		}
+		{
+			int t_pos[1];
+			siia[0].pos = t_pos;
+		}
+		{
+			int t_pos[1];
+			siia[1].pos = t_pos;
+		}
+		int t = 0;
+
+		siia[0].arr[0] = 45.;
+		siia[0].arr[1] = 35.;
+		siia[0].arr[2] = 25.;
+
+		siia[0].pos[0] = 0;
+		is_eq(siia[0].arr[(t ++, siia[0].pos[0] += 1)] , 35.);
+
+		siia[0].pos[0] = 0;
+		is_eq(siia[0].arr[(t ++, siia[0].pos[0] ++  )] , 45.);
+
+		siia[0].pos[0] = 2;
+		is_eq(siia[0].arr[(t ++, siia[0].pos[0] -= 1)] , 35.);
+
+		siia[0].pos[0] = 2;
+		is_eq(siia[0].arr[(t ++, siia[0].pos[0] --  )] , 25.);
+
+		is_eq(t,4);
+		(void)(t);
+	}
 
     done_testing();
 }

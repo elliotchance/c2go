@@ -30,13 +30,6 @@ import (
 	"github.com/elliotchance/c2go/transpiler"
 )
 
-// Version can be requested through the command line with:
-//
-//     c2go -v
-//
-// See https://github.com/elliotchance/c2go/wiki/Release-Process
-const Version = "v0.20.2 Ytterbium 2018-01-08"
-
 var stderr io.Writer = os.Stderr
 
 // ProgramArgs defines the options available when processing the program. There
@@ -201,7 +194,7 @@ func Start(args ProgramArgs) (err error) {
 		fmt.Println("Running clang preprocessor...")
 	}
 
-	pp, err := preprocessor.Analyze(args.inputFiles, args.clangFlags)
+	pp, comments, err := preprocessor.Analyze(args.inputFiles, args.clangFlags)
 	if err != nil {
 		return err
 	}
@@ -250,6 +243,7 @@ func Start(args ProgramArgs) (err error) {
 	p := program.NewProgram()
 	p.Verbose = args.verbose
 	p.OutputAsTest = args.outputAsTest
+	p.Comments = comments
 
 	// Converting to nodes
 	if args.verbose {
@@ -304,6 +298,10 @@ func Start(args ProgramArgs) (err error) {
 	if err != nil {
 		return fmt.Errorf("writing Go output file failed: %v", err)
 	}
+
+	// simplify Go code by `gofmt`
+	// error ignored, because it is not change the workflow
+	_, _ = exec.Command("gofmt", "-w", outputFilePath).Output()
 
 	return nil
 }
@@ -366,7 +364,7 @@ func runCommand() int {
 
 	if *versionFlag {
 		// Simply print out the version and exit.
-		fmt.Println(Version)
+		fmt.Println(program.Version)
 		return 0
 	}
 

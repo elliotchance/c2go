@@ -49,11 +49,13 @@ checkAgain:
 	for i := range body.Children() {
 		if v, ok := body.Children()[i].(*ast.CaseStmt); ok {
 			if vv, ok := v.Children()[len(v.Children())-1].(*ast.CaseStmt); ok {
+				// TODO : add "vv" before next case, but not at the end
 				body.AddChild(vv)
 				v.Children()[len(v.Children())-1] = &ast.CompoundStmt{}
 				goto checkAgain
 			}
 			if vv, ok := v.Children()[len(v.Children())-1].(*ast.DefaultStmt); ok {
+				// TODO : add "vv" before next case, but not at the end
 				body.AddChild(vv)
 				v.Children()[len(v.Children())-1] = &ast.CompoundStmt{}
 				goto checkAgain
@@ -121,6 +123,54 @@ checkAgain:
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
+	// For simplification switch case:
+	// from:
+	// case 3:
+	// 	{
+	// 		var c int
+	// 		return
+	// 	}
+	// 	fallthrough
+	// to:
+	// case 3:
+	// 	var c int
+	// 	return
+	//
+	for i := range cases {
+		body := cases[i].Body
+		if len(body) != 2 {
+			continue
+		}
+		var isFallThrough bool
+		if v, ok := body[1].(*goast.BranchStmt); ok {
+			isFallThrough = (v.Tok == token.FALLTHROUGH)
+		}
+		if !isFallThrough {
+			if len(body) > 1 {
+				cases[i].Body = body
+			}
+			continue
+		}
+		if v, ok := body[0].(*goast.BlockStmt); ok {
+			if len(v.List) > 0 {
+				if vv, ok := v.List[len(v.List)-1].(*goast.BranchStmt); ok {
+					if vv.Tok == token.BREAK {
+						if isFallThrough {
+							cases[i].Body = append(v.List[:len(v.List)-1])
+							continue
+						}
+					}
+				}
+				if _, ok := v.List[len(v.List)-1].(*goast.ReturnStmt); ok {
+					cases[i].Body = body[:len(body)-1]
+					continue
+				}
+			} else {
+				cases[i].Body = []goast.Stmt{body[1]}
+			}
+		}
+	}
 
 	// Convert the normalized cases back into statements so they can be children
 	// of goast.SwitchStmt.

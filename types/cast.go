@@ -60,7 +60,9 @@ func GetArrayTypeAndSize(s string) (string, int) {
 //    a bug. It is most useful to do this when dealing with compound types like
 //    FILE where those function probably exist (or should exist) in the noarch
 //    package.
-func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (_ goast.Expr, err2 error) {
+func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
+	_ goast.Expr, err2 error) {
+
 	defer func() {
 		if err2 != nil {
 			err2 = fmt.Errorf("Cannot casting {%s -> %s}. err = %v", cFromType, cToType, err2)
@@ -74,6 +76,10 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (_
 
 	if cFromType == cToType {
 		return expr, nil
+	}
+
+	if expr == nil {
+		return nil, fmt.Errorf("Expr is nil")
 	}
 
 	// Function casting
@@ -396,11 +402,11 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (_
 	leftName := fromType
 	rightName := toType
 
-	if strings.Index(leftName, ".") != -1 {
+	if strings.Contains(leftName, ".") {
 		parts := strings.Split(leftName, ".")
 		leftName = parts[len(parts)-1]
 	}
-	if strings.Index(rightName, ".") != -1 {
+	if strings.Contains(rightName, ".") {
 		parts := strings.Split(rightName, ".")
 		rightName = parts[len(parts)-1]
 	}
@@ -413,7 +419,7 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (_
 		util.GetExportedName(leftName), util.GetExportedName(rightName))
 
 	// FIXME: This is a hack to get SQLite3 to transpile.
-	if strings.Index(functionName, "RowSetEntry") > -1 {
+	if strings.Contains(functionName, "RowSetEntry") {
 		functionName = "FIXME111"
 	}
 

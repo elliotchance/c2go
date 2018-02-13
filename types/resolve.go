@@ -3,11 +3,38 @@ package types
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/util"
 )
+
+// cIntegerType - slice of C integer type
+var cIntegerType = []string{
+	"int",
+	"long long",
+	"long long int",
+	"long long unsigned int",
+	"long unsigned int",
+	"long",
+	"short",
+	"unsigned int",
+	"unsigned long long",
+	"unsigned long",
+	"unsigned short",
+	"unsigned short int",
+}
+
+// IsCInteger - return true is C type integer
+func IsCInteger(cType string) bool {
+	for i := range cIntegerType {
+		if cType == cIntegerType[i] {
+			return true
+		}
+	}
+	return false
+}
 
 // TODO: Some of these are based on assumptions that may not be true for all
 // architectures (like the size of an int). At some point in the future we will
@@ -59,6 +86,9 @@ var simpleResolveTypes = map[string]string{
 	"ldiv_t":     "github.com/elliotchance/c2go/noarch.LdivT",
 	"lldiv_t":    "github.com/elliotchance/c2go/noarch.LldivT",
 	"time_t":     "github.com/elliotchance/c2go/noarch.TimeT",
+
+	// time.h
+	"tm": "github.com/elliotchance/c2go/noarch.Tm",
 
 	// Darwin specific
 	"__darwin_ct_rune_t": "github.com/elliotchance/c2go/darwin.CtRuneT",
@@ -161,6 +191,10 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 	}
 
 	if v, ok := p.TypedefType[s]; ok {
+		if IsFunction(v) {
+			// typedef function
+			return s, nil
+		}
 		return ResolveType(p, v)
 	}
 
@@ -179,12 +213,11 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 		if s[len(s)-1] == '*' {
 			s = s[start : len(s)-2]
 
-			for _, v := range simpleResolveTypes {
-				if v == s {
+			for k := range simpleResolveTypes {
+				if k == s {
 					return "[]" + p.ImportType(simpleResolveTypes[s]), nil
 				}
 			}
-
 			return "[]" + strings.TrimSpace(s), nil
 		}
 
@@ -209,7 +242,7 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 	}
 
 	// I have no idea how to handle this yet.
-	if strings.Index(s, "anonymous union") != -1 {
+	if strings.Contains(s, "anonymous union") {
 		return "interface{}", errors.New("probably an incorrect type translation 3")
 	}
 
@@ -220,7 +253,6 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 		// the name and the "*". If there is an extra space it will be trimmed
 		// off.
 		t, err := ResolveType(p, strings.TrimSpace(s[:len(s)-1]))
-
 		// Pointers are always converted into slices, except with some specific
 		// entities that are shared in the Go libraries.
 		prefix := "*"
@@ -297,27 +329,33 @@ func ResolveFunction(p *program.Program, s string) (fields []string, returns []s
 
 // IsFunction - return true if string is function like "void (*)(void)"
 func IsFunction(s string) bool {
-	var counter int
-	for i := range []byte(s) {
-		if s[i] == '(' {
-			counter++
-		}
-	}
-	if counter > 0 {
-		return true
-	}
-	return false
+	s = strings.Replace(s, "(*)", "", -1)
+	return strings.Contains(s, "(")
 }
 
 // IsPointer - check type is pointer
 func IsPointer(s string) bool {
-	if strings.ContainsAny(s, "*[]") {
-		return true
+	return strings.ContainsAny(s, "*[]")
+}
+
+// IsLastArray - check type have array '[]'
+func IsLastArray(s string) bool {
+	for _, b := range s {
+		switch b {
+		case '[':
+			return true
+		case '*':
+			break
+		}
 	}
 	return false
 }
 
+// IsTypedefFunction - return true if that type is typedef of function.
 func IsTypedefFunction(p *program.Program, s string) bool {
+	if v, ok := p.TypedefType[s]; ok && IsFunction(v) {
+		return true
+	}
 	s = string(s[0 : len(s)-len(" *")])
 	if v, ok := p.TypedefType[s]; ok && IsFunction(v) {
 		return true
@@ -351,9 +389,8 @@ func ParseFunction(s string) (f []string, r []string, err error) {
 			if len(parts) != 2 {
 				err = fmt.Errorf("Cannot parse (separation on parts) : %v", s)
 				return
-			} else {
-				part = "(" + parts[1]
 			}
+			part = "(" + parts[1]
 		} else {
 			part = parts[1]
 		}
@@ -454,4 +491,27 @@ func GenerateCorrectType(name string) string {
 	out = strings.Replace(out, ":", "D", -1)
 
 	return out
+}
+
+// GetAmountArraySize - return amount array size
+// Example :
+// In  : 'char [40]'
+// Out : 40
+func GetAmountArraySize(cType string) (size int, err error) {
+	reg := util.GetRegex("\\[(?P<size>\\d+)\\]")
+	match := reg.FindStringSubmatch(cType)
+
+	if reg.NumSubexp() != 1 {
+		err = fmt.Errorf("Cannot found size of array in type : %s", cType)
+		return
+	}
+
+	result := make(map[string]string)
+	for i, name := range reg.SubexpNames() {
+		if i != 0 {
+			result[name] = match[i]
+		}
+	}
+
+	return strconv.Atoi(result["size"])
 }

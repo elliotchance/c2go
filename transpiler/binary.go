@@ -6,7 +6,6 @@ import (
 	"fmt"
 	goast "go/ast"
 	"go/token"
-	"reflect"
 	"strings"
 
 	"github.com/elliotchance/c2go/ast"
@@ -53,16 +52,76 @@ func transpileBinaryOperatorComma(n *ast.BinaryOperator, p *program.Program) (
 	return right[len(right)-1], preStmts, nil
 }
 
+func findUnion(node ast.Node) (unionNode ast.Node, haveMemberExprWithUnion bool) {
+	switch chi := node.(type) {
+	case *ast.MemberExpr:
+		if strings.HasPrefix(chi.Type, "union ") {
+			haveMemberExprWithUnion = true
+			unionNode = node
+			return
+		}
+		return findUnion(node.Children()[0])
+	case *ast.DeclRefExpr:
+		if strings.HasPrefix(chi.Type, "union ") {
+			haveMemberExprWithUnion = true
+			unionNode = node
+			return
+		}
+	}
+	return nil, false
+}
+
 func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsStmt bool) (
-	_ goast.Expr, resultType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+	expr goast.Expr, eType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 	defer func() {
 		if err != nil {
-			err = fmt.Errorf("Cannot transpile BinaryOperator with type '%s' : result type = {%s}. Error: %v", n.Type, resultType, err)
+			err = fmt.Errorf("Cannot transpile BinaryOperator with type '%s' : result type = {%s}. Error: %v", n.Type, eType, err)
 			p.AddMessage(p.GenerateWarningMessage(err, n))
 		}
 	}()
 
 	operator := getTokenForOperator(n.Operator)
+
+	// Char overflow
+	// BinaryOperator 0x2b74458 <line:506:7, col:18> 'int' '!='
+	// |-ImplicitCastExpr 0x2b74440 <col:7, col:10> 'int' <IntegralCast>
+	// | `-ImplicitCastExpr 0x2b74428 <col:7, col:10> 'char' <LValueToRValue>
+	// |   `-...
+	// `-ParenExpr 0x2b74408 <col:15, col:18> 'int'
+	//   `-UnaryOperator 0x2b743e8 <col:16, col:17> 'int' prefix '-'
+	//     `-IntegerLiteral 0x2b743c8 <col:17> 'int' 1
+	if n.Operator == "!=" {
+		var leftOk bool
+		if l0, ok := n.ChildNodes[0].(*ast.ImplicitCastExpr); ok && l0.Type == "int" {
+			if len(l0.ChildNodes) > 0 {
+				if l1, ok := l0.ChildNodes[0].(*ast.ImplicitCastExpr); ok && l1.Type == "char" {
+					leftOk = true
+				}
+			}
+		}
+		if leftOk {
+			if r0, ok := n.ChildNodes[1].(*ast.ParenExpr); ok && r0.Type == "int" {
+				if len(r0.ChildNodes) > 0 {
+					if r1, ok := r0.ChildNodes[0].(*ast.UnaryOperator); ok && r1.IsPrefix && r1.Operator == "-" {
+						if r2, ok := r1.ChildNodes[0].(*ast.IntegerLiteral); ok && r2.Type == "int" {
+							r0.ChildNodes[0] = &ast.BinaryOperator{
+								Type:     "int",
+								Type2:    "int",
+								Operator: "+",
+								ChildNodes: []ast.Node{
+									r1,
+									&ast.IntegerLiteral{
+										Type:  "int",
+										Value: "256",
+									},
+								},
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 
 	// Example of C code
 	// a = b = 1
@@ -163,19 +222,19 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 		// from n.Children()[1]
 		if len(newPre) > 0 || len(newPost) > 0 {
 			p.AddMessage(p.GenerateWarningMessage(
-				fmt.Errorf("Not support lenght pre or post stmts: {%d,%d}", len(newPre), len(newPost)), n))
+				fmt.Errorf("Not support length pre or post stmts: {%d,%d}", len(newPre), len(newPost)), n))
 		}
 		return stmts, st, preStmts, postStmts, nil
 	}
 
-	left, leftType, newPre, newPost, err := transpileToExpr(n.Children()[0], p, false)
+	left, leftType, newPre, newPost, err := atomicOperation(n.Children()[0], p)
 	if err != nil {
 		return nil, "unknown52", nil, nil, err
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	right, rightType, newPre, newPost, err := transpileToExpr(n.Children()[1], p, false)
+	right, rightType, newPre, newPost, err := atomicOperation(n.Children()[1], p)
 	if err != nil {
 		return nil, "unknown53", nil, nil, err
 	}
@@ -222,7 +281,35 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 			leftType, preStmts, postStmts, nil
 	}
 
-	if operator == token.NEQ || operator == token.EQL || operator == token.LSS || operator == token.GTR || operator == token.AND || operator == token.ADD || operator == token.SUB || operator == token.MUL || operator == token.QUO || operator == token.REM {
+	// pointer arithmetic
+	if types.IsPointer(n.Type) {
+		if operator == token.ADD || operator == token.SUB {
+			if types.IsPointer(leftType) {
+				expr, eType, newPre, newPost, err =
+					pointerArithmetic(p, left, leftType, right, rightType, operator)
+			} else {
+				expr, eType, newPre, newPost, err =
+					pointerArithmetic(p, right, rightType, left, leftType, operator)
+			}
+			if err != nil {
+				return
+			}
+			if expr == nil {
+				return nil, "", nil, nil, fmt.Errorf("Expr is nil")
+			}
+			preStmts, postStmts =
+				combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
+			return
+		}
+	}
+
+	if operator == token.NEQ || operator == token.EQL ||
+		operator == token.LSS || operator == token.GTR ||
+		operator == token.AND || operator == token.ADD ||
+		operator == token.SUB || operator == token.MUL ||
+		operator == token.QUO || operator == token.REM {
+
 		// We may have to cast the right side to the same type as the left
 		// side. This is a bit crude because we should make a better
 		// decision of which type to cast to instead of only using the type
@@ -236,36 +323,17 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 
 	if operator == token.ASSIGN {
 		// Memory allocation is translated into the Go-style.
-		allocSize := GetAllocationSizeNode(n.Children()[1])
+		allocSize := getAllocationSizeNode(p, n.Children()[1])
 
 		if allocSize != nil {
-			allocSizeExpr, _, newPre, newPost, err := transpileToExpr(allocSize, p, false)
+			right, newPre, newPost, err = generateAlloc(p, allocSize, leftType)
+			if err != nil {
+				p.AddMessage(p.GenerateWarningMessage(err, n))
+				return nil, "", nil, nil, err
+			}
+
 			preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-			if err != nil {
-				return nil, "unknown60", preStmts, postStmts, err
-			}
-
-			derefType, err := types.GetDereferenceType(leftType)
-			if err != nil {
-				return nil, "unknown61", preStmts, postStmts, err
-			}
-
-			toType, err := types.ResolveType(p, leftType)
-			if err != nil {
-				return nil, "unknown62", preStmts, postStmts, err
-			}
-
-			elementSize, err := types.SizeOf(p, derefType)
-			if err != nil {
-				return nil, "unknown63", preStmts, postStmts, err
-			}
-
-			right = util.NewCallExpr(
-				"make",
-				util.NewTypeIdent(toType),
-				util.NewBinaryExpr(allocSizeExpr, token.QUO, util.NewIntLit(elementSize), "int", false),
-			)
 		} else {
 			right, err = types.CastExpr(p, right, rightType, returnType)
 
@@ -291,11 +359,16 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 				right = util.NewNil()
 			}
 
+			unionNode, haveMemberExprWithUnion := findUnion(n.Children()[0])
+
 			// Construct code for assigning value to an union field
 			if memberExpr, ok := n.Children()[0].(*ast.MemberExpr); ok {
 				ref := memberExpr.GetDeclRefExpr()
 				if ref != nil {
 					union := p.GetStruct(ref.Type)
+					if union == nil {
+						union = p.GetStruct("union " + ref.Type)
+					}
 					if union != nil && union.IsUnion {
 						attrType, err := types.ResolveType(p, ref.Type)
 						if err != nil {
@@ -316,11 +389,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 					union := p.GetStruct(un.Type)
 					if union != nil && union.IsUnion {
 						if str, ok := un.Children()[0].(*ast.DeclRefExpr); ok {
-							attrType, err := types.ResolveType(p, memberExpr.Type)
-							if err != nil {
-								p.AddMessage(p.GenerateWarningMessage(err, memberExpr))
-							}
-							funcName := getFunctionNameForUnionSetter("", attrType, memberExpr.Name)
+							funcName := getFunctionNameForUnionSetter("", memberExpr.Type, memberExpr.Name)
 							funcName = str.Name + "." + un.Name + funcName
 							resExpr := &goast.CallExpr{
 								Fun:  goast.NewIdent(funcName),
@@ -331,6 +400,12 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 							return resExpr, resType, preStmts, postStmts, nil
 						}
 					}
+				}
+
+				// struct inside union
+				if haveMemberExprWithUnion {
+					p.AddMessage(p.GenerateWarningMessage(
+						fmt.Errorf("Binary operation with union not support. AST node with union : %v", unionNode), n))
 				}
 			}
 		}
@@ -377,7 +452,17 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 		preStmts, postStmts, nil
 }
 
-// GetAllocationSizeNode returns the node that, if evaluated, would return the
+func foundCallExpr(n ast.Node) *ast.CallExpr {
+	switch v := n.(type) {
+	case *ast.ImplicitCastExpr, *ast.CStyleCastExpr:
+		return foundCallExpr(n.Children()[0])
+	case *ast.CallExpr:
+		return v
+	}
+	return nil
+}
+
+// getAllocationSizeNode returns the node that, if evaluated, would return the
 // size (in bytes) of a memory allocation operation. For example:
 //
 //     (int *)malloc(sizeof(int))
@@ -389,35 +474,71 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 //
 // In the case of calloc() it will return a new BinaryExpr that multiplies both
 // arguments.
-func GetAllocationSizeNode(node ast.Node) ast.Node {
-	exprs := ast.GetAllNodesOfType(node, reflect.TypeOf((*ast.CallExpr)(nil)))
+func getAllocationSizeNode(p *program.Program, node ast.Node) ast.Node {
+	expr := foundCallExpr(node)
 
-	for _, expr := range exprs {
-		functionName, _ := getNameOfFunctionFromCallExpr(expr.(*ast.CallExpr))
+	if expr == nil || expr == (*ast.CallExpr)(nil) {
+		return nil
+	}
 
-		if functionName == "malloc" {
-			// Is 1 always the body in this case? Might need to be more careful
-			// to find the correct node.
-			return expr.(*ast.CallExpr).Children()[1]
-		}
+	functionName, _ := getNameOfFunctionFromCallExpr(p, expr)
 
-		if functionName == "calloc" {
-			return &ast.BinaryOperator{
-				Type:       "int",
-				Operator:   "*",
-				ChildNodes: expr.(*ast.CallExpr).Children()[1:],
-			}
-		}
+	if functionName == "malloc" {
+		// Is 1 always the body in this case? Might need to be more careful
+		// to find the correct node.
+		return expr.Children()[1]
+	}
 
-		// TODO: realloc() is not supported
-		// https://github.com/elliotchance/c2go/issues/118
-		//
-		// Realloc will be treated as calloc which will almost certainly cause
-		// bugs in your code.
-		if functionName == "realloc" {
-			return expr.(*ast.CallExpr).Children()[2]
+	if functionName == "calloc" {
+		return &ast.BinaryOperator{
+			Type:       "int",
+			Operator:   "*",
+			ChildNodes: expr.Children()[1:],
 		}
 	}
 
+	// TODO: realloc() is not supported
+	// https://github.com/elliotchance/c2go/issues/118
+	//
+	// Realloc will be treated as calloc which will almost certainly cause
+	// bugs in your code.
+	if functionName == "realloc" {
+		return expr.Children()[2]
+	}
+
 	return nil
+}
+
+func generateAlloc(p *program.Program, allocSize ast.Node, leftType string) (
+	right goast.Expr, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+
+	allocSizeExpr, _, newPre, newPost, err := transpileToExpr(allocSize, p, false)
+
+	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
+	if err != nil {
+		return nil, preStmts, postStmts, err
+	}
+
+	derefType, err := types.GetDereferenceType(leftType)
+	if err != nil {
+		return nil, preStmts, postStmts, err
+	}
+
+	toType, err := types.ResolveType(p, leftType)
+	if err != nil {
+		return nil, preStmts, postStmts, err
+	}
+
+	elementSize, err := types.SizeOf(p, derefType)
+	if err != nil {
+		return nil, preStmts, postStmts, err
+	}
+
+	right = util.NewCallExpr(
+		"make",
+		util.NewTypeIdent(toType),
+		util.NewBinaryExpr(allocSizeExpr, token.QUO, util.NewIntLit(elementSize), "int", false),
+	)
+	return
 }

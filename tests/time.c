@@ -37,12 +37,64 @@ void test_ctime()
     is_streq(s, "Fri Dec 31 HH:mm:58 1999\n");
 }
 
+void test_gmtime()
+{
+	struct tm * timeinfo;
+	time_t      rawtime = 80000;
+	timeinfo = gmtime ( &rawtime );
+	is_eq( timeinfo-> tm_sec	,  20 );
+	is_eq( timeinfo-> tm_min	,  13 );
+	is_eq( timeinfo-> tm_hour	,  22 );
+	is_eq( timeinfo-> tm_mday	,  1  );
+	is_eq( timeinfo-> tm_mon	,  0  );
+	is_eq( timeinfo-> tm_year	,  70 );
+	is_eq( timeinfo-> tm_wday	,  4  );
+	is_eq( timeinfo-> tm_yday	,  0  );
+	is_eq( timeinfo-> tm_isdst	,  0  );
+}
+
+void test_mktime()
+{
+	struct tm  timeinfo;
+	
+	timeinfo.tm_year = 2000  - 1900;
+	timeinfo.tm_mon  = 5     - 1   ;
+	timeinfo.tm_mday = 20          ;
+	timeinfo.tm_sec  = 0           ;
+	timeinfo.tm_min  = 0           ;
+	timeinfo.tm_hour = 0           ;
+	
+	mktime ( &timeinfo );
+	
+	is_eq(timeinfo.tm_wday  , 6           );
+	is_eq(timeinfo.tm_year  , 100         );
+	is_eq(timeinfo.tm_mon   , 4           );
+	is_eq(timeinfo.tm_mday  , 20          );
+}
+
+void test_asctime()
+{
+	time_t rawtime = 80000;
+	struct tm * timeinfo;
+	timeinfo = gmtime ( &rawtime );
+	is_streq(asctime(timeinfo) , "Thu Jan  1 22:13:20 1970\n" );
+}
+
 int main()
 {
-    plan(5);
+	plan(19);
 
-    START_TEST(time)
-    START_TEST(ctime)
-
-    done_testing();
+	// sorting in according to :
+	// http://www.cplusplus.com/reference/ctime/clock/
+	START_TEST(asctime   );
+	// TODO : START_TEST(clock     );
+	START_TEST(ctime     );
+	// TODO : START_TEST(difftime  );
+	START_TEST(gmtime    );
+	// TODO : START_TEST(localtime );
+	START_TEST(mktime    );
+	// TODO : START_TEST(strftime  );
+	START_TEST(time      );
+	
+	done_testing();
 }

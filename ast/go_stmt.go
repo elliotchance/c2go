@@ -1,5 +1,6 @@
 package ast
 
+// GotoStmt is node represent 'goto'
 type GotoStmt struct {
 	Addr       Address
 	Pos        Position

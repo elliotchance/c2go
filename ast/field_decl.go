@@ -4,6 +4,7 @@ import (
 	"strings"
 )
 
+// FieldDecl is node represents a field declaration.
 type FieldDecl struct {
 	Addr       Address
 	Pos        Position

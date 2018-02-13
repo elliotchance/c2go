@@ -1,5 +1,6 @@
 package ast
 
+// IfStmt is node represent 'if'
 type IfStmt struct {
 	Addr       Address
 	Pos        Position

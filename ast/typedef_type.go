@@ -1,5 +1,6 @@
 package ast
 
+// TypedefType is typedef type
 type TypedefType struct {
 	Addr       Address
 	Type       string
