@@ -20,16 +20,18 @@ void b //comment20
  )//comment22
 { //comment23
 //comment24
+int i = 9;
+(void)(i);
 }//comment25
 
 
-void /* comment26 */ main /*comment27*/()
+void /* comment26 */ main ()
 {
 	int i = 0;
 	for ( i = 0 ; i < 5 ; i++)
 	{
 		if (i > 2)
-		{
+		{/*comment27*/
 			a(i);
 		} else {
 			/*
