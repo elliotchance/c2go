@@ -213,7 +213,7 @@ func TestIntegrationScripts(t *testing.T) {
 					if start < 0 {
 						start = 0
 					}
-					for i := start; i < linePosition && i < len(fileLines); i++ {
+					for i := start; i < linePosition+5 && i < len(fileLines); i++ {
 						output += fmt.Sprintf("Line : %3d : %s\n", i, fileLines[i])
 					}
 				}
