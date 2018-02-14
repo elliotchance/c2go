@@ -28,7 +28,7 @@ int main()
 	// Test cases
 	testCase tcs[10];
 	// case 0
-	tcs[0].argc = 0;
+	tcs[0].argc = 1;
 	{
 		char *v0 = "programName";
 		char *c[1];
