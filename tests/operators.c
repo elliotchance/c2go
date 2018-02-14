@@ -37,7 +37,7 @@ double * return_null(){
 
 int main()
 {
-	plan(87);
+	plan(96);
 
     int i = 10;
     signed char j = 1;
@@ -348,6 +348,31 @@ int main()
 			pass("ok");
 		}
 		(void)(aaa);
+	}
+	diag("Comma with operations");
+	{
+		int x,y,z;
+		x = y = z = 1;
+		x <<= y <<= z <<= 1;
+		is_eq(x, 16);
+		is_eq(y, 4);
+		is_eq(z, 2);
+	}
+	{
+		int x,y,z;
+		x = y = z = 1000;
+		x /= y /= z /= 2;
+		is_eq(x, 500);
+		is_eq(y, 2);
+		is_eq(z, 500);
+	}
+	{
+		int x,y,z;
+		x = y = z = 3;
+		x *= y *= z *= 2;
+		is_eq(x, 54);
+		is_eq(y, 18);
+		is_eq(z, 6 );
 	}
 
 	done_testing();
