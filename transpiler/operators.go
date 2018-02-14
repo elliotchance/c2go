@@ -286,7 +286,7 @@ func transpileCompoundAssignOperator(
 
 	operator := getTokenForOperator(n.Opcode)
 
-	right, rightType, newPre, newPost, err := transpileToExpr(n.Children()[1], p, false)
+	right, rightType, newPre, newPost, err := atomicOperation(n.Children()[1], p)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
