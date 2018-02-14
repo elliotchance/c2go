@@ -184,6 +184,7 @@ int main()
 	int i;
 	for ( i = 0; i < amount_cases ; i++)
 	{
+		diag("Test case : %d",i);
 		int aflag, bflag;
 		aflag = 0;
 		bflag = 0;
