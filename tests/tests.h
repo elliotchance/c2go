@@ -1,5 +1,6 @@
 #include <string.h> // strlen()
 #include <math.h> // signbit()
+#include <stdio.h> // printf()
 
 // When comparing floating-point numbers this is how many significant bits will
 // be used to calculate the epsilon.

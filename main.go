@@ -194,7 +194,7 @@ func Start(args ProgramArgs) (err error) {
 		fmt.Println("Running clang preprocessor...")
 	}
 
-	pp, comments, err := preprocessor.Analyze(args.inputFiles, args.clangFlags)
+	pp, comments, includes, err := preprocessor.Analyze(args.inputFiles, args.clangFlags)
 	if err != nil {
 		return err
 	}
@@ -218,7 +218,8 @@ func Start(args ProgramArgs) (err error) {
 	if args.verbose {
 		fmt.Println("Running clang for AST tree...")
 	}
-	astPP, err := exec.Command("clang", "-Xclang", "-ast-dump", "-fsyntax-only", "-fno-color-diagnostics", ppFilePath).Output()
+	astPP, err := exec.Command("clang", "-Xclang", "-ast-dump",
+		"-fsyntax-only", "-fno-color-diagnostics", ppFilePath).Output()
 	if err != nil {
 		// If clang fails it still prints out the AST, so we have to run it
 		// again to get the real error.
@@ -244,6 +245,7 @@ func Start(args ProgramArgs) (err error) {
 	p.Verbose = args.verbose
 	p.OutputAsTest = args.outputAsTest
 	p.Comments = comments
+	p.IncludeHeaders = includes
 
 	// Converting to nodes
 	if args.verbose {
@@ -285,7 +287,8 @@ func Start(args ProgramArgs) (err error) {
 		fmt.Println("Transpiling tree...")
 	}
 
-	err = transpiler.TranspileAST(args.outputFile, args.packageName, p, tree[0].(ast.Node))
+	err = transpiler.TranspileAST(args.outputFile, args.packageName,
+		p, tree[0].(ast.Node))
 	if err != nil {
 		return fmt.Errorf("cannot transpile AST : %v", err)
 	}

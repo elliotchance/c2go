@@ -43,6 +43,9 @@ type Program struct {
 	// Contains the current function name during the transpilation.
 	Function *ast.FunctionDecl
 
+	functionDefinitions                      map[string]FunctionDefinition
+	builtInFunctionDefinitionsHaveBeenLoaded bool
+
 	// These are used to setup the runtime before the application begins. An
 	// example would be to setup globals with stdin file pointers on certain
 	// platforms.
@@ -101,6 +104,9 @@ type Program struct {
 	// key    - filename
 	// value  - last comment inserted in Go code
 	commentLine map[string]int
+
+	// IncludeHeaders - list of C header
+	IncludeHeaders []IncludeHeader
 }
 
 // Comment - position of line comment '//...'
@@ -108,6 +114,12 @@ type Comment struct {
 	File    string
 	Line    int
 	Comment string
+}
+
+// IncludeHeader - struct for C include header
+type IncludeHeader struct {
+	HeaderName   string
+	IsUserSource bool
 }
 
 // NewProgram creates a new blank program.
@@ -138,14 +150,17 @@ func NewProgram() *Program {
 				IsUnion: false,
 			},
 		}),
-		Unions:             make(StructRegistry),
-		Verbose:            false,
-		messages:           []string{},
-		GlobalVariables:    map[string]string{},
-		EnumConstantToEnum: map[string]string{},
-		EnumTypedefName:    map[string]bool{},
-		TypedefType:        map[string]string{},
-		commentLine:        map[string]int{},
+		Unions:                                   make(StructRegistry),
+		Verbose:                                  false,
+		messages:                                 []string{},
+		GlobalVariables:                          map[string]string{},
+		EnumConstantToEnum:                       map[string]string{},
+		EnumTypedefName:                          map[string]bool{},
+		TypedefType:                              map[string]string{},
+		commentLine:                              map[string]int{},
+		IncludeHeaders:                           []IncludeHeader{},
+		functionDefinitions:                      map[string]FunctionDefinition{},
+		builtInFunctionDefinitionsHaveBeenLoaded: false,
 	}
 }
 

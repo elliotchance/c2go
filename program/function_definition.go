@@ -30,10 +30,6 @@ type FunctionDefinition struct {
 	Parameters       []int
 }
 
-var functionDefinitions map[string]FunctionDefinition
-
-var builtInFunctionDefinitionsHaveBeenLoaded = false
-
 // Each of the predefined function have a syntax that allows them to be easy to
 // read (and maintain). For example:
 //
@@ -60,196 +56,206 @@ var builtInFunctionDefinitionsHaveBeenLoaded = false
 //
 //     size_t fread(void*, size_t, size_t, FILE*) -> $0 = noarch.Fread(&1, $2, $3, $4)
 //
-var builtInFunctionDefinitions = []string{
-	// darwin/assert.h
-	"int __builtin_expect(int, int) -> darwin.BuiltinExpect",
-	"bool __assert_rtn(const char*, const char*, int, const char*) -> darwin.AssertRtn",
+var builtInFunctionDefinitions = map[string][]string{
+	"assert.h": []string{
+		// darwin/assert.h
+		"int __builtin_expect(int, int) -> darwin.BuiltinExpect",
+		"bool __assert_rtn(const char*, const char*, int, const char*) -> darwin.AssertRtn",
 
-	// darwin/ctype.h
-	"uint32 __istype(__darwin_ct_rune_t, uint32) -> darwin.IsType",
-	"__darwin_ct_rune_t __isctype(__darwin_ct_rune_t, uint32) -> darwin.IsCType",
-	"__darwin_ct_rune_t __tolower(__darwin_ct_rune_t) -> darwin.ToLower",
-	"__darwin_ct_rune_t __toupper(__darwin_ct_rune_t) -> darwin.ToUpper",
-	"uint32 __maskrune(__darwin_ct_rune_t, uint32) -> darwin.MaskRune",
+		// linux/assert.h
+		"bool __assert_fail(const char*, const char*, unsigned int, const char*) -> linux.AssertFail",
+	},
+	"ctype.h": []string{
+		// darwin/ctype.h
+		"uint32 __istype(__darwin_ct_rune_t, uint32) -> darwin.IsType",
+		"__darwin_ct_rune_t __isctype(__darwin_ct_rune_t, uint32) -> darwin.IsCType",
+		"__darwin_ct_rune_t __tolower(__darwin_ct_rune_t) -> darwin.ToLower",
+		"__darwin_ct_rune_t __toupper(__darwin_ct_rune_t) -> darwin.ToUpper",
+		"uint32 __maskrune(__darwin_ct_rune_t, uint32) -> darwin.MaskRune",
 
-	// linux/ctype.h
-	"const unsigned short int** __ctype_b_loc() -> linux.CtypeLoc",
-	"int tolower(int) -> linux.ToLower",
-	"int toupper(int) -> linux.ToUpper",
+		// linux/ctype.h
+		"const unsigned short int** __ctype_b_loc() -> linux.CtypeLoc",
+		"int tolower(int) -> linux.ToLower",
+		"int toupper(int) -> linux.ToUpper",
+	},
+	"math.h": []string{
+		// linux/math.h
+		"int __signbitf(float) -> noarch.Signbitf",
+		"int __signbit(double) -> noarch.Signbitd",
+		"int __signbitl(long double) -> noarch.Signbitl",
+		"int __builtin_signbitf(float) -> noarch.Signbitf",
+		"int __builtin_signbit(double) -> noarch.Signbitd",
+		"int __builtin_signbitl(long double) -> noarch.Signbitl",
+		"int __isnanf(float) -> linux.IsNanf",
+		"int __isnan(double) -> noarch.IsNaN",
+		"int __isnanl(long double) -> noarch.IsNaN",
+		"int __isinff(float) -> linux.IsInff",
+		"int __isinf(double) -> linux.IsInf",
+		"int __isinfl(long double) -> linux.IsInf",
 
-	// linux/math.h
-	"int __signbitf(float) -> noarch.Signbitf",
-	"int __signbit(double) -> noarch.Signbitd",
-	"int __signbitl(long double) -> noarch.Signbitl",
-	"int __builtin_signbitf(float) -> noarch.Signbitf",
-	"int __builtin_signbit(double) -> noarch.Signbitd",
-	"int __builtin_signbitl(long double) -> noarch.Signbitl",
-	"int __isnanf(float) -> linux.IsNanf",
-	"int __isnan(double) -> noarch.IsNaN",
-	"int __isnanl(long double) -> noarch.IsNaN",
-	"int __isinff(float) -> linux.IsInff",
-	"int __isinf(double) -> linux.IsInf",
-	"int __isinfl(long double) -> linux.IsInf",
+		// darwin/math.h
+		"double __builtin_fabs(double) -> darwin.Fabs",
+		"float __builtin_fabsf(float) -> darwin.Fabsf",
+		"double __builtin_fabsl(double) -> darwin.Fabsl",
+		"double __builtin_inf() -> darwin.Inf",
+		"float __builtin_inff() -> darwin.Inff",
+		"double __builtin_infl() -> darwin.Infl",
+		"Double2 __sincospi_stret(double) -> darwin.SincospiStret",
+		"Float2 __sincospif_stret(float) -> darwin.SincospifStret",
+		"Double2 __sincos_stret(double) -> darwin.SincosStret",
+		"Float2 __sincosf_stret(float) -> darwin.SincosfStret",
+		"float __builtin_huge_valf() -> darwin.Inff",
+		"int __inline_signbitf(float) -> noarch.Signbitf",
+		"int __inline_signbitd(double) -> noarch.Signbitd",
+		"int __inline_signbitl(long double) -> noarch.Signbitl",
+		"double __builtin_nanf(const char*) -> darwin.NaN",
 
-	// darwin/math.h
-	"double __builtin_fabs(double) -> darwin.Fabs",
-	"float __builtin_fabsf(float) -> darwin.Fabsf",
-	"double __builtin_fabsl(double) -> darwin.Fabsl",
-	"double __builtin_inf() -> darwin.Inf",
-	"float __builtin_inff() -> darwin.Inff",
-	"double __builtin_infl() -> darwin.Infl",
-	"Double2 __sincospi_stret(double) -> darwin.SincospiStret",
-	"Float2 __sincospif_stret(float) -> darwin.SincospifStret",
-	"Double2 __sincos_stret(double) -> darwin.SincosStret",
-	"Float2 __sincosf_stret(float) -> darwin.SincosfStret",
-	"float __builtin_huge_valf() -> darwin.Inff",
-	"int __inline_signbitf(float) -> noarch.Signbitf",
-	"int __inline_signbitd(double) -> noarch.Signbitd",
-	"int __inline_signbitl(long double) -> noarch.Signbitl",
-	"double __builtin_nanf(const char*) -> darwin.NaN",
+		// math.h
+		"double acos(double) -> math.Acos",
+		"double asin(double) -> math.Asin",
+		"double atan(double) -> math.Atan",
+		"double atan2(double, double) -> math.Atan2",
+		"double ceil(double) -> math.Ceil",
+		"double cos(double) -> math.Cos",
+		"double cosh(double) -> math.Cosh",
+		"double exp(double) -> math.Exp",
+		"double fabs(double) -> math.Abs",
+		"double floor(double) -> math.Floor",
+		"double fmod(double, double) -> math.Mod",
+		"double ldexp(double, int) -> math.Ldexp",
+		"double log(double) -> math.Log",
+		"double log10(double) -> math.Log10",
+		"double pow(double, double) -> math.Pow",
+		"double sin(double) -> math.Sin",
+		"double sinh(double) -> math.Sinh",
+		"double sqrt(double) -> math.Sqrt",
+		"double tan(double) -> math.Tan",
+		"double tanh(double) -> math.Tanh",
+	},
+	"stdio.h": []string{
 
-	// linux/assert.h
-	"bool __assert_fail(const char*, const char*, unsigned int, const char*) -> linux.AssertFail",
+		// linux/stdio.h
+		"int _IO_getc(FILE*) -> noarch.Fgetc",
+		"int _IO_putc(int, FILE*) -> noarch.Fputc",
 
-	// linux/stdio.h
-	"int _IO_getc(FILE*) -> noarch.Fgetc",
-	"int _IO_putc(int, FILE*) -> noarch.Fputc",
+		// stdio.h
+		"int printf(const char*) -> noarch.Printf",
+		"int scanf(const char*) -> noarch.Scanf",
+		"int putchar(int) -> noarch.Putchar",
+		"int puts(const char *) -> noarch.Puts",
+		"FILE* fopen(const char *, const char *) -> noarch.Fopen",
+		"int fclose(FILE*) -> noarch.Fclose",
+		"int remove(const char*) -> noarch.Remove",
+		"int rename(const char*, const char*) -> noarch.Rename",
+		"int fputs(const char*, FILE*) -> noarch.Fputs",
+		"FILE* tmpfile() -> noarch.Tmpfile",
+		"char* fgets(char*, int, FILE*) -> noarch.Fgets",
+		"void rewind(FILE*) -> noarch.Rewind",
+		"int feof(FILE*) -> noarch.Feof",
+		"char* tmpnam(char*) -> noarch.Tmpnam",
+		"int fflush(FILE*) -> noarch.Fflush",
+		"int fprintf(FILE*, const char*) -> noarch.Fprintf",
+		"int fscanf(FILE*, const char*) -> noarch.Fscanf",
+		"int fgetc(FILE*) -> noarch.Fgetc",
+		"int fputc(int, FILE*) -> noarch.Fputc",
+		"int getc(FILE*) -> noarch.Fgetc",
+		"int getchar() -> noarch.Getchar",
+		"int putc(int, FILE*) -> noarch.Fputc",
+		"int fseek(FILE*, long int, int) -> noarch.Fseek",
+		"long ftell(FILE*) -> noarch.Ftell",
+		"int fread(void*, int, int, FILE*) -> $0 = noarch.Fread(&1, $2, $3, $4)",
+		"int fwrite(char*, int, int, FILE*) -> noarch.Fwrite",
+		"int fgetpos(FILE*, int*) -> noarch.Fgetpos",
+		"int fsetpos(FILE*, int*) -> noarch.Fsetpos",
+		"int sprintf(char*, const char *) -> noarch.Sprintf",
+		"int snprintf(char*, int, const char *) -> noarch.Snprintf",
+		"int vsprintf(char*, const char *) -> noarch.Vsprintf",
+		"int vsnprintf(char*, int, const char *) -> noarch.Vsnprintf",
 
-	// math.h
-	"double acos(double) -> math.Acos",
-	"double asin(double) -> math.Asin",
-	"double atan(double) -> math.Atan",
-	"double atan2(double, double) -> math.Atan2",
-	"double ceil(double) -> math.Ceil",
-	"double cos(double) -> math.Cos",
-	"double cosh(double) -> math.Cosh",
-	"double exp(double) -> math.Exp",
-	"double fabs(double) -> math.Abs",
-	"double floor(double) -> math.Floor",
-	"double fmod(double, double) -> math.Mod",
-	"double ldexp(double, int) -> math.Ldexp",
-	"double log(double) -> math.Log",
-	"double log10(double) -> math.Log10",
-	"double pow(double, double) -> math.Pow",
-	"double sin(double) -> math.Sin",
-	"double sinh(double) -> math.Sinh",
-	"double sqrt(double) -> math.Sqrt",
-	"double tan(double) -> math.Tan",
-	"double tanh(double) -> math.Tanh",
+		// darwin/stdio.h
+		"int __builtin___sprintf_chk(char*, int, int, char*) -> darwin.BuiltinSprintfChk",
+		"int __builtin___snprintf_chk(char*, int, int, int, char*) -> darwin.BuiltinSnprintfChk",
+		"int __builtin___vsprintf_chk(char*, int, int, char*) -> darwin.BuiltinVsprintfChk",
+		"int __builtin___vsnprintf_chk(char*, int, int, int, char*) -> darwin.BuiltinVsnprintfChk",
+	},
+	"string.h": []string{
+		// string.h
+		"char* strcat(char *, const char *) -> noarch.Strcat",
+		"int strcmp(const char *, const char *) -> noarch.Strcmp",
+		"char * strchr(char *, int) -> noarch.Strchr",
 
-	// stdio.h
-	"int printf(const char*) -> noarch.Printf",
-	"int scanf(const char*) -> noarch.Scanf",
-	"int putchar(int) -> noarch.Putchar",
-	"int puts(const char *) -> noarch.Puts",
-	"FILE* fopen(const char *, const char *) -> noarch.Fopen",
-	"int fclose(FILE*) -> noarch.Fclose",
-	"int remove(const char*) -> noarch.Remove",
-	"int rename(const char*, const char*) -> noarch.Rename",
-	"int fputs(const char*, FILE*) -> noarch.Fputs",
-	"FILE* tmpfile() -> noarch.Tmpfile",
-	"char* fgets(char*, int, FILE*) -> noarch.Fgets",
-	"void rewind(FILE*) -> noarch.Rewind",
-	"int feof(FILE*) -> noarch.Feof",
-	"char* tmpnam(char*) -> noarch.Tmpnam",
-	"int fflush(FILE*) -> noarch.Fflush",
-	"int fprintf(FILE*, const char*) -> noarch.Fprintf",
-	"int fscanf(FILE*, const char*) -> noarch.Fscanf",
-	"int fgetc(FILE*) -> noarch.Fgetc",
-	"int fputc(int, FILE*) -> noarch.Fputc",
-	"int getc(FILE*) -> noarch.Fgetc",
-	"int getchar() -> noarch.Getchar",
-	"int putc(int, FILE*) -> noarch.Fputc",
-	"int fseek(FILE*, long int, int) -> noarch.Fseek",
-	"long ftell(FILE*) -> noarch.Ftell",
-	"int fread(void*, int, int, FILE*) -> $0 = noarch.Fread(&1, $2, $3, $4)",
-	"int fwrite(char*, int, int, FILE*) -> noarch.Fwrite",
-	"int fgetpos(FILE*, int*) -> noarch.Fgetpos",
-	"int fsetpos(FILE*, int*) -> noarch.Fsetpos",
-	"int sprintf(char*, const char *) -> noarch.Sprintf",
-	"int snprintf(char*, int, const char *) -> noarch.Snprintf",
-	"int vsprintf(char*, const char *) -> noarch.Vsprintf",
-	"int vsnprintf(char*, int, const char *) -> noarch.Vsnprintf",
+		"char* strcpy(const char*, char*) -> noarch.Strcpy",
+		// should be: "char* strncpy(const char*, char*, size_t) -> noarch.Strncpy",
+		"char* strncpy(const char*, char*, int) -> noarch.Strncpy",
 
-	// darwin/stdio.h
-	"int __builtin___sprintf_chk(char*, int, int, char*) -> darwin.BuiltinSprintfChk",
-	"int __builtin___snprintf_chk(char*, int, int, int, char*) -> darwin.BuiltinSnprintfChk",
-	"int __builtin___vsprintf_chk(char*, int, int, char*) -> darwin.BuiltinVsprintfChk",
-	"int __builtin___vsnprintf_chk(char*, int, int, int, char*) -> darwin.BuiltinVsnprintfChk",
+		// real return type is "size_t", but it is changed to "int"
+		// in according to noarch.Strlen
+		"int strlen(const char*) -> noarch.Strlen",
 
-	// string.h
-	"char* strcat(char *, const char *) -> noarch.Strcat",
-	"int strcmp(const char *, const char *) -> noarch.Strcmp",
-	"char * strchr(char *, int) -> noarch.Strchr",
+		// darwin/string.h
+		// should be: const char*, char*, size_t
+		"char* __builtin___strcpy_chk(const char*, char*, int) -> darwin.BuiltinStrcpy",
+		// should be: const char*, char*, size_t, size_t
+		"char* __builtin___strncpy_chk(const char*, char*, int, int) -> darwin.BuiltinStrncpy",
 
-	"char* strcpy(const char*, char*) -> noarch.Strcpy",
-	// should be: "char* strncpy(const char*, char*, size_t) -> noarch.Strncpy",
-	"char* strncpy(const char*, char*, int) -> noarch.Strncpy",
+		// should be: size_t __builtin_object_size(const void*, int)
+		"int __builtin_object_size(const char*, int) -> darwin.BuiltinObjectSize",
 
-	// real return type is "size_t", but it is changed to "int"
-	// in according to noarch.Strlen
-	"int strlen(const char*) -> noarch.Strlen",
-
-	// darwin/string.h
-	// should be: const char*, char*, size_t
-	"char* __builtin___strcpy_chk(const char*, char*, int) -> darwin.BuiltinStrcpy",
-	// should be: const char*, char*, size_t, size_t
-	"char* __builtin___strncpy_chk(const char*, char*, int, int) -> darwin.BuiltinStrncpy",
-
-	// should be: size_t __builtin_object_size(const void*, int)
-	"int __builtin_object_size(const char*, int) -> darwin.BuiltinObjectSize",
-
-	// see https://opensource.apple.com/source/Libc/Libc-763.12/include/secure/_string.h.auto.html
-	"char* __builtin___strcat_chk(char *, const char *, int) -> darwin.BuiltinStrcat",
-	"char* __inline_strcat_chk(char *, const char *) -> noarch.Strcat",
-
-	// stdlib.h
-	"int abs(int) -> noarch.Abs",
-	"double atof(const char *) -> noarch.Atof",
-	"int atoi(const char*) -> noarch.Atoi",
-	"long int atol(const char*) -> noarch.Atol",
-	"long long int atoll(const char*) -> noarch.Atoll",
-	"div_t div(int, int) -> noarch.Div",
-	"void exit(int) -> os.Exit",
-	"void free(void*) -> noarch.Free",
-	"char* getenv(const char *) -> noarch.Getenv",
-	"long int labs(long int) -> noarch.Labs",
-	"ldiv_t ldiv(long int, long int) -> noarch.Ldiv",
-	"long long int llabs(long long int) -> noarch.Llabs",
-	"lldiv_t lldiv(long long int, long long int) -> noarch.Lldiv",
-	"int rand() -> math/rand.Int",
-	// The real definition is srand(unsigned int) however the type would be
-	// different. It's easier to change the definition than create a proxy
-	// function in stdlib.go.
-	"void srand(long long) -> math/rand.Seed",
-	"double strtod(const char *, char **) -> noarch.Strtod",
-	"float strtof(const char *, char **) -> noarch.Strtof",
-	"long strtol(const char *, char **, int) -> noarch.Strtol",
-	"long double strtold(const char *, char **) -> noarch.Strtold",
-	"long long strtoll(const char *, char **, int) -> noarch.Strtoll",
-	"long unsigned int strtoul(const char *, char **, int) -> noarch.Strtoul",
-	"long long unsigned int strtoull(const char *, char **, int) -> noarch.Strtoull",
-	"void free(void*) -> _",
-
-	// time.h
-	"time_t time(time_t *) -> noarch.Time",
-	"char* ctime(const time_t *) -> noarch.Ctime",
-	"struct tm * localtime(const time_t *) -> noarch.LocalTime",
-	"struct tm * gmtime(const time_t *) -> noarch.Gmtime",
-	"time_t mktime(struct tm *) -> noarch.Mktime",
-	"char * asctime(struct tm *) -> noarch.Asctime",
-
-	// I'm not sure which header file these comes from?
-	"uint32 __builtin_bswap32(uint32) -> darwin.BSwap32",
-	"uint64 __builtin_bswap64(uint64) -> darwin.BSwap64",
+		// see https://opensource.apple.com/source/Libc/Libc-763.12/include/secure/_string.h.auto.html
+		"char* __builtin___strcat_chk(char *, const char *, int) -> darwin.BuiltinStrcat",
+		"char* __inline_strcat_chk(char *, const char *) -> noarch.Strcat",
+	},
+	"stdlib.h": []string{
+		// stdlib.h
+		"int abs(int) -> noarch.Abs",
+		"double atof(const char *) -> noarch.Atof",
+		"int atoi(const char*) -> noarch.Atoi",
+		"long int atol(const char*) -> noarch.Atol",
+		"long long int atoll(const char*) -> noarch.Atoll",
+		"div_t div(int, int) -> noarch.Div",
+		"void exit(int) -> os.Exit",
+		"void free(void*) -> noarch.Free",
+		"char* getenv(const char *) -> noarch.Getenv",
+		"long int labs(long int) -> noarch.Labs",
+		"ldiv_t ldiv(long int, long int) -> noarch.Ldiv",
+		"long long int llabs(long long int) -> noarch.Llabs",
+		"lldiv_t lldiv(long long int, long long int) -> noarch.Lldiv",
+		"int rand() -> math/rand.Int",
+		// The real definition is srand(unsigned int) however the type would be
+		// different. It's easier to change the definition than create a proxy
+		// function in stdlib.go.
+		"void srand(long long) -> math/rand.Seed",
+		"double strtod(const char *, char **) -> noarch.Strtod",
+		"float strtof(const char *, char **) -> noarch.Strtof",
+		"long strtol(const char *, char **, int) -> noarch.Strtol",
+		"long double strtold(const char *, char **) -> noarch.Strtold",
+		"long long strtoll(const char *, char **, int) -> noarch.Strtoll",
+		"long unsigned int strtoul(const char *, char **, int) -> noarch.Strtoul",
+		"long long unsigned int strtoull(const char *, char **, int) -> noarch.Strtoull",
+		"void free(void*) -> _",
+	},
+	"time.h": []string{
+		// time.h
+		"time_t time(time_t *) -> noarch.Time",
+		"char* ctime(const time_t *) -> noarch.Ctime",
+		"struct tm * localtime(const time_t *) -> noarch.LocalTime",
+		"struct tm * gmtime(const time_t *) -> noarch.Gmtime",
+		"time_t mktime(struct tm *) -> noarch.Mktime",
+		"char * asctime(struct tm *) -> noarch.Asctime",
+	},
+	"endian.h": []string{
+		// I'm not sure which header file these comes from?
+		"uint32 __builtin_bswap32(uint32) -> darwin.BSwap32",
+		"uint64 __builtin_bswap64(uint64) -> darwin.BSwap64",
+	},
 }
 
 // GetFunctionDefinition will return nil if the function does not exist (is not
 // registered).
-func GetFunctionDefinition(functionName string) *FunctionDefinition {
-	loadFunctionDefinitions()
+func (p *Program) GetFunctionDefinition(functionName string) *FunctionDefinition {
+	p.loadFunctionDefinitions()
 
-	if f, ok := functionDefinitions[functionName]; ok {
+	if f, ok := p.functionDefinitions[functionName]; ok {
 		return &f
 	}
 
@@ -258,10 +264,10 @@ func GetFunctionDefinition(functionName string) *FunctionDefinition {
 
 // AddFunctionDefinition registers a function definition. If the definition
 // already exists it will be replaced.
-func AddFunctionDefinition(f FunctionDefinition) {
-	loadFunctionDefinitions()
+func (p *Program) AddFunctionDefinition(f FunctionDefinition) {
+	p.loadFunctionDefinitions()
 
-	functionDefinitions[f.Name] = f
+	p.functionDefinitions[f.Name] = f
 }
 
 // dollarArgumentsToIntSlice converts a list of dollar arguments, like "$1, &2"
@@ -289,59 +295,72 @@ func dollarArgumentsToIntSlice(s string) []int {
 	return r
 }
 
-func loadFunctionDefinitions() {
-	if builtInFunctionDefinitionsHaveBeenLoaded {
+func (p *Program) loadFunctionDefinitions() {
+	if p.builtInFunctionDefinitionsHaveBeenLoaded {
 		return
 	}
 
-	functionDefinitions = map[string]FunctionDefinition{}
-	builtInFunctionDefinitionsHaveBeenLoaded = true
+	p.functionDefinitions = map[string]FunctionDefinition{}
+	p.builtInFunctionDefinitionsHaveBeenLoaded = true
 
-	for _, f := range builtInFunctionDefinitions {
-		match := util.GetRegex(`^(.+) ([^ ]+)\(([, a-z*A-Z_0-9]*)\)( -> .+)?$`).
-			FindStringSubmatch(f)
-
-		// Unpack argument types.
-		argumentTypes := strings.Split(match[3], ",")
-		for i := range argumentTypes {
-			argumentTypes[i] = strings.TrimSpace(argumentTypes[i])
-		}
-		if len(argumentTypes) == 1 && argumentTypes[0] == "" {
-			argumentTypes = []string{}
-		}
-
-		// Defaults for transformations.
-		var returnParameters, parameters []int
-
-		// Substitution rules.
-		substitution := match[4]
-		if substitution != "" {
-			substitution = strings.TrimLeft(substitution, " ->")
-
-			// The substitution might also rearrange the parameters (return and
-			// parameter transformation).
-			subMatch := util.GetRegex(`^(.*?) = (.*)\((.*)\)$`).
-				FindStringSubmatch(substitution)
-			if len(subMatch) > 0 {
-				returnParameters = dollarArgumentsToIntSlice(subMatch[1])
-				parameters = dollarArgumentsToIntSlice(subMatch[3])
-				substitution = subMatch[2]
+	for k, v := range builtInFunctionDefinitions {
+		var isExist bool
+		for _, inc := range p.IncludeHeaders {
+			if strings.HasSuffix(inc.HeaderName, k) {
+				isExist = true
+				break
 			}
 		}
-
-		if strings.HasPrefix(substitution, "darwin.") ||
-			strings.HasPrefix(substitution, "linux.") ||
-			strings.HasPrefix(substitution, "noarch.") {
-			substitution = "github.com/elliotchance/c2go/" + substitution
+		if !isExist {
+			continue
 		}
 
-		AddFunctionDefinition(FunctionDefinition{
-			Name:             match[2],
-			ReturnType:       match[1],
-			ArgumentTypes:    argumentTypes,
-			Substitution:     substitution,
-			ReturnParameters: returnParameters,
-			Parameters:       parameters,
-		})
+		for _, f := range v {
+			match := util.GetRegex(`^(.+) ([^ ]+)\(([, a-z*A-Z_0-9]*)\)( -> .+)?$`).
+				FindStringSubmatch(f)
+
+			// Unpack argument types.
+			argumentTypes := strings.Split(match[3], ",")
+			for i := range argumentTypes {
+				argumentTypes[i] = strings.TrimSpace(argumentTypes[i])
+			}
+			if len(argumentTypes) == 1 && argumentTypes[0] == "" {
+				argumentTypes = []string{}
+			}
+
+			// Defaults for transformations.
+			var returnParameters, parameters []int
+
+			// Substitution rules.
+			substitution := match[4]
+			if substitution != "" {
+				substitution = strings.TrimLeft(substitution, " ->")
+
+				// The substitution might also rearrange the parameters (return and
+				// parameter transformation).
+				subMatch := util.GetRegex(`^(.*?) = (.*)\((.*)\)$`).
+					FindStringSubmatch(substitution)
+				if len(subMatch) > 0 {
+					returnParameters = dollarArgumentsToIntSlice(subMatch[1])
+					parameters = dollarArgumentsToIntSlice(subMatch[3])
+					substitution = subMatch[2]
+				}
+			}
+
+			if strings.HasPrefix(substitution, "darwin.") ||
+				strings.HasPrefix(substitution, "linux.") ||
+				strings.HasPrefix(substitution, "noarch.") {
+				substitution = "github.com/elliotchance/c2go/" + substitution
+			}
+
+			p.AddFunctionDefinition(FunctionDefinition{
+				Name:             match[2],
+				ReturnType:       match[1],
+				ArgumentTypes:    argumentTypes,
+				Substitution:     substitution,
+				ReturnParameters: returnParameters,
+				Parameters:       parameters,
+			})
+		}
 	}
 }
