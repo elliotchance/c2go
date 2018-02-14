@@ -180,31 +180,26 @@ func TestIntegrationScripts(t *testing.T) {
 					}
 					index := strings.Index(line, ":")
 					if index < 0 {
-						output += fmt.Sprintf("Cannot found symbol ':' in %s\n",
-							line)
 						continue
 					}
 					filename := "./" + line[0:index]
 					output += "+========================+\n"
-					output += fmt.Sprintf("File : %s\n", filename)
+					output += fmt.Sprintf("File : %s\n\n", filename)
 					if len(line) <= index+1 {
 						continue
 					}
 					line = line[index+1:]
 					index = strings.Index(line, ":")
 					if index < 0 {
-						output += "Cannot found linePosition : " + line
 						continue
 					}
 					linePosition, err := strconv.Atoi(line[:index])
 					if err != nil {
-						output += fmt.Sprintf("Cannot parse : %v\n", err)
 						err = nil
 						continue
 					}
 					content, err := ioutil.ReadFile(filename)
 					if err != nil {
-						output += fmt.Sprintf("Cannot read file : %v\n", err)
 						err = nil
 						continue
 					}
