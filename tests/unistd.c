@@ -197,8 +197,8 @@ int main()
 		{
 			switch (c)
 			{
-			case 'a': aflag = 1; break;
-			case 'b': bflag = 1; break;
+			case 'a': aflag  = 1     ; break;
+			case 'b': bflag  = 1     ; break;
 			case 'c': cvalue = optarg; break;
 			}
 		}
