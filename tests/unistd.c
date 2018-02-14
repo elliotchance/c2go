@@ -21,7 +21,7 @@ struct testCase
 
 int main()
 {
-	plan(40);
+	plan(30);
 
 	// Amount test cases
 	int amount_cases = 10;
@@ -29,7 +29,12 @@ int main()
 	testCase tcs[10];
 	// case 0
 	tcs[0].argc = 0;
-	tcs[0].argv = NULL;
+	{
+		char *v0 = "programName";
+		char *c[1];
+		c[0] = v0;
+		tcs[0].argv = (char**)c;
+	}
 	tcs[0].aflag = 0;
 	tcs[0].bflag = 0;
 	tcs[0].cvalue = NULL;
@@ -179,9 +184,6 @@ int main()
 	int i;
 	for ( i = 0; i < amount_cases ; i++)
 	{
-		char header [80];
-		sprintf(header , "Test case %d", i);
-		diag(header);
 		int aflag, bflag;
 		aflag = 0;
 		bflag = 0;
@@ -191,12 +193,14 @@ int main()
 		opterr = 1;
 		optind = 0;// reset 
 		while ((c = getopt (tcs[i].argc, tcs[i].argv, "abc:")) != -1)
+		{
 			switch (c)
 			{
 			case 'a': aflag = 1; break;
 			case 'b': bflag = 1; break;
 			case 'c': cvalue = optarg; break;
 			}
+		}
 		// compare results
 		is_eq(tcs[i].aflag , aflag)
 		is_eq(tcs[i].bflag , bflag)
@@ -214,10 +218,11 @@ int main()
 				is_streq( tcs[i].cvalue, cvalue );
 			}
 		}
-		pass(cvalue);
+		if (cvalue != NULL){
+			pass(cvalue);
+		}
 
 		(void)(cvalue);
 	}
-
     done_testing();
 }
