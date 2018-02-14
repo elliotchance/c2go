@@ -219,9 +219,6 @@ int main()
 				is_streq( tcs[i].cvalue, cvalue );
 			}
 		}
-		if (cvalue != NULL){
-			pass(cvalue);
-		}
 
 		(void)(cvalue);
 	}

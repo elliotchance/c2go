@@ -160,7 +160,8 @@ static int last_test_was_ok = 1;
     }                                                                      \
     else                                                                   \
     {                                                                      \
-        fail("%s == %s # got %.25g", #actual, #expected, (double)(actual)) \
+        fail("%s == %s # got %.25g != %.25g", #actual, #expected,          \
+				(double)(actual), (double)(expected));                     \
     }
 
 // This works in the opposite way as is_eq().
