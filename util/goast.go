@@ -276,6 +276,55 @@ func ConvertFunctionNameFromCtoGo(name string) string {
 	return name
 }
 
+// GetUintptrForSlice - return uintptr for slice
+// Example : uint64(uintptr(unsafe.Pointer((*(**int)(unsafe.Pointer(& ...slice... )))))))
+func GetUintptrForSlice(expr goast.Expr) (goast.Expr, string) {
+	returnType := "long"
+
+	return &goast.CallExpr{
+		Fun:    goast.NewIdent("uint64"),
+		Lparen: 1,
+		Args: []goast.Expr{&goast.CallExpr{
+			Fun:    goast.NewIdent("uintptr"),
+			Lparen: 1,
+			Args: []goast.Expr{&goast.CallExpr{
+				Fun: &goast.SelectorExpr{
+					X:   goast.NewIdent("unsafe"),
+					Sel: goast.NewIdent("Pointer"),
+				},
+				Lparen: 1,
+				Args: []goast.Expr{&goast.StarExpr{
+					Star: 1,
+					X: &goast.CallExpr{
+						Fun: &goast.ParenExpr{
+							Lparen: 1,
+							X: &goast.StarExpr{
+								Star: 1,
+								X: &goast.StarExpr{
+									Star: 1,
+									X:    goast.NewIdent("int"),
+								},
+							},
+						},
+						Lparen: 1,
+						Args: []goast.Expr{&goast.CallExpr{
+							Fun: &goast.SelectorExpr{
+								X:   goast.NewIdent("unsafe"),
+								Sel: goast.NewIdent("Pointer"),
+							},
+							Lparen: 1,
+							Args: []goast.Expr{&goast.UnaryExpr{
+								Op: token.AND,
+								X:  expr,
+							}},
+						}},
+					},
+				}},
+			}},
+		}},
+	}, returnType
+}
+
 // CreateSliceFromReference - create a slice, like :
 // (*[1]int)(unsafe.Pointer(&a))[:]
 func CreateSliceFromReference(goType string, expr goast.Expr) *goast.SliceExpr {

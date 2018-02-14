@@ -238,6 +238,10 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 	if err != nil {
 		return nil, "unknown53", nil, nil, err
 	}
+	if types.IsPointer(leftType) && types.IsPointer(rightType) && operator == token.SUB {
+		left, leftType = util.GetUintptrForSlice(left)
+		right, rightType = util.GetUintptrForSlice(right)
+	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
