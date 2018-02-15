@@ -102,9 +102,12 @@ int call_a_func(operators call_this) {
     return output;
 }
 
+long tolower (int a, int b) { return (long)(a+b);}
+long toupper (int a, int b) { return (long)(a+b);}
+
 int main()
 {
-    plan(46);
+    plan(48);
 
     pass("%s", "Main function.");
 
@@ -212,6 +215,12 @@ int main()
 	}
 	{
 		is_eq(call_a_func(&mul),40);
+	}
+	
+	diag("function name like in CSTD");
+	{
+		is_eq(tolower(34,52),86);
+		is_eq(toupper(34,52),86);
 	}
 
     done_testing();

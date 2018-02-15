@@ -81,7 +81,9 @@ func (e *entity) isSame(x *entity) bool {
 }
 
 // Analyze - separation preprocessor code to part
-func Analyze(inputFiles, clangFlags []string) (pp []byte, comments []program.Comment, err error) {
+func Analyze(inputFiles, clangFlags []string) (pp []byte,
+	comments []program.Comment, includes []program.IncludeHeader, err error) {
+
 	var allItems []entity
 
 	allItems, err = analyzeFiles(inputFiles, clangFlags)
@@ -96,6 +98,14 @@ func Analyze(inputFiles, clangFlags []string) (pp []byte, comments []program.Com
 	if err != nil {
 		return
 	}
+	var all []string
+	all, err = GetIncludeFullList(inputFiles, clangFlags)
+	if err != nil {
+		return
+	}
+	// Generate C header list
+	includes = generateIncludeList(us, all)
+
 	for j := range us {
 		userSource[us[j]] = true
 	}
@@ -260,32 +270,31 @@ func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, er
 	return
 }
 
+func generateIncludeList(userList, allList []string) (
+	includes []program.IncludeHeader) {
+
+	for i := range allList {
+		var isUser bool
+		for j := range userList {
+			if allList[i] == userList[j] {
+				isUser = true
+				break
+			}
+		}
+		includes = append(includes, program.IncludeHeader{
+			HeaderName:   allList[i],
+			IsUserSource: isUser,
+		})
+	}
+	return
+}
+
 // GetIncludeListWithUserSource - Get list of include files
 // Example:
 // $ clang  -MM -c exit.c
 // exit.o: exit.c tests.h
 func GetIncludeListWithUserSource(inputFiles, clangFlags []string) (lines []string, err error) {
-	var out bytes.Buffer
-	var stderr bytes.Buffer
-	var args []string
-	for i := range inputFiles {
-		inputFiles[i], err = filepath.Abs(inputFiles[i])
-		if err != nil {
-			return
-		}
-	}
-	args = append(args, "-MM", "-c")
-	args = append(args, inputFiles...)
-	args = append(args, clangFlags...)
-	cmd := exec.Command("clang", args...)
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
-	err = cmd.Run()
-	if err != nil {
-		err = fmt.Errorf("preprocess failed: %v\nStdErr = %v", err, stderr.String())
-		return
-	}
-	return parseIncludeList(out.String())
+	return getIncludeList(inputFiles, clangFlags, "-MM")
 }
 
 // GetIncludeFullList - Get full list of include files
@@ -297,10 +306,24 @@ func GetIncludeListWithUserSource(inputFiles, clangFlags []string) (lines []stri
 //   /usr/include/x86_64-linux-gnu/gnu/stubs.h \
 //   /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
 //   / ........ and other
-func GetIncludeFullList(inputFile string) (lines []string, err error) {
+func GetIncludeFullList(inputFiles, clangFlags []string) (lines []string, err error) {
+	return getIncludeList(inputFiles, clangFlags, "-M")
+}
+
+func getIncludeList(inputFiles, clangFlags []string, flag string) (lines []string, err error) {
 	var out bytes.Buffer
 	var stderr bytes.Buffer
-	cmd := exec.Command("clang", "-M", "-c", inputFile)
+	var args []string
+	for i := range inputFiles {
+		inputFiles[i], err = filepath.Abs(inputFiles[i])
+		if err != nil {
+			return
+		}
+	}
+	args = append(args, flag, "-c")
+	args = append(args, inputFiles...)
+	args = append(args, clangFlags...)
+	cmd := exec.Command("clang", args...)
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
 	err = cmd.Run()

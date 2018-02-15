@@ -27,11 +27,14 @@ var cIntegerType = []string{
 }
 
 // IsCInteger - return true is C type integer
-func IsCInteger(cType string) bool {
+func IsCInteger(p *program.Program, cType string) bool {
 	for i := range cIntegerType {
 		if cType == cIntegerType[i] {
 			return true
 		}
+	}
+	if rt, ok := p.TypedefType[cType]; ok {
+		return IsCInteger(p, rt)
 	}
 	return false
 }

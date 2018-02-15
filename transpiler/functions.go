@@ -60,8 +60,8 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (
 
 	// Always register the new function. Only from this point onwards will
 	// we be allowed to refer to the function.
-	if program.GetFunctionDefinition(n.Name) == nil {
-		program.AddFunctionDefinition(program.FunctionDefinition{
+	if p.GetFunctionDefinition(n.Name) == nil {
+		p.AddFunctionDefinition(program.FunctionDefinition{
 			Name:          n.Name,
 			ReturnType:    getFunctionReturnType(n.Type),
 			ArgumentTypes: getFunctionArgumentTypes(n),
@@ -71,7 +71,7 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (
 
 	// If the function has a direct substitute in Go we do not want to
 	// output the C definition of it.
-	f := program.GetFunctionDefinition(n.Name)
+	f := p.GetFunctionDefinition(n.Name)
 	if f != nil && f.Substitution != "" {
 		err = nil
 		return
@@ -302,7 +302,7 @@ func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (
 		return nil, nil, nil, fmt.Errorf("Expr is nil")
 	}
 
-	f := program.GetFunctionDefinition(p.Function.Name)
+	f := p.GetFunctionDefinition(p.Function.Name)
 
 	t, err := types.CastExpr(p, e, eType, f.ReturnType)
 	if p.AddMessage(p.GenerateWarningMessage(err, n)) {
