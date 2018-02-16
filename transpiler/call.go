@@ -116,112 +116,15 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 	}
 
 	// function "calloc" from stdlib.c
-	if functionName == "calloc" && len(n.Children()) == 3 {
-		var allocType string
-		size, _, preStmts, postStmts, err := transpileToExpr(n.Children()[1], p, false)
-		if err != nil {
-			return nil, "", nil, nil, err
-		}
-		if v, ok := n.Children()[2].(*ast.UnaryExprOrTypeTraitExpr); ok {
-			allocType = v.Type2
-		} else {
-			return nil, "", nil, nil,
-				fmt.Errorf("Unsupport type '%T' in function calloc", n.Children()[2])
-		}
-		goType, err := types.ResolveType(p, allocType)
-		if err != nil {
-			return nil, "", nil, nil, err
-		}
-		return &goast.CallExpr{
-			Fun: util.NewIdent("make"),
-			Args: []goast.Expr{
-				&goast.ArrayType{Elt: goast.NewIdent(goType)},
-				size,
-			},
-		}, allocType + " *", preStmts, postStmts, nil
+	if p.IncludeHeaderIsExist("stdlib.h") && functionName == "calloc" &&
+		len(n.Children()) == 3 {
+		return callCalloc(n, p)
 	}
 
 	// function "qsort" from stdlib.h
-	if functionName == "qsort" && len(n.Children()) == 5 {
-		defer func() {
-			if err != nil {
-				err = fmt.Errorf("Function: qsort. err = %v", err)
-			}
-		}()
-		/*
-			CallExpr 0x2c6b1b0 <line:182:2, col:40> 'void'
-			|-ImplicitCastExpr 0x2c6b198 <col:2> 'void (*)(void *, size_t, size_t, __compar_fn_t)' <FunctionToPointerDecay>
-			| `-DeclRefExpr 0x2c6b070 <col:2> 'void (void *, size_t, size_t, __compar_fn_t)' Function 0x2bec110 'qsort' 'void (void *, size_t, size_t, __compar_fn_t)'
-			|-ImplicitCastExpr 0x2c6b210 <col:9> 'void *' <BitCast>
-			| `-ImplicitCastExpr 0x2c6b1f8 <col:9> 'int *' <ArrayToPointerDecay>
-			|   `-DeclRefExpr 0x2c6b098 <col:9> 'int [6]' lvalue Var 0x2c6a6c0 'values' 'int [6]'
-			|-ImplicitCastExpr 0x2c6b228 <col:17> 'size_t':'unsigned long' <IntegralCast>
-			| `-IntegerLiteral 0x2c6b0c0 <col:17> 'int' 6
-			|-UnaryExprOrTypeTraitExpr 0x2c6b0f8 <col:20, col:30> 'unsigned long' sizeof 'int'
-			`-ImplicitCastExpr 0x2c6b240 <col:33> 'int (*)(const void *, const void *)' <FunctionToPointerDecay>
-			  `-DeclRefExpr 0x2c6b118 <col:33> 'int (const void *, const void *)' Function 0x2c6aa70 'compare' 'int (const void *, const void *)'
-		*/
-		var element [4]goast.Expr
-		for i := 1; i < 5; i++ {
-			el, _, newPre, newPost, err := transpileToExpr(n.Children()[i], p, false)
-			if err != nil {
-				return nil, "", nil, nil, err
-			}
-			element[i-1] = el
-			preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
-		}
-		// found the C type
-		t := n.Children()[3].(*ast.UnaryExprOrTypeTraitExpr).Type2
-		t, err := types.ResolveType(p, t)
-		if err != nil {
-			return nil, "", nil, nil, err
-		}
-
-		var compareFunc string
-		if v, ok := element[3].(*goast.Ident); ok {
-			compareFunc = v.Name
-		} else {
-			return nil, "", nil, nil,
-				fmt.Errorf("golang ast for compare function have type %T, expect ast.Ident", element[3])
-		}
-
-		var varName string
-		if v, ok := element[0].(*goast.Ident); ok {
-			varName = v.Name
-		} else {
-			return nil, "", nil, nil,
-				fmt.Errorf("golang ast for variable name have type %T, expect ast.Ident", element[3])
-		}
-
-		p.AddImport("sort")
-		src := fmt.Sprintf(`package main
-		var %s func(a,b interface{})int
-		var temp = func(i, j int) bool {
-			c2goTempVarA := ([]%s{%s[i]})
-			c2goTempVarB := ([]%s{%s[j]})
-			return %s(c2goTempVarA, c2goTempVarB) <= 0
-		}`, compareFunc, t, varName, t, varName, compareFunc)
-
-		// Create the AST by parsing src.
-		fset := token.NewFileSet() // positions are relative to fset
-		f, err := parser.ParseFile(fset, "", src, 0)
-		if err != nil {
-			return nil, "", nil, nil, err
-		}
-
-		// AST tree part of code after "var temp = ..."
-		convertExpr := f.Decls[1].(*goast.GenDecl).Specs[0].(*goast.ValueSpec).Values[0]
-
-		return &goast.CallExpr{
-			Fun: &goast.SelectorExpr{
-				X:   goast.NewIdent("sort"),
-				Sel: goast.NewIdent("SliceStable"),
-			},
-			Args: []goast.Expr{
-				element[0],
-				convertExpr,
-			},
-		}, "", preStmts, postStmts, nil
+	if p.IncludeHeaderIsExist("stdlib.h") && functionName == "qsort" &&
+		len(n.Children()) == 5 {
+		return callQsort(n, p)
 	}
 
 	// Get the function definition from it's name. The case where it is not
@@ -418,4 +321,117 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 
 	return util.NewCallExpr(functionName, realArgs...),
 		functionDef.ReturnType, preStmts, postStmts, nil
+}
+
+// callCalloc - call function "calloc" from #include <stdlib.h>
+//
+func callCalloc(n *ast.CallExpr, p *program.Program) (
+	_ *goast.CallExpr, resultType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+	var allocType string
+	size, _, preStmts, postStmts, err := transpileToExpr(n.Children()[1], p, false)
+	if err != nil {
+		return nil, "", nil, nil, err
+	}
+	if v, ok := n.Children()[2].(*ast.UnaryExprOrTypeTraitExpr); ok {
+		allocType = v.Type2
+	} else {
+		return nil, "", nil, nil,
+			fmt.Errorf("Unsupport type '%T' in function calloc", n.Children()[2])
+	}
+	goType, err := types.ResolveType(p, allocType)
+	if err != nil {
+		return nil, "", nil, nil, err
+	}
+	return &goast.CallExpr{
+		Fun: util.NewIdent("make"),
+		Args: []goast.Expr{
+			&goast.ArrayType{Elt: goast.NewIdent(goType)},
+			size,
+		},
+	}, allocType + " *", preStmts, postStmts, nil
+}
+
+// callQsort - call function "qsort" from #include <stdlib.h>
+// Example of clang AST:
+// CallExpr 0x2c6b1b0 <line:182:2, col:40> 'void'
+// |-ImplicitCastExpr 0x2c6b198 <col:2> 'void (*)(void *, size_t, size_t, __compar_fn_t)' <FunctionToPointerDecay>
+// | `-DeclRefExpr 0x2c6b070 <col:2> 'void (void *, size_t, size_t, __compar_fn_t)' Function 0x2bec110 'qsort' 'void (void *, size_t, size_t, __compar_fn_t)'
+// |-ImplicitCastExpr 0x2c6b210 <col:9> 'void *' <BitCast>
+// | `-ImplicitCastExpr 0x2c6b1f8 <col:9> 'int *' <ArrayToPointerDecay>
+// |   `-DeclRefExpr 0x2c6b098 <col:9> 'int [6]' lvalue Var 0x2c6a6c0 'values' 'int [6]'
+// |-ImplicitCastExpr 0x2c6b228 <col:17> 'size_t':'unsigned long' <IntegralCast>
+// | `-IntegerLiteral 0x2c6b0c0 <col:17> 'int' 6
+// |-UnaryExprOrTypeTraitExpr 0x2c6b0f8 <col:20, col:30> 'unsigned long' sizeof 'int'
+// `-ImplicitCastExpr 0x2c6b240 <col:33> 'int (*)(const void *, const void *)' <FunctionToPointerDecay>
+//   `-DeclRefExpr 0x2c6b118 <col:33> 'int (const void *, const void *)' Function 0x2c6aa70 'compare' 'int (const void *, const void *)'
+//
+func callQsort(n *ast.CallExpr, p *program.Program) (
+	_ *goast.CallExpr, resultType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Function: qsort. err = %v", err)
+		}
+	}()
+
+	var element [4]goast.Expr
+	for i := 1; i < 5; i++ {
+		el, _, newPre, newPost, err := transpileToExpr(n.Children()[i], p, false)
+		if err != nil {
+			return nil, "", nil, nil, err
+		}
+		element[i-1] = el
+		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+	}
+	// found the C type
+	t := n.Children()[3].(*ast.UnaryExprOrTypeTraitExpr).Type2
+	t, err = types.ResolveType(p, t)
+	if err != nil {
+		return nil, "", nil, nil, err
+	}
+
+	var compareFunc string
+	if v, ok := element[3].(*goast.Ident); ok {
+		compareFunc = v.Name
+	} else {
+		return nil, "", nil, nil,
+			fmt.Errorf("golang ast for compare function have type %T, expect ast.Ident", element[3])
+	}
+
+	var varName string
+	if v, ok := element[0].(*goast.Ident); ok {
+		varName = v.Name
+	} else {
+		return nil, "", nil, nil,
+			fmt.Errorf("golang ast for variable name have type %T, expect ast.Ident", element[3])
+	}
+
+	p.AddImport("sort")
+	src := fmt.Sprintf(`package main
+		var %s func(a,b interface{})int
+		var temp = func(i, j int) bool {
+			c2goTempVarA := ([]%s{%s[i]})
+			c2goTempVarB := ([]%s{%s[j]})
+			return %s(c2goTempVarA, c2goTempVarB) <= 0
+		}`, compareFunc, t, varName, t, varName, compareFunc)
+
+	// Create the AST by parsing src.
+	fset := token.NewFileSet() // positions are relative to fset
+	f, err := parser.ParseFile(fset, "", src, 0)
+	if err != nil {
+		return nil, "", nil, nil, err
+	}
+
+	// AST tree part of code after "var temp = ..."
+	convertExpr := f.Decls[1].(*goast.GenDecl).Specs[0].(*goast.ValueSpec).Values[0]
+
+	return &goast.CallExpr{
+		Fun: &goast.SelectorExpr{
+			X:   goast.NewIdent("sort"),
+			Sel: goast.NewIdent("SliceStable"),
+		},
+		Args: []goast.Expr{
+			element[0],
+			convertExpr,
+		},
+	}, "", preStmts, postStmts, nil
 }
