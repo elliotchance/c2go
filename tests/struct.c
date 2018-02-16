@@ -137,7 +137,7 @@ void struct_in_struct_with_star()
 
 struct memory{
 	int * one;
-	int ** oop;
+	float ** oop;
 	double * two;
 	struct memory * mm;
 };
@@ -145,9 +145,9 @@ struct memory{
 void struct_null()
 {
 	struct memory  dm;
-	int o = 99;
-	int * oo = &o;
-	int * ooo = &oo;
+	float o = 99;
+	float * oo = &o;
+	float ** ooo = &oo;
 	dm.oop = ooo;
 	struct memory * m = &dm;
 	m->one = (int           *)(NULL);
