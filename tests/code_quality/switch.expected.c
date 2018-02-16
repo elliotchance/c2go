@@ -7,7 +7,7 @@
 
 package code_quality
 
-// switch_function - transpiled function from  /home/konstantin/go/src/github.com/elliotchance/c2go/tests/code_quality/switch.c:1
+// switch_function - transpiled function from  /home/lepricon/go/src/github.com/elliotchance/c2go/tests/code_quality/switch.c:1
 func switch_function() {
 	var i int = 34
 	switch i {
@@ -37,5 +37,3 @@ func switch_function() {
 }
 func init() {
 }
-
-type _Bool int

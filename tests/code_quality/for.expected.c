@@ -7,21 +7,21 @@
 
 package code_quality
 
-// f1 - transpiled function from  /home/konstantin/go/src/github.com/elliotchance/c2go/tests/code_quality/for.c:1
+// f1 - transpiled function from  /home/lepricon/go/src/github.com/elliotchance/c2go/tests/code_quality/for.c:1
 func f1() {
 	var i int
 	for i = 0; i < 10; i++ {
 	}
 }
 
-// f2 - transpiled function from  /home/konstantin/go/src/github.com/elliotchance/c2go/tests/code_quality/for.c:7
+// f2 - transpiled function from  /home/lepricon/go/src/github.com/elliotchance/c2go/tests/code_quality/for.c:7
 func f2() {
 	var i int
 	for i = 10; i > 0; i-- {
 	}
 }
 
-// f3 - transpiled function from  /home/konstantin/go/src/github.com/elliotchance/c2go/tests/code_quality/for.c:13
+// f3 - transpiled function from  /home/lepricon/go/src/github.com/elliotchance/c2go/tests/code_quality/for.c:13
 func f3() {
 	{
 		var i int = 0
@@ -31,5 +31,3 @@ func f3() {
 }
 func init() {
 }
-
-type _Bool int
