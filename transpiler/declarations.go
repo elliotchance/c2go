@@ -544,12 +544,10 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 	theType = n.Type
 	_, isTypedefType := p.TypedefType[theType]
 
-	if !isTypedefType {
-		theType, err = types.ResolveType(p, n.Type)
-		if err != nil {
-			p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Cannot resolve type %s : %v", theType, err), n))
-			err = nil // Error is ignored
-		}
+	theType, err = types.ResolveType(p, n.Type)
+	if err != nil {
+		p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Cannot resolve type %s : %v", theType, err), n))
+		err = nil // Error is ignored
 	}
 
 	p.GlobalVariables[n.Name] = theType

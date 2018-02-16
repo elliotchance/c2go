@@ -85,13 +85,6 @@ var simpleResolveTypes = map[string]string{
 	"__uint16_t": "uint16",
 	"__uint32_t": "uint32",
 	"__uint64_t": "uint64",
-	"div_t":      "github.com/elliotchance/c2go/noarch.DivT",
-	"ldiv_t":     "github.com/elliotchance/c2go/noarch.LdivT",
-	"lldiv_t":    "github.com/elliotchance/c2go/noarch.LldivT",
-	"time_t":     "github.com/elliotchance/c2go/noarch.TimeT",
-
-	// time.h
-	"tm": "github.com/elliotchance/c2go/noarch.Tm",
 
 	// Darwin specific
 	"__darwin_ct_rune_t": "github.com/elliotchance/c2go/darwin.CtRuneT",
@@ -112,6 +105,17 @@ var simpleResolveTypes = map[string]string{
 	"__sbuf":                       "int64",
 	"__sFILEX":                     "interface{}",
 	"FILE":                         "github.com/elliotchance/c2go/noarch.File",
+}
+
+var otherStructType = map[string]string{
+	"div_t":   "github.com/elliotchance/c2go/noarch.DivT",
+	"ldiv_t":  "github.com/elliotchance/c2go/noarch.LdivT",
+	"lldiv_t": "github.com/elliotchance/c2go/noarch.LldivT",
+
+	// time.h
+	"tm":        "github.com/elliotchance/c2go/noarch.Tm",
+	"struct tm": "github.com/elliotchance/c2go/noarch.Tm",
+	"time_t":    "github.com/elliotchance/c2go/noarch.TimeT",
 }
 
 // NullPointer - is look : (double *)(nil) or (FILE *)(nil)
@@ -192,7 +196,19 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 
 	// No need resolve typedef types
 	if _, ok := p.TypedefType[s]; ok {
-		return s, nil
+		if tt, ok := otherStructType[s]; ok {
+			// "div_t":   "github.com/elliotchance/c2go/noarch.DivT",
+			ii := p.ImportType(tt)
+			return ii, nil
+		} else {
+			return s, nil
+		}
+	}
+
+	if tt, ok := otherStructType[s]; ok {
+		// "div_t":   "github.com/elliotchance/c2go/noarch.DivT",
+		ii := p.ImportType(tt)
+		return ii, nil
 	}
 
 	// The simple resolve types are the types that we know there is an exact Go
@@ -231,12 +247,10 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 		if s[len(s)-1] == '*' {
 			s = s[start : len(s)-2]
 
-			for k := range simpleResolveTypes {
-				if k == s {
-					return "[]" + p.ImportType(simpleResolveTypes[s]), nil
-				}
-			}
-			return "[]" + strings.TrimSpace(s), nil
+			var t string
+			t, err = ResolveType(p, s)
+			// TODO err
+			return "[]" + t, err
 		}
 
 		s = s[start:]
