@@ -1,7 +1,6 @@
 package transpiler
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -320,7 +319,7 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program) 
 
 	children := n.Children()
 
-	expression, expressionType, newPre, newPost, err := transpileToExpr(children[0], p, false)
+	expression, _, newPre, newPost, err := transpileToExpr(children[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
@@ -331,14 +330,6 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program) 
 		return nil, "", nil, nil, err
 	}
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
-
-	theType, err = types.GetDereferenceType(expressionType)
-	if err != nil {
-		message := fmt.Sprintf(
-			"Cannot dereference type '%s' for the expression '%#v'. err = %v",
-			expressionType, expression, err)
-		return nil, theType, nil, nil, errors.New(message)
-	}
 
 	return &goast.IndexExpr{
 		X:     expression,

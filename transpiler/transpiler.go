@@ -90,6 +90,19 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 		},
 	})
 
+	// only for "stdbool.h"
+	if p.IncludeHeaderIsExist("stdbool.h") {
+		p.File.Decls = append(p.File.Decls, &goast.GenDecl{
+			Tok: token.TYPE,
+			Specs: []goast.Spec{
+				&goast.TypeSpec{
+					Name: goast.NewIdent("_Bool"),
+					Type: goast.NewIdent("int"),
+				},
+			},
+		})
+	}
+
 	// Add the imports after everything else so we can ensure that they are all
 	// placed at the top.
 	for _, quotedImportPath := range p.Imports() {

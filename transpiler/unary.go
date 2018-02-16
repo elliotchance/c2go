@@ -193,6 +193,18 @@ func transpileUnaryOperatorNot(n *ast.UnaryOperator, p *program.Program) (
 		), "bool", preStmts, postStmts, nil
 	}
 
+	// only if added "stdbool.h"
+	if p.IncludeHeaderIsExist("stdbool.h") {
+		if t == "_Bool" {
+			t = "int"
+			e = &goast.CallExpr{
+				Fun:    goast.NewIdent("int"),
+				Lparen: 1,
+				Args:   []goast.Expr{e},
+			}
+		}
+	}
+
 	p.AddImport("github.com/elliotchance/c2go/noarch")
 
 	functionName := fmt.Sprintf("noarch.Not%s",
