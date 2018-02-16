@@ -135,9 +135,33 @@ void struct_in_struct_with_star()
 	is_eq(in.star_con->sa,45);
 }
 
+struct memory{
+	int * one;
+	int ** oop;
+	double * two;
+	struct memory * mm;
+};
+
+void struct_null()
+{
+	struct memory  dm;
+	struct memory * m = &dm;
+	m->one = (int           *)(NULL);
+	m->two = (double        *)(NULL);
+	m->mm  = (struct memory *)(NULL);
+	m->one = (void *)(NULL);
+	m->two = (void *)(NULL);
+	m->mm  = (void *)(NULL);
+	*(m->oop) = (int *) NULL;
+	 (m->oop) = (int *) NULL;
+	(void)(dm);
+	(void)(m);
+	pass("ok");
+}
+
 int main()
 {
-    plan(59);
+    plan(60);
 
     struct programming variable;
     char *s = "Programming in Software Development.";
@@ -385,6 +409,7 @@ int main()
 	}
 	
 	struct_in_struct_with_star();
+	struct_null();
 
     done_testing();
 }
