@@ -86,14 +86,6 @@ var simpleResolveTypes = map[string]string{
 	"__uint32_t": "uint32",
 	"__uint64_t": "uint64",
 
-	// Darwin specific
-	"__darwin_ct_rune_t": "github.com/elliotchance/c2go/darwin.CtRuneT",
-	"fpos_t":             "int",
-	"struct __float2":    "github.com/elliotchance/c2go/darwin.Float2",
-	"struct __double2":   "github.com/elliotchance/c2go/darwin.Double2",
-	"Float2":             "github.com/elliotchance/c2go/darwin.Float2",
-	"Double2":            "github.com/elliotchance/c2go/darwin.Double2",
-
 	// These are special cases that almost certainly don't work. I've put
 	// them here because for whatever reason there is no suitable type or we
 	// don't need these platform specific things to be implemented yet.
@@ -116,6 +108,14 @@ var otherStructType = map[string]string{
 	"tm":        "github.com/elliotchance/c2go/noarch.Tm",
 	"struct tm": "github.com/elliotchance/c2go/noarch.Tm",
 	"time_t":    "github.com/elliotchance/c2go/noarch.TimeT",
+
+	// Darwin specific
+	"__darwin_ct_rune_t": "github.com/elliotchance/c2go/darwin.CtRuneT",
+	"fpos_t":             "int",
+	"struct __float2":    "github.com/elliotchance/c2go/darwin.Float2",
+	"struct __double2":   "github.com/elliotchance/c2go/darwin.Double2",
+	"Float2":             "github.com/elliotchance/c2go/darwin.Float2",
+	"Double2":            "github.com/elliotchance/c2go/darwin.Double2",
 }
 
 // NullPointer - is look : (double *)(nil) or (FILE *)(nil)
