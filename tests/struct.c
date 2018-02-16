@@ -145,6 +145,10 @@ struct memory{
 void struct_null()
 {
 	struct memory  dm;
+	int o = 99;
+	int * oo = &o;
+	int * ooo = &oo;
+	dm.oop = ooo;
 	struct memory * m = &dm;
 	m->one = (int           *)(NULL);
 	m->two = (double        *)(NULL);
@@ -154,8 +158,13 @@ void struct_null()
 	m->mm  = (void *)(NULL);
 	*(m->oop) = (int *) NULL;
 	 (m->oop) = (int *) NULL;
+	double d = 99;
+	double * dd = &d;
+	double **ddd = &dd;
+	*(ddd) = (int *) NULL;
 	(void)(dm);
 	(void)(m);
+	(void)(ddd);
 	pass("ok");
 }
 

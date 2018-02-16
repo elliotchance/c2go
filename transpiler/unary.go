@@ -350,6 +350,9 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 						}
 						a = vv
 						continue
+					case *ast.ImplicitCastExpr, *ast.CStyleCastExpr:
+						a = vv
+						continue
 					}
 					break
 				}
