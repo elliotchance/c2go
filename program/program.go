@@ -123,7 +123,11 @@ type IncludeHeader struct {
 }
 
 // NewProgram creates a new blank program.
-func NewProgram() *Program {
+func NewProgram() (p *Program) {
+	defer func() {
+		// TODO: add only for "stdbool.h"
+		p.TypedefType["_Bool"] = "int"
+	}()
 	return &Program{
 		imports:             []string{},
 		typesAlreadyDefined: []string{},

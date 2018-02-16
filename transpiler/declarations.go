@@ -541,16 +541,13 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 		return
 	}
 
-	t := n.Type
-	if len(t) > 1 {
-		t = n.Type[0 : len(n.Type)-len(" *")]
-	}
-	_, isTypedefType := p.TypedefType[t]
+	theType = n.Type
+	_, isTypedefType := p.TypedefType[theType]
 
 	if !isTypedefType {
 		theType, err = types.ResolveType(p, n.Type)
 		if err != nil {
-			p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Cannot resolve type %s : %v", n.Type, err), n))
+			p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Cannot resolve type %s : %v", theType, err), n))
 			err = nil // Error is ignored
 		}
 	}
@@ -584,11 +581,13 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 	arrayType, arraySize := types.GetArrayTypeAndSize(n.Type)
 
 	if arraySize != -1 && defaultValue == nil {
-		var goArrayType string
-		goArrayType, err = types.ResolveType(p, arrayType)
-		if err != nil {
-			p.AddMessage(p.GenerateErrorMessage(err, n))
-			err = nil // Error is ignored
+		var goArrayType string = arrayType
+		if _, ok := p.TypedefType[arrayType]; !ok {
+			goArrayType, err = types.ResolveType(p, arrayType)
+			if err != nil {
+				p.AddMessage(p.GenerateErrorMessage(err, n))
+				err = nil // Error is ignored
+			}
 		}
 
 		defaultValue = []goast.Expr{
@@ -603,23 +602,15 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 		}
 	}
 
-	if !isTypedefType {
-		t, err = types.ResolveType(p, n.Type)
-		if err != nil {
-			p.AddMessage(p.GenerateErrorMessage(err, n))
-			err = nil // Error is ignored
-		}
-	}
-
 	if len(preStmts) != 0 || len(postStmts) != 0 {
 		p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Not acceptable length of Stmt : pre(%d), post(%d)", len(preStmts), len(postStmts)), n))
 	}
 
 	var typeResult goast.Expr
 	if isTypedefType {
-		typeResult = goast.NewIdent(t)
+		typeResult = goast.NewIdent(theType)
 	} else {
-		typeResult = util.NewTypeIdent(t)
+		typeResult = util.NewTypeIdent(theType)
 	}
 
 	return []goast.Decl{&goast.GenDecl{
