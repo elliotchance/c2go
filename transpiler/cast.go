@@ -45,7 +45,6 @@ func transpileImplicitCastExpr(n *ast.ImplicitCastExpr, p *program.Program, expr
 	if len(n.Type) != 0 && len(n.Type2) != 0 && n.Type != n.Type2 {
 		var tt string
 		tt, err = types.ResolveType(p, n.Type)
-		// TODO err
 		expr = &goast.CallExpr{
 			Fun:    goast.NewIdent(tt),
 			Lparen: 1,
@@ -123,7 +122,6 @@ func transpileCStyleCastExpr(n *ast.CStyleCastExpr, p *program.Program, exprIsSt
 	if len(n.Type) != 0 && len(n.Type2) != 0 && n.Type != n.Type2 {
 		var tt string
 		tt, err = types.ResolveType(p, n.Type)
-		// TODO err
 		expr = &goast.CallExpr{
 			Fun:    goast.NewIdent(tt),
 			Lparen: 1,

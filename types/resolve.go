@@ -249,7 +249,6 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 
 			var t string
 			t, err = ResolveType(p, s)
-			// TODO err
 			return "[]" + t, err
 		}
 

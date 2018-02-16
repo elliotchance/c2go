@@ -125,7 +125,7 @@ type IncludeHeader struct {
 // NewProgram creates a new blank program.
 func NewProgram() (p *Program) {
 	defer func() {
-		// TODO: add only for "stdbool.h"
+		// Need for "stdbool.h"
 		p.TypedefType["_Bool"] = "int"
 	}()
 	return &Program{
