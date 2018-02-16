@@ -362,6 +362,10 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 	}
 
 	err = nil
+	fmt.Println(resolvedType)
+	if resolvedType == "" {
+		resolvedType = "interface{}"
+	}
 	decls = append(decls, &goast.GenDecl{
 		Tok: token.TYPE,
 		Specs: []goast.Spec{

@@ -142,6 +142,12 @@ struct memory{
 	struct memory * mm;
 };
 
+typedef double** subseg;
+
+struct mesh {
+	subseg *dummysub;
+};
+
 void struct_null()
 {
 	struct memory  dm;
@@ -150,21 +156,30 @@ void struct_null()
 	float ** ooo = &oo;
 	dm.oop = ooo;
 	struct memory * m = &dm;
-	m->one = (int           *)(NULL);
-	m->two = (double        *)(NULL);
-	m->mm  = (struct memory *)(NULL);
-	m->one = (void *)(NULL);
-	m->two = (void *)(NULL);
-	m->mm  = (void *)(NULL);
-	*(m->oop) = (int *) NULL;
-	 (m->oop) = (int *) NULL;
+	m->one    = (int           *)(NULL);
+	m->two    = (double        *)(NULL);
+	m->mm     = (struct memory *)(NULL);
+	m->one    = (void          *)(NULL);
+	m->two    = (void          *)(NULL);
+	m->mm     = (void          *)(NULL);
+	*(m->oop) = (int           *) NULL ;
+	 (m->oop) = (int           *) NULL ;
+	(void)(dm);
+	(void)(m);
+	
 	double d = 99;
 	double * dd = &d;
 	double **ddd = &dd;
 	*(ddd) = (int *) NULL;
-	(void)(dm);
-	(void)(m);
 	(void)(ddd);
+
+	struct mesh msh;
+	subseg sub[10];
+	for (int i=0;i<10;i++){sub[i] = (subseg)(ddd);}
+	msh.dummysub = sub;
+	struct mesh *ms = &msh;
+	ms->dummysub[2] = (subseg) NULL;
+	(void)(ms);
 	pass("ok");
 }
 

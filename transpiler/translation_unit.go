@@ -11,67 +11,46 @@ import (
 
 func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl) (decls []goast.Decl, err error) {
 	for i := 0; i < len(n.Children()); i++ {
-		switch v := n.Children()[i].(type) {
-		case *ast.RecordDecl:
-			// for case :
-			// typedef struct C C;
-			// typedef union  C C;
-			if len(v.Children()) == 0 {
-				if i+1 < len(n.Children()) {
-					if vv, ok := n.Children()[i+1].(*ast.TypedefDecl); ok {
-						if isSameTypedefNames(vv) {
-							i++
-							continue
-						}
+		if rec, ok := n.Children()[i].(*ast.RecordDecl); ok {
+			if i+1 < len(n.Children()) {
+				switch recNode := n.Children()[i+1].(type) {
+				case *ast.VarDecl:
+					name := types.GenerateCorrectType(recNode.Type)
+					if strings.HasPrefix(name, "union ") {
+						rec.Name = name[len("union "):]
+						recNode.Type = "union " + name
+					}
+					if strings.HasPrefix(name, "struct ") {
+						rec.Name = name[len("struct "):]
+						recNode.Type = "struct " + name
+					}
+				case *ast.TypedefDecl:
+					if strings.Contains(recNode.Type, "__locale_struct") {
+						continue
+					}
+					if isSameTypedefNames(recNode) {
+						i++
+						continue
+					}
+					name := types.GenerateCorrectType(recNode.Type)
+					if strings.HasPrefix(name, "union ") {
+						rec.Name = name[len("union "):]
+						recNode.Type = "union " + name
+					}
+					if strings.HasPrefix(name, "struct ") {
+						rec.Name = name[len("struct "):]
+						recNode.Type = "struct " + name
 					}
 				}
 			}
-			// specific for `typedef struct`, `typedef union` without name
-			if v.Name != "" || i == len(n.Children())-1 {
-				var d []goast.Decl
-				d, err = transpileRecordDecl(p, v)
-				if err != nil {
-					return
-				}
-				decls = append(decls, d...)
-			}
-			for counter := 1; i+counter < len(n.Children()); counter++ {
-				if vv, ok := n.Children()[i+counter].(*ast.TypedefDecl); ok && !types.IsFunction(vv.Type) {
-					nameTypedefStruct := vv.Name
-					fields := v.Children()
-					// create a struct in according to
-					// name and fields
-					var recordDecl ast.RecordDecl
-					recordDecl.Name = nameTypedefStruct
-					recordDecl.Kind = "struct"
-					if strings.Contains(vv.Type, "union ") {
-						recordDecl.Kind = "union"
-					}
-					recordDecl.ChildNodes = fields
-					var d []goast.Decl
-					d, err = transpileRecordDecl(p, &recordDecl)
-					if err != nil {
-						p.AddMessage(p.GenerateErrorMessage(err, n))
-						err = nil
-					} else {
-						decls = append(decls, d...)
-					}
-					break
-				} else {
-					counter--
-					i = i + counter
-					break
-				}
-			}
-		default:
-			var d []goast.Decl
-			d, err = transpileToNode(n.Children()[i], p)
-			if err != nil {
-				p.AddMessage(p.GenerateErrorMessage(err, n))
-				err = nil
-			} else {
-				decls = append(decls, d...)
-			}
+		}
+		var d []goast.Decl
+		d, err = transpileToNode(n.Children()[i], p)
+		if err != nil {
+			p.AddMessage(p.GenerateErrorMessage(err, n))
+			err = nil
+		} else {
+			decls = append(decls, d...)
 		}
 	}
 	return
