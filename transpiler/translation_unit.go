@@ -37,7 +37,6 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 						continue
 					}
 					name := types.GenerateCorrectType(types.CleanCType(recNode.Type))
-					// fmt.Println("Typedef ", recNode.Name, " -> ", recNode.Type, "||", recNode.Type2)
 					if strings.HasPrefix(name, "union ") {
 						if recNode.Type == "union "+rec.Name {
 							names := []string{rec.Name, recNode.Name}
@@ -61,25 +60,8 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 						}
 					}
 					if strings.HasPrefix(name, "struct ") {
-
-						// fmt.Println(">>>>  Typedef ", recNode.Name, " -> ", recNode.Type, "||", recNode.Type2)
-						// fmt.Println(">>>> ", name, "\t")
-						// rec.name = name[len("struct "):]
-						// recnode.type = "struct " + name
-
-						// From :
-						// TypedefDecl __locale_t 'struct __locale_struct *'
-						// To   :
-						// VarDecl st7a 'struct st4':'struct st4'
 						if rec.Name != "" {
 							runAfter = func() {
-								// var v ast.VarDecl
-								// v.Name = recNode.Name
-								// v.Type = recNode.Type[len("struct "):]
-								//
-								// v.Type = types.GenerateCorrectType(v.Type)
-								// fmt.Println("VarDecl : ", v.Name, " > ", v.Type)
-
 								var d []goast.Decl
 								d, err = transpileToNode(recNode, p)
 								if err != nil {

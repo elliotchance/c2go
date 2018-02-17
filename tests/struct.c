@@ -203,6 +203,14 @@ typedef struct st21{
 }st26;
 typedef double ** st27;
 
+static struct unix_syscall {
+  const char *zName;
+} aSyscall[] = {
+  { "open"   },
+  { "close"  }
+};
+
+
 struct memory{
 	int * one;
 	float ** oop;
