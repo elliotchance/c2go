@@ -210,7 +210,6 @@ static struct unix_syscall {
   { "close"  }
 };
 
-
 struct memory{
 	int * one;
 	float ** oop;
@@ -224,6 +223,13 @@ struct mesh {
 	subseg *dummysub;
 };
 
+double * returner(int* i, double *d)
+{
+	(void)(i);
+	return d;
+}
+
+#include <sys/time.h>
 void struct_null()
 {
 	struct memory  dm;
@@ -242,6 +248,11 @@ void struct_null()
 	 (m->oop) = (int           *) NULL ;
 	(void)(dm);
 	(void)(m);
+
+	(void)summator(1,34.4);
+	struct timeval sNow;
+	(void)(sNow);
+	(void)returner(0,0);
 	
 	double d = 99;
 	double * dd = &d;

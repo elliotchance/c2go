@@ -383,8 +383,13 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 				// This means the argument is one of the varargs so we don't
 				// know what type it needs to be cast to.
 			} else {
-				a, err = types.CastExpr(p, a, argTypes[i],
-					functionDef.ArgumentTypes[i])
+				if argTypes[i] != types.NullPointer {
+					a, err = types.CastExpr(p, a, argTypes[i],
+						functionDef.ArgumentTypes[i])
+				} else {
+					a = util.NewNil()
+					err = nil
+				}
 
 				if p.AddMessage(p.GenerateWarningMessage(err, n)) {
 					a = util.NewNil()

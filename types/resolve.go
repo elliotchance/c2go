@@ -454,7 +454,6 @@ func CleanCType(s string) (out string) {
 	if out != s {
 		return CleanCType(out)
 	}
-
 	return out
 }
 

@@ -327,6 +327,9 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 				a := n.Children()[i]
 				var isUnion bool
 				for {
+					if a == nil {
+						break
+					}
 					if len(a.Children()) == 0 {
 						break
 					}
