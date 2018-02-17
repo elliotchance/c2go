@@ -9,7 +9,9 @@ import (
 	"github.com/elliotchance/c2go/types"
 )
 
-func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl) (decls []goast.Decl, err error) {
+func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl) (
+	decls []goast.Decl, err error) {
+
 	for i := 0; i < len(n.Children()); i++ {
 		if rec, ok := n.Children()[i].(*ast.RecordDecl); ok {
 			if i+1 < len(n.Children()) {
@@ -35,8 +37,26 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 					}
 					name := types.GenerateCorrectType(recNode.Type)
 					if strings.HasPrefix(name, "union ") {
-						rec.Name = name[len("union "):]
-						recNode.Type = "union " + name
+						if recNode.Type == "union "+rec.Name {
+							names := []string{rec.Name, recNode.Name}
+							for _, name := range names {
+								rec.Name = name
+								var d []goast.Decl
+								d, err = transpileToNode(rec, p)
+								if err != nil {
+									p.AddMessage(p.GenerateErrorMessage(err, n))
+									err = nil
+								} else {
+									decls = append(decls, d...)
+								}
+							}
+
+							i++
+							continue
+						} else {
+							rec.Name = name[len("union "):]
+							recNode.Type = "union " + name
+						}
 					}
 					if strings.HasPrefix(name, "struct ") {
 						rec.Name = name[len("struct "):]
