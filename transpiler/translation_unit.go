@@ -1,7 +1,6 @@
 package transpiler
 
 import (
-	"fmt"
 	goast "go/ast"
 	"strings"
 
@@ -18,18 +17,19 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 		var runAfter func()
 
 		if rec, ok := presentNode.(*ast.RecordDecl); ok {
-			fmt.Println("Record = ", rec.Name, "\t", rec.Kind, "\t", rec.Pos)
 			if i+1 < len(n.Children()) {
 				switch recNode := n.Children()[i+1].(type) {
 				case *ast.VarDecl:
 					name := types.GenerateCorrectType(recNode.Type)
-					if strings.HasPrefix(name, "union ") {
-						rec.Name = name[len("union "):]
-						recNode.Type = "union " + name
-					}
-					if strings.HasPrefix(name, "struct ") {
-						rec.Name = name[len("struct "):]
-						recNode.Type = "struct " + name
+					if rec.Name == "" {
+						if strings.HasPrefix(name, "union ") {
+							rec.Name = name[len("union "):]
+							recNode.Type = "union " + name
+						}
+						if strings.HasPrefix(name, "struct ") {
+							rec.Name = name[len("struct "):]
+							recNode.Type = "struct " + name
+						}
 					}
 				case *ast.TypedefDecl:
 					if isSameTypedefNames(recNode) {
