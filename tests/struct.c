@@ -135,6 +135,65 @@ void struct_in_struct_with_star()
 	is_eq(in.star_con->sa,45);
 }
 
+struct {
+	int a;
+} m;
+typedef double ** y;
+
+struct {
+	int aa;
+} mm;
+typedef double ** yy;
+
+struct mmm{
+	int aaa;
+};
+typedef double *** yyy;
+
+struct mmmm{
+	int aaaa;
+};
+typedef double **** yyyy;
+
+struct mmmmm0{
+	int aaaaa;
+}mmmmm;
+typedef double ** yyyyy;
+
+typedef struct {
+	int st1;
+} st2;
+typedef double ** st3;
+
+typedef struct st4{
+	int st5;
+} st6;
+typedef double ** st7;
+
+struct st8{
+	int st9;
+	struct st10{
+		int st11;
+	};
+};
+typedef double ** st12;
+
+struct st13{
+	int st14;
+	struct st16{
+		int st17;
+	}st18;
+}st19;
+typedef double ** st20;
+
+typedef struct st21{
+	int st22;
+	struct st23{
+		int st24;
+	}st25;
+}st26;
+typedef double ** st27;
+
 struct memory{
 	int * one;
 	float ** oop;
