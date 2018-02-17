@@ -26,6 +26,7 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 					}
 				case *ast.TypedefDecl:
 					if strings.Contains(recNode.Type, "__locale_struct") {
+						i++
 						continue
 					}
 					if isSameTypedefNames(recNode) {

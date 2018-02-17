@@ -206,9 +206,6 @@ func mergePositions(p1, p2 Position) Position {
 		p1.ColumnEnd = p2.ColumnEnd
 	}
 
-	// Saving base string position
-	p1.StringValue = p2.StringValue
-
 	return p1
 }
 
