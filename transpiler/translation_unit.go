@@ -1,6 +1,7 @@
 package transpiler
 
 import (
+	"fmt"
 	goast "go/ast"
 	"strings"
 
@@ -13,7 +14,11 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 	decls []goast.Decl, err error) {
 
 	for i := 0; i < len(n.Children()); i++ {
-		if rec, ok := n.Children()[i].(*ast.RecordDecl); ok {
+		presentNode := n.Children()[i]
+		var runAfter func()
+
+		if rec, ok := presentNode.(*ast.RecordDecl); ok {
+			fmt.Println("Record = ", rec.Name, "\t", rec.Kind, "\t", rec.Pos)
 			if i+1 < len(n.Children()) {
 				switch recNode := n.Children()[i+1].(type) {
 				case *ast.VarDecl:
@@ -27,15 +32,12 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 						recNode.Type = "struct " + name
 					}
 				case *ast.TypedefDecl:
-					if strings.Contains(recNode.Type, "__locale_struct") {
-						i++
-						continue
-					}
 					if isSameTypedefNames(recNode) {
 						i++
 						continue
 					}
-					name := types.GenerateCorrectType(recNode.Type)
+					name := types.GenerateCorrectType(types.CleanCType(recNode.Type))
+					// fmt.Println("Typedef ", recNode.Name, " -> ", recNode.Type, "||", recNode.Type2)
 					if strings.HasPrefix(name, "union ") {
 						if recNode.Type == "union "+rec.Name {
 							names := []string{rec.Name, recNode.Name}
@@ -59,20 +61,57 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 						}
 					}
 					if strings.HasPrefix(name, "struct ") {
-						rec.Name = name[len("struct "):]
-						recNode.Type = "struct " + name
+
+						// fmt.Println(">>>>  Typedef ", recNode.Name, " -> ", recNode.Type, "||", recNode.Type2)
+						// fmt.Println(">>>> ", name, "\t")
+						// rec.name = name[len("struct "):]
+						// recnode.type = "struct " + name
+
+						// From :
+						// TypedefDecl __locale_t 'struct __locale_struct *'
+						// To   :
+						// VarDecl st7a 'struct st4':'struct st4'
+						if rec.Name != "" {
+							runAfter = func() {
+								// var v ast.VarDecl
+								// v.Name = recNode.Name
+								// v.Type = recNode.Type[len("struct "):]
+								//
+								// v.Type = types.GenerateCorrectType(v.Type)
+								// fmt.Println("VarDecl : ", v.Name, " > ", v.Type)
+
+								var d []goast.Decl
+								d, err = transpileToNode(recNode, p)
+								if err != nil {
+									p.AddMessage(p.GenerateErrorMessage(err, n))
+									err = nil
+								} else {
+									decls = append(decls, d...)
+								}
+							}
+
+							i++
+						} else {
+							rec.Name = name[len("struct "):]
+							recNode.Type = "struct " + name
+						}
 					}
 				}
 			}
 		}
+
 		var d []goast.Decl
-		d, err = transpileToNode(n.Children()[i], p)
+		d, err = transpileToNode(presentNode, p)
 		if err != nil {
 			p.AddMessage(p.GenerateErrorMessage(err, n))
 			err = nil
 		} else {
 			decls = append(decls, d...)
+			if runAfter != nil {
+				runAfter()
+			}
 		}
+
 	}
 	return
 }

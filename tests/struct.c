@@ -169,6 +169,15 @@ typedef struct st4{
 	int st5;
 } st6;
 typedef double ** st7;
+struct st4 st7a; 
+
+typedef struct st4a{
+	int st5a;
+} * st6a;
+
+typedef struct st4b{
+	int st5b;
+} *const* st6b;
 
 struct st8{
 	int st9;

@@ -128,27 +128,27 @@ func NewProgram() *Program {
 		imports:             []string{},
 		typesAlreadyDefined: []string{},
 		startupStatements:   []goast.Stmt{},
-		Structs: StructRegistry(map[string]*Struct{
-			// Structs without implementations inside system C headers
-			// Example node for adding:
-			// &ast.TypedefDecl{ ... Type:"struct __locale_struct *" ... }
+		Structs:             StructRegistry(map[string]*Struct{
+		// Structs without implementations inside system C headers
+		// Example node for adding:
+		// &ast.TypedefDecl{ ... Type:"struct __locale_struct *" ... }
 
-			"struct __va_list_tag [1]": {
-				Name:    "struct __va_list_tag [1]",
-				IsUnion: false,
-			},
-
-			// Pos:ast.Position{File:"/usr/include/xlocale.h", Line:27
-			"struct __locale_struct *": {
-				Name:    "struct __locale_struct *",
-				IsUnion: false,
-			},
-
-			// Pos:ast.Position{File:"/usr/include/x86_64-linux-gnu/sys/time.h", Line:61
-			"struct timezone *__restrict": {
-				Name:    "struct timezone *__restrict",
-				IsUnion: false,
-			},
+		// "struct __va_list_tag [1]": {
+		// 	Name:    "struct __va_list_tag [1]",
+		// 	IsUnion: false,
+		// },
+		//
+		// // Pos:ast.Position{File:"/usr/include/xlocale.h", Line:27
+		// "struct __locale_struct *": {
+		// 	Name:    "struct __locale_struct *",
+		// 	IsUnion: false,
+		// },
+		//
+		// // Pos:ast.Position{File:"/usr/include/x86_64-linux-gnu/sys/time.h", Line:61
+		// "struct timezone *__restrict": {
+		// 	Name:    "struct timezone *__restrict",
+		// 	IsUnion: false,
+		// },
 		}),
 		Unions:                                   make(StructRegistry),
 		Verbose:                                  false,

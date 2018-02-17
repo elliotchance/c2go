@@ -180,7 +180,7 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 		return "int", nil
 	}
 
-	if strings.Contains(s, "locale_struct") {
+	if strings.Contains(s, "__locale_struct") {
 		return "int", nil
 	}
 
