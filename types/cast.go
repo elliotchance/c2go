@@ -114,12 +114,26 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 			}}, nil
 	}
 
-	// registration type _Bool in program
-	if cFromType == "_Bool" {
-		p.TypedefType["_Bool"] = "int"
-	}
-	if cToType == "_Bool" {
-		p.TypedefType["_Bool"] = "int"
+	// Checking amount recursive typedef element
+	list := []string{fromType, toType}
+	for _, l := range list {
+		if v, ok := p.TypedefType[l]; ok {
+			var typedefs []string
+			for {
+				if vv, ok := p.TypedefType[v]; ok {
+					for i := range typedefs {
+						if vv == typedefs[i] {
+							return expr,
+								fmt.Errorf("recursive typedef %s in : %v", vv, typedefs)
+						}
+					}
+					v = vv
+					typedefs = append(typedefs, vv)
+				} else {
+					break
+				}
+			}
+		}
 	}
 
 	// Checking registated typedef types in program

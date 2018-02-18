@@ -223,7 +223,7 @@ struct mesh {
 	subseg *dummysub;
 };
 
-double * returner(int* i, double *d)
+double * returner(int*const* i, double *d)
 {
 	(void)(i);
 	return d;
@@ -253,6 +253,9 @@ void struct_null()
 	struct timeval sNow;
 	(void)(sNow);
 	(void)returner(0,0);
+	double fd = 56;
+	returner(0, &fd);
+	(void)(fd);
 	
 	double d = 99;
 	double * dd = &d;

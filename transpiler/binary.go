@@ -48,7 +48,7 @@ func transpileBinaryOperatorComma(n *ast.BinaryOperator, p *program.Program) (
 	preStmts = append(preStmts, right...)
 
 	if len(preStmts) >= 2 {
-		return preStmts[len(preStmts)-1], preStmts, nil
+		return preStmts[len(preStmts)-1], preStmts[:len(preStmts)-1], nil
 	}
 
 	if len(preStmts) == 1 {

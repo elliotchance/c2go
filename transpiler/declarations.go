@@ -255,6 +255,8 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 		}
 	}()
 	name := n.Name
+	n.Type = types.CleanCType(n.Type)
+	n.Type2 = types.CleanCType(n.Type2)
 
 	if types.IsFunction(n.Type) {
 		var field *goast.Field

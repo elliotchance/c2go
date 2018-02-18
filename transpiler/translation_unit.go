@@ -20,15 +20,15 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 			if i+1 < len(n.Children()) {
 				switch recNode := n.Children()[i+1].(type) {
 				case *ast.VarDecl:
-					name := types.GenerateCorrectType(recNode.Type)
+					name := types.GenerateCorrectType(types.CleanCType(recNode.Type))
 					if rec.Name == "" {
 						if strings.HasPrefix(name, "union ") {
 							rec.Name = name[len("union "):]
-							recNode.Type = "union " + name
+							recNode.Type = types.CleanCType("union " + name)
 						}
 						if strings.HasPrefix(name, "struct ") {
 							rec.Name = name[len("struct "):]
-							recNode.Type = "struct " + name
+							recNode.Type = types.CleanCType("struct " + name)
 						}
 					}
 				case *ast.TypedefDecl:
@@ -56,7 +56,7 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 							continue
 						} else {
 							rec.Name = name[len("union "):]
-							recNode.Type = "union " + name
+							recNode.Type = types.CleanCType("union " + name)
 						}
 					}
 					if strings.HasPrefix(name, "struct ") {
@@ -75,7 +75,7 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 							i++
 						} else {
 							rec.Name = name[len("struct "):]
-							recNode.Type = "struct " + name
+							recNode.Type = types.CleanCType("struct " + name)
 						}
 					}
 				}
