@@ -584,13 +584,11 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 	arrayType, arraySize := types.GetArrayTypeAndSize(n.Type)
 
 	if arraySize != -1 && defaultValue == nil {
-		var goArrayType string = arrayType
-		if _, ok := p.TypedefType[arrayType]; !ok {
-			goArrayType, err = types.ResolveType(p, arrayType)
-			if err != nil {
-				p.AddMessage(p.GenerateErrorMessage(err, n))
-				err = nil // Error is ignored
-			}
+		var goArrayType string
+		goArrayType, err = types.ResolveType(p, arrayType)
+		if err != nil {
+			p.AddMessage(p.GenerateErrorMessage(err, n))
+			err = nil // Error is ignored
 		}
 
 		defaultValue = []goast.Expr{

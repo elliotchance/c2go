@@ -188,6 +188,33 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 		return "int", nil
 	}
 
+	// function type is pointer in Go by default
+	if len(s) > 2 {
+		base := s[:len(s)-2]
+		if ff, ok := p.TypedefType[base]; ok {
+			if IsFunction(ff) {
+				return base, nil
+			}
+		}
+	}
+
+	// No need resolve typedef types
+	if _, ok := p.TypedefType[s]; ok {
+		if tt, ok := otherStructType[s]; ok {
+			// "div_t":   "github.com/elliotchance/c2go/noarch.DivT",
+			ii := p.ImportType(tt)
+			return ii, nil
+		} else {
+			return s, nil
+		}
+	}
+
+	if tt, ok := otherStructType[s]; ok {
+		// "div_t":   "github.com/elliotchance/c2go/noarch.DivT",
+		ii := p.ImportType(tt)
+		return ii, nil
+	}
+
 	// The simple resolve types are the types that we know there is an exact Go
 	// equivalent. For example float, int, etc.
 	for k, v := range simpleResolveTypes {
