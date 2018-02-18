@@ -327,6 +327,12 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 				a := n.Children()[i]
 				var isUnion bool
 				for {
+					if a == nil {
+						break
+					}
+					if len(a.Children()) == 0 {
+						break
+					}
 					switch vv := a.Children()[0].(type) {
 					case *ast.MemberExpr, *ast.DeclRefExpr:
 						var typeVV string
@@ -348,6 +354,9 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 						if isUnion {
 							break
 						}
+						a = vv
+						continue
+					case *ast.ImplicitCastExpr, *ast.CStyleCastExpr:
 						a = vv
 						continue
 					}

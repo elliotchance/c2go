@@ -180,6 +180,10 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 		return "int", nil
 	}
 
+	if strings.Contains(s, "__locale_struct") {
+		return "int", nil
+	}
+
 	// The simple resolve types are the types that we know there is an exact Go
 	// equivalent. For example float, int, etc.
 	for k, v := range simpleResolveTypes {
