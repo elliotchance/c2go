@@ -229,7 +229,6 @@ double * returner(int*const* i, double *d)
 	return d;
 }
 
-#include <sys/time.h>
 void struct_null()
 {
 	struct memory  dm;
@@ -250,8 +249,6 @@ void struct_null()
 	(void)(m);
 
 	(void)summator(1,34.4);
-	struct timeval sNow;
-	(void)(sNow);
 	(void)returner(0,0);
 	double fd = 56;
 	returner(0, &fd);
