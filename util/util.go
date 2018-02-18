@@ -54,5 +54,9 @@ func GetExportedName(field string) string {
 		field = field[2:] + "Slice"
 	}
 
+	// NotFunc(int)()
+	field = strings.Replace(field, "(", "_", -1)
+	field = strings.Replace(field, ")", "_", -1)
+
 	return Ucfirst(strings.TrimLeft(field, "*_"))
 }

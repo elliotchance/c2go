@@ -2,15 +2,16 @@ package transpiler
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
-	"strings"
 
 	goast "go/ast"
 	"go/format"
 	"go/parser"
 	"go/token"
 
-	"fmt"
+	"github.com/elliotchance/c2go/ast"
+	"github.com/elliotchance/c2go/program"
 )
 
 func transpileUnion(name string, size int, fields []*goast.Field) (
@@ -35,36 +36,26 @@ import(
 )
 
 type {{ .Name }} struct{
-	value    interface{}
-	arr      [{{ .Size }}]byte
+	memory unsafe.Pointer
 }
 
-func (unionVar*{{ .Name }}) cast(t reflect.Type) reflect.Value {
-	return reflect.NewAt(t, unsafe.Pointer(&unionVar.arr[0]))
-}
-
-func (unionVar*{{ .Name }}) assign(v interface{}){
-	value := reflect.ValueOf(v).Elem()
-	value.Set(unionVar.cast(value.Type()).Elem())
-}
-
-func (unionVar*{{ .Name }}) UntypedSet(v interface{}){
-	value := reflect.ValueOf(v)
-	unionVar.cast(value.Type()).Elem().Set(value)
+func (unionVar * {{ .Name }}) copy() ( {{ .Name }}){
+	var buffer [{{ .Size }}]byte
+	for i := range buffer{
+		buffer[i] = (*((*[{{ .Size }}]byte)(unionVar.memory)))[i]
+	}
+	var newUnion {{ .Name }}
+	newUnion.memory = unsafe.Pointer(&buffer)
+	return newUnion
 }
 
 {{ range .Fields }}
-// Get{{ .Name }} - return value of {{ .Name }}
-func (unionVar*{{ $.Name }}) Get{{ .Name }} () (res {{ .TypeField }}){
-	unionVar.assign(&res)
-	return
-}
-
-// Set{{ .Name }} - set value of {{ .Name }}
-func (unionVar*{{ $.Name }}) Set{{ .Name }} (v {{ .TypeField }}) {{ .TypeField }}{
-	unionVar.value = v // added for avoid GC removing pointers in union
-	unionVar.UntypedSet(v)
-	return v
+func (unionVar * {{ $.Name }}) {{ .Name }}() (*{{ .TypeField }}){
+	if unionVar.memory == nil{
+		var buffer [{{ $.Size }}]byte
+		unionVar.memory = unsafe.Pointer(&buffer)
+	}
+	return (*{{ .TypeField }})(unionVar.memory)
 }
 {{ end }}
 `
@@ -79,16 +70,10 @@ func (unionVar*{{ $.Name }}) Set{{ .Name }} (v {{ .TypeField }}) {{ .TypeField }
 		var buf bytes.Buffer
 		err = format.Node(&buf, token.NewFileSet(), fields[i].Type)
 		if err != nil {
-			panic(err)
+			err = fmt.Errorf("cannot parse type '%s' : %v", fields[i].Type, err)
+			return
 		}
 		f.TypeField = buf.String()
-
-		// capitalization first letter
-		name := strings.ToUpper(string(f.Name[0]))
-		if len(f.Name) > 1 {
-			name += f.Name[1:]
-		}
-		f.Name = name
 
 		un.Fields = append(un.Fields, f)
 	}
@@ -97,6 +82,7 @@ func (unionVar*{{ $.Name }}) Set{{ .Name }} (v {{ .TypeField }}) {{ .TypeField }
 	var source bytes.Buffer
 	err = tmpl.Execute(&source, un)
 	if err != nil {
+		err = fmt.Errorf("cannot execute template \"%s\" for data %v : %v", source.String(), un, err)
 		return
 	}
 
@@ -104,24 +90,30 @@ func (unionVar*{{ $.Name }}) Set{{ .Name }} (v {{ .TypeField }}) {{ .TypeField }
 	fset := token.NewFileSet() // positions are relative to fset
 	f, err := parser.ParseFile(fset, "", source.String(), 0)
 	if err != nil {
+		err = fmt.Errorf("cannot parse source \"%s\" : %v", source.String(), err)
 		return
 	}
 
 	return f.Decls[1:], nil
 }
 
-func getFunctionNameForUnion(verb, variableName, variableType, attributeName string) string {
-	if strings.HasPrefix(variableType, "[]") {
-		return fmt.Sprintf("%s[0].%s%s", variableName, verb, strings.Title(attributeName))
+func isUnionMemberExpr(p *program.Program, n *ast.MemberExpr) (IsUnion bool) {
+	if len(n.Children()) > 0 {
+		if v, ok := n.Children()[0].(*ast.MemberExpr); ok {
+			if p.IsUnion(v.Type) {
+				IsUnion = true
+			}
+		}
+		if v, ok := n.Children()[0].(*ast.DeclRefExpr); ok {
+			if p.IsUnion(v.Type) {
+				IsUnion = true
+			}
+		}
+		if v, ok := n.Children()[0].(*ast.ImplicitCastExpr); ok {
+			if p.IsUnion(v.Type) {
+				IsUnion = true
+			}
+		}
 	}
-
-	return fmt.Sprintf("%s.%s%s", variableName, verb, strings.Title(attributeName))
-}
-
-func getFunctionNameForUnionGetter(variableName, variableType, attributeName string) string {
-	return getFunctionNameForUnion("Get", variableName, variableType, attributeName)
-}
-
-func getFunctionNameForUnionSetter(variableName, variableType, attributeName string) string {
-	return getFunctionNameForUnion("Set", variableName, variableType, attributeName)
+	return
 }
