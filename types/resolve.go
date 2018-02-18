@@ -85,21 +85,6 @@ var simpleResolveTypes = map[string]string{
 	"__uint16_t": "uint16",
 	"__uint32_t": "uint32",
 	"__uint64_t": "uint64",
-	"div_t":      "github.com/elliotchance/c2go/noarch.DivT",
-	"ldiv_t":     "github.com/elliotchance/c2go/noarch.LdivT",
-	"lldiv_t":    "github.com/elliotchance/c2go/noarch.LldivT",
-	"time_t":     "github.com/elliotchance/c2go/noarch.TimeT",
-
-	// time.h
-	"tm": "github.com/elliotchance/c2go/noarch.Tm",
-
-	// Darwin specific
-	"__darwin_ct_rune_t": "github.com/elliotchance/c2go/darwin.CtRuneT",
-	"fpos_t":             "int",
-	"struct __float2":    "github.com/elliotchance/c2go/darwin.Float2",
-	"struct __double2":   "github.com/elliotchance/c2go/darwin.Double2",
-	"Float2":             "github.com/elliotchance/c2go/darwin.Float2",
-	"Double2":            "github.com/elliotchance/c2go/darwin.Double2",
 
 	// These are special cases that almost certainly don't work. I've put
 	// them here because for whatever reason there is no suitable type or we
@@ -112,6 +97,25 @@ var simpleResolveTypes = map[string]string{
 	"__sbuf":                       "int64",
 	"__sFILEX":                     "interface{}",
 	"FILE":                         "github.com/elliotchance/c2go/noarch.File",
+}
+
+var otherStructType = map[string]string{
+	"div_t":   "github.com/elliotchance/c2go/noarch.DivT",
+	"ldiv_t":  "github.com/elliotchance/c2go/noarch.LdivT",
+	"lldiv_t": "github.com/elliotchance/c2go/noarch.LldivT",
+
+	// time.h
+	"tm":        "github.com/elliotchance/c2go/noarch.Tm",
+	"struct tm": "github.com/elliotchance/c2go/noarch.Tm",
+	"time_t":    "github.com/elliotchance/c2go/noarch.TimeT",
+
+	// Darwin specific
+	"__darwin_ct_rune_t": "github.com/elliotchance/c2go/darwin.CtRuneT",
+	"fpos_t":             "int",
+	"struct __float2":    "github.com/elliotchance/c2go/darwin.Float2",
+	"struct __double2":   "github.com/elliotchance/c2go/darwin.Double2",
+	"Float2":             "github.com/elliotchance/c2go/darwin.Float2",
+	"Double2":            "github.com/elliotchance/c2go/darwin.Double2",
 }
 
 // NullPointer - is look : (double *)(nil) or (FILE *)(nil)
@@ -220,12 +224,9 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 		if s[len(s)-1] == '*' {
 			s = s[start : len(s)-2]
 
-			for k := range simpleResolveTypes {
-				if k == s {
-					return "[]" + p.ImportType(simpleResolveTypes[s]), nil
-				}
-			}
-			return "[]" + strings.TrimSpace(s), nil
+			var t string
+			t, err = ResolveType(p, s)
+			return "[]" + t, err
 		}
 
 		s = s[start:]

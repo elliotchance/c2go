@@ -49,12 +49,31 @@ void char_overflow()
 	}
 }
 
+typedef double * vertex;
+void test_vertex()
+{
+	diag("vertex");
+
+	double a[1];
+	a[0] = 42;
+	double b[1];
+	b[0] = 45;
+
+	double dxoa;
+	vertex triorg  = (vertex)(a);
+	vertex triapex = (vertex)(b);
+	dxoa = triorg[0] - triapex[0];
+
+	is_eq(dxoa, -3);
+}
+
 int main()
 {
-    plan(27);
+    plan(28);
 
     START_TEST(cast)
     START_TEST(castbool)
+    START_TEST(vertex)
 
 	{
 	typedef unsigned int u32;
