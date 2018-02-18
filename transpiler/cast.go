@@ -42,6 +42,18 @@ func transpileImplicitCastExpr(n *ast.ImplicitCastExpr, p *program.Program, expr
 		return
 	}
 
+	if len(n.Type) != 0 && len(n.Type2) != 0 && n.Type != n.Type2 {
+		var tt string
+		tt, err = types.ResolveType(p, n.Type)
+		expr = &goast.CallExpr{
+			Fun:    goast.NewIdent(tt),
+			Lparen: 1,
+			Args:   []goast.Expr{expr},
+		}
+		exprType = n.Type
+		return
+	}
+
 	if !types.IsFunction(exprType) && n.Kind != ast.ImplicitCastExprArrayToPointerDecay {
 		expr, err = types.CastExpr(p, expr, exprType, n.Type)
 		if err != nil {
@@ -104,6 +116,18 @@ func transpileCStyleCastExpr(n *ast.CStyleCastExpr, p *program.Program, exprIsSt
 	}
 
 	if exprType == types.NullPointer {
+		return
+	}
+
+	if len(n.Type) != 0 && len(n.Type2) != 0 && n.Type != n.Type2 {
+		var tt string
+		tt, err = types.ResolveType(p, n.Type)
+		expr = &goast.CallExpr{
+			Fun:    goast.NewIdent(tt),
+			Lparen: 1,
+			Args:   []goast.Expr{expr},
+		}
+		exprType = n.Type
 		return
 	}
 
