@@ -91,7 +91,7 @@ int j_function(J *j, float i)
 		return (int)(i+(*j).f);
 	}
 	return -1;
-}
+};
 
 void struct_with_rec_fuction()
 {

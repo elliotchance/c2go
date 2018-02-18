@@ -454,7 +454,12 @@ func transpileToNode(node ast.Node, p *program.Program) (decls []goast.Decl, err
 		decls, err = transpileEnumDecl(p, n)
 
 	case *ast.EmptyDecl:
-		p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("EmptyDecl is not transpiled"), n))
+		if len(n.Children()) == 0 {
+			// ignore if length is zero, for avoid
+			// mistake warning
+		} else {
+			p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("EmptyDecl is not transpiled"), n))
+		}
 		err = nil
 		return
 
