@@ -354,6 +354,8 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 						if vvv, ok := vv.(*ast.DeclRefExpr); ok {
 							typeVV = vvv.Type
 						}
+						typeVV = types.GetBaseType(typeVV)
+
 						if _, ok := p.Structs[typeVV]; ok {
 							isUnion = true
 						}
@@ -386,6 +388,8 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 					var zero ast.IntegerLiteral
 					zero.Type = "int"
 					zero.Value = "0"
+					locPointer = n
+					locPosition = i
 					n.Children()[i] = &zero
 					found = true
 					return

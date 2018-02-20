@@ -272,6 +272,20 @@ void struct_null()
 	double **ddd = &dd;
 	*(ddd) = (int *) NULL;
 	(void)(ddd);
+      
+	struct memorypool {
+		int **nowblock;
+	};
+	struct memorypool Vpool;
+	int nowblock;
+	int * s_nowblock = &nowblock;
+	Vpool.nowblock = &s_nowblock;
+	is_not_null(*Vpool.nowblock);
+	*(Vpool.nowblock) = NULL;
+	struct memorypool *pool = &Vpool;
+	if (*(pool->nowblock) == (int *) NULL) {
+		pass("ok");
+	}
 
 	struct mesh msh;
 	subseg sub[10];
@@ -285,7 +299,7 @@ void struct_null()
 
 int main()
 {
-    plan(60);
+    plan(62);
 
     struct programming variable;
     char *s = "Programming in Software Development.";

@@ -550,3 +550,23 @@ func GetAmountArraySize(cType string) (size int, err error) {
 
 	return strconv.Atoi(result["size"])
 }
+
+// GetBaseType - return base type without pointera, array symbols
+// Input:
+// s =  struct BSstructSatSShomeSlepriconSgoSsrcSgithubPcomSelliotchanceSc2goStestsSstructPcD260D18E [7]
+func GetBaseType(s string) string {
+	s = strings.TrimSpace(s)
+	s = CleanCType(s)
+	if s[len(s)-1] == ']' {
+		for i := len(s) - 1; i >= 0; i-- {
+			if s[i] == '[' {
+				s = s[:i]
+				return GetBaseType(s)
+			}
+		}
+	}
+	if s[len(s)-1] == '*' {
+		return GetBaseType(s[:len(s)-1])
+	}
+	return s
+}

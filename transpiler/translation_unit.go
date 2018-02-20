@@ -27,7 +27,7 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 							recNode.Type = types.CleanCType("union " + name)
 						}
 						if strings.HasPrefix(name, "struct ") {
-							name = getBaseType(name)
+							name = types.GetBaseType(name)
 							rec.Name = name[len("struct "):]
 						}
 					}
@@ -96,21 +96,6 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 
 	}
 	return
-}
-
-// Input:
-// s =  struct BSstructSatSShomeSlepriconSgoSsrcSgithubPcomSelliotchanceSc2goStestsSstructPcD260D18E [7]
-func getBaseType(s string) string {
-	s = strings.TrimSpace(s)
-	if s[len(s)-1] == ']' {
-		for i := len(s) - 1; i >= 0; i-- {
-			if s[i] == '[' {
-				s = s[:i]
-				return getBaseType(s)
-			}
-		}
-	}
-	return s
 }
 
 func isSameTypedefNames(v *ast.TypedefDecl) bool {

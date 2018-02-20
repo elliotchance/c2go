@@ -24,7 +24,7 @@ func transpileImplicitCastExpr(n *ast.ImplicitCastExpr, p *program.Program, expr
 	}()
 
 	if n.Kind == ast.CStyleCastExprNullToPointer {
-		expr = util.NewIdent("nil")
+		expr = goast.NewIdent("nil")
 		exprType = types.NullPointer
 		return
 	}
@@ -39,6 +39,7 @@ func transpileImplicitCastExpr(n *ast.ImplicitCastExpr, p *program.Program, expr
 		return nil, "", nil, nil, err
 	}
 	if exprType == types.NullPointer {
+		expr = goast.NewIdent("nil")
 		return
 	}
 
@@ -106,7 +107,7 @@ func transpileCStyleCastExpr(n *ast.CStyleCastExpr, p *program.Program, exprIsSt
 	}
 
 	if n.Kind == ast.CStyleCastExprNullToPointer {
-		expr = util.NewIdent("nil")
+		expr = goast.NewIdent("nil")
 		exprType = types.NullPointer
 		return
 	}
@@ -116,6 +117,7 @@ func transpileCStyleCastExpr(n *ast.CStyleCastExpr, p *program.Program, exprIsSt
 	}
 
 	if exprType == types.NullPointer {
+		expr = goast.NewIdent("nil")
 		return
 	}
 
