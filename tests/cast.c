@@ -49,12 +49,46 @@ void char_overflow()
 	}
 }
 
+typedef double * vertex;
+void test_vertex()
+{
+	diag("vertex");
+
+	double a[1];
+	a[0] = 42;
+	double b[1];
+	b[0] = 45;
+
+	double dxoa;
+	vertex triorg  = (vertex)(a);
+	vertex triapex = (vertex)(b);
+	dxoa = triorg[0] - triapex[0];
+
+	is_eq(dxoa, -3);
+}
+
+static int strlenChar(const char *z){
+  int n = 0;
+  while( *z ){
+    if( (0xc0&*(z++))!=0x80 ) n++;
+  }
+  return n;
+}
+
+void test_strCh()
+{
+	char * z = "Hello, c2go\0";
+	is_eq(strlenChar(z),11);
+}
+
 int main()
 {
-    plan(27);
+    plan(29);
 
-    START_TEST(cast)
-    START_TEST(castbool)
+    START_TEST(cast);
+    START_TEST(castbool);
+    START_TEST(vertex);
+    START_TEST(strCh);
 
 	{
 	typedef unsigned int u32;
