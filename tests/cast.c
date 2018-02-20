@@ -67,13 +67,28 @@ void test_vertex()
 	is_eq(dxoa, -3);
 }
 
+static int strlenChar(const char *z){
+  int n = 0;
+  while( *z ){
+    if( (0xc0&*(z++))!=0x80 ) n++;
+  }
+  return n;
+}
+
+void test_strCh()
+{
+	char * z = "Hello, c2go\0";
+	is_eq(strlenChar(z),11);
+}
+
 int main()
 {
-    plan(28);
+    plan(29);
 
-    START_TEST(cast)
-    START_TEST(castbool)
-    START_TEST(vertex)
+    START_TEST(cast);
+    START_TEST(castbool);
+    START_TEST(vertex);
+    START_TEST(strCh);
 
 	{
 	typedef unsigned int u32;

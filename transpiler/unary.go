@@ -575,7 +575,7 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 		}, eType, preStmts, postStmts, err
 
 	case *ast.UnaryOperator:
-		arr, _, newPre, newPost, err2 := transpileToExpr(v, p, false)
+		arr, _, newPre, newPost, err2 := atomicOperation(v, p)
 		if err2 != nil {
 			return
 		}
