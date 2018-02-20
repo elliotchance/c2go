@@ -609,8 +609,9 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 				if err != nil {
 					p.AddMessage(p.GenerateErrorMessage(err, n))
 					err = nil // Error is ignored
+				} else {
+					defaultValue = []goast.Expr{list}
 				}
-				defaultValue = []goast.Expr{list}
 			}
 		}
 	}
