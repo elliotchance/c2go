@@ -215,6 +215,8 @@ func GenerateFuncType(fields, returns []string) *goast.FuncType {
 func transpileInitListExpr(e *ast.InitListExpr, p *program.Program) (goast.Expr, string, error) {
 	resp := []goast.Expr{}
 	var hasArrayFiller = false
+	e.Type1 = types.GenerateCorrectType(e.Type1)
+	e.Type2 = types.GenerateCorrectType(e.Type2)
 
 	for _, node := range e.Children() {
 		// Skip ArrayFiller

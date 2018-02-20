@@ -267,6 +267,10 @@ void struct_null()
       { "cancelled_write_bytes: ",  "Cancelled write bytes:"    },
     };
 
+	is_eq(strlen(aTrans[3].zPattern),7);
+	is_streq(aTrans[2].zPattern, "syscr: ");
+	is_streq(aTrans[1].zDesc,"Bytes sent to write():");
+
 	double d = 99;
 	double * dd = &d;
 	double **ddd = &dd;
@@ -287,6 +291,9 @@ void struct_null()
 		pass("ok");
 	}
 
+	mm.aa = 42;
+	is_eq(mm.aa,42);
+
 	struct mesh msh;
 	subseg sub[10];
 	for (int i=0;i<10;i++){sub[i] = (subseg)(ddd);}
@@ -299,7 +306,7 @@ void struct_null()
 
 int main()
 {
-    plan(62);
+    plan(66);
 
     struct programming variable;
     char *s = "Programming in Software Development.";

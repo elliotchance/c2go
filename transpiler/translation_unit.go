@@ -22,6 +22,8 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 				case *ast.VarDecl:
 					name := types.GenerateCorrectType(types.CleanCType(recNode.Type))
 					if rec.Name == "" {
+						recNode.Type = types.GenerateCorrectType(recNode.Type)
+						recNode.Type2 = types.GenerateCorrectType(recNode.Type2)
 						if strings.HasPrefix(name, "union ") {
 							rec.Name = name[len("union "):]
 							recNode.Type = types.CleanCType("union " + name)

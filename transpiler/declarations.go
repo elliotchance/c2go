@@ -584,22 +584,34 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 	arrayType, arraySize := types.GetArrayTypeAndSize(n.Type)
 
 	if arraySize != -1 && defaultValue == nil {
-		var goArrayType string
-		goArrayType, err = types.ResolveType(p, arrayType)
-		if err != nil {
-			p.AddMessage(p.GenerateErrorMessage(err, n))
-			err = nil // Error is ignored
-		}
+		if len(n.Children()) == 0 {
+			var goArrayType string
+			goArrayType, err = types.ResolveType(p, arrayType)
+			if err != nil {
+				p.AddMessage(p.GenerateErrorMessage(err, n))
+				err = nil // Error is ignored
+			}
 
-		defaultValue = []goast.Expr{
-			util.NewCallExpr(
-				"make",
-				&goast.ArrayType{
-					Elt: util.NewTypeIdent(goArrayType),
-				},
-				util.NewIntLit(arraySize),
-				util.NewIntLit(arraySize),
-			),
+			defaultValue = []goast.Expr{
+				util.NewCallExpr(
+					"make",
+					&goast.ArrayType{
+						Elt: util.NewTypeIdent(goArrayType),
+					},
+					util.NewIntLit(arraySize),
+					util.NewIntLit(arraySize),
+				),
+			}
+		} else {
+			if iniList, ok := n.Children()[0].(*ast.InitListExpr); ok {
+				var list goast.Expr
+				list, _, err = transpileInitListExpr(iniList, p)
+				if err != nil {
+					p.AddMessage(p.GenerateErrorMessage(err, n))
+					err = nil // Error is ignored
+				}
+				defaultValue = []goast.Expr{list}
+			}
 		}
 	}
 

@@ -525,7 +525,7 @@ func GenerateCorrectType(name string) string {
 	// we see '::' before 'anonymous' word
 	out = strings.Replace(out, ":", "D", -1)
 
-	return out
+	return CleanCType(out)
 }
 
 // GetAmountArraySize - return amount array size
