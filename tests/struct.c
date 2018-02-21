@@ -343,9 +343,33 @@ void struct_inside_union()
 	is_true(s.d != 0);
 }
 
+struct FFS{
+	void (*(*xDlSym)(int*,void*, const char *zSymbol))(void);
+};
+int global_ffs = 0;
+void ffs_i1(int * i, void * v, const char * ch){
+	global_ffs++;
+}
+
+void (*ffs_i2(int*i,void*d, const char *zSymbol))(void){
+	return ffs_i1;
+}
+
+void struct_func_func()
+{
+	struct FFS f;
+	f.xDlSym = &ffs_i2;
+	is_eq(global_ffs,0);
+	// TODO
+	/* f.xDlSym(NULL,NULL,NULL)(); */
+	/* is_eq(global_ffs,1); */
+}
+
 int main()
 {
-    plan(68);
+    plan(69);
+
+	struct_func_func();
 
     struct programming variable;
     char *s = "Programming in Software Development.";

@@ -61,10 +61,16 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (
 	// Always register the new function. Only from this point onwards will
 	// we be allowed to refer to the function.
 	if p.GetFunctionDefinition(n.Name) == nil {
+		var f, r []string
+		f, r, err = types.ParseFunction(n.Type)
+		if err != nil {
+			return
+		}
+
 		p.AddFunctionDefinition(program.FunctionDefinition{
 			Name:          n.Name,
-			ReturnType:    getFunctionReturnType(n.Type),
-			ArgumentTypes: getFunctionArgumentTypes(n),
+			ReturnType:    r[0],
+			ArgumentTypes: f,
 			Substitution:  "",
 		})
 	}
@@ -115,10 +121,12 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (
 				strings.Join(f.ArgumentTypes, ", "))
 		}
 
-		var fieldList *goast.FieldList
-		fieldList, err = getFieldList(n, p)
-		if err != nil {
-			return
+		var fieldList = &goast.FieldList{}
+		if !(len(f.ArgumentTypes) == 1 && f.ArgumentTypes[0] == "void") {
+			fieldList, err = getFieldList(n, p)
+			if err != nil {
+				return
+			}
 		}
 
 		t, err := types.ResolveType(p, f.ReturnType)
