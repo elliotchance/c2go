@@ -2,6 +2,7 @@ package program
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/elliotchance/c2go/ast"
 )
@@ -52,4 +53,46 @@ func NewStruct(n *ast.RecordDecl) *Struct {
 		IsUnion: n.Kind == "union",
 		Fields:  fields,
 	}
+}
+
+// IsUnion - return true if the cType is 'union' or
+// typedef of union
+func (p *Program) IsUnion(cType string) bool {
+	if strings.HasPrefix(cType, "union ") {
+		return true
+	}
+	if _, ok := p.Unions[cType]; ok {
+		return true
+	}
+	if _, ok := p.Unions["union "+cType]; ok {
+		return true
+	}
+	if _, ok := p.GetBaseTypeOfTypedef("union " + cType); ok {
+		return true
+	}
+	if t, ok := p.GetBaseTypeOfTypedef(cType); ok {
+		if t == cType {
+			panic(fmt.Errorf("Cannot be same name: %s", t))
+		}
+		if strings.HasPrefix(t, "struct ") {
+			return false
+		}
+		if t == "" {
+			panic(fmt.Errorf("Type cannot be empty"))
+		}
+		return p.IsUnion(t)
+	}
+	return false
+}
+
+// GetBaseTypeOfTypedef - return typedef type
+func (p *Program) GetBaseTypeOfTypedef(cTypedef string) (
+	cBase string, ok bool) {
+
+	cBase, ok = p.TypedefType[cTypedef]
+	if cBase == "" && ok {
+		panic(fmt.Errorf("Type cannot be empty"))
+	}
+
+	return
 }
