@@ -1,7 +1,6 @@
 package transpiler
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -216,6 +215,8 @@ func GenerateFuncType(fields, returns []string) *goast.FuncType {
 func transpileInitListExpr(e *ast.InitListExpr, p *program.Program) (goast.Expr, string, error) {
 	resp := []goast.Expr{}
 	var hasArrayFiller = false
+	e.Type1 = types.GenerateCorrectType(e.Type1)
+	e.Type2 = types.GenerateCorrectType(e.Type2)
 
 	for _, node := range e.Children() {
 		// Skip ArrayFiller
@@ -320,7 +321,7 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program) 
 
 	children := n.Children()
 
-	expression, expressionType, newPre, newPost, err := transpileToExpr(children[0], p, false)
+	expression, _, newPre, newPost, err := transpileToExpr(children[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
@@ -331,14 +332,6 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program) 
 		return nil, "", nil, nil, err
 	}
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
-
-	theType, err = types.GetDereferenceType(expressionType)
-	if err != nil {
-		message := fmt.Sprintf(
-			"Cannot dereference type '%s' for the expression '%#v'. err = %v",
-			expressionType, expression, err)
-		return nil, theType, nil, nil, errors.New(message)
-	}
 
 	return &goast.IndexExpr{
 		X:     expression,
@@ -404,28 +397,6 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 		rhsType = "int"
 	}
 
-	// Construct code for getting value to an union field
-	if structType != nil && structType.IsUnion {
-		var resExpr goast.Expr
-
-		switch t := lhs.(type) {
-		case *goast.Ident:
-			funcName := getFunctionNameForUnionGetter(t.Name, lhsResolvedType, n.Name)
-			resExpr = util.NewCallExpr(funcName)
-		case *goast.SelectorExpr:
-			funcName := getFunctionNameForUnionGetter("", lhsResolvedType, n.Name)
-			if id, ok := t.X.(*goast.Ident); ok {
-				funcName = id.Name + "." + t.Sel.Name + funcName
-			}
-			resExpr = &goast.CallExpr{
-				Fun:  goast.NewIdent(funcName),
-				Args: nil,
-			}
-		}
-
-		return resExpr, rhsType, preStmts, postStmts, nil
-	}
-
 	x := lhs
 	if n.IsPointer {
 		x = &goast.IndexExpr{X: x, Index: util.NewIntLit(0)}
@@ -447,8 +418,26 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 		rhs = "anon"
 	}
 
+	if isUnionMemberExpr(p, n) {
+		return &goast.ParenExpr{
+			Lparen: 1,
+			X: &goast.StarExpr{
+				Star: 1,
+				X: &goast.CallExpr{
+					Fun: &goast.SelectorExpr{
+						X:   x,
+						Sel: util.NewIdent(rhs),
+					},
+					Lparen: 1,
+				},
+			},
+		}, n.Type, preStmts, postStmts, nil
+	}
+
+	_ = rhsType
+
 	return &goast.SelectorExpr{
 		X:   x,
 		Sel: util.NewIdent(rhs),
-	}, rhsType, preStmts, postStmts, nil
+	}, n.Type, preStmts, postStmts, nil
 }

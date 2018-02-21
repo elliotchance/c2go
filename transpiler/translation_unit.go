@@ -9,70 +9,93 @@ import (
 	"github.com/elliotchance/c2go/types"
 )
 
-func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl) (decls []goast.Decl, err error) {
+func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl) (
+	decls []goast.Decl, err error) {
+
 	for i := 0; i < len(n.Children()); i++ {
-		switch v := n.Children()[i].(type) {
-		case *ast.RecordDecl:
-			// for case :
-			// typedef struct C C;
-			// typedef union  C C;
-			if len(v.Children()) == 0 {
-				if i+1 < len(n.Children()) {
-					if vv, ok := n.Children()[i+1].(*ast.TypedefDecl); ok {
-						if isSameTypedefNames(vv) {
+		presentNode := n.Children()[i]
+		var runAfter func()
+
+		if rec, ok := presentNode.(*ast.RecordDecl); ok {
+			if i+1 < len(n.Children()) {
+				switch recNode := n.Children()[i+1].(type) {
+				case *ast.VarDecl:
+					name := types.GenerateCorrectType(types.CleanCType(recNode.Type))
+					if rec.Name == "" {
+						recNode.Type = types.GenerateCorrectType(recNode.Type)
+						recNode.Type2 = types.GenerateCorrectType(recNode.Type2)
+						if strings.HasPrefix(name, "union ") {
+							rec.Name = name[len("union "):]
+							recNode.Type = types.CleanCType("union " + name)
+						}
+						if strings.HasPrefix(name, "struct ") {
+							name = types.GetBaseType(name)
+							rec.Name = name[len("struct "):]
+						}
+					}
+				case *ast.TypedefDecl:
+					if isSameTypedefNames(recNode) {
+						i++
+						continue
+					}
+					name := types.GenerateCorrectType(types.CleanCType(recNode.Type))
+					if strings.HasPrefix(name, "union ") {
+						if recNode.Type == "union "+rec.Name {
+							names := []string{rec.Name, recNode.Name}
+							for _, name := range names {
+								rec.Name = name
+								var d []goast.Decl
+								d, err = transpileToNode(rec, p)
+								if err != nil {
+									p.AddMessage(p.GenerateErrorMessage(err, n))
+									err = nil
+								} else {
+									decls = append(decls, d...)
+								}
+							}
+
 							i++
 							continue
+						} else {
+							rec.Name = name[len("union "):]
+							recNode.Type = types.CleanCType("union " + name)
+						}
+					}
+					if strings.HasPrefix(name, "struct ") {
+						if rec.Name != "" {
+							runAfter = func() {
+								var d []goast.Decl
+								d, err = transpileToNode(recNode, p)
+								if err != nil {
+									p.AddMessage(p.GenerateErrorMessage(err, n))
+									err = nil
+								} else {
+									decls = append(decls, d...)
+								}
+							}
+
+							i++
+						} else {
+							rec.Name = name[len("struct "):]
+							recNode.Type = types.CleanCType("struct " + name)
 						}
 					}
 				}
 			}
-			// specific for `typedef struct`, `typedef union` without name
-			if v.Name != "" || i == len(n.Children())-1 {
-				var d []goast.Decl
-				d, err = transpileRecordDecl(p, v)
-				if err != nil {
-					return
-				}
-				decls = append(decls, d...)
-			}
-			for counter := 1; i+counter < len(n.Children()); counter++ {
-				if vv, ok := n.Children()[i+counter].(*ast.TypedefDecl); ok && !types.IsFunction(vv.Type) {
-					nameTypedefStruct := vv.Name
-					fields := v.Children()
-					// create a struct in according to
-					// name and fields
-					var recordDecl ast.RecordDecl
-					recordDecl.Name = nameTypedefStruct
-					recordDecl.Kind = "struct"
-					if strings.Contains(vv.Type, "union ") {
-						recordDecl.Kind = "union"
-					}
-					recordDecl.ChildNodes = fields
-					var d []goast.Decl
-					d, err = transpileRecordDecl(p, &recordDecl)
-					if err != nil {
-						p.AddMessage(p.GenerateErrorMessage(err, n))
-						err = nil
-					} else {
-						decls = append(decls, d...)
-					}
-					break
-				} else {
-					counter--
-					i = i + counter
-					break
-				}
-			}
-		default:
-			var d []goast.Decl
-			d, err = transpileToNode(n.Children()[i], p)
-			if err != nil {
-				p.AddMessage(p.GenerateErrorMessage(err, n))
-				err = nil
-			} else {
-				decls = append(decls, d...)
+		}
+
+		var d []goast.Decl
+		d, err = transpileToNode(presentNode, p)
+		if err != nil {
+			p.AddMessage(p.GenerateErrorMessage(err, n))
+			err = nil
+		} else {
+			decls = append(decls, d...)
+			if runAfter != nil {
+				runAfter()
 			}
 		}
+
 	}
 	return
 }

@@ -32,7 +32,7 @@ func newFunctionField(p *program.Program, name, cType string) (_ *goast.Field, e
 		},
 	}
 	var arg, ret []string
-	arg, ret, err = types.ResolveFunction(p, cType)
+	arg, ret, err = types.SeparateFunction(p, cType)
 	if err != nil {
 		return
 	}
@@ -88,6 +88,14 @@ func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (field *goast.Fiel
 	// Search for this issue in other areas of the codebase.
 	if util.IsGoKeyword(name) {
 		name += "_"
+	}
+
+	arrayType, arraySize := types.GetArrayTypeAndSize(n.Type)
+	if arraySize != -1 {
+		fieldType, err = types.ResolveType(p, arrayType)
+		p.AddMessage(p.GenerateWarningMessage(err, n))
+		fieldType = fmt.Sprintf("[%d]%s", arraySize, fieldType)
+		err = nil
 	}
 
 	return &goast.Field{
@@ -215,7 +223,7 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 		} else {
 			// So, we got size, then
 			// Add imports needed
-			p.AddImports("reflect", "unsafe")
+			p.AddImports("unsafe")
 
 			// Declaration for implementing union type
 			d, err2 := transpileUnion(name, size, fields)
@@ -255,6 +263,8 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 		}
 	}()
 	name := n.Name
+	n.Type = types.CleanCType(n.Type)
+	n.Type2 = types.CleanCType(n.Type2)
 
 	if types.IsFunction(n.Type) {
 		var field *goast.Field
@@ -362,6 +372,9 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 	}
 
 	err = nil
+	if resolvedType == "" {
+		resolvedType = "interface{}"
+	}
 	decls = append(decls, &goast.GenDecl{
 		Tok: token.TYPE,
 		Specs: []goast.Spec{
@@ -488,7 +501,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 				// Is it function ?
 				if types.IsFunction(v.Type) {
 					var fields, returns []string
-					fields, returns, err = types.ResolveFunction(p, v.Type)
+					fields, returns, err = types.SeparateFunction(p, v.Type)
 					if err != nil {
 						err = fmt.Errorf("Cannot resolve function : %v", err)
 						return
@@ -521,7 +534,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 
 	if types.IsFunction(n.Type) {
 		var fields, returns []string
-		fields, returns, err = types.ResolveFunction(p, n.Type)
+		fields, returns, err = types.SeparateFunction(p, n.Type)
 		if err != nil {
 			p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Cannot resolve function : %v", err), n))
 			err = nil // Error is ignored
@@ -541,18 +554,13 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 		return
 	}
 
-	t := n.Type
-	if len(t) > 1 {
-		t = n.Type[0 : len(n.Type)-len(" *")]
-	}
-	_, isTypedefType := p.TypedefType[t]
+	theType = n.Type
+	_, isTypedefType := p.TypedefType[theType]
 
-	if !isTypedefType {
-		theType, err = types.ResolveType(p, n.Type)
-		if err != nil {
-			p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Cannot resolve type %s : %v", n.Type, err), n))
-			err = nil // Error is ignored
-		}
+	theType, err = types.ResolveType(p, n.Type)
+	if err != nil {
+		p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Cannot resolve type %s : %v", theType, err), n))
+		err = nil // Error is ignored
 	}
 
 	p.GlobalVariables[n.Name] = theType
@@ -584,30 +592,35 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 	arrayType, arraySize := types.GetArrayTypeAndSize(n.Type)
 
 	if arraySize != -1 && defaultValue == nil {
-		var goArrayType string
-		goArrayType, err = types.ResolveType(p, arrayType)
-		if err != nil {
-			p.AddMessage(p.GenerateErrorMessage(err, n))
-			err = nil // Error is ignored
-		}
+		if len(n.Children()) == 0 {
+			var goArrayType string
+			goArrayType, err = types.ResolveType(p, arrayType)
+			if err != nil {
+				p.AddMessage(p.GenerateErrorMessage(err, n))
+				err = nil // Error is ignored
+			}
 
-		defaultValue = []goast.Expr{
-			util.NewCallExpr(
-				"make",
-				&goast.ArrayType{
-					Elt: util.NewTypeIdent(goArrayType),
-				},
-				util.NewIntLit(arraySize),
-				util.NewIntLit(arraySize),
-			),
-		}
-	}
-
-	if !isTypedefType {
-		t, err = types.ResolveType(p, n.Type)
-		if err != nil {
-			p.AddMessage(p.GenerateErrorMessage(err, n))
-			err = nil // Error is ignored
+			defaultValue = []goast.Expr{
+				util.NewCallExpr(
+					"make",
+					&goast.ArrayType{
+						Elt: util.NewTypeIdent(goArrayType),
+					},
+					util.NewIntLit(arraySize),
+					util.NewIntLit(arraySize),
+				),
+			}
+		} else {
+			if iniList, ok := n.Children()[0].(*ast.InitListExpr); ok {
+				var list goast.Expr
+				list, _, err = transpileInitListExpr(iniList, p)
+				if err != nil {
+					p.AddMessage(p.GenerateErrorMessage(err, n))
+					err = nil // Error is ignored
+				} else {
+					defaultValue = []goast.Expr{list}
+				}
+			}
 		}
 	}
 
@@ -617,9 +630,9 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 
 	var typeResult goast.Expr
 	if isTypedefType {
-		typeResult = goast.NewIdent(t)
+		typeResult = goast.NewIdent(theType)
 	} else {
-		typeResult = util.NewTypeIdent(t)
+		typeResult = util.NewTypeIdent(theType)
 	}
 
 	return []goast.Decl{&goast.GenDecl{
