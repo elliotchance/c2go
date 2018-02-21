@@ -404,28 +404,6 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 		rhsType = "int"
 	}
 
-	// Construct code for getting value to an union field
-	if structType != nil && structType.IsUnion {
-		var resExpr goast.Expr
-
-		switch t := lhs.(type) {
-		case *goast.Ident:
-			funcName := getFunctionNameForUnionGetter(t.Name, lhsResolvedType, n.Name)
-			resExpr = util.NewCallExpr(funcName)
-		case *goast.SelectorExpr:
-			funcName := getFunctionNameForUnionGetter("", lhsResolvedType, n.Name)
-			if id, ok := t.X.(*goast.Ident); ok {
-				funcName = id.Name + "." + t.Sel.Name + funcName
-			}
-			resExpr = &goast.CallExpr{
-				Fun:  goast.NewIdent(funcName),
-				Args: nil,
-			}
-		}
-
-		return resExpr, rhsType, preStmts, postStmts, nil
-	}
-
 	x := lhs
 	if n.IsPointer {
 		x = &goast.IndexExpr{X: x, Index: util.NewIntLit(0)}
@@ -447,8 +425,26 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 		rhs = "anon"
 	}
 
+	if isUnionMemberExpr(p, n) {
+		return &goast.ParenExpr{
+			Lparen: 1,
+			X: &goast.StarExpr{
+				Star: 1,
+				X: &goast.CallExpr{
+					Fun: &goast.SelectorExpr{
+						X:   x,
+						Sel: util.NewIdent(rhs),
+					},
+					Lparen: 1,
+				},
+			},
+		}, n.Type, preStmts, postStmts, nil
+	}
+
+	_ = rhsType
+
 	return &goast.SelectorExpr{
 		X:   x,
 		Sel: util.NewIdent(rhs),
-	}, rhsType, preStmts, postStmts, nil
+	}, n.Type, preStmts, postStmts, nil
 }

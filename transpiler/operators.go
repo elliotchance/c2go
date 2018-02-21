@@ -293,41 +293,6 @@ func transpileCompoundAssignOperator(
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	// Construct code for computing compound assign operation to an union field
-	memberExpr, ok := n.Children()[0].(*ast.MemberExpr)
-	if ok {
-		ref := memberExpr.GetDeclRefExpr()
-		if ref != nil {
-			// Get operator by removing last char that is '=' (e.g.: += becomes +)
-			binaryOperation := n.Opcode
-			binaryOperation = binaryOperation[:(len(binaryOperation) - 1)]
-
-			// TODO: Is this duplicate code in unary.go?
-			union := p.GetStruct(ref.Type)
-			if union != nil && union.IsUnion {
-				attrType, err := types.ResolveType(p, ref.Type)
-				if err != nil {
-					p.AddMessage(p.GenerateWarningMessage(err, memberExpr))
-				}
-
-				// Method names
-				getterName := getFunctionNameForUnionGetter(ref.Name, attrType, memberExpr.Name)
-				setterName := getFunctionNameForUnionSetter(ref.Name, attrType, memberExpr.Name)
-
-				// Call-Expression argument
-				argLHS := util.NewCallExpr(getterName)
-				argOp := getTokenForOperator(binaryOperation)
-				argRHS := right
-				argValue := util.NewBinaryExpr(argLHS, argOp, argRHS, "interface{}", exprIsStmt)
-
-				// Make Go expression
-				resExpr := util.NewCallExpr(setterName, argValue)
-
-				return resExpr, "", preStmts, postStmts, nil
-			}
-		}
-	}
-
 	left, leftType, newPre, newPost, err := transpileToExpr(n.Children()[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
@@ -347,8 +312,13 @@ func transpileCompoundAssignOperator(
 			return nil, "", nil, nil, fmt.Errorf("Expr is nil")
 		}
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+		var name string
+		name, err = getName(p, n.Children()[0])
+		if err != nil {
+			return nil, "", nil, nil, err
+		}
 		v = &goast.BinaryExpr{
-			X:  goast.NewIdent(getName(p, n.Children()[0])),
+			X:  goast.NewIdent(name),
 			Op: token.ASSIGN,
 			Y:  v,
 		}

@@ -66,17 +66,19 @@ func internalTypeToExpr(goType string) goast.Expr {
 
 	// Specific case for 'interface{}'
 	// remove all separator inside that word
-	special := []byte("interface{}")
+	specials := [][]byte{[]byte("func("), []byte("interface{}")}
 
-	input := []byte(goType)
-again:
-	index := bytes.Index(input, special)
-	if index >= 0 {
-		for i := index + 1; i < index+len(special); i++ {
-			separator[i] = false
+	for _, special := range specials {
+		input := []byte(goType)
+	again:
+		index := bytes.Index(input, special)
+		if index >= 0 {
+			for i := index + 1; i < index+len(special); i++ {
+				separator[i] = false
+			}
+			input = input[index+len(special)-1:]
+			goto again
 		}
-		input = input[index+len(special)-1:]
-		goto again
 	}
 
 	separator[0] = true

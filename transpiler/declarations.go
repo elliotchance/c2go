@@ -32,7 +32,7 @@ func newFunctionField(p *program.Program, name, cType string) (_ *goast.Field, e
 		},
 	}
 	var arg, ret []string
-	arg, ret, err = types.ResolveFunction(p, cType)
+	arg, ret, err = types.SeparateFunction(p, cType)
 	if err != nil {
 		return
 	}
@@ -88,6 +88,14 @@ func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (field *goast.Fiel
 	// Search for this issue in other areas of the codebase.
 	if util.IsGoKeyword(name) {
 		name += "_"
+	}
+
+	arrayType, arraySize := types.GetArrayTypeAndSize(n.Type)
+	if arraySize != -1 {
+		fieldType, err = types.ResolveType(p, arrayType)
+		p.AddMessage(p.GenerateWarningMessage(err, n))
+		fieldType = fmt.Sprintf("[%d]%s", arraySize, fieldType)
+		err = nil
 	}
 
 	return &goast.Field{
@@ -215,7 +223,7 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 		} else {
 			// So, we got size, then
 			// Add imports needed
-			p.AddImports("reflect", "unsafe")
+			p.AddImports("unsafe")
 
 			// Declaration for implementing union type
 			d, err2 := transpileUnion(name, size, fields)
@@ -488,7 +496,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 				// Is it function ?
 				if types.IsFunction(v.Type) {
 					var fields, returns []string
-					fields, returns, err = types.ResolveFunction(p, v.Type)
+					fields, returns, err = types.SeparateFunction(p, v.Type)
 					if err != nil {
 						err = fmt.Errorf("Cannot resolve function : %v", err)
 						return
@@ -521,7 +529,7 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 
 	if types.IsFunction(n.Type) {
 		var fields, returns []string
-		fields, returns, err = types.ResolveFunction(p, n.Type)
+		fields, returns, err = types.SeparateFunction(p, n.Type)
 		if err != nil {
 			p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Cannot resolve function : %v", err), n))
 			err = nil // Error is ignored
