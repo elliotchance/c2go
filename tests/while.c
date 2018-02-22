@@ -6,7 +6,7 @@ typedef float **triangle;
 
 int main()
 {
-    plan(9);
+    plan(8);
 
     int value = 1;
 
@@ -63,21 +63,6 @@ int main()
 			}
 		};
 		is_eq(T,-1);
-	}
-
-	diag("while in triangle");
-	{
-		triangle* newtriangle;
-		triangle  value[10];
-		newtriangle = & value;
-		int counter = 0;
-		do {
-			counter ++;
-			if (counter > 10) {
-				break;
-			}
-		} while (deadtri(newtriangle));
-		is_eq(counter, 11);
 	}
 
     done_testing();
