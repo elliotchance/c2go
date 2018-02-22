@@ -163,7 +163,7 @@ func transpileUnaryOperatorNot(n *ast.UnaryOperator, p *program.Program) (
 	}
 
 	// only if added "stdbool.h"
-	if p.IncludeHeaderIsExist("stdbool.h") {
+	if p.IncludeHeaderIsExists("stdbool.h") {
 		if t == "_Bool" {
 			t = "int"
 			e = &goast.CallExpr{

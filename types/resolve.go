@@ -475,11 +475,7 @@ func ParseFunction(s string) (f []string, r []string, err error) {
 				break
 			}
 		}
-		if IsFunction(s[:pos]) {
-			r = append(r, s[:pos])
-		} else {
-			r = append(r, strings.Replace(s[:pos], "(*)", "", -1))
-		}
+		r = append(r, strings.Replace(s[:pos], "(*)", "", -1))
 		part = s[pos:]
 	}
 	inside := strings.TrimSpace(part)
@@ -490,37 +486,9 @@ func ParseFunction(s string) (f []string, r []string, err error) {
 	f = append(f, strings.Split(inside[1:len(inside)-1], ",")...)
 
 	for i := range r {
-		r[i] = CleanCType(r[i])
 		r[i] = strings.TrimSpace(r[i])
-		if IsFunction(r[i]) {
-			// Example :
-			// s      = void (*(*)(int *, void *, const char *))(void)
-			// r      = void (*(*)(int *, void *, const char *))
-			// result = void (int *, void *, const char *)
-			// Example :
-			// s      = void (*(int *, void *, const char *))(void)
-			// r      = void (*(int *, void *, const char *))
-			// result = void (int *, void *, const char *)
-			index := strings.Index(r[i], "(")
-			if index < 0 {
-				err = fmt.Errorf("Cannot find '(' in return type : %v", r[i])
-				return
-			}
-			r[i] = CleanCType(r[i])
-			if len(r[i]) <= index+5 {
-				err = fmt.Errorf("Not implemented for : %v", r[i])
-				return
-			}
-			if r[i][index+5] == ')' {
-				r[i] = strings.Replace(r[i], "( *(*)", "", 1)
-			} else {
-				r[i] = strings.Replace(r[i], "( *", "", 1)
-			}
-			r[i] = r[i][:len(r[i])-1]
-		}
 	}
 	for i := range f {
-		f[i] = CleanCType(f[i])
 		f[i] = strings.TrimSpace(f[i])
 	}
 

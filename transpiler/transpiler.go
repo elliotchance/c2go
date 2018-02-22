@@ -91,7 +91,7 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 	})
 
 	// only for "stdbool.h"
-	if p.IncludeHeaderIsExist("stdbool.h") {
+	if p.IncludeHeaderIsExists("stdbool.h") {
 		p.File.Decls = append(p.File.Decls, &goast.GenDecl{
 			Tok: token.TYPE,
 			Specs: []goast.Spec{

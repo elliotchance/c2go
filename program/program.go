@@ -416,7 +416,7 @@ func (p *Program) String() string {
 }
 
 // IncudeHeaderIsExist - return true if C #include header is inside list
-func (p *Program) IncludeHeaderIsExist(includeHeader string) bool {
+func (p *Program) IncludeHeaderIsExists(includeHeader string) bool {
 	for _, inc := range p.IncludeHeaders {
 		if strings.HasSuffix(inc.HeaderName, includeHeader) {
 			return true

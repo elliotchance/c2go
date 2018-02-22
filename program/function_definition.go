@@ -304,7 +304,7 @@ func (p *Program) loadFunctionDefinitions() {
 	p.builtInFunctionDefinitionsHaveBeenLoaded = true
 
 	for k, v := range builtInFunctionDefinitions {
-		if !p.IncludeHeaderIsExist(k) {
+		if !p.IncludeHeaderIsExists(k) {
 			continue
 		}
 
