@@ -525,7 +525,14 @@ func transpileDoStmt(n *ast.DoStmt, p *program.Program) (
 	forOperator.AddChild(nil)
 	forOperator.AddChild(nil)
 	forOperator.AddChild(nil)
-	c := n.Children()[0].(*ast.CompoundStmt)
+	var c *ast.CompoundStmt
+	if _, ok := n.Children()[0].(*ast.CompoundStmt); ok {
+		c = n.Children()[0].(*ast.CompoundStmt)
+	} else {
+		var newComp ast.CompoundStmt
+		newComp.AddChild(n.Children()[0])
+		c = &newComp
+	}
 	ifBreak := createIfWithNotConditionAndBreak(n.Children()[1])
 	c.AddChild(&ifBreak)
 	forOperator.AddChild(c)

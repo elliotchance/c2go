@@ -3,7 +3,7 @@
 
 int main()
 {
-    plan(6);
+    plan(7);
 	
 	int i = 0;
 
@@ -29,5 +29,10 @@ int main()
 	} while ((i /= 10) > 0);
 	is_eq( i , 8 );
 	
+	diag("do without CompoundStmt");
+	int s = 1;
+	do s = s == 0 ? s+=2 : s++;while(s > 10);
+	is_eq(s , 1);
+
 	done_testing();
 }
