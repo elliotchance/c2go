@@ -346,9 +346,14 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 
 // resolveType determines the Go type from a C type.
 func resolveFunction(p *program.Program, s string) (goType string, err error) {
+	var prefix string
 	var f, r []string
-	f, r, err = SeparateFunction(p, s)
-	goType = "func("
+	prefix, f, r, err = SeparateFunction(p, s)
+	if err != nil {
+		return
+	}
+	goType = strings.Replace(prefix, "*", "[]", -1)
+	goType += "func("
 	for i := range f {
 		goType += fmt.Sprintf("%s", f[i])
 		if i < len(f)-1 {
@@ -368,13 +373,13 @@ func resolveFunction(p *program.Program, s string) (goType string, err error) {
 
 // SeparateFunction separate a function C type to Go types parts.
 func SeparateFunction(p *program.Program, s string) (
-	fields []string, returns []string, err error) {
+	prefix string, fields []string, returns []string, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("Cannot separate function '%s' : %v", s, err)
 		}
 	}()
-	f, r, err := ParseFunction(s)
+	pr, f, r, err := parseFunction(s)
 	if err != nil {
 		return
 	}
@@ -382,6 +387,7 @@ func SeparateFunction(p *program.Program, s string) (
 		var t string
 		t, err = ResolveType(p, f[i])
 		if err != nil {
+			err = fmt.Errorf("Error in field %s. err = %v", t, err)
 			return
 		}
 		fields = append(fields, t)
@@ -390,10 +396,12 @@ func SeparateFunction(p *program.Program, s string) (
 		var t string
 		t, err = ResolveType(p, r[i])
 		if err != nil {
+			err = fmt.Errorf("Error in return field %s. err = %v", t, err)
 			return
 		}
 		returns = append(returns, t)
 	}
+	prefix = pr
 	return
 }
 
@@ -433,11 +441,19 @@ func IsTypedefFunction(p *program.Program, s string) bool {
 	return false
 }
 
-// ParseFunction - parsing elements of C function
-func ParseFunction(s string) (f []string, r []string, err error) {
+// parseFunction - parsing elements of C function
+func parseFunction(s string) (prefix string, f []string, r []string, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("Cannot parse function '%s' : %v", s, err)
+		} else {
+			prefix = strings.TrimSpace(prefix)
+			for i := range r {
+				r[i] = strings.TrimSpace(r[i])
+			}
+			for i := range f {
+				f[i] = strings.TrimSpace(f[i])
+			}
 		}
 	}()
 
@@ -446,6 +462,7 @@ func ParseFunction(s string) (f []string, r []string, err error) {
 		err = fmt.Errorf("Is not function : %s", s)
 		return
 	}
+	var returns string
 	var arguments string
 	{
 		// Example of function types :
@@ -475,10 +492,9 @@ func ParseFunction(s string) (f []string, r []string, err error) {
 				break
 			}
 		}
-		r = append(r, strings.Replace(s[:pos], "(*)", "", -1))
-		arguments = s[pos:]
+		returns = strings.TrimSpace(s[:pos])
+		arguments = strings.TrimSpace(s[pos:])
 	}
-	arguments = strings.TrimSpace(arguments)
 	if arguments == "" {
 		err = fmt.Errorf("Cannot parse (right part is nil) : %v", s)
 		return
@@ -502,12 +518,66 @@ func ParseFunction(s string) (f []string, r []string, err error) {
 		f = append(f, strings.TrimSpace(arguments[pos:len(arguments)-1]))
 	}
 
-	for i := range r {
-		r[i] = strings.TrimSpace(r[i])
+	// returns
+	// remove one star for Go
+	if strings.Contains(returns, "(*)") {
+		// return type is : void ( *(*)(int *, void *, char *))
+		//                : void  *(*)(int *, void *, char *)
+		returns = strings.Replace(returns, "(*)", "", 1)
+		var counter int
+		var position int
+		for i := len(returns) - 1; i >= 0; i-- {
+			if returns[i] == ')' {
+				counter++
+			}
+			if returns[i] == '(' {
+				counter--
+			}
+			if counter == 0 {
+				position = i
+				if i == len(returns)-1 {
+					position++
+				}
+				break
+			}
+		}
+		prefix = string([]byte(returns[position:]))
+		prefix = strings.Replace(prefix, "(", "", -1)
+		prefix = strings.Replace(prefix, ")", "", -1)
+		returns = returns[:position]
+	} else {
+
+		returns = strings.Replace(returns, "*", "", 1)
+		returns = strings.TrimSpace(returns)
+		var counter int
+		var position int
+		for i := len(returns) - 1; i >= 0; i-- {
+			if returns[i] == ')' {
+				counter++
+			}
+			if returns[i] == '(' {
+				counter--
+			}
+			if counter == 0 {
+				position = i
+				if i == len(returns)-1 {
+					position++
+				}
+				break
+			}
+		}
+		var bs []byte = []byte(returns[position:])
+		for i := 0; i < len(bs); i++ {
+			switch bs[i] {
+			case '(', ')':
+				bs[i] = ' '
+			}
+		}
+		prefix = strings.TrimSpace(string(bs))
+		returns = s[:position]
 	}
-	for i := range f {
-		f[i] = strings.TrimSpace(f[i])
-	}
+
+	r = append(r, returns)
 
 	return
 }
