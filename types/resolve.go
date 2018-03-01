@@ -380,7 +380,7 @@ func SeparateFunction(p *program.Program, s string) (
 			err = fmt.Errorf("Cannot separate function '%s' : %v", s, err)
 		}
 	}()
-	pr, f, r, err := parseFunction(s)
+	pr, f, r, err := ParseFunction(s)
 	if err != nil {
 		return
 	}
@@ -442,8 +442,8 @@ func IsTypedefFunction(p *program.Program, s string) bool {
 	return false
 }
 
-// parseFunction - parsing elements of C function
-func parseFunction(s string) (prefix string, f []string, r []string, err error) {
+// ParseFunction - parsing elements of C function
+func ParseFunction(s string) (prefix string, f []string, r []string, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("Cannot parse function '%s' : %v", s, err)

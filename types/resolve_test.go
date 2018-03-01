@@ -1,4 +1,4 @@
-package types
+package types_test
 
 import (
 	"encoding/json"
@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/elliotchance/c2go/program"
+	"github.com/elliotchance/c2go/types"
 )
 
 type resolveTestCase struct {
@@ -36,7 +37,7 @@ func TestResolve(t *testing.T) {
 
 	for i, testCase := range resolveTestCases {
 		t.Run(fmt.Sprintf("Test %d : %s", i, testCase.cType), func(t *testing.T) {
-			goType, err := ResolveType(p, testCase.cType)
+			goType, err := types.ResolveType(p, testCase.cType)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -210,7 +211,8 @@ func TestResolveFunction(t *testing.T) {
 	}
 	for i, tc := range tcs {
 		t.Run(fmt.Sprintf("Test %d : %s", i, tc.input), func(t *testing.T) {
-			actualPrefix, actualField, actualReturn, err := parseFunction(tc.input)
+			actualPrefix, actualField, actualReturn, err :=
+				types.ParseFunction(tc.input)
 			if err != nil {
 				t.Fatal(err)
 			}

@@ -270,10 +270,15 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 						t, _ = p.TypedefType[t]
 					}
 				}
-				fields, returns, err := types.ParseFunction(t)
+				prefix, fields, returns, err := types.ParseFunction(t)
 				if err != nil {
-					p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Cannot resolve function : %v", err), n))
+					p.AddMessage(p.GenerateWarningMessage(fmt.Errorf(
+						"Cannot resolve function : %v", err), n))
 					return nil, "", nil, nil, err
+				}
+				if len(prefix) != 0 {
+					p.AddMessage(p.GenerateWarningMessage(fmt.Errorf(
+						"prefix is not used in type : %v", t), n))
 				}
 				functionDef.ReturnType = returns[0]
 				functionDef.ArgumentTypes = fields
