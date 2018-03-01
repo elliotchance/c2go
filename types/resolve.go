@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"strconv"
@@ -519,64 +520,98 @@ func parseFunction(s string) (prefix string, f []string, r []string, err error) 
 	}
 
 	// returns
-	// remove one star for Go
-	if strings.Contains(returns, "(*)") {
-		// return type is : void ( *(*)(int *, void *, char *))
-		//                : void  *(*)(int *, void *, char *)
-		returns = strings.Replace(returns, "(*)", "", 1)
-		var counter int
-		var position int
-		for i := len(returns) - 1; i >= 0; i-- {
-			if returns[i] == ')' {
-				counter++
-			}
-			if returns[i] == '(' {
-				counter--
-			}
-			if counter == 0 {
-				position = i
-				if i == len(returns)-1 {
-					position++
-				}
-				break
-			}
-		}
-		prefix = string([]byte(returns[position:]))
-		prefix = strings.Replace(prefix, "(", "", -1)
-		prefix = strings.Replace(prefix, ")", "", -1)
-		returns = returns[:position]
-	} else {
 
-		returns = strings.Replace(returns, "*", "", 1)
-		returns = strings.TrimSpace(returns)
-		var counter int
-		var position int
-		for i := len(returns) - 1; i >= 0; i-- {
-			if returns[i] == ')' {
-				counter++
-			}
-			if returns[i] == '(' {
-				counter--
-			}
-			if counter == 0 {
-				position = i
-				if i == len(returns)-1 {
-					position++
-				}
-				break
-			}
-		}
-		var bs []byte = []byte(returns[position:])
-		for i := 0; i < len(bs); i++ {
-			switch bs[i] {
-			case '(', ')':
-				bs[i] = ' '
-			}
-		}
-		prefix = strings.TrimSpace(string(bs))
-		returns = s[:position]
+	// Example:  __ssize_t
+	if returns[len(returns)-1] != ')' {
+		r = append(r, returns)
+		return
 	}
 
+	// Example: void  ( *(*)(int *, void *, char *))
+	//          -------  --------------------------- return type
+	//                 ==                            prefix
+	//                ++++++++++++++++++++++++++++++ block
+	// return type : void (*)(int *, void *, char *)
+	// prefix      : *
+	// Find the block
+	var counter int
+	var position int
+	for i := len(returns) - 1; i >= 0; i-- {
+		if returns[i] == ')' {
+			counter++
+		}
+		if returns[i] == '(' {
+			counter--
+		}
+		if counter == 0 {
+			position = i
+			break
+		}
+	}
+	block := string([]byte(returns[position:]))
+	returns = returns[:position]
+
+	// Examples returns:
+	// int   (*)
+	// char *(*)
+	// block is : (*)
+	if block == "(*)" {
+		r = append(r, returns)
+		return
+	}
+
+	index := strings.Index(block, "(*)")
+	if index < 0 {
+		// Examples returns:
+		// int   ( * [2])
+		// ------         return type
+		//        ======  prefix
+		//       ++++++++ block
+		bBlock := []byte(block)
+		for i := 0; i < len(bBlock); i++ {
+			switch bBlock[i] {
+			case '(', ')':
+				bBlock[i] = ' '
+			}
+		}
+		bBlock = bytes.Replace(bBlock, []byte("*"), []byte(""), 1)
+		prefix = string(bBlock)
+		r = append(r, returns)
+		return
+	}
+	if len(block)-1 > index+3 && block[index+3] == '(' {
+		// Examples returns:
+		// void  ( *(*)(int *, void *, char *))
+		//       ++++++++++++++++++++++++++++++ block
+		//            ^^                        check this
+		block = strings.Replace(block, "(*)", "", 1)
+		block = block[1 : len(block)-1]
+		index := strings.Index(block, "(")
+		if index < 0 {
+			err = fmt.Errorf("Cannot found '(' in block")
+			return
+		}
+		prefix = block[:index]
+		returns = returns + block[index:]
+
+		r = append(r, returns)
+		return
+	}
+
+	// Examples returns:
+	// int   ( *( *(*)))
+	// -----              return type
+	//        =========   prefix
+	//       +++++++++++  block
+	bBlock := []byte(block)
+	for i := 0; i < len(bBlock); i++ {
+		switch bBlock[i] {
+		case '(', ')':
+			bBlock[i] = ' '
+		}
+	}
+	bBlock = bytes.Replace(bBlock, []byte("*"), []byte(""), 1)
+	prefix = string(bBlock)
 	r = append(r, returns)
 
 	return

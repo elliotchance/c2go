@@ -79,9 +79,9 @@ func TestResolveFunction(t *testing.T) {
 		},
 		{
 			input:   "void ( *(*)(int *, void *, char *))(void)",
-			prefix:  "",
+			prefix:  "*",
 			fields:  []string{"void"},
-			returns: []string{"void *(int *, void *, char *)"},
+			returns: []string{"void (int *, void *, char *)"},
 		},
 		{
 			input:   " void (*)(void)",
