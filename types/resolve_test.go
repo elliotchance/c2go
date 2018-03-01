@@ -208,6 +208,18 @@ func TestResolveFunction(t *testing.T) {
 				"void **"},
 			returns: []string{"int"},
 		},
+		{
+			input:   "void (*(int *, void *, const char *))(void)",
+			prefix:  "",
+			fields:  []string{"void"},
+			returns: []string{"void (int *, void *, const char *)"},
+		},
+		{
+			input:   "long (int, int)",
+			prefix:  "",
+			fields:  []string{"int", "int"},
+			returns: []string{"long"},
+		},
 	}
 	for i, tc := range tcs {
 		t.Run(fmt.Sprintf("Test %d : %s", i, tc.input), func(t *testing.T) {

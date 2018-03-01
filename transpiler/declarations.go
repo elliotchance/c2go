@@ -26,36 +26,46 @@ func newFunctionField(p *program.Program, name, cType string) (_ *goast.Field, e
 		return
 	}
 
-	field := &goast.Field{
-		Names: []*goast.Ident{
-			util.NewIdent(name),
-		},
-	}
-	var arg, ret []string
-	arg, ret, err = types.SeparateFunction(p, cType)
-	if err != nil {
-		return
-	}
-	funcType := &goast.FuncType{}
-	argFieldList := []*goast.Field{}
-	for _, aa := range arg {
-		argFieldList = append(argFieldList, &goast.Field{
-			Type: goast.NewIdent(aa),
-		})
-	}
-	funcType.Params = &goast.FieldList{
-		List: argFieldList,
-	}
-	funcType.Results = &goast.FieldList{
-		List: []*goast.Field{
-			&goast.Field{
-				Type: goast.NewIdent(ret[0]),
-			},
-		},
-	}
-	field.Type = funcType
+	fieldType, err := types.ResolveType(p, cType)
 
-	return field, nil
+	return &goast.Field{
+		Names: []*goast.Ident{util.NewIdent(name)},
+		Type:  goast.NewIdent(fieldType),
+	}, nil
+
+	/*
+
+		field := &goast.Field{
+			Names: []*goast.Ident{
+				util.NewIdent(name),
+			},
+		}
+		var arg, ret []string
+		arg, ret, err = types.SeparateFunction(p, cType)
+		if err != nil {
+			return
+		}
+		funcType := &goast.FuncType{}
+		argFieldList := []*goast.Field{}
+		for _, aa := range arg {
+			argFieldList = append(argFieldList, &goast.Field{
+				Type: goast.NewIdent(aa),
+			})
+		}
+		funcType.Params = &goast.FieldList{
+			List: argFieldList,
+		}
+		funcType.Results = &goast.FieldList{
+			List: []*goast.Field{
+				&goast.Field{
+					Type: goast.NewIdent(ret[0]),
+				},
+			},
+		}
+		field.Type = funcType
+
+		return field, nil
+	*/
 }
 
 func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (field *goast.Field, err error) {
@@ -500,11 +510,16 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 			if len(v.Type) > 0 {
 				// Is it function ?
 				if types.IsFunction(v.Type) {
+					var prefix string
 					var fields, returns []string
-					fields, returns, err = types.SeparateFunction(p, v.Type)
+					prefix, fields, returns, err = types.SeparateFunction(p, v.Type)
 					if err != nil {
 						err = fmt.Errorf("Cannot resolve function : %v", err)
 						return
+					}
+					if len(prefix) != 0 {
+						p.AddMessage(p.GenerateWarningMessage(
+							fmt.Errorf("Prefix is not used", prefix), n))
 					}
 					functionType := GenerateFuncType(fields, returns)
 					nameVar1 := n.Name
@@ -533,12 +548,17 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 	}
 
 	if types.IsFunction(n.Type) {
+		var prefix string
 		var fields, returns []string
-		fields, returns, err = types.SeparateFunction(p, n.Type)
+		prefix, fields, returns, err = types.SeparateFunction(p, n.Type)
 		if err != nil {
 			p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Cannot resolve function : %v", err), n))
 			err = nil // Error is ignored
 			return
+		}
+		if len(prefix) != 0 {
+			p.AddMessage(p.GenerateWarningMessage(
+				fmt.Errorf("Prefix is not used", prefix), n))
 		}
 		functionType := GenerateFuncType(fields, returns)
 		nameVar1 := n.Name

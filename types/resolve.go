@@ -562,20 +562,40 @@ func ParseFunction(s string) (prefix string, f []string, r []string, err error) 
 
 	index := strings.Index(block, "(*)")
 	if index < 0 {
-		// Examples returns:
-		// int   ( * [2])
-		// ------         return type
-		//        ======  prefix
-		//       ++++++++ block
-		bBlock := []byte(block)
-		for i := 0; i < len(bBlock); i++ {
-			switch bBlock[i] {
-			case '(', ')':
-				bBlock[i] = ' '
+		if strings.Count(block, "(") == 1 {
+			// Examples returns:
+			// int   ( * [2])
+			// ------         return type
+			//        ======  prefix
+			//       ++++++++ block
+			bBlock := []byte(block)
+			for i := 0; i < len(bBlock); i++ {
+				switch bBlock[i] {
+				case '(', ')':
+					bBlock[i] = ' '
+				}
 			}
+			bBlock = bytes.Replace(bBlock, []byte("*"), []byte(""), 1)
+			prefix = string(bBlock)
+			r = append(r, returns)
+			return
 		}
-		bBlock = bytes.Replace(bBlock, []byte("*"), []byte(""), 1)
-		prefix = string(bBlock)
+		// void (*(int *, void *, const char *))
+		//      ++++++++++++++++++++++++++++++++ block
+		block = block[1 : len(block)-1]
+		index := strings.Index(block, "(")
+		if index < 0 {
+			err = fmt.Errorf("Cannot found '(' in block")
+			return
+		}
+		returns = returns + block[index:]
+		prefix = block[:index]
+		if strings.Contains(prefix, "*") {
+			prefix = strings.Replace(prefix, "*", "", 1)
+		} else {
+			err = fmt.Errorf("Undefined situation")
+			return
+		}
 		r = append(r, returns)
 		return
 	}
