@@ -446,7 +446,7 @@ func ParseFunction(s string) (f []string, r []string, err error) {
 		err = fmt.Errorf("Is not function : %s", s)
 		return
 	}
-	var part string
+	var arguments string
 	{
 		// Example of function types :
 		// int (*)(int, float)
@@ -476,14 +476,31 @@ func ParseFunction(s string) (f []string, r []string, err error) {
 			}
 		}
 		r = append(r, strings.Replace(s[:pos], "(*)", "", -1))
-		part = s[pos:]
+		arguments = s[pos:]
 	}
-	inside := strings.TrimSpace(part)
-	if inside == "" {
+	arguments = strings.TrimSpace(arguments)
+	if arguments == "" {
 		err = fmt.Errorf("Cannot parse (right part is nil) : %v", s)
 		return
 	}
-	f = append(f, strings.Split(inside[1:len(inside)-1], ",")...)
+	// separate fields of arguments
+	{
+		var pos int = 1
+		counter := 0
+		for i := 1; i < len(arguments)-1; i++ {
+			if arguments[i] == '(' {
+				counter++
+			}
+			if arguments[i] == ')' {
+				counter--
+			}
+			if counter == 0 && arguments[i] == ',' {
+				f = append(f, strings.TrimSpace(arguments[pos:i]))
+				pos = i + 1
+			}
+		}
+		f = append(f, strings.TrimSpace(arguments[pos:len(arguments)-1]))
+	}
 
 	for i := range r {
 		r[i] = strings.TrimSpace(r[i])
