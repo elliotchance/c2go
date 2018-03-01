@@ -31,8 +31,8 @@ int main()
 	
 	diag("do without CompoundStmt");
 	int s = 1;
-	do s = s == 0 ? s+=2 : s++;while(s > 10);
-	is_eq(s , 1);
+	do s++; while(s < 10);
+	is_eq(s , 10);
 
 	done_testing();
 }
