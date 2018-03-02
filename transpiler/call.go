@@ -402,17 +402,31 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 	} else {
 		// Keep all the arguments the same. But make sure we cast to the correct
 		// types.
+		// Example of functionDef.ArgumentTypes :
+		// [void *, int]
+		// [char *, char * , ...]
+		// Example of args:
+		// [void *, int]
+		// [char *, char *, char *, int, double]
+		//
 		for i, a := range args {
-			if i > len(functionDef.ArgumentTypes)-1 {
-				// This means the argument is one of the varargs so we don't
-				// know what type it needs to be cast to.
+			var realType string = "unknownType"
+			if i >= len(functionDef.ArgumentTypes)-1 &&
+				functionDef.ArgumentTypes[len(functionDef.ArgumentTypes)-1] == "..." {
+				realType = functionDef.ArgumentTypes[len(functionDef.ArgumentTypes)-2]
 			} else {
-				a, err = types.CastExpr(p, a, argTypes[i],
-					functionDef.ArgumentTypes[i])
+				realType = functionDef.ArgumentTypes[i]
+				a, err = types.CastExpr(p, a, argTypes[i], realType)
 
 				if p.AddMessage(p.GenerateWarningMessage(err, n)) {
 					a = util.NewNil()
 				}
+			}
+
+			if strings.Contains(realType, "...") {
+				p.AddMessage(p.GenerateWarningMessage(
+					fmt.Errorf("not acceptable type '...'"), n))
+				realType = "unknownType2"
 			}
 
 			if a == nil {

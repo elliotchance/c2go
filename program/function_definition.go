@@ -139,8 +139,8 @@ var builtInFunctionDefinitions = map[string][]string{
 		"int _IO_putc(int, FILE*) -> noarch.Fputc",
 
 		// stdio.h
-		"int printf(const char*) -> noarch.Printf",
-		"int scanf(const char*) -> noarch.Scanf",
+		"int printf(const char*, ...) -> noarch.Printf",
+		"int scanf(const char*, ...) -> noarch.Scanf",
 		"int putchar(int) -> noarch.Putchar",
 		"int puts(const char *) -> noarch.Puts",
 		"FILE* fopen(const char *, const char *) -> noarch.Fopen",
@@ -154,8 +154,8 @@ var builtInFunctionDefinitions = map[string][]string{
 		"int feof(FILE*) -> noarch.Feof",
 		"char* tmpnam(char*) -> noarch.Tmpnam",
 		"int fflush(FILE*) -> noarch.Fflush",
-		"int fprintf(FILE*, const char*) -> noarch.Fprintf",
-		"int fscanf(FILE*, const char*) -> noarch.Fscanf",
+		"int fprintf(FILE*, const char*, ...) -> noarch.Fprintf",
+		"int fscanf(FILE*, const char*, ...) -> noarch.Fscanf",
 		"int fgetc(FILE*) -> noarch.Fgetc",
 		"int fputc(int, FILE*) -> noarch.Fputc",
 		"int getc(FILE*) -> noarch.Fgetc",
@@ -167,10 +167,10 @@ var builtInFunctionDefinitions = map[string][]string{
 		"int fwrite(char*, int, int, FILE*) -> noarch.Fwrite",
 		"int fgetpos(FILE*, int*) -> noarch.Fgetpos",
 		"int fsetpos(FILE*, int*) -> noarch.Fsetpos",
-		"int sprintf(char*, const char *) -> noarch.Sprintf",
-		"int snprintf(char*, int, const char *) -> noarch.Snprintf",
-		"int vsprintf(char*, const char *) -> noarch.Vsprintf",
-		"int vsnprintf(char*, int, const char *) -> noarch.Vsnprintf",
+		"int sprintf(char*, const char *, ...) -> noarch.Sprintf",
+		"int snprintf(char*, int, const char *, ...) -> noarch.Snprintf",
+		"int vsprintf(char*, const char *, ...) -> noarch.Vsprintf",
+		"int vsnprintf(char*, int, const char *, ...) -> noarch.Vsnprintf",
 
 		// darwin/stdio.h
 		"int __builtin___sprintf_chk(char*, int, int, char*) -> darwin.BuiltinSprintfChk",
@@ -309,7 +309,7 @@ func (p *Program) loadFunctionDefinitions() {
 		}
 
 		for _, f := range v {
-			match := util.GetRegex(`^(.+) ([^ ]+)\(([, a-z*A-Z_0-9]*)\)( -> .+)?$`).
+			match := util.GetRegex(`^(.+) ([^ ]+)\(([, a-z*A-Z_0-9.]*)\)( -> .+)?$`).
 				FindStringSubmatch(f)
 
 			// Unpack argument types.
