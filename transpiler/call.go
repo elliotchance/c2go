@@ -411,8 +411,9 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 		//
 		for i, a := range args {
 			var realType string = "unknownType"
-			if i < len(functionDef.ArgumentTypes)-1 {
+			if i < len(functionDef.ArgumentTypes) {
 				if len(functionDef.ArgumentTypes) > 1 &&
+					i >= len(functionDef.ArgumentTypes)-1 &&
 					functionDef.ArgumentTypes[len(functionDef.ArgumentTypes)-1] == "..." {
 					realType = functionDef.ArgumentTypes[len(functionDef.ArgumentTypes)-2]
 				} else {
