@@ -411,16 +411,22 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 		//
 		for i, a := range args {
 			var realType string = "unknownType"
-			if i >= len(functionDef.ArgumentTypes)-1 &&
-				functionDef.ArgumentTypes[len(functionDef.ArgumentTypes)-1] == "..." {
-				realType = functionDef.ArgumentTypes[len(functionDef.ArgumentTypes)-2]
-			} else {
-				realType = functionDef.ArgumentTypes[i]
-				if strings.TrimSpace(realType) != "void" {
-					a, err = types.CastExpr(p, a, argTypes[i], realType)
+			if i < len(functionDef.ArgumentTypes)-1 {
+				if len(functionDef.ArgumentTypes) > 1 &&
+					functionDef.ArgumentTypes[len(functionDef.ArgumentTypes)-1] == "..." {
+					realType = functionDef.ArgumentTypes[len(functionDef.ArgumentTypes)-2]
+				} else {
+					if len(functionDef.ArgumentTypes) > 0 {
+						if len(functionDef.ArgumentTypes[i]) != 0 {
+							realType = functionDef.ArgumentTypes[i]
+							if strings.TrimSpace(realType) != "void" {
+								a, err = types.CastExpr(p, a, argTypes[i], realType)
 
-					if p.AddMessage(p.GenerateWarningMessage(err, n)) {
-						a = util.NewNil()
+								if p.AddMessage(p.GenerateWarningMessage(err, n)) {
+									a = util.NewNil()
+								}
+							}
+						}
 					}
 				}
 			}

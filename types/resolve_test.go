@@ -226,6 +226,18 @@ func TestResolveFunction(t *testing.T) {
 			fields:  []string{"const char *", "..."},
 			returns: []string{"void"},
 		},
+		{
+			input:   "void (void)",
+			prefix:  "",
+			fields:  []string{"void"},
+			returns: []string{"void"},
+		},
+		{
+			input:   "void ()",
+			prefix:  "",
+			fields:  []string{""},
+			returns: []string{"void"},
+		},
 	}
 	for i, tc := range tcs {
 		t.Run(fmt.Sprintf("Test %d : %s", i, tc.input), func(t *testing.T) {
