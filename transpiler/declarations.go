@@ -32,43 +32,10 @@ func newFunctionField(p *program.Program, name, cType string) (_ *goast.Field, e
 		Names: []*goast.Ident{util.NewIdent(name)},
 		Type:  goast.NewIdent(fieldType),
 	}, nil
-
-	/*
-
-		field := &goast.Field{
-			Names: []*goast.Ident{
-				util.NewIdent(name),
-			},
-		}
-		var arg, ret []string
-		arg, ret, err = types.SeparateFunction(p, cType)
-		if err != nil {
-			return
-		}
-		funcType := &goast.FuncType{}
-		argFieldList := []*goast.Field{}
-		for _, aa := range arg {
-			argFieldList = append(argFieldList, &goast.Field{
-				Type: goast.NewIdent(aa),
-			})
-		}
-		funcType.Params = &goast.FieldList{
-			List: argFieldList,
-		}
-		funcType.Results = &goast.FieldList{
-			List: []*goast.Field{
-				&goast.Field{
-					Type: goast.NewIdent(ret[0]),
-				},
-			},
-		}
-		field.Type = funcType
-
-		return field, nil
-	*/
 }
 
-func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (field *goast.Field, err error) {
+func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (
+	field *goast.Field, err error) {
 	if types.IsFunction(n.Type) {
 		field, err = newFunctionField(p, n.Name, n.Type)
 		if err == nil {
@@ -114,7 +81,8 @@ func transpileFieldDecl(p *program.Program, n *ast.FieldDecl) (field *goast.Fiel
 	}, nil
 }
 
-func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.Decl, err error) {
+func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (
+	decls []goast.Decl, err error) {
 	name := n.Name
 
 	if name == "" || p.IsTypeAlreadyDefined(name) {
@@ -262,7 +230,8 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (decls []goast.D
 	return
 }
 
-func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast.Decl, err error) {
+func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (
+	decls []goast.Decl, err error) {
 	// implicit code from clang at the head of each clang AST tree
 	if n.IsImplicit && n.Pos.File == ast.PositionBuiltIn {
 		return
@@ -552,7 +521,8 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 		var fields, returns []string
 		prefix, fields, returns, err = types.SeparateFunction(p, n.Type)
 		if err != nil {
-			p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Cannot resolve function : %v", err), n))
+			p.AddMessage(p.GenerateErrorMessage(
+				fmt.Errorf("Cannot resolve function : %v", err), n))
 			err = nil // Error is ignored
 			return
 		}
@@ -579,7 +549,8 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 
 	theType, err = types.ResolveType(p, n.Type)
 	if err != nil {
-		p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Cannot resolve type %s : %v", theType, err), n))
+		p.AddMessage(p.GenerateErrorMessage(
+			fmt.Errorf("Cannot resolve type %s : %v", theType, err), n))
 		err = nil // Error is ignored
 	}
 
@@ -645,7 +616,9 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 	}
 
 	if len(preStmts) != 0 || len(postStmts) != 0 {
-		p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Not acceptable length of Stmt : pre(%d), post(%d)", len(preStmts), len(postStmts)), n))
+		p.AddMessage(p.GenerateErrorMessage(
+			fmt.Errorf("Not acceptable length of Stmt : pre(%d), post(%d)",
+				len(preStmts), len(postStmts)), n))
 	}
 
 	var typeResult goast.Expr
