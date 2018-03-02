@@ -654,6 +654,7 @@ func CleanCType(s string) (out string) {
 	out = strings.Replace(out, "volatile", "", -1)
 	out = strings.Replace(out, "__restrict", "", -1)
 	out = strings.Replace(out, "restrict", "", -1)
+	out = strings.Replace(out, "_Nullable", "", -1)
 	out = strings.Replace(out, "\t", "", -1)
 	out = strings.Replace(out, "\n", "", -1)
 	out = strings.Replace(out, "\r", "", -1)
