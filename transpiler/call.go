@@ -416,10 +416,12 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 				realType = functionDef.ArgumentTypes[len(functionDef.ArgumentTypes)-2]
 			} else {
 				realType = functionDef.ArgumentTypes[i]
-				a, err = types.CastExpr(p, a, argTypes[i], realType)
+				if strings.TrimSpace(realType) != "void" {
+					a, err = types.CastExpr(p, a, argTypes[i], realType)
 
-				if p.AddMessage(p.GenerateWarningMessage(err, n)) {
-					a = util.NewNil()
+					if p.AddMessage(p.GenerateWarningMessage(err, n)) {
+						a = util.NewNil()
+					}
 				}
 			}
 
