@@ -525,9 +525,18 @@ func transpileDoStmt(n *ast.DoStmt, p *program.Program) (
 	forOperator.AddChild(nil)
 	forOperator.AddChild(nil)
 	forOperator.AddChild(nil)
-	c := n.Children()[0].(*ast.CompoundStmt)
-	ifBreak := createIfWithNotConditionAndBreak(n.Children()[1])
-	c.AddChild(&ifBreak)
+	c := &ast.CompoundStmt{}
+	if n.Children()[0] != nil {
+		if comp, ok := n.Children()[0].(*ast.CompoundStmt); ok {
+			c = comp
+		} else {
+			c.AddChild(n.Children()[0])
+		}
+	}
+	if n.Children()[1] != nil {
+		ifBreak := createIfWithNotConditionAndBreak(n.Children()[1])
+		c.AddChild(&ifBreak)
+	}
 	forOperator.AddChild(c)
 	return transpileForStmt(&forOperator, p)
 }
@@ -546,7 +555,9 @@ func transpileDoStmt(n *ast.DoStmt, p *program.Program) (
 //    |-CompoundStmt 0x3bb1d88 <col:13, line:17:3>
 //    | `-BreakStmt 0x3bb1d80 <line:16:4>
 //    `-<<<NULL>>>
-func createIfWithNotConditionAndBreak(condition ast.Node) (ifStmt ast.IfStmt) {
+func createIfWithNotConditionAndBreak(condition ast.Node) (
+	ifStmt ast.IfStmt) {
+
 	ifStmt.AddChild(nil)
 
 	var par ast.ParenExpr
@@ -585,6 +596,7 @@ func createIfWithNotConditionAndBreak(condition ast.Node) (ifStmt ast.IfStmt) {
 	unitary.AddChild(&par)
 
 	ifStmt.AddChild(&unitary)
+
 	var c ast.CompoundStmt
 	c.AddChild(&ast.BreakStmt{})
 	ifStmt.AddChild(&c)
