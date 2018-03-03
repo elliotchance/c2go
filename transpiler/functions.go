@@ -49,6 +49,9 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (
 			err = fmt.Errorf("Cannot transpileFunctionDecl. %v", err)
 		}
 	}()
+	if len(n.Children()) == 0 {
+		return
+	}
 
 	var body *goast.BlockStmt
 

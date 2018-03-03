@@ -163,10 +163,6 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 	}()
 	s = CleanCType(s)
 
-	if s == "_Bool" {
-		p.TypedefType[s] = "int"
-	}
-
 	// FIXME: This is a hack to avoid casting in some situations.
 	if s == "" {
 		return "interface{}", errors.New("probably an incorrect type translation 1")
@@ -193,6 +189,14 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 	}
 	if strings.Contains(s, "__locale_struct") {
 		return "int", nil
+	}
+
+	// The simple resolve types are the types that we know there is an exact Go
+	// equivalent. For example float, int, etc.
+	for k, v := range simpleResolveTypes {
+		if k == s {
+			return p.ImportType(v), nil
+		}
 	}
 
 	// function type is pointer in Go by default
@@ -226,14 +230,6 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 	if IsFunction(s) {
 		g, e := resolveFunction(p, s)
 		return g, e
-	}
-
-	// The simple resolve types are the types that we know there is an exact Go
-	// equivalent. For example float, int, etc.
-	for k, v := range simpleResolveTypes {
-		if k == s {
-			return p.ImportType(v), nil
-		}
 	}
 
 	// Check is it typedef enum

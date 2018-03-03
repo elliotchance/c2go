@@ -105,9 +105,24 @@ int call_a_func(operators call_this) {
 long tolower2 (int a, int b) { return (long)(a+b);}
 long toupper2 (int a, int b) { return (long)(a+b);}
 
+char *readline();
+char * readline(char *string, FILE *infile, char *infilename)
+{
+	(void)(infile);
+	(void)(infilename);
+	return string;
+}
+
+void test_string()
+{
+	is_streq(readline("rt",NULL,NULL),"rt");
+}
+
 int main()
 {
-    plan(48);
+    plan(49);
+
+	test_string();
 
     pass("%s", "Main function.");
 
