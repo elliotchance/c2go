@@ -293,7 +293,9 @@ func transpileInitListExpr(e *ast.InitListExpr, p *program.Program) (goast.Expr,
 	}, cTypeString, nil
 }
 
-func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) (stmts []goast.Stmt, err error) {
+func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) (
+	stmts []goast.Stmt, err error) {
+
 	if len(n.Children()) == 0 {
 		return
 	}

@@ -364,11 +364,32 @@ void struct_func_func()
        is_eq(global_ffs,1);
 }
 
+struct empty_str{};
+typedef struct sqlite3_file sqlite3_file;
+struct sqlite3_file {
+  const struct sqlite3_io_methods *pMethods;  /* Methods for an open file */
+};
+
+typedef struct sqlite3_io_methods sqlite3_io_methods;
+struct sqlite3_io_methods {
+  int iVersion;
+  int (*xClose)(sqlite3_file*);
+};
+
+void struct_after_struct()
+{
+	sqlite3_file sFile;
+	sqlite3_io_methods io;
+	sFile.pMethods = &io;
+	is_not_null(sFile.pMethods);
+}
+
 int main()
 {
-    plan(70);
+    plan(71);
 
 	struct_func_func();
+	struct_after_struct();
 
     struct programming variable;
     char *s = "Programming in Software Development.";

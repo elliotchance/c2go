@@ -83,6 +83,12 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 				}
 			}
 		}
+		if rec, ok := presentNode.(*ast.RecordDecl); ok {
+			// ignore RecordDecl if haven`t definition
+			if rec.Name == "" && !rec.Definition {
+				continue
+			}
+		}
 
 		var d []goast.Decl
 		d, err = transpileToNode(presentNode, p)

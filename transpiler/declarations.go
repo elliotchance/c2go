@@ -85,6 +85,11 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (
 	decls []goast.Decl, err error) {
 	name := n.Name
 
+	// ignore if haven`t definition
+	if !n.Definition {
+		return
+	}
+
 	if name == "" || p.IsTypeAlreadyDefined(name) {
 		err = nil
 		return

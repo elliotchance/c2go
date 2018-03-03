@@ -251,7 +251,8 @@ func transpileToStmts(node ast.Node, p *program.Program) (stmts []goast.Stmt, er
 	case *ast.DeclStmt:
 		stmts, err = transpileDeclStmt(n, p)
 		if err != nil {
-			p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Error in DeclStmt: %v", err), n))
+			p.AddMessage(p.GenerateErrorMessage(
+				fmt.Errorf("Error in DeclStmt: %v", err), n))
 			err = nil // Error is ignored
 		}
 		return
