@@ -2,7 +2,6 @@ package transpiler
 
 import (
 	goast "go/ast"
-	"strings"
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
@@ -16,70 +15,13 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 		presentNode := n.Children()[i]
 		var runAfter func()
 
-		if rec, ok := presentNode.(*ast.RecordDecl); ok {
+		if rec, ok := presentNode.(*ast.RecordDecl); ok && rec.Name == "" {
 			if i+1 < len(n.Children()) {
 				switch recNode := n.Children()[i+1].(type) {
 				case *ast.VarDecl:
-					name := types.GenerateCorrectType(types.CleanCType(recNode.Type))
-					if rec.Name == "" {
-						recNode.Type = types.GenerateCorrectType(recNode.Type)
-						recNode.Type2 = types.GenerateCorrectType(recNode.Type2)
-						if strings.HasPrefix(name, "union ") {
-							rec.Name = name[len("union "):]
-							recNode.Type = types.CleanCType("union " + name)
-						}
-						if strings.HasPrefix(name, "struct ") {
-							name = types.GetBaseType(name)
-							rec.Name = name[len("struct "):]
-						}
-					}
+					rec.Name = types.GetBaseType(recNode.Type)
 				case *ast.TypedefDecl:
-					if isSameTypedefNames(recNode) {
-						i++
-						continue
-					}
-					name := types.GenerateCorrectType(types.CleanCType(recNode.Type))
-					if strings.HasPrefix(name, "union ") {
-						if recNode.Type == "union "+rec.Name {
-							names := []string{rec.Name, recNode.Name}
-							for _, name := range names {
-								rec.Name = name
-								var d []goast.Decl
-								d, err = transpileToNode(rec, p)
-								if err != nil {
-									p.AddMessage(p.GenerateErrorMessage(err, n))
-									err = nil
-								} else {
-									decls = append(decls, d...)
-								}
-							}
-
-							i++
-							continue
-						} else {
-							rec.Name = name[len("union "):]
-							recNode.Type = types.CleanCType("union " + name)
-						}
-					}
-					if strings.HasPrefix(name, "struct ") {
-						if rec.Name != "" {
-							runAfter = func() {
-								var d []goast.Decl
-								d, err = transpileToNode(recNode, p)
-								if err != nil {
-									p.AddMessage(p.GenerateErrorMessage(err, n))
-									err = nil
-								} else {
-									decls = append(decls, d...)
-								}
-							}
-
-							i++
-						} else {
-							rec.Name = name[len("struct "):]
-							recNode.Type = types.CleanCType("struct " + name)
-						}
-					}
+					rec.Name = types.GetBaseType(recNode.Type)
 				}
 			}
 		}
@@ -104,31 +46,4 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 
 	}
 	return
-}
-
-func isSameTypedefNames(v *ast.TypedefDecl) bool {
-	// for structs :
-	/*
-	   TypedefDecl 0x33da010 <col:3, col:21> col:21 referenced Uq 'struct Uq':'struct Uq'
-	   `-ElaboratedType 0x33d9fc0 'struct Uq' sugar
-	     `-RecordType 0x33d9fa0 'struct Uq'
-	       `-Record 0x33da090 'Uq'
-	*/
-	// for unions:
-	/*
-		TypedefDecl 0x38bc070 <col:1, col:23> col:23 referenced myunion 'union myunion':'union myunion'
-		`-ElaboratedType 0x38bc020 'union myunion' sugar
-		  `-RecordType 0x38bc000 'union myunion'
-		    `-Record 0x38bc0d8 'myunion'
-	*/
-	if ("struct "+v.Name == v.Type2 || "union "+v.Name == v.Type2) && v.Type == v.Type2 {
-		if vv, ok := v.Children()[0].(*ast.ElaboratedType); ok && vv.Type == v.Type {
-			if vvv, ok := vv.Children()[0].(*ast.RecordType); ok && vvv.Type == v.Type2 {
-				if vvvv, ok := vvv.Children()[0].(*ast.Record); ok && vvvv.Type == v.Name {
-					return true
-				}
-			}
-		}
-	}
-	return false
 }

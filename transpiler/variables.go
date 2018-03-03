@@ -64,7 +64,7 @@ func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (
 }
 
 func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
-	_ []goast.Expr, _ string, _ []goast.Stmt, _ []goast.Stmt, err error) {
+	expr []goast.Expr, _ string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("Cannot getDefaultValueForVar : err = %v", err)
@@ -212,7 +212,13 @@ func GenerateFuncType(fields, returns []string) *goast.FuncType {
 	return &ft
 }
 
-func transpileInitListExpr(e *ast.InitListExpr, p *program.Program) (goast.Expr, string, error) {
+func transpileInitListExpr(e *ast.InitListExpr, p *program.Program) (
+	expr goast.Expr, exprType string, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot transpileInitListExpr. err = %v", err)
+		}
+	}()
 	resp := []goast.Expr{}
 	var hasArrayFiller = false
 	e.Type1 = types.GenerateCorrectType(e.Type1)

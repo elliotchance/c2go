@@ -251,47 +251,13 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 
 	// If the type is already defined we can proceed with the same name.
 	if p.IsTypeAlreadyDefined(s) {
+		if strings.HasPrefix(s, "struct ") {
+			s = s[len("struct "):]
+		}
+		if strings.HasPrefix(s, "union ") {
+			s = s[len("union "):]
+		}
 		return p.ImportType(s), nil
-	}
-
-	// Structures are by name.
-	if strings.HasPrefix(s, "struct ") || strings.HasPrefix(s, "union ") {
-		start := 6
-		if s[0] == 's' {
-			start++
-		}
-
-		if s[len(s)-1] == '*' {
-			s = s[start : len(s)-2]
-
-			var t string
-			t, err = ResolveType(p, s)
-			return "[]" + t, err
-		}
-
-		s = s[start:]
-
-		for _, v := range simpleResolveTypes {
-			if v == s {
-				return p.ImportType(simpleResolveTypes[s]), nil
-			}
-		}
-
-		return ResolveType(p, s)
-	}
-
-	// Enums are by name.
-	if strings.HasPrefix(s, "enum ") {
-		if s[len(s)-1] == '*' {
-			return "*" + s[5:len(s)-2], nil
-		}
-
-		return s[5:], nil
-	}
-
-	// I have no idea how to handle this yet.
-	if strings.Contains(s, "anonymous union") {
-		return "interface{}", errors.New("probably an incorrect type translation 3")
 	}
 
 	// It may be a pointer of a simple type. For example, float *, int *,
@@ -311,6 +277,43 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 		return prefix + t, err
 	}
 
+	// It could be an array of fixed length. These needs to be converted to
+	// slices.
+	// int [2][3] -> [][]int
+	// int [2][3][4] -> [][][]int
+	search2 := util.GetRegex(`([\w\* ]+)((\[\d+\])+)`).FindStringSubmatch(s)
+	if len(search2) > 2 {
+		t, err := ResolveType(p, search2[1])
+
+		var re = util.GetRegex(`[0-9]+`)
+		arraysNoSize := re.ReplaceAllString(search2[2], "")
+
+		return fmt.Sprintf("%s%s", arraysNoSize, t), err
+	}
+
+	// Structures are by name.
+	if strings.HasPrefix(s, "struct ") || strings.HasPrefix(s, "union ") {
+		start := 6
+		if s[0] == 's' {
+			start++
+		}
+		return s[start:], nil
+	}
+
+	// Enums are by name.
+	if strings.HasPrefix(s, "enum ") {
+		if s[len(s)-1] == '*' {
+			return "*" + s[5:len(s)-2], nil
+		}
+
+		return s[5:], nil
+	}
+
+	// I have no idea how to handle this yet.
+	if strings.Contains(s, "anonymous union") {
+		return "interface{}", errors.New("probably an incorrect type translation 3")
+	}
+
 	// Function pointers are not yet supported. In the mean time they will be
 	// replaced with a type that certainly wont work until we can fix this
 	// properly.
@@ -324,20 +327,6 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 	if search {
 		return "interface{}",
 			fmt.Errorf("function pointers are not supported [2] : '%s'", s)
-	}
-
-	// It could be an array of fixed length. These needs to be converted to
-	// slices.
-	// int [2][3] -> [][]int
-	// int [2][3][4] -> [][][]int
-	search2 := util.GetRegex(`([\w\* ]+)((\[\d+\])+)`).FindStringSubmatch(s)
-	if len(search2) > 2 {
-		t, err := ResolveType(p, search2[1])
-
-		var re = util.GetRegex(`[0-9]+`)
-		arraysNoSize := re.ReplaceAllString(search2[2], "")
-
-		return fmt.Sprintf("%s%s", arraysNoSize, t), err
 	}
 
 	errMsg := fmt.Sprintf(
@@ -681,7 +670,7 @@ func CleanCType(s string) (out string) {
 // Example: 'union (anonymous union at tests/union.c:46:3)'
 func GenerateCorrectType(name string) string {
 	if !strings.Contains(name, "anonymous") {
-		return name
+		return CleanCType(name)
 	}
 	index := strings.Index(name, "(anonymous")
 	if index < 0 {
@@ -701,14 +690,14 @@ func GenerateCorrectType(name string) string {
 	inside := string(([]byte(name))[index : last+1])
 
 	// change unacceptable C name letters
-	inside = strings.Replace(inside, "(", "B", -1)
-	inside = strings.Replace(inside, ")", "E", -1)
-	inside = strings.Replace(inside, " ", "S", -1)
-	inside = strings.Replace(inside, ":", "D", -1)
-	inside = strings.Replace(inside, "/", "S", -1)
-	inside = strings.Replace(inside, "-", "T", -1)
-	inside = strings.Replace(inside, "\\", "S", -1)
-	inside = strings.Replace(inside, ".", "P", -1)
+	inside = strings.Replace(inside, "(", "_", -1)
+	inside = strings.Replace(inside, ")", "_", -1)
+	inside = strings.Replace(inside, " ", "_", -1)
+	inside = strings.Replace(inside, ":", "_", -1)
+	inside = strings.Replace(inside, "/", "_", -1)
+	inside = strings.Replace(inside, "-", "_", -1)
+	inside = strings.Replace(inside, "\\", "_", -1)
+	inside = strings.Replace(inside, ".", "_", -1)
 	out := string(([]byte(name))[0:index]) + inside + string(([]byte(name))[last+1:])
 
 	// For case:
@@ -748,6 +737,9 @@ func GetAmountArraySize(cType string) (size int, err error) {
 func GetBaseType(s string) string {
 	s = strings.TrimSpace(s)
 	s = CleanCType(s)
+	if len(s) < 1 {
+		return s
+	}
 	if s[len(s)-1] == ']' {
 		for i := len(s) - 1; i >= 0; i-- {
 			if s[i] == '[' {
