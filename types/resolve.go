@@ -272,11 +272,8 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 		// the name and the "*". If there is an extra space it will be trimmed
 		// off.
 		t, err := ResolveType(p, strings.TrimSpace(s[:len(s)-1]))
-		// Pointers are always converted into slices, except with some specific
-		// entities that are shared in the Go libraries.
-		prefix := "[]"
 
-		return prefix + t, err
+		return "[]" + t, err
 	}
 
 	// It could be an array of fixed length. These needs to be converted to
