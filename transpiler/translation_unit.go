@@ -2,6 +2,7 @@ package transpiler
 
 import (
 	goast "go/ast"
+	"strings"
 
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
@@ -22,6 +23,9 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 					rec.Name = types.GetBaseType(recNode.Type)
 				case *ast.TypedefDecl:
 					rec.Name = types.GetBaseType(recNode.Type)
+					if strings.HasPrefix(recNode.Type, "union ") {
+						rec.Name = recNode.Type[len("union "):]
+					}
 				}
 			}
 		}

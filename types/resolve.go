@@ -190,12 +190,21 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 	if strings.Contains(s, "__locale_struct") {
 		return "int", nil
 	}
+	if strings.Contains(s, "__sFILEX") {
+		s = strings.Replace(s, "__sFILEX", "int", -1)
+	}
 
 	// The simple resolve types are the types that we know there is an exact Go
 	// equivalent. For example float, int, etc.
 	for k, v := range simpleResolveTypes {
 		if k == s {
 			return p.ImportType(v), nil
+		}
+	}
+
+	if t, ok := p.GetBaseTypeOfTypedef(s); ok {
+		if strings.HasPrefix(t, "union ") {
+			return t[len("union "):], nil
 		}
 	}
 
