@@ -267,17 +267,14 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 
 	// It may be a pointer of a simple type. For example, float *, int *,
 	// etc.
-	if util.GetRegex("[\\w ]+\\*+$").MatchString(s) {
+	if strings.HasSuffix(s, "*") {
 		// The "-1" is important because there may or may not be a space between
 		// the name and the "*". If there is an extra space it will be trimmed
 		// off.
 		t, err := ResolveType(p, strings.TrimSpace(s[:len(s)-1]))
 		// Pointers are always converted into slices, except with some specific
 		// entities that are shared in the Go libraries.
-		prefix := "*"
-		if !strings.Contains(t, "noarch.") {
-			prefix = "[]"
-		}
+		prefix := "[]"
 
 		return prefix + t, err
 	}
