@@ -358,6 +358,7 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 		return nil, "", nil, nil, err
 	}
 
+	baseType := lhsType
 	lhsType = types.GenerateCorrectType(lhsType)
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
@@ -374,6 +375,14 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	// added for support "union typedef"
 	if structType == nil {
 		structType = p.GetStruct("union " + lhsType)
+	}
+	// for anonymous structs
+	if structType == nil {
+		structType = p.GetStruct(baseType)
+	}
+	// for anonymous structs
+	if structType == nil {
+		structType = p.GetStruct(types.CleanCType(baseType))
 	}
 	rhs := n.Name
 	rhsType := "void *"
