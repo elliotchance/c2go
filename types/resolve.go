@@ -272,8 +272,12 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 		// the name and the "*". If there is an extra space it will be trimmed
 		// off.
 		t, err := ResolveType(p, strings.TrimSpace(s[:len(s)-1]))
+		prefix := "[]"
+		if strings.Contains(t, "noarch.File") {
+			prefix = "*"
+		}
 
-		return "[]" + t, err
+		return prefix + t, err
 	}
 
 	// It could be an array of fixed length. These needs to be converted to
