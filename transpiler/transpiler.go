@@ -90,6 +90,19 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 		},
 	})
 
+	// only for "stdbool.h"
+	if p.IncludeHeaderIsExists("stdbool.h") {
+		p.File.Decls = append(p.File.Decls, &goast.GenDecl{
+			Tok: token.TYPE,
+			Specs: []goast.Spec{
+				&goast.TypeSpec{
+					Name: goast.NewIdent("_Bool"),
+					Type: goast.NewIdent("int"),
+				},
+			},
+		})
+	}
+
 	// Add the imports after everything else so we can ensure that they are all
 	// placed at the top.
 	for _, quotedImportPath := range p.Imports() {
@@ -194,28 +207,16 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 		return transpileStmtExpr(n, p)
 
 	case *ast.ImplicitValueInitExpr:
-		cType := n.Type1
-
-		if strings.HasPrefix(cType, "struct ") {
-			s := p.Structs[cType]
-			if s == nil {
-				return nil, "", nil, nil, fmt.Errorf("cannot found struct with name: `%s`", cType)
-			}
-			expr = &goast.CompositeLit{
-				Type:   util.NewIdent(cType[len("struct "):]),
-				Lbrace: 1,
-			}
-			return
-		}
-
-		s := p.Structs["struct "+cType]
-		if s == nil {
-			return nil, "", nil, nil, fmt.Errorf("cannot found struct with name: `%s`", cType)
+		var t string
+		t = n.Type1
+		if strings.HasPrefix(t, "struct ") {
+			t = t[len("struct "):]
 		}
 		expr = &goast.CompositeLit{
-			Type:   util.NewIdent(cType),
+			Type:   util.NewIdent(t),
 			Lbrace: 1,
 		}
+		return
 
 	default:
 		p.AddMessage(p.GenerateWarningMessage(errors.New("cannot transpile to expr"), node))
@@ -238,7 +239,8 @@ func transpileToStmts(node ast.Node, p *program.Program) (stmts []goast.Stmt, er
 	case *ast.DeclStmt:
 		stmts, err = transpileDeclStmt(n, p)
 		if err != nil {
-			p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Error in DeclStmt: %v", err), n))
+			p.AddMessage(p.GenerateErrorMessage(
+				fmt.Errorf("Error in DeclStmt: %v", err), n))
 			err = nil // Error is ignored
 		}
 		return
@@ -441,7 +443,12 @@ func transpileToNode(node ast.Node, p *program.Program) (decls []goast.Decl, err
 		decls, err = transpileEnumDecl(p, n)
 
 	case *ast.EmptyDecl:
-		p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("EmptyDecl is not transpiled"), n))
+		if len(n.Children()) == 0 {
+			// ignore if length is zero, for avoid
+			// mistake warning
+		} else {
+			p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("EmptyDecl is not transpiled"), n))
+		}
 		err = nil
 		return
 

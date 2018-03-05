@@ -135,7 +135,6 @@ func TestIntegrationScripts(t *testing.T) {
 				testName := strings.Split(file, ".")[0][6:]
 				args = append(
 					args,
-					"-race",
 					"-covermode=atomic",
 					"-coverprofile="+testName+".coverprofile",
 					"-coverpkg=./noarch,./linux,./darwin",
@@ -208,8 +207,15 @@ func TestIntegrationScripts(t *testing.T) {
 					if start < 0 {
 						start = 0
 					}
+					var indicator string
 					for i := start; i < linePosition+5 && i < len(fileLines); i++ {
-						output += fmt.Sprintf("Line : %3d : %s\n", i, fileLines[i])
+						if i == linePosition-1 {
+							indicator = "*"
+						} else {
+							indicator = " "
+						}
+						output += fmt.Sprintf("Line : %3d %s: %s\n",
+							i+1, indicator, fileLines[i])
 					}
 				}
 				t.Fatalf("Expected %s\nGot: %s\nParts of code:\n%s",

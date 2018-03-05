@@ -24,7 +24,9 @@ rm -f $TRIANGLE_TEMP_FOLDER/$TRIANGLE_FILE.go
 
 # Transpile files.
 echo "Transpiling $TRIANGLE_FILE.c..."
-./c2go transpile -o=$TRIANGLE_TEMP_FOLDER/$TRIANGLE_FILE.go $TRIANGLE_TEMP_FOLDER/$TRIANGLE_FILE.c
+./c2go transpile -o=$TRIANGLE_TEMP_FOLDER/$TRIANGLE_FILE.go \
+	-clang-flag="-DANSI_DECLARATORS" \
+	$TRIANGLE_TEMP_FOLDER/$TRIANGLE_FILE.c
 
 # Show amount "Warning" in Go codes
 TRIANGLE_WARNINGS=`cat $TRIANGLE_TEMP_FOLDER/$TRIANGLE_FILE.go | grep "// Warning" | wc -l`

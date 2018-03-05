@@ -102,12 +102,27 @@ int call_a_func(operators call_this) {
     return output;
 }
 
-long tolower (int a, int b) { return (long)(a+b);}
-long toupper (int a, int b) { return (long)(a+b);}
+long tolower2 (int a, int b) { return (long)(a+b);}
+long toupper2 (int a, int b) { return (long)(a+b);}
+
+char *readline();
+char * readline(char *string, FILE *infile, char *infilename)
+{
+	(void)(infile);
+	(void)(infilename);
+	return string;
+}
+
+void test_string()
+{
+	is_streq(readline("rt",NULL,NULL),"rt");
+}
 
 int main()
 {
-    plan(48);
+    plan(49);
+
+	test_string();
 
     pass("%s", "Main function.");
 
@@ -219,8 +234,8 @@ int main()
 	
 	diag("function name like in CSTD");
 	{
-		is_eq(tolower(34,52),86);
-		is_eq(toupper(34,52),86);
+		is_eq(tolower2(34,52),86);
+		is_eq(toupper2(34,52),86);
 	}
 
     done_testing();

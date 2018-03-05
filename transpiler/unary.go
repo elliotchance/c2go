@@ -162,6 +162,18 @@ func transpileUnaryOperatorNot(n *ast.UnaryOperator, p *program.Program) (
 		), "bool", preStmts, postStmts, nil
 	}
 
+	// only if added "stdbool.h"
+	if p.IncludeHeaderIsExists("stdbool.h") {
+		if t == "_Bool" {
+			t = "int"
+			e = &goast.CallExpr{
+				Fun:    goast.NewIdent("int"),
+				Lparen: 1,
+				Args:   []goast.Expr{e},
+			}
+		}
+	}
+
 	p.AddImport("github.com/elliotchance/c2go/noarch")
 
 	functionName := fmt.Sprintf("noarch.Not%s",
@@ -249,17 +261,15 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 	var f func(ast.Node)
 	f = func(n ast.Node) {
 		for i := range n.Children() {
-			switch v := n.Children()[i].(type) {
-			case *ast.ArraySubscriptExpr,
-				*ast.UnaryOperator,
-				*ast.DeclRefExpr:
+			state := func() {
 				counter++
 				if counter > 1 {
-					err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %T,%T", pointer, v)
+					err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %T,%T",
+						pointer, n.Children()[i])
 					return
 				}
 				// found pointer
-				pointer = v
+				pointer = n.Children()[i]
 				// Replace pointer to zero
 				var zero ast.IntegerLiteral
 				zero.Type = "int"
@@ -268,27 +278,20 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 				locPosition = i
 				n.Children()[i] = &zero
 				found = true
+			}
+
+			switch v := n.Children()[i].(type) {
+			case *ast.ArraySubscriptExpr,
+				*ast.UnaryOperator,
+				*ast.DeclRefExpr:
+				state()
 				return
 
 			case *ast.CStyleCastExpr:
 				if v.Type == "int" {
 					continue
 				}
-				counter++
-				if counter > 1 {
-					err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %T,%T", pointer, v)
-					return
-				}
-				// found pointer
-				pointer = v
-				// Replace pointer to zero
-				var zero ast.IntegerLiteral
-				zero.Type = "int"
-				zero.Value = "0"
-				locPointer = n
-				locPosition = i
-				n.Children()[i] = &zero
-				found = true
+				state()
 				return
 
 			case *ast.MemberExpr:
@@ -296,6 +299,12 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 				a := n.Children()[i]
 				var isUnion bool
 				for {
+					if a == nil {
+						break
+					}
+					if len(a.Children()) == 0 {
+						break
+					}
 					switch vv := a.Children()[0].(type) {
 					case *ast.MemberExpr, *ast.DeclRefExpr:
 						var typeVV string
@@ -305,6 +314,8 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 						if vvv, ok := vv.(*ast.DeclRefExpr); ok {
 							typeVV = vvv.Type
 						}
+						typeVV = types.GetBaseType(typeVV)
+
 						if _, ok := p.Structs[typeVV]; ok {
 							isUnion = true
 						}
@@ -319,23 +330,14 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 						}
 						a = vv
 						continue
+					case *ast.ImplicitCastExpr, *ast.CStyleCastExpr:
+						a = vv
+						continue
 					}
 					break
 				}
 				if isUnion {
-					counter++
-					if counter > 1 {
-						err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %v,%v", pointer, v)
-						return
-					}
-					// found pointer
-					pointer = v
-					// Replace pointer to zero
-					var zero ast.IntegerLiteral
-					zero.Type = "int"
-					zero.Value = "0"
-					n.Children()[i] = &zero
-					found = true
+					state()
 					return
 				}
 				// member of struct
@@ -345,21 +347,7 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 				if v.Type == "int" {
 					continue
 				}
-				counter++
-				if counter > 1 {
-					err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %T,%T", pointer, v)
-					return
-				}
-				// found pointer
-				pointer = v
-				// Replace pointer to zero
-				var zero ast.IntegerLiteral
-				zero.Type = "int"
-				zero.Value = "0"
-				locPointer = n
-				locPosition = i
-				n.Children()[i] = &zero
-				found = true
+				state()
 				return
 
 			default:
@@ -519,7 +507,7 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 		}, eType, preStmts, postStmts, err
 
 	case *ast.UnaryOperator:
-		arr, _, newPre, newPost, err2 := transpileToExpr(v, p, false)
+		arr, _, newPre, newPost, err2 := atomicOperation(v, p)
 		if err2 != nil {
 			return
 		}

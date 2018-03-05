@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"strconv"
@@ -85,21 +86,6 @@ var simpleResolveTypes = map[string]string{
 	"__uint16_t": "uint16",
 	"__uint32_t": "uint32",
 	"__uint64_t": "uint64",
-	"div_t":      "github.com/elliotchance/c2go/noarch.DivT",
-	"ldiv_t":     "github.com/elliotchance/c2go/noarch.LdivT",
-	"lldiv_t":    "github.com/elliotchance/c2go/noarch.LldivT",
-	"time_t":     "github.com/elliotchance/c2go/noarch.TimeT",
-
-	// time.h
-	"tm": "github.com/elliotchance/c2go/noarch.Tm",
-
-	// Darwin specific
-	"__darwin_ct_rune_t": "github.com/elliotchance/c2go/darwin.CtRuneT",
-	"fpos_t":             "int",
-	"struct __float2":    "github.com/elliotchance/c2go/darwin.Float2",
-	"struct __double2":   "github.com/elliotchance/c2go/darwin.Double2",
-	"Float2":             "github.com/elliotchance/c2go/darwin.Float2",
-	"Double2":            "github.com/elliotchance/c2go/darwin.Double2",
 
 	// These are special cases that almost certainly don't work. I've put
 	// them here because for whatever reason there is no suitable type or we
@@ -112,6 +98,25 @@ var simpleResolveTypes = map[string]string{
 	"__sbuf":                       "int64",
 	"__sFILEX":                     "interface{}",
 	"FILE":                         "github.com/elliotchance/c2go/noarch.File",
+}
+
+var otherStructType = map[string]string{
+	"div_t":   "github.com/elliotchance/c2go/noarch.DivT",
+	"ldiv_t":  "github.com/elliotchance/c2go/noarch.LdivT",
+	"lldiv_t": "github.com/elliotchance/c2go/noarch.LldivT",
+
+	// time.h
+	"tm":        "github.com/elliotchance/c2go/noarch.Tm",
+	"struct tm": "github.com/elliotchance/c2go/noarch.Tm",
+	"time_t":    "github.com/elliotchance/c2go/noarch.TimeT",
+
+	// Darwin specific
+	"__darwin_ct_rune_t": "github.com/elliotchance/c2go/darwin.CtRuneT",
+	"fpos_t":             "int",
+	"struct __float2":    "github.com/elliotchance/c2go/darwin.Float2",
+	"struct __double2":   "github.com/elliotchance/c2go/darwin.Double2",
+	"Float2":             "github.com/elliotchance/c2go/darwin.Float2",
+	"Double2":            "github.com/elliotchance/c2go/darwin.Double2",
 }
 
 // NullPointer - is look : (double *)(nil) or (FILE *)(nil)
@@ -158,10 +163,6 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 	}()
 	s = CleanCType(s)
 
-	if s == "_Bool" {
-		p.TypedefType[s] = "int"
-	}
-
 	// FIXME: This is a hack to avoid casting in some situations.
 	if s == "" {
 		return "interface{}", errors.New("probably an incorrect type translation 1")
@@ -186,11 +187,11 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 		s = strings.Replace(s, "struct __locale_data", "int", -1)
 		s = strings.Replace(s, "__locale_data", "int", -1)
 	}
-
-	// For function
-	if IsFunction(s) {
-		g, e := resolveFunction(p, s)
-		return g, e
+	if strings.Contains(s, "__locale_struct") {
+		return "int", nil
+	}
+	if strings.Contains(s, "__sFILEX") {
+		s = strings.Replace(s, "__sFILEX", "int", -1)
 	}
 
 	// The simple resolve types are the types that we know there is an exact Go
@@ -199,6 +200,45 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 		if k == s {
 			return p.ImportType(v), nil
 		}
+	}
+
+	if t, ok := p.GetBaseTypeOfTypedef(s); ok {
+		if strings.HasPrefix(t, "union ") {
+			return t[len("union "):], nil
+		}
+	}
+
+	// function type is pointer in Go by default
+	if len(s) > 2 {
+		base := s[:len(s)-2]
+		if ff, ok := p.TypedefType[base]; ok {
+			if IsFunction(ff) {
+				return base, nil
+			}
+		}
+	}
+
+	// No need resolve typedef types
+	if _, ok := p.TypedefType[s]; ok {
+		if tt, ok := otherStructType[s]; ok {
+			// "div_t":   "github.com/elliotchance/c2go/noarch.DivT",
+			ii := p.ImportType(tt)
+			return ii, nil
+		} else {
+			return s, nil
+		}
+	}
+
+	if tt, ok := otherStructType[s]; ok {
+		// "div_t":   "github.com/elliotchance/c2go/noarch.DivT",
+		ii := p.ImportType(tt)
+		return ii, nil
+	}
+
+	// For function
+	if IsFunction(s) {
+		g, e := resolveFunction(p, s)
+		return g, e
 	}
 
 	// Check is it typedef enum
@@ -216,7 +256,42 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 
 	// If the type is already defined we can proceed with the same name.
 	if p.IsTypeAlreadyDefined(s) {
+		if strings.HasPrefix(s, "struct ") {
+			s = s[len("struct "):]
+		}
+		if strings.HasPrefix(s, "union ") {
+			s = s[len("union "):]
+		}
 		return p.ImportType(s), nil
+	}
+
+	// It may be a pointer of a simple type. For example, float *, int *,
+	// etc.
+	if strings.HasSuffix(s, "*") {
+		// The "-1" is important because there may or may not be a space between
+		// the name and the "*". If there is an extra space it will be trimmed
+		// off.
+		t, err := ResolveType(p, strings.TrimSpace(s[:len(s)-1]))
+		prefix := "[]"
+		if strings.Contains(t, "noarch.File") {
+			prefix = "*"
+		}
+
+		return prefix + t, err
+	}
+
+	// It could be an array of fixed length. These needs to be converted to
+	// slices.
+	// int [2][3] -> [][]int
+	// int [2][3][4] -> [][][]int
+	search2 := util.GetRegex(`([\w\* ]+)((\[\d+\])+)`).FindStringSubmatch(s)
+	if len(search2) > 2 {
+		t, err := ResolveType(p, search2[1])
+
+		var re = util.GetRegex(`[0-9]+`)
+		arraysNoSize := re.ReplaceAllString(search2[2], "")
+
+		return fmt.Sprintf("%s%s", arraysNoSize, t), err
 	}
 
 	// Structures are by name.
@@ -225,27 +300,7 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 		if s[0] == 's' {
 			start++
 		}
-
-		if s[len(s)-1] == '*' {
-			s = s[start : len(s)-2]
-
-			for k := range simpleResolveTypes {
-				if k == s {
-					return "[]" + p.ImportType(simpleResolveTypes[s]), nil
-				}
-			}
-			return "[]" + strings.TrimSpace(s), nil
-		}
-
-		s = s[start:]
-
-		for _, v := range simpleResolveTypes {
-			if v == s {
-				return p.ImportType(simpleResolveTypes[s]), nil
-			}
-		}
-
-		return ResolveType(p, s)
+		return s[start:], nil
 	}
 
 	// Enums are by name.
@@ -260,23 +315,6 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 	// I have no idea how to handle this yet.
 	if strings.Contains(s, "anonymous union") {
 		return "interface{}", errors.New("probably an incorrect type translation 3")
-	}
-
-	// It may be a pointer of a simple type. For example, float *, int *,
-	// etc.
-	if util.GetRegex("[\\w ]+\\*+$").MatchString(s) {
-		// The "-1" is important because there may or may not be a space between
-		// the name and the "*". If there is an extra space it will be trimmed
-		// off.
-		t, err := ResolveType(p, strings.TrimSpace(s[:len(s)-1]))
-		// Pointers are always converted into slices, except with some specific
-		// entities that are shared in the Go libraries.
-		prefix := "*"
-		if !strings.Contains(t, "noarch.") {
-			prefix = "[]"
-		}
-
-		return prefix + t, err
 	}
 
 	// Function pointers are not yet supported. In the mean time they will be
@@ -294,20 +332,6 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 			fmt.Errorf("function pointers are not supported [2] : '%s'", s)
 	}
 
-	// It could be an array of fixed length. These needs to be converted to
-	// slices.
-	// int [2][3] -> [][]int
-	// int [2][3][4] -> [][][]int
-	search2 := util.GetRegex(`([\w\* ]+)((\[\d+\])+)`).FindStringSubmatch(s)
-	if len(search2) > 2 {
-		t, err := ResolveType(p, search2[1])
-
-		var re = util.GetRegex(`[0-9]+`)
-		arraysNoSize := re.ReplaceAllString(search2[2], "")
-
-		return fmt.Sprintf("%s%s", arraysNoSize, t), err
-	}
-
 	errMsg := fmt.Sprintf(
 		"I couldn't find an appropriate Go type for the C type '%s'.", s)
 	return "interface{}", errors.New(errMsg)
@@ -315,9 +339,14 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 
 // resolveType determines the Go type from a C type.
 func resolveFunction(p *program.Program, s string) (goType string, err error) {
+	var prefix string
 	var f, r []string
-	f, r, err = SeparateFunction(p, s)
-	goType = "func("
+	prefix, f, r, err = SeparateFunction(p, s)
+	if err != nil {
+		return
+	}
+	goType = strings.Replace(prefix, "*", "[]", -1)
+	goType += "func("
 	for i := range f {
 		goType += fmt.Sprintf("%s", f[i])
 		if i < len(f)-1 {
@@ -337,13 +366,13 @@ func resolveFunction(p *program.Program, s string) (goType string, err error) {
 
 // SeparateFunction separate a function C type to Go types parts.
 func SeparateFunction(p *program.Program, s string) (
-	fields []string, returns []string, err error) {
+	prefix string, fields []string, returns []string, err error) {
 	defer func() {
 		if err != nil {
-			err = fmt.Errorf("Cannot resolve function '%s' : %v", s, err)
+			err = fmt.Errorf("Cannot separate function '%s' : %v", s, err)
 		}
 	}()
-	f, r, err := ParseFunction(s)
+	pr, f, r, err := ParseFunction(s)
 	if err != nil {
 		return
 	}
@@ -351,6 +380,7 @@ func SeparateFunction(p *program.Program, s string) (
 		var t string
 		t, err = ResolveType(p, f[i])
 		if err != nil {
+			err = fmt.Errorf("Error in field %s. err = %v", t, err)
 			return
 		}
 		fields = append(fields, t)
@@ -359,10 +389,12 @@ func SeparateFunction(p *program.Program, s string) (
 		var t string
 		t, err = ResolveType(p, r[i])
 		if err != nil {
+			err = fmt.Errorf("Error in return field %s. err = %v", t, err)
 			return
 		}
 		returns = append(returns, t)
 	}
+	prefix = pr
 	return
 }
 
@@ -403,25 +435,34 @@ func IsTypedefFunction(p *program.Program, s string) bool {
 }
 
 // ParseFunction - parsing elements of C function
-func ParseFunction(s string) (f []string, r []string, err error) {
+func ParseFunction(s string) (prefix string, f []string, r []string, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("Cannot parse function '%s' : %v", s, err)
+		} else {
+			prefix = strings.TrimSpace(prefix)
+			for i := range r {
+				r[i] = strings.TrimSpace(r[i])
+			}
+			for i := range f {
+				f[i] = strings.TrimSpace(f[i])
+			}
 		}
 	}()
 
 	s = strings.TrimSpace(s)
-
 	if !IsFunction(s) {
 		err = fmt.Errorf("Is not function : %s", s)
 		return
 	}
-	var part string
+	var returns string
+	var arguments string
 	{
 		// Example of function types :
 		// int (*)(int, float)
 		// int (int, float)
 		// int (*)(int (*)(int))
+		// void (*(*)(int *, void *, const char *))(void)
 		if s[len(s)-1] != ')' {
 			err = fmt.Errorf("function type |%s| haven't last symbol ')'", s)
 			return
@@ -444,22 +485,146 @@ func ParseFunction(s string) (f []string, r []string, err error) {
 				break
 			}
 		}
-		r = append(r, strings.Replace(s[:pos], "(*)", "", -1))
-		part = s[pos:]
+		returns = strings.TrimSpace(s[:pos])
+		arguments = strings.TrimSpace(s[pos:])
 	}
-	inside := strings.TrimSpace(part)
-	if inside == "" {
+	if arguments == "" {
 		err = fmt.Errorf("Cannot parse (right part is nil) : %v", s)
 		return
 	}
-	f = append(f, strings.Split(inside[1:len(inside)-1], ",")...)
+	// separate fields of arguments
+	{
+		var pos int = 1
+		counter := 0
+		for i := 1; i < len(arguments)-1; i++ {
+			if arguments[i] == '(' {
+				counter++
+			}
+			if arguments[i] == ')' {
+				counter--
+			}
+			if counter == 0 && arguments[i] == ',' {
+				f = append(f, strings.TrimSpace(arguments[pos:i]))
+				pos = i + 1
+			}
+		}
+		f = append(f, strings.TrimSpace(arguments[pos:len(arguments)-1]))
+	}
 
-	for i := range r {
-		r[i] = strings.TrimSpace(r[i])
+	// returns
+
+	// Example:  __ssize_t
+	if returns[len(returns)-1] != ')' {
+		r = append(r, returns)
+		return
 	}
-	for i := range f {
-		f[i] = strings.TrimSpace(f[i])
+
+	// Example: void  ( *(*)(int *, void *, char *))
+	//          -------  --------------------------- return type
+	//                 ==                            prefix
+	//                ++++++++++++++++++++++++++++++ block
+	// return type : void (*)(int *, void *, char *)
+	// prefix      : *
+	// Find the block
+	var counter int
+	var position int
+	for i := len(returns) - 1; i >= 0; i-- {
+		if returns[i] == ')' {
+			counter++
+		}
+		if returns[i] == '(' {
+			counter--
+		}
+		if counter == 0 {
+			position = i
+			break
+		}
 	}
+	block := string([]byte(returns[position:]))
+	returns = returns[:position]
+
+	// Examples returns:
+	// int   (*)
+	// char *(*)
+	// block is : (*)
+	if block == "(*)" {
+		r = append(r, returns)
+		return
+	}
+
+	index := strings.Index(block, "(*)")
+	if index < 0 {
+		if strings.Count(block, "(") == 1 {
+			// Examples returns:
+			// int   ( * [2])
+			// ------         return type
+			//        ======  prefix
+			//       ++++++++ block
+			bBlock := []byte(block)
+			for i := 0; i < len(bBlock); i++ {
+				switch bBlock[i] {
+				case '(', ')':
+					bBlock[i] = ' '
+				}
+			}
+			bBlock = bytes.Replace(bBlock, []byte("*"), []byte(""), 1)
+			prefix = string(bBlock)
+			r = append(r, returns)
+			return
+		}
+		// void (*(int *, void *, const char *))
+		//      ++++++++++++++++++++++++++++++++ block
+		block = block[1 : len(block)-1]
+		index := strings.Index(block, "(")
+		if index < 0 {
+			err = fmt.Errorf("Cannot found '(' in block")
+			return
+		}
+		returns = returns + block[index:]
+		prefix = block[:index]
+		if strings.Contains(prefix, "*") {
+			prefix = strings.Replace(prefix, "*", "", 1)
+		} else {
+			err = fmt.Errorf("Undefined situation")
+			return
+		}
+		r = append(r, returns)
+		return
+	}
+	if len(block)-1 > index+3 && block[index+3] == '(' {
+		// Examples returns:
+		// void  ( *(*)(int *, void *, char *))
+		//       ++++++++++++++++++++++++++++++ block
+		//            ^^                        check this
+		block = strings.Replace(block, "(*)", "", 1)
+		block = block[1 : len(block)-1]
+		index := strings.Index(block, "(")
+		if index < 0 {
+			err = fmt.Errorf("Cannot found '(' in block")
+			return
+		}
+		prefix = block[:index]
+		returns = returns + block[index:]
+
+		r = append(r, returns)
+		return
+	}
+
+	// Examples returns:
+	// int   ( *( *(*)))
+	// -----              return type
+	//        =========   prefix
+	//       +++++++++++  block
+	bBlock := []byte(block)
+	for i := 0; i < len(bBlock); i++ {
+		switch bBlock[i] {
+		case '(', ')':
+			bBlock[i] = ' '
+		}
+	}
+	bBlock = bytes.Replace(bBlock, []byte("*"), []byte(""), 1)
+	prefix = string(bBlock)
+	r = append(r, returns)
 
 	return
 }
@@ -481,6 +646,7 @@ func CleanCType(s string) (out string) {
 	out = strings.Replace(out, "volatile", "", -1)
 	out = strings.Replace(out, "__restrict", "", -1)
 	out = strings.Replace(out, "restrict", "", -1)
+	out = strings.Replace(out, "_Nullable", "", -1)
 	out = strings.Replace(out, "\t", "", -1)
 	out = strings.Replace(out, "\n", "", -1)
 	out = strings.Replace(out, "\r", "", -1)
@@ -507,7 +673,7 @@ func CleanCType(s string) (out string) {
 // Example: 'union (anonymous union at tests/union.c:46:3)'
 func GenerateCorrectType(name string) string {
 	if !strings.Contains(name, "anonymous") {
-		return name
+		return CleanCType(name)
 	}
 	index := strings.Index(name, "(anonymous")
 	if index < 0 {
@@ -527,14 +693,14 @@ func GenerateCorrectType(name string) string {
 	inside := string(([]byte(name))[index : last+1])
 
 	// change unacceptable C name letters
-	inside = strings.Replace(inside, "(", "B", -1)
-	inside = strings.Replace(inside, ")", "E", -1)
-	inside = strings.Replace(inside, " ", "S", -1)
-	inside = strings.Replace(inside, ":", "D", -1)
-	inside = strings.Replace(inside, "/", "S", -1)
-	inside = strings.Replace(inside, "-", "T", -1)
-	inside = strings.Replace(inside, "\\", "S", -1)
-	inside = strings.Replace(inside, ".", "P", -1)
+	inside = strings.Replace(inside, "(", "_", -1)
+	inside = strings.Replace(inside, ")", "_", -1)
+	inside = strings.Replace(inside, " ", "_", -1)
+	inside = strings.Replace(inside, ":", "_", -1)
+	inside = strings.Replace(inside, "/", "_", -1)
+	inside = strings.Replace(inside, "-", "_", -1)
+	inside = strings.Replace(inside, "\\", "_", -1)
+	inside = strings.Replace(inside, ".", "_", -1)
 	out := string(([]byte(name))[0:index]) + inside + string(([]byte(name))[last+1:])
 
 	// For case:
@@ -542,7 +708,7 @@ func GenerateCorrectType(name string) string {
 	// we see '::' before 'anonymous' word
 	out = strings.Replace(out, ":", "D", -1)
 
-	return out
+	return CleanCType(out)
 }
 
 // GetAmountArraySize - return amount array size
@@ -566,4 +732,27 @@ func GetAmountArraySize(cType string) (size int, err error) {
 	}
 
 	return strconv.Atoi(result["size"])
+}
+
+// GetBaseType - return base type without pointera, array symbols
+// Input:
+// s =  struct BSstructSatSShomeSlepriconSgoSsrcSgithubPcomSelliotchanceSc2goStestsSstructPcD260D18E [7]
+func GetBaseType(s string) string {
+	s = strings.TrimSpace(s)
+	s = CleanCType(s)
+	if len(s) < 1 {
+		return s
+	}
+	if s[len(s)-1] == ']' {
+		for i := len(s) - 1; i >= 0; i-- {
+			if s[i] == '[' {
+				s = s[:i]
+				return GetBaseType(s)
+			}
+		}
+	}
+	if s[len(s)-1] == '*' {
+		return GetBaseType(s[:len(s)-1])
+	}
+	return s
 }

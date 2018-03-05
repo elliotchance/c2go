@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include "tests.h"
 
+typedef float * triangle;
+
 int main()
 {
-    plan(8);
+    plan(9);
 
     int value = 1;
 
@@ -33,21 +35,22 @@ int main()
 
 	diag("while with star");
 	{
-	int * ok;
-	int value2;
-	ok = & value2;
-	*ok = 1;
-	int iterator = 0;
-	do{
-		if (iterator == 1){
-			*ok = 0;
-		}
-		iterator ++;
-		if (iterator >10){
-			break;
-		}
-	}while(*ok);
-	is_eq(*ok, 0);
+		int * ok;
+		int value2;
+		ok = & value2;
+		*ok = 1;
+        int counter = 0;
+		do{
+              counter ++;
+              if (counter > 10) {
+                     break;
+              }
+				   if (counter < 10) {
+					   break;
+				   }
+			  *ok = *ok - 1;
+		}while(*ok);
+		is_eq(*ok, 1);
 	}
 
 	diag("while with --");
@@ -61,5 +64,25 @@ int main()
 		};
 		is_eq(T,-1);
 	}
+   diag("while in triangle");
+   {
+	       float f = 87.76;
+           triangle* newtriangle;
+           triangle  value[50];
+		   for (int y;y<50;y++){value[y]=(triangle)(&f);}
+           newtriangle = & value;
+           int counter = 0;
+           do {
+                   counter ++;
+                   if (counter > 10) {
+                           break;
+                   }
+				   if (counter < 10) {
+					   break;
+				   }
+           } while ((newtriangle)[counter] == (triangle) NULL);
+           is_eq(counter, 1);
+   }
+
     done_testing();
 }
