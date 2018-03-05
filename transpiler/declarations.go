@@ -115,7 +115,7 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (
 			if pos < len(n.Children()) {
 				switch v := n.Children()[pos+1].(type) {
 				case *ast.FieldDecl:
-					rec.Name = types.GenerateCorrectType(v.Type)
+					rec.Name = types.GetBaseType(types.GenerateCorrectType(v.Type))
 				default:
 					p.AddMessage(p.GenerateWarningMessage(
 						fmt.Errorf("Cannot find name for anonymous RecordDecl: %T", v), n))
