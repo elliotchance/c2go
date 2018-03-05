@@ -353,6 +353,15 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	n.Type = types.GenerateCorrectType(n.Type)
 	n.Type2 = types.GenerateCorrectType(n.Type2)
 
+	originTypes := []string{n.Type, n.Type2}
+	if n.Children()[0] != nil {
+		switch v := n.Children()[0].(type) {
+		case *ast.ParenExpr:
+			originTypes = append(originTypes, v.Type)
+			originTypes = append(originTypes, v.Type2)
+		}
+	}
+
 	lhs, lhsType, newPre, newPost, err := transpileToExpr(n.Children()[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
@@ -384,6 +393,13 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	if structType == nil {
 		structType = p.GetStruct(types.CleanCType(baseType))
 	}
+	// other case
+	if structType == nil {
+		for _, t := range originTypes {
+			structType = p.GetStruct(types.CleanCType(t))
+		}
+	}
+
 	rhs := n.Name
 	rhsType := "void *"
 	if structType == nil {
