@@ -109,6 +109,22 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (
 
 	var fields []*goast.Field
 
+	// repair name for anonymous RecordDecl
+	for pos := range n.Children() {
+		if rec, ok := n.Children()[pos].(*ast.RecordDecl); ok && rec.Name == "" {
+			if pos < len(n.Children()) {
+				switch v := n.Children()[pos+1].(type) {
+				case *ast.FieldDecl:
+					rec.Name = types.GenerateCorrectType(v.Type)
+				default:
+					p.AddMessage(p.GenerateWarningMessage(
+						fmt.Errorf("Cannot find name for anonymous RecordDecl: %T", v), n))
+					rec.Name = "UndefinedNameC2GO"
+				}
+			}
+		}
+	}
+
 	for pos := range n.Children() {
 		switch field := n.Children()[pos].(type) {
 		case *ast.FieldDecl:
@@ -122,58 +138,13 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (
 			}
 
 		case *ast.RecordDecl:
-			if field.Kind == "union" && pos+2 <= len(n.Children()) {
-				if inField, ok := n.Children()[pos+1].(*ast.FieldDecl); ok {
-					inField.Type = types.GenerateCorrectType(inField.Type)
-					inField.Type2 = types.GenerateCorrectType(inField.Type2)
-					field.Name = string(([]byte(inField.Type))[len("union "):])
-					declUnion, err := transpileRecordDecl(p, field)
-					if err != nil {
-						p.AddMessage(p.GenerateWarningMessage(err, field))
-					}
-					pos++
-					decls = append(decls, declUnion...)
-				}
-			} else if field.Kind == "struct" &&
-				pos+2 <= len(n.Children()) {
-				if inField, ok := n.Children()[pos+1].(*ast.FieldDecl); ok {
-					inField.Type = types.GenerateCorrectType(inField.Type)
-					inField.Type2 = types.GenerateCorrectType(inField.Type2)
-
-					field.Name = inField.Type
-
-					if strings.HasPrefix(field.Name, "const ") {
-						field.Name = field.Name[len("const "):]
-					}
-
-					if strings.HasPrefix(field.Name, "struct ") {
-						field.Name = field.Name[len("struct "):]
-					}
-
-					if field.Name[len(field.Name)-1] == '*' {
-						// star in struct
-						field.Name = field.Name[:len(field.Name)-len(" *")]
-					}
-
-					if strings.Contains(field.Name, "[") {
-						p.AddMessage(p.GenerateWarningMessage(
-							fmt.Errorf("Not acceptable name of struct %s", field.Name), n))
-						continue
-					}
-					declStruct, err := transpileRecordDecl(p, field)
-					if err != nil {
-						p.AddMessage(p.GenerateWarningMessage(err, field))
-					}
-					pos++
-					decls = append(decls, declStruct...)
-				}
-			} else {
-				decls, err = transpileRecordDecl(p, field)
-				if err != nil {
-					message := fmt.Sprintf("could not parse %v", field)
-					p.AddMessage(p.GenerateWarningMessage(errors.New(message), field))
-				}
+			var declsInRec []goast.Decl
+			declsInRec, err = transpileRecordDecl(p, field)
+			if err != nil {
+				message := fmt.Sprintf("could not parse %v", field)
+				p.AddMessage(p.GenerateWarningMessage(errors.New(message), field))
 			}
+			decls = append(decls, declsInRec...)
 
 		case *ast.FullComment:
 			// We haven't Go ast struct for easy inject a comments.
@@ -201,6 +172,14 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (
 			p.Structs["struct "+s.Name] = s
 		}
 	}
+
+	if strings.HasPrefix(name, "struct ") {
+		name = name[len("struct "):]
+	}
+	if strings.HasPrefix(name, "union ") {
+		name = name[len("union "):]
+	}
+
 	if s.IsUnion {
 		// Union size
 		var size int
@@ -224,13 +203,6 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (
 			decls = append(decls, d...)
 		}
 		return
-	}
-
-	if strings.HasPrefix(name, "struct ") {
-		name = name[len("struct "):]
-	}
-	if strings.HasPrefix(name, "union ") {
-		name = name[len("union "):]
 	}
 
 	decls = append(decls, &goast.GenDecl{

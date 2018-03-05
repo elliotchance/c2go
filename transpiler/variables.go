@@ -394,9 +394,16 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 		structType = p.GetStruct(types.CleanCType(baseType))
 	}
 	// other case
-	if structType == nil {
-		for _, t := range originTypes {
+	for _, t := range originTypes {
+		if structType == nil {
 			structType = p.GetStruct(types.CleanCType(t))
+		} else {
+			break
+		}
+		if structType == nil {
+			structType = p.GetStruct(types.GetBaseType(t))
+		} else {
+			break
 		}
 	}
 

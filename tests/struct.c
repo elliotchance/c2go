@@ -384,10 +384,25 @@ void struct_after_struct()
 	is_not_null(sFile.pMethods);
 }
 
+struct RRR{
+	struct sColMap {      /* Mapping of columns in pFrom to columns in zTo */
+	  int iFrom;            /* Index of column in pFrom */
+	  char *zCol;           /* Name of column in zTo.  If NULL use PRIMARY KEY */
+	} aCol[1];            /* One entry for each of nCol columns */
+};
+
+void struct_array()
+{
+	struct RRR rrr;
+	rrr.aCol[0].iFrom = 10;
+	is_eq(rrr.aCol[0].iFrom, 10);
+}
+
 int main()
 {
-    plan(71);
+    plan(72);
 
+	struct_array();
 	struct_func_func();
 	struct_after_struct();
 
