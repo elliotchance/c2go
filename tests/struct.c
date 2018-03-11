@@ -160,6 +160,175 @@ void struct_in_struct_with_star()
 	is_eq(in.star_con->sa,45);
 }
 
+struct {
+	int a;
+} m;
+typedef double ** y;
+
+struct {
+	int aa;
+} mm;
+typedef double ** yy;
+
+struct mmm{
+	int aaa;
+};
+typedef double *** yyy;
+
+struct mmmm{
+	int aaaa;
+};
+typedef double **** yyyy;
+
+struct mmmmm0{
+	int aaaaa;
+}mmmmm;
+typedef double ** yyyyy;
+
+typedef struct {
+	int st1;
+} st2;
+typedef double ** st3;
+
+typedef struct st4{
+	int st5;
+} st6;
+typedef double ** st7;
+struct st4 st7a; 
+
+typedef struct st4a{
+	int st5a;
+} * st6a;
+
+typedef struct st4b{
+	int st5b;
+} *const* st6b;
+
+struct st8{
+	int st9;
+	struct st10{
+		int st11;
+	};
+};
+typedef double ** st12;
+
+struct st13{
+	int st14;
+	struct st16{
+		int st17;
+	}st18;
+}st19;
+typedef double ** st20;
+
+typedef struct st21{
+	int st22;
+	struct st23{
+		int st24;
+	}st25;
+}st26;
+typedef double ** st27;
+
+static struct unix_syscall {
+  const char *zName;
+} aSyscall[] = {
+  { "open"   },
+  { "close"  }
+};
+
+struct memory{
+	int * one;
+	float ** oop;
+	double * two;
+	struct memory * mm;
+};
+
+typedef double** subseg;
+
+struct mesh {
+	subseg *dummysub;
+};
+
+double * returner(int*const* i, double *d)
+{
+	(void)(i);
+	return d;
+}
+
+void struct_null()
+{
+	struct memory  dm;
+	float o = 99;
+	float * oo = &o;
+	float ** ooo = &oo;
+	dm.oop = ooo;
+	struct memory * m = &dm;
+	m->one    = (int           *)(NULL);
+	m->two    = (double        *)(NULL);
+	m->mm     = (struct memory *)(NULL);
+	m->one    = (void          *)(NULL);
+	m->two    = (void          *)(NULL);
+	m->mm     = (void          *)(NULL);
+	*(m->oop) = (int           *) NULL ;
+	 (m->oop) = (int           *) NULL ;
+	(void)(dm);
+	(void)(m);
+
+	(void)summator(1,34.4);
+	(void)returner(0,0);
+	double fd = 56;
+	returner(0, &fd);
+	(void)(fd);
+	
+    static const struct {
+      const char *zPattern;
+      const char *zDesc;
+    } aTrans[] = {
+      { "rchar: ",                  "Bytes received by read():" },
+      { "wchar: ",                  "Bytes sent to write():"    },
+      { "syscr: ",                  "Read() system calls:"      },
+      { "syscw: ",                  "Write() system calls:"     },
+      { "read_bytes: ",             "Bytes read from storage:"  },
+      { "write_bytes: ",            "Bytes written to storage:" },
+      { "cancelled_write_bytes: ",  "Cancelled write bytes:"    },
+    };
+
+	is_eq(strlen(aTrans[3].zPattern),7);
+	is_streq(aTrans[2].zPattern, "syscr: ");
+	is_streq(aTrans[1].zDesc,"Bytes sent to write():");
+
+	double d = 99;
+	double * dd = &d;
+	double **ddd = &dd;
+	*(ddd) = (int *) NULL;
+	(void)(ddd);
+      
+	struct memorypool {
+		int **nowblock;
+	};
+	struct memorypool Vpool;
+	int nowblock;
+	int * s_nowblock = &nowblock;
+	Vpool.nowblock = &s_nowblock;
+	is_not_null(*Vpool.nowblock);
+	*(Vpool.nowblock) = NULL;
+	struct memorypool *pool = &Vpool;
+	if (*(pool->nowblock) == (int *) NULL) {
+		pass("ok");
+	}
+
+	mm.aa = 42;
+	is_eq(mm.aa,42);
+
+	struct mesh msh;
+	subseg sub[10];
+	for (int i=0;i<10;i++){sub[i] = (subseg)(ddd);}
+	msh.dummysub = sub;
+	struct mesh *ms = &msh;
+	ms->dummysub[2] = (subseg) NULL;
+	(void)(ms);
+	pass("ok");
+}
+
 union STRS{
 	double d;
 	struct {
@@ -176,7 +345,7 @@ void struct_inside_union()
 
 int main()
 {
-    plan(61);
+    plan(68);
 
     struct programming variable;
     char *s = "Programming in Software Development.";
@@ -424,6 +593,7 @@ int main()
 	}
 	
 	struct_in_struct_with_star();
+	struct_null();
 
 	func_in_func_in_struct();
 

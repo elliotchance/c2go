@@ -115,7 +115,7 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (
 				strings.Join(f.ArgumentTypes, ", "))
 		}
 
-		var fieldList *goast.FieldList
+		var fieldList = &goast.FieldList{}
 		fieldList, err = getFieldList(n, p)
 		if err != nil {
 			return

@@ -570,6 +570,22 @@ func createIfWithNotConditionAndBreak(condition ast.Node) (ifStmt ast.IfStmt) {
 	case *ast.CStyleCastExpr:
 		par.Type = con.Type
 		unitary.Type = con.Type
+
+	case *ast.ParenExpr:
+		par.Type = con.Type
+		unitary.Type = con.Type
+
+	case *ast.UnaryOperator:
+		par.Type = con.Type
+		unitary.Type = con.Type
+
+	case *ast.IntegerLiteral:
+		par.Type = con.Type
+		unitary.Type = con.Type
+
+	default:
+		panic(
+			fmt.Errorf("Type %T is not implemented in createIfWithNotConditionAndBreak", condition))
 	}
 	par.AddChild(condition)
 	unitary.Operator = "!"

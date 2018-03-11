@@ -304,14 +304,7 @@ func (p *Program) loadFunctionDefinitions() {
 	p.builtInFunctionDefinitionsHaveBeenLoaded = true
 
 	for k, v := range builtInFunctionDefinitions {
-		var isExist bool
-		for _, inc := range p.IncludeHeaders {
-			if strings.HasSuffix(inc.HeaderName, k) {
-				isExist = true
-				break
-			}
-		}
-		if !isExist {
+		if !p.IncludeHeaderIsExists(k) {
 			continue
 		}
 

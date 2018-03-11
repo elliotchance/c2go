@@ -123,7 +123,11 @@ type IncludeHeader struct {
 }
 
 // NewProgram creates a new blank program.
-func NewProgram() *Program {
+func NewProgram() (p *Program) {
+	defer func() {
+		// Need for "stdbool.h"
+		p.TypedefType["_Bool"] = "int"
+	}()
 	return &Program{
 		imports:             []string{},
 		typesAlreadyDefined: []string{},
@@ -409,4 +413,14 @@ func (p *Program) String() string {
 	reg := util.GetRegex("interface( )?{(\r*)\n(\t*)}")
 
 	return string(reg.ReplaceAll(buf.Bytes(), []byte("interface {}")))
+}
+
+// IncudeHeaderIsExist - return true if C #include header is inside list
+func (p *Program) IncludeHeaderIsExists(includeHeader string) bool {
+	for _, inc := range p.IncludeHeaders {
+		if strings.HasSuffix(inc.HeaderName, includeHeader) {
+			return true
+		}
+	}
+	return false
 }

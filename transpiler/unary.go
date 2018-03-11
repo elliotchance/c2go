@@ -162,6 +162,18 @@ func transpileUnaryOperatorNot(n *ast.UnaryOperator, p *program.Program) (
 		), "bool", preStmts, postStmts, nil
 	}
 
+	// only if added "stdbool.h"
+	if p.IncludeHeaderIsExists("stdbool.h") {
+		if t == "_Bool" {
+			t = "int"
+			e = &goast.CallExpr{
+				Fun:    goast.NewIdent("int"),
+				Lparen: 1,
+				Args:   []goast.Expr{e},
+			}
+		}
+	}
+
 	p.AddImport("github.com/elliotchance/c2go/noarch")
 
 	functionName := fmt.Sprintf("noarch.Not%s",
@@ -296,6 +308,12 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 				a := n.Children()[i]
 				var isUnion bool
 				for {
+					if a == nil {
+						break
+					}
+					if len(a.Children()) == 0 {
+						break
+					}
 					switch vv := a.Children()[0].(type) {
 					case *ast.MemberExpr, *ast.DeclRefExpr:
 						var typeVV string
@@ -305,6 +323,8 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 						if vvv, ok := vv.(*ast.DeclRefExpr); ok {
 							typeVV = vvv.Type
 						}
+						typeVV = types.GetBaseType(typeVV)
+
 						if _, ok := p.Structs[typeVV]; ok {
 							isUnion = true
 						}
@@ -317,6 +337,9 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 						if isUnion {
 							break
 						}
+						a = vv
+						continue
+					case *ast.ImplicitCastExpr, *ast.CStyleCastExpr:
 						a = vv
 						continue
 					}
@@ -334,6 +357,8 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 					var zero ast.IntegerLiteral
 					zero.Type = "int"
 					zero.Value = "0"
+					locPointer = n
+					locPosition = i
 					n.Children()[i] = &zero
 					found = true
 					return
@@ -519,7 +544,7 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 		}, eType, preStmts, postStmts, err
 
 	case *ast.UnaryOperator:
-		arr, _, newPre, newPost, err2 := transpileToExpr(v, p, false)
+		arr, _, newPre, newPost, err2 := atomicOperation(v, p)
 		if err2 != nil {
 			return
 		}

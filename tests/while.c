@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include "tests.h"
 
+typedef float **triangle;
+#define deadtri(tria)  ((tria)[1] == (triangle) NULL)
+
 int main()
 {
     plan(8);
@@ -61,5 +64,6 @@ int main()
 		};
 		is_eq(T,-1);
 	}
+
     done_testing();
 }

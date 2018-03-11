@@ -36,6 +36,7 @@ func combinePreAndPostStmts(
 
 // nilFilterStmts - remove nil stmt from slice
 func nilFilterStmts(stmts []goast.Stmt) (out []goast.Stmt) {
+	out = make([]goast.Stmt, 0, len(stmts))
 	for _, stmt := range stmts {
 		if !isNil(stmt) {
 			out = append(out, stmt)
@@ -46,6 +47,8 @@ func nilFilterStmts(stmts []goast.Stmt) (out []goast.Stmt) {
 
 // combineStmts - combine elements to slice
 func combineStmts(stmt goast.Stmt, preStmts, postStmts []goast.Stmt) (stmts []goast.Stmt) {
+	stmts = make([]goast.Stmt, 0, 1+len(preStmts)+len(postStmts))
+
 	preStmts = nilFilterStmts(preStmts)
 	if preStmts != nil {
 		stmts = append(stmts, preStmts...)

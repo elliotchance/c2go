@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -19,8 +20,6 @@ var resolveTestCases = []resolveTestCase{
 	{"__uint16_t", "uint16"},
 	{"void *", "interface{}"},
 	{"unsigned short int", "uint16"},
-	{"_Bool", "int"},
-	{"struct RowSetEntry *", "[]RowSetEntry"},
 	{"div_t", "noarch.DivT"},
 	{"ldiv_t", "noarch.LdivT"},
 	{"lldiv_t", "noarch.LldivT"},
@@ -79,6 +78,88 @@ func TestResolveFunction(t *testing.T) {
 			fields:  []string{"sqlite3_context *", "int", "sqlite3_value **"},
 			returns: []string{"void"},
 		},
+		{
+			input:   "char *(*)( char *, ...)",
+			fields:  []string{"char *", "..."},
+			returns: []string{"char *"},
+		},
+		{
+			input:   "char *(*)( char *, struct __va_list_tag *)",
+			fields:  []string{"char *", "struct __va_list_tag *"},
+			returns: []string{"char *"},
+		},
+		{
+			input:   "char *(*)(const char *, ...)",
+			fields:  []string{"const char *", "..."},
+			returns: []string{"char *"},
+		},
+		{
+			input:   "char *(*)(ImportCtx *)",
+			fields:  []string{"ImportCtx *"},
+			returns: []string{"char *"},
+		},
+		{
+			input:   "char *(*)(int, char *, char *, ...)",
+			fields:  []string{"int", "char *", "char *", "..."},
+			returns: []string{"char *"},
+		},
+		{
+			input:   "const char *(*)(int)",
+			fields:  []string{"int"},
+			returns: []string{"const char *"},
+		},
+		{
+			input:   "const unsigned char *(*)(sqlite3_value *)",
+			fields:  []string{"sqlite3_value *"},
+			returns: []string{"const unsigned char *"},
+		},
+		{
+			input:   "int (*)(const char *, sqlite3 **)",
+			fields:  []string{"const char *", "sqlite3 **"},
+			returns: []string{"int"},
+		},
+		{
+			input: "int (*)(fts5_api *, const char *, void *, fts5_extension_function, void (*)(void *))",
+			fields: []string{"fts5_api *",
+				"const char *",
+				"void *",
+				"fts5_extension_function",
+				"void (*)(void *)"},
+			returns: []string{"int"},
+		},
+		{
+			input: "int (*)(Fts5Context *, char *, int, void *, int (*)(void *, int, char *, int, int, int))",
+			fields: []string{"Fts5Context *",
+				"char *",
+				"int",
+				"void *",
+				"int (*)(void *, int, char *, int, int, int)"},
+			returns: []string{"int"},
+		},
+		{
+			input: "int (*)(sqlite3 *, char *, int, int, void *, void (*)(sqlite3_context *, int, sqlite3_value **), void (*)(sqlite3_context *, int, sqlite3_value **), void (*)(sqlite3_context *))",
+			fields: []string{
+				"sqlite3 *",
+				"char *",
+				"int",
+				"int",
+				"void *",
+				"void (*)(sqlite3_context *, int, sqlite3_value **)",
+				"void (*)(sqlite3_context *, int, sqlite3_value **)",
+				"void (*)(sqlite3_context *)",
+			},
+			returns: []string{"int"},
+		}, /*
+			{
+				input: "int (*)(sqlite3_vtab *, int, const char *, void (**)(sqlite3_context *, int, sqlite3_value **), void **)",
+				fields: []string{
+					"sqlite3_vtab *",
+					"int",
+					"const char *",
+					"void (**)(sqlite3_context *, int, sqlite3_value **)",
+					"void **"},
+				returns: []string{"int"},
+			},*/
 	}
 	for i, tc := range tcs {
 		t.Run(fmt.Sprintf("Test %d : %s", i, tc.input), func(t *testing.T) {
@@ -88,6 +169,14 @@ func TestResolveFunction(t *testing.T) {
 			}
 			if len(actualField) != len(tc.fields) {
 				t.Error("Amount of fields is different")
+			}
+			if len(actualField) != len(tc.fields) {
+				a, _ := json.Marshal(actualField)
+				f, _ := json.Marshal(tc.fields)
+				t.Errorf("Size of field is not same.\nActual  : %s\nExpected: %s\n",
+					string(a),
+					string(f))
+				return
 			}
 			for i := range actualField {
 				if actualField[i] != tc.fields[i] {

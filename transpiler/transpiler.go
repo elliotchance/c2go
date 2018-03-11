@@ -90,6 +90,19 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 		},
 	})
 
+	// only for "stdbool.h"
+	if p.IncludeHeaderIsExists("stdbool.h") {
+		p.File.Decls = append(p.File.Decls, &goast.GenDecl{
+			Tok: token.TYPE,
+			Specs: []goast.Spec{
+				&goast.TypeSpec{
+					Name: goast.NewIdent("_Bool"),
+					Type: goast.NewIdent("int"),
+				},
+			},
+		})
+	}
+
 	// Add the imports after everything else so we can ensure that they are all
 	// placed at the top.
 	for _, quotedImportPath := range p.Imports() {
@@ -441,7 +454,12 @@ func transpileToNode(node ast.Node, p *program.Program) (decls []goast.Decl, err
 		decls, err = transpileEnumDecl(p, n)
 
 	case *ast.EmptyDecl:
-		p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("EmptyDecl is not transpiled"), n))
+		if len(n.Children()) == 0 {
+			// ignore if length is zero, for avoid
+			// mistake warning
+		} else {
+			p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("EmptyDecl is not transpiled"), n))
+		}
 		err = nil
 		return
 
