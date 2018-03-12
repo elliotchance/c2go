@@ -442,6 +442,7 @@ func ParseFunction(s string) (f []string, r []string, err error) {
 	}()
 
 	s = strings.TrimSpace(s)
+
 	if !IsFunction(s) {
 		err = fmt.Errorf("Is not function : %s", s)
 		return
@@ -475,11 +476,7 @@ func ParseFunction(s string) (f []string, r []string, err error) {
 				break
 			}
 		}
-		if IsFunction(s[:pos]) {
-			r = append(r, s[:pos])
-		} else {
-			r = append(r, strings.Replace(s[:pos], "(*)", "", -1))
-		}
+		r = append(r, strings.Replace(s[:pos], "(*)", "", -1))
 		part = s[pos:]
 	}
 	inside := strings.TrimSpace(part)

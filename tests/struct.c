@@ -623,5 +623,9 @@ int main()
 
 	struct_inside_union();
 
+	func_in_func_in_struct();
+
+	struct_inside_union();
+
     done_testing();
 }
