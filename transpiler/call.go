@@ -114,12 +114,24 @@ func getNameOfFunctionFromCallExpr(p *program.Program, n *ast.CallExpr) (string,
 // returned by the function) and any error. If there is an error returned you
 // can assume the first two arguments will not contain any useful information.
 func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
-	_ *goast.CallExpr, resultType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+	expr *goast.CallExpr, resultType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("Error in transpileCallExpr : %v", err)
 		}
 	}()
+
+	if insideCall, ok := n.Children()[0].(*ast.CallExpr); ok {
+		// TODO :
+		// expr, resultType, preStmts, postStmts, err = transpileCallExpr(insideCall, p)
+		// return &goast.CallExpr{
+		// 	Fun:    expr,
+		// 	Lparen: 1,
+		// }, n.Type, preStmts, postStmts, err
+		_ = insideCall
+		err = fmt.Errorf("Call of call node is not implemented")
+		return
+	}
 
 	functionName, err := getNameOfFunctionFromCallExpr(p, n)
 	if err != nil {

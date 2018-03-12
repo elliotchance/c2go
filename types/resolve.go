@@ -520,7 +520,6 @@ func ParseFunction(s string) (prefix string, f []string, r []string, err error) 
 	}
 
 	// returns
-
 	// Example:  __ssize_t
 	if returns[len(returns)-1] != ')' {
 		r = append(r, returns)
