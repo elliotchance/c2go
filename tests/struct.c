@@ -368,7 +368,7 @@ int main()
 {
     plan(70);
 
-	struct_func_func();
+	  struct_func_func();
 
     struct programming variable;
     char *s = "Programming in Software Development.";

@@ -258,6 +258,14 @@ func TestResolveFunction(t *testing.T) {
 					string(f))
 				return
 			}
+			if len(actualField) != len(tc.fields) {
+				a, _ := json.Marshal(actualField)
+				f, _ := json.Marshal(tc.fields)
+				t.Errorf("Size of field is not same.\nActual  : %s\nExpected: %s\n",
+					string(a),
+					string(f))
+				return
+			}
 			for i := range actualField {
 				actualField[i] = strings.Replace(actualField[i], " ", "", -1)
 				tc.fields[i] = strings.Replace(tc.fields[i], " ", "", -1)
