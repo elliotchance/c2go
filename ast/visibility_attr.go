@@ -2,25 +2,28 @@ package ast
 
 // VisibilityAttr contains information for a VisibilityAttr AST line.
 type VisibilityAttr struct {
-	Addr       Address
-	Pos        Position
-	ChildNodes []Node
-	IsDefault  bool
+	Addr        Address
+	Pos         Position
+	ChildNodes  []Node
+	IsDefault   bool
+	IsInherited bool
 }
 
 func parseVisibilityAttr(line string) *VisibilityAttr {
 	groups := groupsFromRegex(
 		`<(?P<position>.*)>
+		(?P<inherited> Inherited)?
 		(?P<default> Default)?
 		`,
 		line,
 	)
 
 	return &VisibilityAttr{
-		Addr:       ParseAddress(groups["address"]),
-		Pos:        NewPositionFromString(groups["position"]),
-		ChildNodes: []Node{},
-		IsDefault:  len(groups["default"]) > 0,
+		Addr:        ParseAddress(groups["address"]),
+		Pos:         NewPositionFromString(groups["position"]),
+		ChildNodes:  []Node{},
+		IsDefault:   len(groups["default"]) > 0,
+		IsInherited: len(groups["inherited"]) > 0,
 	}
 }
 
