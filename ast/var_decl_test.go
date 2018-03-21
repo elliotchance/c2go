@@ -19,6 +19,7 @@ func TestVarDecl(t *testing.T) {
 			IsReferenced: false,
 			IsStatic:     false,
 			IsRegister:   false,
+			Parent:       0,
 			ChildNodes:   []Node{},
 		},
 		`0x7fd5e90e9078 <line:156:1, col:14> col:14 __stdinp 'FILE *' extern`: &VarDecl{
@@ -34,6 +35,7 @@ func TestVarDecl(t *testing.T) {
 			IsReferenced: false,
 			IsStatic:     false,
 			IsRegister:   false,
+			Parent:       0,
 			ChildNodes:   []Node{},
 		},
 		`0x7fd5e90ed630 <col:40, col:47> col:47 __size 'size_t':'unsigned long'`: &VarDecl{
@@ -49,6 +51,7 @@ func TestVarDecl(t *testing.T) {
 			IsReferenced: false,
 			IsStatic:     false,
 			IsRegister:   false,
+			Parent:       0,
 			ChildNodes:   []Node{},
 		},
 		`0x7fee35907a78 <col:4, col:8> col:8 used c 'int'`: &VarDecl{
@@ -64,6 +67,7 @@ func TestVarDecl(t *testing.T) {
 			IsReferenced: false,
 			IsStatic:     false,
 			IsRegister:   false,
+			Parent:       0,
 			ChildNodes:   []Node{},
 		},
 		`0x7fb0fd90ba30 <col:3, /usr/include/sys/_types.h:52:33> tests/assert/assert.c:13:9 used b 'int *' cinit`: &VarDecl{
@@ -79,6 +83,7 @@ func TestVarDecl(t *testing.T) {
 			IsReferenced: false,
 			IsStatic:     false,
 			IsRegister:   false,
+			Parent:       0,
 			ChildNodes:   []Node{},
 		},
 		`0x7fb20308bd40 <col:5, col:11> col:11 referenced a 'short'`: &VarDecl{
@@ -94,6 +99,7 @@ func TestVarDecl(t *testing.T) {
 			IsReferenced: true,
 			IsStatic:     false,
 			IsRegister:   false,
+			Parent:       0,
 			ChildNodes:   []Node{},
 		},
 		`0x55a040ddd798 <sqlite3.c:66:1, line:770:1> line:66:27 used sqlite3azCompileOpt 'const char *const [2]' static cinit`: &VarDecl{
@@ -109,6 +115,7 @@ func TestVarDecl(t *testing.T) {
 			IsReferenced: false,
 			IsStatic:     true,
 			IsRegister:   false,
+			Parent:       0,
 			ChildNodes:   []Node{},
 		},
 		`0x55772c7774d0 <col:3, col:27> col:27 used a 'unsigned char *' register`: &VarDecl{
@@ -124,6 +131,7 @@ func TestVarDecl(t *testing.T) {
 			IsReferenced: false,
 			IsStatic:     false,
 			IsRegister:   true,
+			Parent:       0,
 			ChildNodes:   []Node{},
 		},
 		`0x26fd180 <col:4, col:32> col:13 used aExt 'extCoord':'extCoord' cinit`: &VarDecl{
@@ -139,6 +147,23 @@ func TestVarDecl(t *testing.T) {
 			IsReferenced: false,
 			IsStatic:     false,
 			IsRegister:   false,
+			Parent:       0,
+			ChildNodes:   []Node{},
+		},
+		`0x7f985e0ffb10 parent 0x7f985e0246d0 <col:3, col:20> col:20 used DEFAULT_MEM_ALLOCATOR 'cmark_mem':'struct cmark_mem' extern`: &VarDecl{
+			Addr:         0x7f985e0ffb10,
+			Pos:          NewPositionFromString("col:3, col:20"),
+			Position2:    "col:20",
+			Name:         "DEFAULT_MEM_ALLOCATOR",
+			Type:         "cmark_mem",
+			Type2:        "struct cmark_mem",
+			IsExtern:     true,
+			IsUsed:       true,
+			IsCInit:      false,
+			IsReferenced: false,
+			IsStatic:     false,
+			IsRegister:   false,
+			Parent:       0x7f985e0246d0,
 			ChildNodes:   []Node{},
 		},
 	}
