@@ -385,6 +385,10 @@ func setPosition(node Node, position Position) {
 		n.Pos = position
 	case *VarDecl:
 		n.Pos = position
+	case *VerbatimBlockComment:
+		n.Pos = position
+	case *VerbatimBlockLineComment:
+		n.Pos = position
 	case *VerbatimLineComment:
 		n.Pos = position
 	case *VisibilityAttr:
