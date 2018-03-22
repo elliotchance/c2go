@@ -29,3 +29,12 @@ echo "Transpiling $TRIANGLE_FILE.c..."
 # Show amount "Warning" in Go codes
 TRIANGLE_WARNINGS=`cat $TRIANGLE_TEMP_FOLDER/$TRIANGLE_FILE.go | grep "// Warning" | wc -l`
 echo "In file $TRIANGLE_FILE summary : $TRIANGLE_WARNINGS warnings."
+
+# Show amount error from `go build`:
+TRIANGLE_WARNINGS_GO=`go build $TRIANGLE_TEMP_FOLDER/$TRIANGLE_FILE.go 2>&1 | wc -l`
+echo "In file $TRIANGLE_FILE summary : $TRIANGLE_WARNINGS_GO warnings in go build."
+
+# Amount warning from gometalinter
+echo "Calculation warnings by gometalinter"
+TRIANGLE_GOMETALINTER_WARNINGS=`$GOPATH/bin/gometalinter $TRIANGLE_TEMP_FOLDER/$TRIANGLE_FILE.go 2>&1 | wc -l`
+echo "Amount found warnings by gometalinter at 30 second : $TRIANGLE_GOMETALINTER_WARNINGS warnings."

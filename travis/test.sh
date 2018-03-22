@@ -115,6 +115,10 @@ c2go transpile -o="$SQLITE_TEMP_FOLDER/sqlite.go" -clang-flag="-DSQLITE_THREADSA
 SQLITE_WARNINGS=`cat $SQLITE_TEMP_FOLDER/sqlite.go | grep "// Warning" | wc -l`
 echo "After transpiling shell.c and sqlite3.c together, have summary: $SQLITE_WARNINGS warnings."
 
+# Show amount error from `go build`:
+SQLITE_WARNINGS_GO=`go build $SQLITE_TEMP_FOLDER/sqlite.go 2>&1 | wc -l`
+echo "In file sqlite.go summary : $SQLITE_WARNINGS_GO warnings in go build."
+
 # Amount warning from gometalinter
 echo "Calculation warnings by gometalinter"
 GOMETALINTER_WARNINGS=`$GOPATH/bin/gometalinter $SQLITE_TEMP_FOLDER/sqlite.go 2>&1 | wc -l`
