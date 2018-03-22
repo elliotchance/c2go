@@ -49,6 +49,18 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (
 			err = fmt.Errorf("Cannot transpileFunctionDecl. %v", err)
 		}
 	}()
+
+	var haveCompound bool
+	for _, ch := range n.Children() {
+		if _, ok := ch.(*ast.CompoundStmt); ok {
+			haveCompound = true
+			break
+		}
+	}
+	if !haveCompound {
+		return
+	}
+
 	if len(n.Children()) == 0 {
 		return
 	}
