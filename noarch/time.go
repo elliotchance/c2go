@@ -66,7 +66,7 @@ type Tm struct {
 	// tm_zone   []byte
 }
 
-// Localtime - Convert time_t to tm as local time
+// LocalTime - Convert time_t to tm as local time
 // Uses the value pointed by timer to fill a tm structure with the values that
 // represent the corresponding time, expressed for the local timezone.
 func LocalTime(timer []TimeT) (tm []Tm) {

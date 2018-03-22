@@ -85,6 +85,11 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (
 	decls []goast.Decl, err error) {
 	name := n.Name
 
+	// ignore if haven`t definition
+	if !n.Definition {
+		return
+	}
+
 	if name == "" || p.IsTypeAlreadyDefined(name) {
 		err = nil
 		return
@@ -104,6 +109,22 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (
 
 	var fields []*goast.Field
 
+	// repair name for anonymous RecordDecl
+	for pos := range n.Children() {
+		if rec, ok := n.Children()[pos].(*ast.RecordDecl); ok && rec.Name == "" {
+			if pos < len(n.Children()) {
+				switch v := n.Children()[pos+1].(type) {
+				case *ast.FieldDecl:
+					rec.Name = types.GetBaseType(types.GenerateCorrectType(v.Type))
+				default:
+					p.AddMessage(p.GenerateWarningMessage(
+						fmt.Errorf("Cannot find name for anonymous RecordDecl: %T", v), n))
+					rec.Name = "UndefinedNameC2GO"
+				}
+			}
+		}
+	}
+
 	for pos := range n.Children() {
 		switch field := n.Children()[pos].(type) {
 		case *ast.FieldDecl:
@@ -117,58 +138,13 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (
 			}
 
 		case *ast.RecordDecl:
-			if field.Kind == "union" && pos+2 <= len(n.Children()) {
-				if inField, ok := n.Children()[pos+1].(*ast.FieldDecl); ok {
-					inField.Type = types.GenerateCorrectType(inField.Type)
-					inField.Type2 = types.GenerateCorrectType(inField.Type2)
-					field.Name = string(([]byte(inField.Type))[len("union "):])
-					declUnion, err := transpileRecordDecl(p, field)
-					if err != nil {
-						p.AddMessage(p.GenerateWarningMessage(err, field))
-					}
-					pos++
-					decls = append(decls, declUnion...)
-				}
-			} else if field.Kind == "struct" &&
-				pos+2 <= len(n.Children()) {
-				if inField, ok := n.Children()[pos+1].(*ast.FieldDecl); ok {
-					inField.Type = types.GenerateCorrectType(inField.Type)
-					inField.Type2 = types.GenerateCorrectType(inField.Type2)
-
-					field.Name = inField.Type
-
-					if strings.HasPrefix(field.Name, "const ") {
-						field.Name = field.Name[len("const "):]
-					}
-
-					if strings.HasPrefix(field.Name, "struct ") {
-						field.Name = field.Name[len("struct "):]
-					}
-
-					if field.Name[len(field.Name)-1] == '*' {
-						// star in struct
-						field.Name = field.Name[:len(field.Name)-len(" *")]
-					}
-
-					if strings.Contains(field.Name, "[") {
-						p.AddMessage(p.GenerateWarningMessage(
-							fmt.Errorf("Not acceptable name of struct %s", field.Name), n))
-						continue
-					}
-					declStruct, err := transpileRecordDecl(p, field)
-					if err != nil {
-						p.AddMessage(p.GenerateWarningMessage(err, field))
-					}
-					pos++
-					decls = append(decls, declStruct...)
-				}
-			} else {
-				decls, err = transpileRecordDecl(p, field)
-				if err != nil {
-					message := fmt.Sprintf("could not parse %v", field)
-					p.AddMessage(p.GenerateWarningMessage(errors.New(message), field))
-				}
+			var declsInRec []goast.Decl
+			declsInRec, err = transpileRecordDecl(p, field)
+			if err != nil {
+				message := fmt.Sprintf("could not parse %v", field)
+				p.AddMessage(p.GenerateWarningMessage(errors.New(message), field))
 			}
+			decls = append(decls, declsInRec...)
 
 		case *ast.FullComment:
 			// We haven't Go ast struct for easy inject a comments.
@@ -184,10 +160,26 @@ func transpileRecordDecl(p *program.Program, n *ast.RecordDecl) (
 
 	s := program.NewStruct(n)
 	if s.IsUnion {
-		p.Unions["union "+s.Name] = s
+		if strings.HasPrefix(s.Name, "union ") {
+			p.Structs[s.Name] = s
+		} else {
+			p.Unions["union "+s.Name] = s
+		}
 	} else {
-		p.Structs["struct "+s.Name] = s
+		if strings.HasPrefix(s.Name, "struct ") {
+			p.Structs[s.Name] = s
+		} else {
+			p.Structs["struct "+s.Name] = s
+		}
 	}
+
+	if strings.HasPrefix(name, "struct ") {
+		name = name[len("struct "):]
+	}
+	if strings.HasPrefix(name, "union ") {
+		name = name[len("union "):]
+	}
+
 	if s.IsUnion {
 		// Union size
 		var size int
@@ -241,9 +233,15 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (
 			err = fmt.Errorf("Cannot transpile Typedef Decl : err = %v", err)
 		}
 	}()
+	n.Name = types.CleanCType(types.GenerateCorrectType(n.Name))
+	n.Type = types.CleanCType(types.GenerateCorrectType(n.Type))
+	n.Type2 = types.CleanCType(types.GenerateCorrectType(n.Type2))
 	name := n.Name
-	n.Type = types.CleanCType(n.Type)
-	n.Type2 = types.CleanCType(n.Type2)
+
+	if "struct "+n.Name == n.Type || "union "+n.Name == n.Type {
+		p.TypedefType[n.Name] = n.Type
+		return
+	}
 
 	if types.IsFunction(n.Type) {
 		var field *goast.Field
@@ -385,6 +383,10 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 			err = fmt.Errorf("Cannot transpileVarDecl : err = %v", err)
 		}
 	}()
+	n.Name = types.GenerateCorrectType(n.Name)
+	n.Type = types.GenerateCorrectType(n.Type)
+	n.Type2 = types.GenerateCorrectType(n.Type2)
+
 	// There may be some startup code for this global variable.
 	if p.Function == nil {
 		name := n.Name
@@ -545,14 +547,6 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 	}
 
 	theType = n.Type
-	_, isTypedefType := p.TypedefType[theType]
-
-	theType, err = types.ResolveType(p, n.Type)
-	if err != nil {
-		p.AddMessage(p.GenerateErrorMessage(
-			fmt.Errorf("Cannot resolve type %s : %v", theType, err), n))
-		err = nil // Error is ignored
-	}
 
 	p.GlobalVariables[n.Name] = theType
 
@@ -577,41 +571,29 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 		p.AddMessage(p.GenerateErrorMessage(err, n))
 		err = nil // Error is ignored
 	}
+
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	// Allocate slice so that it operates like a fixed size array.
 	arrayType, arraySize := types.GetArrayTypeAndSize(n.Type)
 
 	if arraySize != -1 && defaultValue == nil {
-		if len(n.Children()) == 0 {
-			var goArrayType string
-			goArrayType, err = types.ResolveType(p, arrayType)
-			if err != nil {
-				p.AddMessage(p.GenerateErrorMessage(err, n))
-				err = nil // Error is ignored
-			}
+		var goArrayType string
+		goArrayType, err = types.ResolveType(p, arrayType)
+		if err != nil {
+			p.AddMessage(p.GenerateErrorMessage(err, n))
+			err = nil // Error is ignored
+		}
 
-			defaultValue = []goast.Expr{
-				util.NewCallExpr(
-					"make",
-					&goast.ArrayType{
-						Elt: util.NewTypeIdent(goArrayType),
-					},
-					util.NewIntLit(arraySize),
-					util.NewIntLit(arraySize),
-				),
-			}
-		} else {
-			if iniList, ok := n.Children()[0].(*ast.InitListExpr); ok {
-				var list goast.Expr
-				list, _, err = transpileInitListExpr(iniList, p)
-				if err != nil {
-					p.AddMessage(p.GenerateErrorMessage(err, n))
-					err = nil // Error is ignored
-				} else {
-					defaultValue = []goast.Expr{list}
-				}
-			}
+		defaultValue = []goast.Expr{
+			util.NewCallExpr(
+				"make",
+				&goast.ArrayType{
+					Elt: util.NewTypeIdent(goArrayType),
+				},
+				util.NewIntLit(arraySize),
+				util.NewIntLit(arraySize),
+			),
 		}
 	}
 
@@ -621,12 +603,13 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 				len(preStmts), len(postStmts)), n))
 	}
 
-	var typeResult goast.Expr
-	if isTypedefType {
-		typeResult = goast.NewIdent(theType)
-	} else {
-		typeResult = util.NewTypeIdent(theType)
+	theType, err = types.ResolveType(p, n.Type)
+	if err != nil {
+		p.AddMessage(p.GenerateErrorMessage(err, n))
+		err = nil // Error is ignored
+		theType = "UnknownType"
 	}
+	typeResult := util.NewTypeIdent(theType)
 
 	return []goast.Decl{&goast.GenDecl{
 		Tok: token.VAR,

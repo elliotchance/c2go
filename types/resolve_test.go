@@ -294,5 +294,30 @@ func TestResolveFunction(t *testing.T) {
 			}
 		})
 	}
+}
 
+func TestGenerateCorrectType(t *testing.T) {
+	tcs := []struct {
+		inp string
+		out string
+	}{
+		{
+			inp: "union (anonymous union at tests/union.c:46:3)",
+			out: "union __union_at_tests_union_c_46_3_",
+		},
+		{
+			inp: " const struct (anonymous struct at /home/lepricon/go/src/github.com/elliotchance/c2go/tests/struct.c:282:18) [7]",
+			out: "struct __struct_at__home_lepricon_go_src_github_com_elliotchance_c2go_tests_struct_c_282_18_ [7]",
+		},
+	}
+
+	for i, tc := range tcs {
+		t.Run(fmt.Sprintf("Test %d : %s", i, tc.inp), func(t *testing.T) {
+			act := types.GenerateCorrectType(tc.inp)
+			if act != tc.out {
+				t.Errorf("Not correct result.\nExpected:%s\nActual:%s\n",
+					tc.out, act)
+			}
+		})
+	}
 }

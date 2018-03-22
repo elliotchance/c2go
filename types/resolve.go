@@ -163,10 +163,6 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 	}()
 	s = CleanCType(s)
 
-	if s == "_Bool" {
-		p.TypedefType[s] = "int"
-	}
-
 	// FIXME: This is a hack to avoid casting in some situations.
 	if s == "" {
 		return "interface{}", errors.New("probably an incorrect type translation 1")
@@ -193,6 +189,23 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 	}
 	if strings.Contains(s, "__locale_struct") {
 		return "int", nil
+	}
+	if strings.Contains(s, "__sFILEX") {
+		s = strings.Replace(s, "__sFILEX", "int", -1)
+	}
+
+	// The simple resolve types are the types that we know there is an exact Go
+	// equivalent. For example float, int, etc.
+	for k, v := range simpleResolveTypes {
+		if k == s {
+			return p.ImportType(v), nil
+		}
+	}
+
+	if t, ok := p.GetBaseTypeOfTypedef(s); ok {
+		if strings.HasPrefix(t, "union ") {
+			return t[len("union "):], nil
+		}
 	}
 
 	// function type is pointer in Go by default
@@ -228,14 +241,6 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 		return g, e
 	}
 
-	// The simple resolve types are the types that we know there is an exact Go
-	// equivalent. For example float, int, etc.
-	for k, v := range simpleResolveTypes {
-		if k == s {
-			return p.ImportType(v), nil
-		}
-	}
-
 	// Check is it typedef enum
 	if _, ok := p.EnumTypedefName[s]; ok {
 		return ResolveType(p, "int")
@@ -251,7 +256,42 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 
 	// If the type is already defined we can proceed with the same name.
 	if p.IsTypeAlreadyDefined(s) {
+		if strings.HasPrefix(s, "struct ") {
+			s = s[len("struct "):]
+		}
+		if strings.HasPrefix(s, "union ") {
+			s = s[len("union "):]
+		}
 		return p.ImportType(s), nil
+	}
+
+	// It may be a pointer of a simple type. For example, float *, int *,
+	// etc.
+	if strings.HasSuffix(s, "*") {
+		// The "-1" is important because there may or may not be a space between
+		// the name and the "*". If there is an extra space it will be trimmed
+		// off.
+		t, err := ResolveType(p, strings.TrimSpace(s[:len(s)-1]))
+		prefix := "[]"
+		if strings.Contains(t, "noarch.File") {
+			prefix = "*"
+		}
+
+		return prefix + t, err
+	}
+
+	// It could be an array of fixed length. These needs to be converted to
+	// slices.
+	// int [2][3] -> [][]int
+	// int [2][3][4] -> [][][]int
+	search2 := util.GetRegex(`([\w\* ]+)((\[\d+\])+)`).FindStringSubmatch(s)
+	if len(search2) > 2 {
+		t, err := ResolveType(p, search2[1])
+
+		var re = util.GetRegex(`[0-9]+`)
+		arraysNoSize := re.ReplaceAllString(search2[2], "")
+
+		return fmt.Sprintf("%s%s", arraysNoSize, t), err
 	}
 
 	// Structures are by name.
@@ -260,24 +300,7 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 		if s[0] == 's' {
 			start++
 		}
-
-		if s[len(s)-1] == '*' {
-			s = s[start : len(s)-2]
-
-			var t string
-			t, err = ResolveType(p, s)
-			return "[]" + t, err
-		}
-
-		s = s[start:]
-
-		for _, v := range simpleResolveTypes {
-			if v == s {
-				return p.ImportType(simpleResolveTypes[s]), nil
-			}
-		}
-
-		return ResolveType(p, s)
+		return s[start:], nil
 	}
 
 	// Enums are by name.
@@ -294,23 +317,6 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 		return "interface{}", errors.New("probably an incorrect type translation 3")
 	}
 
-	// It may be a pointer of a simple type. For example, float *, int *,
-	// etc.
-	if util.GetRegex("[\\w ]+\\*+$").MatchString(s) {
-		// The "-1" is important because there may or may not be a space between
-		// the name and the "*". If there is an extra space it will be trimmed
-		// off.
-		t, err := ResolveType(p, strings.TrimSpace(s[:len(s)-1]))
-		// Pointers are always converted into slices, except with some specific
-		// entities that are shared in the Go libraries.
-		prefix := "*"
-		if !strings.Contains(t, "noarch.") {
-			prefix = "[]"
-		}
-
-		return prefix + t, err
-	}
-
 	// Function pointers are not yet supported. In the mean time they will be
 	// replaced with a type that certainly wont work until we can fix this
 	// properly.
@@ -324,20 +330,6 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 	if search {
 		return "interface{}",
 			fmt.Errorf("function pointers are not supported [2] : '%s'", s)
-	}
-
-	// It could be an array of fixed length. These needs to be converted to
-	// slices.
-	// int [2][3] -> [][]int
-	// int [2][3][4] -> [][][]int
-	search2 := util.GetRegex(`([\w\* ]+)((\[\d+\])+)`).FindStringSubmatch(s)
-	if len(search2) > 2 {
-		t, err := ResolveType(p, search2[1])
-
-		var re = util.GetRegex(`[0-9]+`)
-		arraysNoSize := re.ReplaceAllString(search2[2], "")
-
-		return fmt.Sprintf("%s%s", arraysNoSize, t), err
 	}
 
 	errMsg := fmt.Sprintf(
@@ -680,7 +672,7 @@ func CleanCType(s string) (out string) {
 // Example: 'union (anonymous union at tests/union.c:46:3)'
 func GenerateCorrectType(name string) string {
 	if !strings.Contains(name, "anonymous") {
-		return name
+		return CleanCType(name)
 	}
 	index := strings.Index(name, "(anonymous")
 	if index < 0 {
@@ -700,14 +692,14 @@ func GenerateCorrectType(name string) string {
 	inside := string(([]byte(name))[index : last+1])
 
 	// change unacceptable C name letters
-	inside = strings.Replace(inside, "(", "B", -1)
-	inside = strings.Replace(inside, ")", "E", -1)
-	inside = strings.Replace(inside, " ", "S", -1)
-	inside = strings.Replace(inside, ":", "D", -1)
-	inside = strings.Replace(inside, "/", "S", -1)
-	inside = strings.Replace(inside, "-", "T", -1)
-	inside = strings.Replace(inside, "\\", "S", -1)
-	inside = strings.Replace(inside, ".", "P", -1)
+	inside = strings.Replace(inside, "(", "_", -1)
+	inside = strings.Replace(inside, ")", "_", -1)
+	inside = strings.Replace(inside, " ", "_", -1)
+	inside = strings.Replace(inside, ":", "_", -1)
+	inside = strings.Replace(inside, "/", "_", -1)
+	inside = strings.Replace(inside, "-", "_", -1)
+	inside = strings.Replace(inside, "\\", "_", -1)
+	inside = strings.Replace(inside, ".", "_", -1)
 	out := string(([]byte(name))[0:index]) + inside + string(([]byte(name))[last+1:])
 
 	// For case:
@@ -747,6 +739,9 @@ func GetAmountArraySize(cType string) (size int, err error) {
 func GetBaseType(s string) string {
 	s = strings.TrimSpace(s)
 	s = CleanCType(s)
+	if len(s) < 1 {
+		return s
+	}
 	if s[len(s)-1] == ']' {
 		for i := len(s) - 1; i >= 0; i-- {
 			if s[i] == '[' {
