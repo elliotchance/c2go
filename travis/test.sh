@@ -8,7 +8,12 @@ function cleanup {
     EXIT_STATUS=$?
 
     if [ $EXIT_STATUS != 0 ]; then
-        [ ! -f $OUTFILE ] || cat $OUTFILE
+		# Travis limit for output file is 4Mb
+		# Preliminary 80 bytes per line
+		# So, maximal acceptable amount of lines is 50000 lines
+		# We choose, not more 3000 lines for avoid
+		# long time checking in travis
+        [ ! -f $OUTFILE ] || head -n 3000 $OUTFILE
     fi
 
     exit $EXIT_STATUS

@@ -8,6 +8,7 @@ import (
 	goast "go/ast"
 	"go/parser"
 	"go/token"
+	"sort"
 	"strings"
 
 	"github.com/elliotchance/c2go/ast"
@@ -105,19 +106,22 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 
 	// Add the imports after everything else so we can ensure that they are all
 	// placed at the top.
-	for _, quotedImportPath := range p.Imports() {
-		importSpec := &goast.ImportSpec{
+	importGroup := goast.GenDecl{
+		Tok:    token.IMPORT,
+		Lparen: 1,
+	}
+	imports := p.Imports()
+	sort.Strings(imports)
+	for _, imp := range imports {
+		importGroup.Specs = append(importGroup.Specs, &goast.ImportSpec{
 			Path: &goast.BasicLit{
-				Kind:  token.IMPORT,
-				Value: quotedImportPath,
+				Kind:  token.STRING,
+				Value: imp,
 			},
-		}
-		importDecl := &goast.GenDecl{
-			Tok: token.IMPORT,
-		}
-
-		importDecl.Specs = append(importDecl.Specs, importSpec)
-		p.File.Decls = append([]goast.Decl{importDecl}, p.File.Decls...)
+		})
+	}
+	if len(imports) > 0 {
+		p.File.Decls = append([]goast.Decl{&importGroup}, p.File.Decls...)
 	}
 
 	return err
