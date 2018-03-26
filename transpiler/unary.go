@@ -264,7 +264,8 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 			state := func() {
 				counter++
 				if counter > 1 {
-					err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %T,%T",
+					err = fmt.Errorf("Not acceptable :"+
+						" change counter is more then 1. found = %T,%T",
 						pointer, n.Children()[i])
 					return
 				}
