@@ -39,6 +39,7 @@ func NewStruct(n *ast.RecordDecl) *Struct {
 
 		case *ast.MaxFieldAlignmentAttr,
 			*ast.AlignedAttr,
+			*ast.PackedAttr,
 			*ast.TransparentUnionAttr,
 			*ast.FullComment:
 			// FIXME: Should these really be ignored?

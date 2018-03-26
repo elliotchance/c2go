@@ -44,6 +44,27 @@ func getFunctionBody(n *ast.FunctionDecl) *ast.CompoundStmt {
 // functions.
 func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (
 	decls []goast.Decl, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot transpileFunctionDecl. %v", err)
+		}
+	}()
+
+	var haveCompound bool
+	for _, ch := range n.Children() {
+		if _, ok := ch.(*ast.CompoundStmt); ok {
+			haveCompound = true
+			break
+		}
+	}
+	if !haveCompound {
+		return
+	}
+
+	if len(n.Children()) == 0 {
+		return
+	}
+
 	var body *goast.BlockStmt
 
 	// This is set at the start of the function declaration so when the
@@ -61,10 +82,21 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (
 	// Always register the new function. Only from this point onwards will
 	// we be allowed to refer to the function.
 	if p.GetFunctionDefinition(n.Name) == nil {
+		var pr string
+		var f, r []string
+		pr, f, r, err = types.ParseFunction(n.Type)
+		if err != nil {
+			err = fmt.Errorf("Cannot get function definition : %v", err)
+			return
+		}
+		if len(pr) != 0 {
+			p.AddMessage(p.GenerateWarningMessage(
+				fmt.Errorf("prefix of type '%s' is not empty", n.Type), n))
+		}
 		p.AddFunctionDefinition(program.FunctionDefinition{
 			Name:          n.Name,
-			ReturnType:    getFunctionReturnType(n.Type),
-			ArgumentTypes: getFunctionArgumentTypes(n),
+			ReturnType:    r[0],
+			ArgumentTypes: f,
 			Substitution:  "",
 		})
 	}
@@ -116,7 +148,7 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (
 		}
 
 		var fieldList = &goast.FieldList{}
-		fieldList, err = getFieldList(n, p)
+		fieldList, err = getFieldList(p, n, p.GetFunctionDefinition(n.Name).ArgumentTypes)
 		if err != nil {
 			return
 		}
@@ -229,31 +261,26 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (
 }
 
 // getFieldList returns the parameters of a C function as a Go AST FieldList.
-func getFieldList(f *ast.FunctionDecl, p *program.Program) (_ *goast.FieldList, err error) {
+func getFieldList(p *program.Program, f *ast.FunctionDecl, fieldTypes []string) (
+	_ *goast.FieldList, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("Error in function field list. err = %v", err)
 		}
 	}()
 	r := []*goast.Field{}
-	for _, n := range f.Children() {
+	for i := range fieldTypes {
+		n := f.Children()[i]
 		if v, ok := n.(*ast.ParmVarDecl); ok {
-			if types.IsFunction(v.Type) {
-				field, err := newFunctionField(p, v.Name, v.Type)
-				if err != nil {
-					p.AddMessage(p.GenerateWarningMessage(err, v))
-					continue
-				}
-				r = append(r, field)
-				continue
-			}
-			t, err := types.ResolveType(p, v.Type)
+			t, err := types.ResolveType(p, fieldTypes[i])
 			p.AddMessage(p.GenerateWarningMessage(err, f))
 
-			r = append(r, &goast.Field{
-				Names: []*goast.Ident{util.NewIdent(v.Name)},
-				Type:  util.NewTypeIdent(t),
-			})
+			if len(t) > 0 {
+				r = append(r, &goast.Field{
+					Names: []*goast.Ident{util.NewIdent(v.Name)},
+					Type:  util.NewTypeIdent(t),
+				})
+			}
 		}
 	}
 
@@ -326,36 +353,4 @@ func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (
 	return &goast.ReturnStmt{
 		Results: results,
 	}, preStmts, postStmts, nil
-}
-
-func getFunctionReturnType(f string) string {
-	// The C type of the function will be the complete prototype, like:
-	//
-	//     __inline_isfinitef(float) int
-	//
-	// will have a C type of:
-	//
-	//     int (float)
-	//
-	// The arguments will handle themselves, we only care about the return type
-	// ('int' in this case)
-	returnType := strings.TrimSpace(strings.Split(f, "(")[0])
-
-	if returnType == "" {
-		panic(fmt.Sprintf("unable to extract the return type from: %s", f))
-	}
-
-	return returnType
-}
-
-// getFunctionArgumentTypes returns the C types of the arguments in a function.
-func getFunctionArgumentTypes(f *ast.FunctionDecl) []string {
-	r := []string{}
-	for _, n := range f.Children() {
-		if v, ok := n.(*ast.ParmVarDecl); ok {
-			r = append(r, v.Type)
-		}
-	}
-
-	return r
 }

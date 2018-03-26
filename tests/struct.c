@@ -343,9 +343,68 @@ void struct_inside_union()
 	is_true(s.d != 0);
 }
 
+struct FFS{
+       void (*xDlSym)(int*,void*, const char *zSymbol);
+};
+int global_ffs = 0;
+void ffs_i1(int * i, void * v, const char * ch){
+       global_ffs++;
+}
+
+void (*ffs_i2(int*i,void*d, const char *zSymbol))(void){
+       return ffs_i1;
+}
+
+void struct_func_func()
+{
+       struct FFS f;
+       f.xDlSym = ffs_i1;
+       is_eq(global_ffs,0);
+       f.xDlSym(NULL,NULL,NULL);
+       is_eq(global_ffs,1);
+}
+
+struct empty_str{};
+typedef struct sqlite3_file sqlite3_file;
+struct sqlite3_file {
+  const struct sqlite3_io_methods *pMethods;  /* Methods for an open file */
+};
+
+typedef struct sqlite3_io_methods sqlite3_io_methods;
+struct sqlite3_io_methods {
+  int iVersion;
+  int (*xClose)(sqlite3_file*);
+};
+
+void struct_after_struct()
+{
+	sqlite3_file sFile;
+	sqlite3_io_methods io;
+	sFile.pMethods = &io;
+	is_not_null(sFile.pMethods);
+}
+
+struct RRR{
+	struct sColMap {      /* Mapping of columns in pFrom to columns in zTo */
+	  int iFrom;            /* Index of column in pFrom */
+	  char *zCol;           /* Name of column in zTo.  If NULL use PRIMARY KEY */
+	} aCol[1];            /* One entry for each of nCol columns */
+};
+
+void struct_array()
+{
+	struct RRR rrr;
+	rrr.aCol[0].iFrom = 10;
+	is_eq(rrr.aCol[0].iFrom, 10);
+}
+
 int main()
 {
-    plan(68);
+    plan(72);
+
+	struct_array();
+	struct_func_func();
+	struct_after_struct();
 
     struct programming variable;
     char *s = "Programming in Software Development.";

@@ -261,17 +261,16 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 	var f func(ast.Node)
 	f = func(n ast.Node) {
 		for i := range n.Children() {
-			switch v := n.Children()[i].(type) {
-			case *ast.ArraySubscriptExpr,
-				*ast.UnaryOperator,
-				*ast.DeclRefExpr:
+			state := func() {
 				counter++
 				if counter > 1 {
-					err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %T,%T", pointer, v)
+					err = fmt.Errorf("Not acceptable :"+
+						" change counter is more then 1. found = %T,%T",
+						pointer, n.Children()[i])
 					return
 				}
 				// found pointer
-				pointer = v
+				pointer = n.Children()[i]
 				// Replace pointer to zero
 				var zero ast.IntegerLiteral
 				zero.Type = "int"
@@ -280,27 +279,20 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 				locPosition = i
 				n.Children()[i] = &zero
 				found = true
+			}
+
+			switch v := n.Children()[i].(type) {
+			case *ast.ArraySubscriptExpr,
+				*ast.UnaryOperator,
+				*ast.DeclRefExpr:
+				state()
 				return
 
 			case *ast.CStyleCastExpr:
 				if v.Type == "int" {
 					continue
 				}
-				counter++
-				if counter > 1 {
-					err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %T,%T", pointer, v)
-					return
-				}
-				// found pointer
-				pointer = v
-				// Replace pointer to zero
-				var zero ast.IntegerLiteral
-				zero.Type = "int"
-				zero.Value = "0"
-				locPointer = n
-				locPosition = i
-				n.Children()[i] = &zero
-				found = true
+				state()
 				return
 
 			case *ast.MemberExpr:
@@ -346,21 +338,7 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 					break
 				}
 				if isUnion {
-					counter++
-					if counter > 1 {
-						err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %v,%v", pointer, v)
-						return
-					}
-					// found pointer
-					pointer = v
-					// Replace pointer to zero
-					var zero ast.IntegerLiteral
-					zero.Type = "int"
-					zero.Value = "0"
-					locPointer = n
-					locPosition = i
-					n.Children()[i] = &zero
-					found = true
+					state()
 					return
 				}
 				// member of struct
@@ -370,21 +348,7 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 				if v.Type == "int" {
 					continue
 				}
-				counter++
-				if counter > 1 {
-					err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %T,%T", pointer, v)
-					return
-				}
-				// found pointer
-				pointer = v
-				// Replace pointer to zero
-				var zero ast.IntegerLiteral
-				zero.Type = "int"
-				zero.Value = "0"
-				locPointer = n
-				locPosition = i
-				n.Children()[i] = &zero
-				found = true
+				state()
 				return
 
 			default:

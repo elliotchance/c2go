@@ -207,28 +207,16 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 		return transpileStmtExpr(n, p)
 
 	case *ast.ImplicitValueInitExpr:
-		cType := n.Type1
-
-		if strings.HasPrefix(cType, "struct ") {
-			s := p.Structs[cType]
-			if s == nil {
-				return nil, "", nil, nil, fmt.Errorf("cannot found struct with name: `%s`", cType)
-			}
-			expr = &goast.CompositeLit{
-				Type:   util.NewIdent(cType[len("struct "):]),
-				Lbrace: 1,
-			}
-			return
-		}
-
-		s := p.Structs["struct "+cType]
-		if s == nil {
-			return nil, "", nil, nil, fmt.Errorf("cannot found struct with name: `%s`", cType)
+		var t string
+		t = n.Type1
+		if strings.HasPrefix(t, "struct ") {
+			t = t[len("struct "):]
 		}
 		expr = &goast.CompositeLit{
-			Type:   util.NewIdent(cType),
+			Type:   util.NewIdent(t),
 			Lbrace: 1,
 		}
+		return
 
 	default:
 		p.AddMessage(p.GenerateWarningMessage(errors.New("cannot transpile to expr"), node))
@@ -251,7 +239,8 @@ func transpileToStmts(node ast.Node, p *program.Program) (stmts []goast.Stmt, er
 	case *ast.DeclStmt:
 		stmts, err = transpileDeclStmt(n, p)
 		if err != nil {
-			p.AddMessage(p.GenerateErrorMessage(fmt.Errorf("Error in DeclStmt: %v", err), n))
+			p.AddMessage(p.GenerateErrorMessage(
+				fmt.Errorf("Error in DeclStmt: %v", err), n))
 			err = nil // Error is ignored
 		}
 		return

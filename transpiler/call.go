@@ -114,12 +114,24 @@ func getNameOfFunctionFromCallExpr(p *program.Program, n *ast.CallExpr) (string,
 // returned by the function) and any error. If there is an error returned you
 // can assume the first two arguments will not contain any useful information.
 func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
-	_ *goast.CallExpr, resultType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+	expr *goast.CallExpr, resultType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("Error in transpileCallExpr : %v", err)
 		}
 	}()
+
+	if insideCall, ok := n.Children()[0].(*ast.CallExpr); ok {
+		// TODO :
+		// expr, resultType, preStmts, postStmts, err = transpileCallExpr(insideCall, p)
+		// return &goast.CallExpr{
+		// 	Fun:    expr,
+		// 	Lparen: 1,
+		// }, n.Type, preStmts, postStmts, err
+		_ = insideCall
+		err = fmt.Errorf("Call of call node is not implemented")
+		return
+	}
 
 	functionName, err := getNameOfFunctionFromCallExpr(p, n)
 	if err != nil {
@@ -270,10 +282,15 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 						t, _ = p.TypedefType[t]
 					}
 				}
-				fields, returns, err := types.ParseFunction(t)
+				prefix, fields, returns, err := types.ParseFunction(t)
 				if err != nil {
-					p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Cannot resolve function : %v", err), n))
+					p.AddMessage(p.GenerateWarningMessage(fmt.Errorf(
+						"Cannot resolve function : %v", err), n))
 					return nil, "", nil, nil, err
+				}
+				if len(prefix) != 0 {
+					p.AddMessage(p.GenerateWarningMessage(fmt.Errorf(
+						"prefix is not used in type : %v", t), n))
 				}
 				functionDef.ReturnType = returns[0]
 				functionDef.ArgumentTypes = fields
@@ -397,17 +414,40 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 	} else {
 		// Keep all the arguments the same. But make sure we cast to the correct
 		// types.
+		// Example of functionDef.ArgumentTypes :
+		// [void *, int]
+		// [char *, char * , ...]
+		// Example of args:
+		// [void *, int]
+		// [char *, char *, char *, int, double]
+		//
 		for i, a := range args {
-			if i > len(functionDef.ArgumentTypes)-1 {
-				// This means the argument is one of the varargs so we don't
-				// know what type it needs to be cast to.
-			} else {
-				a, err = types.CastExpr(p, a, argTypes[i],
-					functionDef.ArgumentTypes[i])
+			var realType string = "unknownType"
+			if i < len(functionDef.ArgumentTypes) {
+				if len(functionDef.ArgumentTypes) > 1 &&
+					i >= len(functionDef.ArgumentTypes)-1 &&
+					functionDef.ArgumentTypes[len(functionDef.ArgumentTypes)-1] == "..." {
+					realType = functionDef.ArgumentTypes[len(functionDef.ArgumentTypes)-2]
+				} else {
+					if len(functionDef.ArgumentTypes) > 0 {
+						if len(functionDef.ArgumentTypes[i]) != 0 {
+							realType = functionDef.ArgumentTypes[i]
+							if strings.TrimSpace(realType) != "void" {
+								a, err = types.CastExpr(p, a, argTypes[i], realType)
 
-				if p.AddMessage(p.GenerateWarningMessage(err, n)) {
-					a = util.NewNil()
+								if p.AddMessage(p.GenerateWarningMessage(err, n)) {
+									a = util.NewNil()
+								}
+							}
+						}
+					}
 				}
+			}
+
+			if strings.Contains(realType, "...") {
+				p.AddMessage(p.GenerateWarningMessage(
+					fmt.Errorf("not acceptable type '...'"), n))
+				realType = "unknownType2"
 			}
 
 			if a == nil {

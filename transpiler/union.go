@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"strings"
 
 	goast "go/ast"
 	"go/format"
@@ -16,6 +17,14 @@ import (
 
 func transpileUnion(name string, size int, fields []*goast.Field) (
 	_ []goast.Decl, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot transpileUnion : err = %v", err)
+			if strings.Contains(err.Error(), "\n") {
+				err = fmt.Errorf("%v", strings.Replace(err.Error(), "\n", "||", -1))
+			}
+		}
+	}()
 
 	type field struct {
 		Name      string

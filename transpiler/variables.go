@@ -64,7 +64,7 @@ func transpileDeclRefExpr(n *ast.DeclRefExpr, p *program.Program) (
 }
 
 func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
-	_ []goast.Expr, _ string, _ []goast.Stmt, _ []goast.Stmt, err error) {
+	expr []goast.Expr, _ string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("Cannot getDefaultValueForVar : err = %v", err)
@@ -212,7 +212,13 @@ func GenerateFuncType(fields, returns []string) *goast.FuncType {
 	return &ft
 }
 
-func transpileInitListExpr(e *ast.InitListExpr, p *program.Program) (goast.Expr, string, error) {
+func transpileInitListExpr(e *ast.InitListExpr, p *program.Program) (
+	expr goast.Expr, exprType string, err error) {
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("Cannot transpileInitListExpr. err = %v", err)
+		}
+	}()
 	resp := []goast.Expr{}
 	var hasArrayFiller = false
 	e.Type1 = types.GenerateCorrectType(e.Type1)
@@ -293,7 +299,9 @@ func transpileInitListExpr(e *ast.InitListExpr, p *program.Program) (goast.Expr,
 	}, cTypeString, nil
 }
 
-func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) (stmts []goast.Stmt, err error) {
+func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) (
+	stmts []goast.Stmt, err error) {
+
 	if len(n.Children()) == 0 {
 		return
 	}
@@ -345,11 +353,21 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	n.Type = types.GenerateCorrectType(n.Type)
 	n.Type2 = types.GenerateCorrectType(n.Type2)
 
+	originTypes := []string{n.Type, n.Type2}
+	if n.Children()[0] != nil {
+		switch v := n.Children()[0].(type) {
+		case *ast.ParenExpr:
+			originTypes = append(originTypes, v.Type)
+			originTypes = append(originTypes, v.Type2)
+		}
+	}
+
 	lhs, lhsType, newPre, newPost, err := transpileToExpr(n.Children()[0], p, false)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
 
+	baseType := lhsType
 	lhsType = types.GenerateCorrectType(lhsType)
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
@@ -367,6 +385,28 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	if structType == nil {
 		structType = p.GetStruct("union " + lhsType)
 	}
+	// for anonymous structs
+	if structType == nil {
+		structType = p.GetStruct(baseType)
+	}
+	// for anonymous structs
+	if structType == nil {
+		structType = p.GetStruct(types.CleanCType(baseType))
+	}
+	// other case
+	for _, t := range originTypes {
+		if structType == nil {
+			structType = p.GetStruct(types.CleanCType(t))
+		} else {
+			break
+		}
+		if structType == nil {
+			structType = p.GetStruct(types.GetBaseType(t))
+		} else {
+			break
+		}
+	}
+
 	rhs := n.Name
 	rhsType := "void *"
 	if structType == nil {

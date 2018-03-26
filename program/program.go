@@ -124,10 +124,6 @@ type IncludeHeader struct {
 
 // NewProgram creates a new blank program.
 func NewProgram() (p *Program) {
-	defer func() {
-		// Need for "stdbool.h"
-		p.TypedefType["_Bool"] = "int"
-	}()
 	return &Program{
 		imports:             []string{},
 		typesAlreadyDefined: []string{},
@@ -154,13 +150,16 @@ func NewProgram() (p *Program) {
 				IsUnion: false,
 			},
 		}),
-		Unions:                                   make(StructRegistry),
-		Verbose:                                  false,
-		messages:                                 []string{},
-		GlobalVariables:                          map[string]string{},
-		EnumConstantToEnum:                       map[string]string{},
-		EnumTypedefName:                          map[string]bool{},
-		TypedefType:                              map[string]string{},
+		Unions:             make(StructRegistry),
+		Verbose:            false,
+		messages:           []string{},
+		GlobalVariables:    map[string]string{},
+		EnumConstantToEnum: map[string]string{},
+		EnumTypedefName:    map[string]bool{},
+		TypedefType: map[string]string{
+			// Need for "stdbool.h"
+			"_Bool": "int",
+		},
 		commentLine:                              map[string]int{},
 		IncludeHeaders:                           []IncludeHeader{},
 		functionDefinitions:                      map[string]FunctionDefinition{},
@@ -415,7 +414,7 @@ func (p *Program) String() string {
 	return string(reg.ReplaceAll(buf.Bytes(), []byte("interface {}")))
 }
 
-// IncudeHeaderIsExist - return true if C #include header is inside list
+// IncludeHeaderIsExists - return true if C #include header is inside list
 func (p *Program) IncludeHeaderIsExists(includeHeader string) bool {
 	for _, inc := range p.IncludeHeaders {
 		if strings.HasSuffix(inc.HeaderName, includeHeader) {
