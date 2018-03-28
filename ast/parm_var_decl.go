@@ -14,6 +14,7 @@ type ParmVarDecl struct {
 	Type2        string
 	IsUsed       bool
 	IsReferenced bool
+	IsRegister   bool
 	ChildNodes   []Node
 }
 
@@ -25,7 +26,9 @@ func parseParmVarDecl(line string) *ParmVarDecl {
 		(?P<referenced> referenced)?
 		(?P<name> \w+)?
 		 '(?P<type>.*?)'
-		(?P<type2>:'.*?')?`,
+		(?P<type2>:'.*?')?
+		(?P<register> register)?
+		`,
 		line,
 	)
 
@@ -48,6 +51,7 @@ func parseParmVarDecl(line string) *ParmVarDecl {
 		Type2:        type2,
 		IsUsed:       len(groups["used"]) > 0,
 		IsReferenced: len(groups["referenced"]) > 0,
+		IsRegister:   len(groups["register"]) > 0,
 		ChildNodes:   []Node{},
 	}
 }
