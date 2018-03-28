@@ -327,6 +327,7 @@ var clangFlags inputDataFlags
 
 func init() {
 	transpileCommand.Var(&clangFlags, "clang-flag", "Pass arguments to clang. You may provide multiple -clang-flag items.")
+	astCommand.Var(&clangFlags, "clang-flag", "Pass arguments to clang. You may provide multiple -clang-flag items.")
 }
 
 var (
@@ -394,6 +395,7 @@ func runCommand() int {
 
 		args.ast = true
 		args.inputFiles = astCommand.Args()
+		args.clangFlags = clangFlags
 	case "transpile":
 		err := transpileCommand.Parse(os.Args[2:])
 		if err != nil {
