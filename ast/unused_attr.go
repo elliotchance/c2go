@@ -10,7 +10,7 @@ type UnusedAttr struct {
 
 func parseUnusedAttr(line string) *UnusedAttr {
 	groups := groupsFromRegex(
-		"<(?P<position>.*)> unused",
+		"<(?P<position>.*)>(?: unused)?",
 		line,
 	)
 
