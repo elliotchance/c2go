@@ -22,8 +22,10 @@ func parseParmVarDecl(line string) *ParmVarDecl {
 	groups := groupsFromRegex(
 		`<(?P<position>.*)>
 		(?P<position2> [^ ]+:[\d:]+)?
-		(?P<used> used)?
-		(?P<referenced> referenced)?
+		(?:
+			(?P<used> used)?|
+			(?P<referenced> referenced)?
+		)*
 		(?P<name> \w+)?
 		 '(?P<type>.*?)'
 		(?P<type2>:'.*?')?

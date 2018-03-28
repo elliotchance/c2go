@@ -13,8 +13,11 @@ type PureAttr struct {
 func parsePureAttr(line string) *PureAttr {
 	groups := groupsFromRegex(
 		`<(?P<position>.*)>
-		(?P<inherited> Inherited)?
-		(?P<implicit> Implicit)?`,
+		(?:
+			(?P<inherited> Inherited)?|
+			(?P<implicit> Implicit)?
+		)*
+		`,
 		line,
 	)
 

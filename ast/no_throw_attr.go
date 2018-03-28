@@ -13,8 +13,10 @@ type NoThrowAttr struct {
 func parseNoThrowAttr(line string) *NoThrowAttr {
 	groups := groupsFromRegex(
 		`<(?P<position>.*)>
-		(?P<inherited> Inherited)?
-		(?P<implicit> Implicit)?
+		(?:
+			(?P<inherited> Inherited)?|
+			(?P<implicit> Implicit)?
+		)*
 		`,
 		line,
 	)

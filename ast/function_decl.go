@@ -29,15 +29,19 @@ func parseFunctionDecl(line string) *FunctionDecl {
 		(?:prev (?P<prev>0x[0-9a-f]+) )?
 		<(?P<position1>.*?)>
 		(?P<position2> <scratch space>[^ ]+| [^ ]+)?
-		(?P<implicit> implicit)?
-		(?P<used> used)?
-		(?P<referenced> referenced)?
+		(?:
+			(?P<implicit> implicit)?|
+			(?P<used> used)?|
+			(?P<referenced> referenced)?
+		)*
 		 (?P<name>[_\w]+)
 		 '(?P<type>.*?)'
 		(:'(?P<type2>.*?)')?
-		(?P<extern> extern)?
-		(?P<static> static)?
-		(?P<inline> inline)?
+		(?:
+			(?P<extern> extern)?|
+			(?P<static> static)?|
+			(?P<inline> inline)?
+		)*
 		`,
 		line,
 	)
