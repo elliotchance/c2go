@@ -12,8 +12,10 @@ type VisibilityAttr struct {
 func parseVisibilityAttr(line string) *VisibilityAttr {
 	groups := groupsFromRegex(
 		`<(?P<position>.*)>
-		(?P<inherited> Inherited)?
-		(?P<default> Default)?
+		(?:
+			(?P<inherited> Inherited)?|
+			(?P<default> Default)?
+		)*
 		`,
 		line,
 	)
