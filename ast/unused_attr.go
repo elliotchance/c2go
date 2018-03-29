@@ -6,7 +6,7 @@ type UnusedAttr struct {
 	Addr       Address
 	Pos        Position
 	ChildNodes []Node
-	IsUnused     bool
+	IsUnused   bool
 }
 
 func parseUnusedAttr(line string) *UnusedAttr {
