@@ -376,6 +376,13 @@ func TestMultifileTranspilation(t *testing.T) {
 			},
 			"234ERROR!ERROR!ERROR!",
 		},
+		{
+			[]string{
+				"./tests/multi-struct/main.c",
+				"./tests/multi-struct/types.c",
+			},
+			"42\n",
+		},
 	}
 
 	for pos, tc := range tcs {
