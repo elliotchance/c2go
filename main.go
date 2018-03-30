@@ -259,6 +259,7 @@ func Start(args ProgramArgs) (err error) {
 	}
 	tree := buildTree(nodes, 0)
 	ast.FixPositions(tree)
+	p.SetNodes(tree)
 
 	// Repair the floating literals. See RepairFloatingLiteralsFromSource for
 	// more information.

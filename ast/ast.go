@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/elliotchance/c2go/util"
+	"reflect"
 )
 
 // Node represents any node in the AST.
@@ -282,4 +283,14 @@ func groupsFromRegex(rx, line string) map[string]string {
 	}
 
 	return result
+}
+
+func FindChildOfType(n Node, t reflect.Type) (ret []Node) {
+	for _, c := range n.Children() {
+		if reflect.TypeOf(c) == t {
+			ret = append(ret, c)
+		}
+		ret = append(ret, FindChildOfType(c, t)...)
+	}
+	return
 }

@@ -2,7 +2,7 @@
 #include "types.h"
 
 int main() {
-    struct mystery m;
+    mystery m;
     m.answer = 42;
     type* t = to_type(m);
     say_type(t);

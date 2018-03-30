@@ -7,7 +7,7 @@ struct real_type {
 };
 
 void say_type(type *t) {
-    printf("%u\n", t->real_answer);
+    printf("%d\n", t->real_answer);
 }
 
 type* to_type(mystery m) {
