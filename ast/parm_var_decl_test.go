@@ -15,6 +15,7 @@ func TestParmVarDecl(t *testing.T) {
 			Type2:        "",
 			IsUsed:       false,
 			IsReferenced: false,
+			IsRegister:   false,
 			ChildNodes:   []Node{},
 		},
 		`0x7f973380f070 <col:19, col:30> col:31 'const char *'`: &ParmVarDecl{
@@ -37,6 +38,7 @@ func TestParmVarDecl(t *testing.T) {
 			Type2:        "",
 			IsUsed:       false,
 			IsReferenced: false,
+			IsRegister:   false,
 			ChildNodes:   []Node{},
 		},
 		`0x7f9733817418 <<invalid sloc>> <invalid sloc> 'FILE *'`: &ParmVarDecl{
@@ -48,6 +50,7 @@ func TestParmVarDecl(t *testing.T) {
 			Type2:        "",
 			IsUsed:       false,
 			IsReferenced: false,
+			IsRegister:   false,
 			ChildNodes:   []Node{},
 		},
 		`0x7f9733817c30 <col:40, col:47> col:47 __size 'size_t':'unsigned long'`: &ParmVarDecl{
@@ -59,6 +62,7 @@ func TestParmVarDecl(t *testing.T) {
 			Type2:        "unsigned long",
 			IsUsed:       false,
 			IsReferenced: false,
+			IsRegister:   false,
 			ChildNodes:   []Node{},
 		},
 		`0x7f973382fa10 <line:476:18, col:25> col:34 'int (* _Nullable)(void *, char *, int)':'int (*)(void *, char *, int)'`: &ParmVarDecl{
@@ -70,6 +74,7 @@ func TestParmVarDecl(t *testing.T) {
 			Type2:        "int (*)(void *, char *, int)",
 			IsUsed:       false,
 			IsReferenced: false,
+			IsRegister:   false,
 			ChildNodes:   []Node{},
 		},
 		`0x7f97338355b8 <col:10, col:14> col:14 used argc 'int'`: &ParmVarDecl{
@@ -81,6 +86,7 @@ func TestParmVarDecl(t *testing.T) {
 			Type2:        "",
 			IsUsed:       true,
 			IsReferenced: false,
+			IsRegister:   false,
 			ChildNodes:   []Node{},
 		},
 		`0x1d82850 <col:11, col:22> col:16 referenced foo 'char *':'char *'`: &ParmVarDecl{
@@ -92,6 +98,19 @@ func TestParmVarDecl(t *testing.T) {
 			Type2:        "char *",
 			IsUsed:       false,
 			IsReferenced: true,
+			IsRegister:   false,
+			ChildNodes:   []Node{},
+		},
+		`0x7f95f30ed9d0 <col:23, col:51> col:51 used eptr 'const char *' register`: &ParmVarDecl{
+			Addr:         0x7f95f30ed9d0,
+			Pos:          NewPositionFromString("col:23, col:51"),
+			Position2:    "col:51",
+			Type:         "const char *",
+			Name:         "eptr",
+			Type2:        "",
+			IsUsed:       true,
+			IsReferenced: false,
+			IsRegister:   true,
 			ChildNodes:   []Node{},
 		},
 	}
