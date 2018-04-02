@@ -6,11 +6,12 @@ type UnusedAttr struct {
 	Addr       Address
 	Pos        Position
 	ChildNodes []Node
+	IsUnused   bool
 }
 
 func parseUnusedAttr(line string) *UnusedAttr {
 	groups := groupsFromRegex(
-		"<(?P<position>.*)> unused",
+		"<(?P<position>.*)>(?P<unused> unused)?",
 		line,
 	)
 
@@ -18,6 +19,7 @@ func parseUnusedAttr(line string) *UnusedAttr {
 		Addr:       ParseAddress(groups["address"]),
 		Pos:        NewPositionFromString(groups["position"]),
 		ChildNodes: []Node{},
+		IsUnused:   len(groups["unused"]) > 0,
 	}
 }
 

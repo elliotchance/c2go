@@ -10,6 +10,13 @@ func TestUnusedAttr(t *testing.T) {
 			Addr:       0x7fe3e01416d0,
 			Pos:        NewPositionFromString("col:47"),
 			ChildNodes: []Node{},
+			IsUnused:   true,
+		},
+		`0x7fe3e01416d0 <col:47>`: &UnusedAttr{
+			Addr:       0x7fe3e01416d0,
+			Pos:        NewPositionFromString("col:47"),
+			ChildNodes: []Node{},
+			IsUnused:   false,
 		},
 	}
 
