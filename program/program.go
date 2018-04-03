@@ -437,7 +437,14 @@ func (p *Program) SetNodes(nodes []ast.Node) {
 		if n == nil {
 			continue
 		}
-		if addr := n.Address(); addr > 0 {
+		var setNode = true
+		addr := n.Address()
+		if addr == 0 {
+			setNode = false
+		} else if _, ok := n.(*ast.Record); ok {
+			setNode = false
+		}
+		if setNode {
 			p.NodeMap[addr] = n
 		}
 		p.SetNodes(n.Children())
