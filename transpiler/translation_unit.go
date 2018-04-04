@@ -86,10 +86,10 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 						}
 					}
 					if !rec.Definition {
-						// This was not the real definition of the type
-						// , we have to go and look it up
+						// This was not the real definition of the type,
+						// we have to go and look it up
 						var typeToDeclare *ast.RecordDecl
-						records := ast.FindChildOfType(recNode, reflect.TypeOf(&ast.Record{}))
+						records := ast.GetAllNodesOfType(recNode, reflect.TypeOf(&ast.Record{}))
 						if len(records) > 0 {
 							record := records[0].(*ast.Record)
 							if n, ok := p.NodeMap[record.Addr]; ok {
