@@ -2,7 +2,7 @@
 //
 // We must be extra sensitive to the fact that switch fallthrough is handled
 // differently in C and Go. Break statements are removed and fallthrough
-// statements are added when nessesary.
+// statements are added when necessary.
 //
 // It is worth mentioning that a SwitchStmt has a CompoundStmt item that
 // contains all of the cases. However, if the individual case are not enclosed

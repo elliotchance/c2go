@@ -30,7 +30,7 @@ func transpileSwitchStmt(n *ast.SwitchStmt, p *program.Program) (
 		panic(fmt.Sprintf("Less than two children for switch: %#v", n))
 	}
 
-	// The condition is the expression to be evaulated against each of the
+	// The condition is the expression to be evaluated against each of the
 	// cases.
 	condition, _, newPre, newPost, err := transpileToExpr(n.Children()[len(n.Children())-2], p, false)
 	if err != nil {
