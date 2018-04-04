@@ -107,6 +107,11 @@ type Program struct {
 
 	// IncludeHeaders - list of C header
 	IncludeHeaders []IncludeHeader
+
+	// NodeMap - a map containing all the program's nodes with:
+	// key    - the node address
+	// value  - the node
+	NodeMap map[ast.Address]ast.Node
 }
 
 // Comment - position of line comment '//...'
@@ -154,16 +159,17 @@ func NewProgram() (p *Program) {
 				IsUnion: false,
 			},
 		}),
-		Unions:                                   make(StructRegistry),
-		Verbose:                                  false,
-		messages:                                 []string{},
-		GlobalVariables:                          map[string]string{},
-		EnumConstantToEnum:                       map[string]string{},
-		EnumTypedefName:                          map[string]bool{},
-		TypedefType:                              map[string]string{},
-		commentLine:                              map[string]int{},
-		IncludeHeaders:                           []IncludeHeader{},
-		functionDefinitions:                      map[string]FunctionDefinition{},
+		Unions:              make(StructRegistry),
+		Verbose:             false,
+		messages:            []string{},
+		GlobalVariables:     map[string]string{},
+		EnumConstantToEnum:  map[string]string{},
+		EnumTypedefName:     map[string]bool{},
+		TypedefType:         map[string]string{},
+		commentLine:         map[string]int{},
+		IncludeHeaders:      []IncludeHeader{},
+		functionDefinitions: map[string]FunctionDefinition{},
+		NodeMap:             map[ast.Address]ast.Node{},
 		builtInFunctionDefinitionsHaveBeenLoaded: false,
 	}
 }
@@ -423,4 +429,50 @@ func (p *Program) IncludeHeaderIsExists(includeHeader string) bool {
 		}
 	}
 	return false
+}
+
+// SetNodes will add the given nodes and all their children to the program's node map.
+func (p *Program) SetNodes(nodes []ast.Node) {
+	for _, n := range nodes {
+		if n == nil {
+			continue
+		}
+		var setNode = true
+		addr := n.Address()
+		if addr == 0 {
+			setNode = false
+		} else if _, ok := n.(*ast.Record); ok {
+			setNode = false
+		}
+		if setNode {
+			p.NodeMap[addr] = n
+		}
+		p.SetNodes(n.Children())
+	}
+}
+
+// DeclareType defines a type without adding the real definition of the type to the list
+// of declarations. This is useful for types which are defined in a header file, but are
+// implemented in another *.c file.
+// This way they can already be used for variable declarations and sizeof.
+func (p *Program) DeclareType(n *ast.RecordDecl, correctName string) (err error) {
+	name := correctName
+
+	// TODO: Some platform structs are ignored.
+	// https://github.com/elliotchance/c2go/issues/85
+	if name == "__locale_struct" ||
+		name == "__sigaction" ||
+		name == "sigaction" {
+		err = nil
+		return
+	}
+
+	s := NewStruct(n)
+	if s.IsUnion {
+		p.Unions["union "+name] = s
+	} else {
+		p.Structs["struct "+name] = s
+	}
+
+	return
 }

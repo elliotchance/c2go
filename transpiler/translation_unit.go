@@ -4,9 +4,11 @@ import (
 	goast "go/ast"
 	"strings"
 
+	"fmt"
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/types"
+	"reflect"
 )
 
 func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl) (
@@ -34,12 +36,16 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 						}
 					}
 				case *ast.TypedefDecl:
-					if isSameTypedefNames(recNode) {
+					if isSameTypedefNames(recNode) && !rec.Definition {
+						// this is just the declaration of a type, the implementation comes later
 						i++
 						continue
 					}
 					name := types.GenerateCorrectType(types.CleanCType(recNode.Type))
-					if strings.HasPrefix(name, "union ") {
+					if isSameTypedefNames(recNode) {
+						i++
+						// continue on, so that this type is defined
+					} else if strings.HasPrefix(name, "union ") {
 						if recNode.Type == "union "+rec.Name {
 							names := []string{rec.Name, recNode.Name}
 							for _, name := range names {
@@ -60,8 +66,7 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 							rec.Name = name[len("union "):]
 							recNode.Type = types.CleanCType("union " + name)
 						}
-					}
-					if strings.HasPrefix(name, "struct ") {
+					} else if strings.HasPrefix(name, "struct ") {
 						if rec.Name != "" {
 							runAfter = func() {
 								var d []goast.Decl
@@ -79,6 +84,29 @@ func transpileTranslationUnitDecl(p *program.Program, n *ast.TranslationUnitDecl
 							rec.Name = name[len("struct "):]
 							recNode.Type = types.CleanCType("struct " + name)
 						}
+					}
+					if !rec.Definition {
+						// This was not the real definition of the type,
+						// we have to go and look it up
+						var typeToDeclare *ast.RecordDecl
+						records := ast.GetAllNodesOfType(recNode, reflect.TypeOf(&ast.Record{}))
+						if len(records) > 0 {
+							record := records[0].(*ast.Record)
+							if n, ok := p.NodeMap[record.Addr]; ok {
+								if toDeclare, ok2 := n.(*ast.RecordDecl); ok2 {
+									typeToDeclare = toDeclare
+								}
+							}
+						}
+						if typeToDeclare == nil {
+							p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("could not lookup type definition for : %v", rec.Name), rec))
+							typeToDeclare = rec
+						}
+						p.DeclareType(typeToDeclare, types.GenerateCorrectType(rec.Name))
+						if runAfter != nil {
+							runAfter()
+						}
+						continue
 					}
 				}
 			}

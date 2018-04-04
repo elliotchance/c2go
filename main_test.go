@@ -278,7 +278,12 @@ func TestIntegrationScripts(t *testing.T) {
 				removeLinesFromEnd = 3
 			}
 
-			goOut := strings.Join(goOutLines[1:len(goOutLines)-removeLinesFromEnd], "\n") + "\n"
+			var goOut string
+			if len(goOutLines)-removeLinesFromEnd < 1 {
+				goOut = "\n"
+			} else {
+				goOut = strings.Join(goOutLines[1:len(goOutLines)-removeLinesFromEnd], "\n") + "\n"
+			}
 
 			// Check if both exit codes are zero (or non-zero)
 			if cProgram.isZero != goProgram.isZero {
@@ -375,6 +380,13 @@ func TestMultifileTranspilation(t *testing.T) {
 				"./tests/multi/main2.c",
 			},
 			"234ERROR!ERROR!ERROR!",
+		},
+		{
+			[]string{
+				"./tests/multi-struct/main.c",
+				"./tests/multi-struct/types.c",
+			},
+			"42\n",
 		},
 	}
 

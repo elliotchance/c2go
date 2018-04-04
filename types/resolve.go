@@ -253,6 +253,14 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 		return p.ImportType(s), nil
 	}
 
+	if _, ok := p.Structs["struct "+s]; ok {
+		return p.ImportType(s), nil
+	}
+
+	if _, ok := p.Unions["union "+s]; ok {
+		return p.ImportType(s), nil
+	}
+
 	// Structures are by name.
 	if strings.HasPrefix(s, "struct ") || strings.HasPrefix(s, "union ") {
 		start := 6
