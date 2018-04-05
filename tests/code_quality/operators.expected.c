@@ -7,7 +7,7 @@
 
 package code_quality
 
-// operators_equals - transpiled function from  /go/src/github.com/elliotchance/c2go/tests/code_quality/operators.c:1
+// operators_equals - transpiled function from  tests/code_quality/operators.c:1
 func operators_equals() {
 	var a int
 	var b int
