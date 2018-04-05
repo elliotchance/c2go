@@ -103,10 +103,19 @@ func RepairFloatingLiteralsFromSource(rootNode Node, preprocessedFile string) []
 		if pos.Column-1 >= len(line) {
 			errs = append(errs, FloatingLiteralError{
 				Node: fNode,
-				Err:  errors.New("cannot get exact value exact value"),
+				Err:  errors.New("cannot get exact value"),
 			})
 		} else {
-			fmt.Sscan(line[pos.Column-1:], &fNode.Value)
+			var f float64
+			literal := line[pos.Column-1:]
+			if _, err := fmt.Sscan(literal, &f); err == nil {
+				fNode.Value = f
+			} else {
+				errs = append(errs, FloatingLiteralError{
+					Node: fNode,
+					Err:  fmt.Errorf("cannot parse float: %v from %s", err, literal),
+				})
+			}
 		}
 	}
 
