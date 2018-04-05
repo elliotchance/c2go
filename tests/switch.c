@@ -2,7 +2,7 @@
 //
 // We must be extra sensitive to the fact that switch fallthrough is handled
 // differently in C and Go. Break statements are removed and fallthrough
-// statements are added when nessesary.
+// statements are added when necessary.
 //
 // It is worth mentioning that a SwitchStmt has a CompoundStmt item that
 // contains all of the cases. However, if the individual case are not enclosed
@@ -91,6 +91,37 @@ void fallthrough_several_cases_including_default()
         pass(__func__);
     default:
         pass(__func__);
+    }
+}
+
+void fallthrough_several_midway_default()
+{
+    for(int i=0; i<=3; i++) {
+        int j = -1;
+        int expected = -1;
+        if(i==0)
+            expected = 10;
+        if(i==1)
+            expected = 21;
+        if(i==2)
+            expected = 22;
+        if(i==3)
+            expected = 13;
+        if(i==4)
+            expected = 666;
+        switch(i) {
+        case 4:
+            fail("code should not reach here");
+        case 0:
+        default:
+            j = i+10;
+            break;
+        case 1:
+        case 2:
+            j = i+20;
+            break;
+        }
+        is_eq(j, expected);
     }
 }
 
@@ -209,6 +240,44 @@ void scoped_fallthrough_several_cases_including_default()
     }
 }
 
+void scoped_fallthrough_several_midway_default()
+{
+    for(int i=0; i<=3; i++) {
+        int j = -1;
+        int expected = -1;
+        if(i==0)
+            expected = 10;
+        if(i==1)
+            expected = 21;
+        if(i==2)
+            expected = 22;
+        if(i==3)
+            expected = 13;
+        if(i==4)
+            expected = 666;
+        switch(i) {
+        case 4:
+        {
+            fail("code should not reach here");
+        }
+        case 0:
+        {}
+        default:
+        {
+            j = i+10;
+            break;
+        }
+        case 1:
+        {}
+        case 2:
+        {
+            j = i+20;
+        }
+        }
+        is_eq(j, expected);
+    }
+}
+
 typedef struct I67 I67;
 struct I67{
 	int x,y;
@@ -307,13 +376,14 @@ void switch_without_input()
 
 int main()
 {
-    plan(25);
+    plan(33);
 
     match_a_single_case();
     fallthrough_to_next_case();
     match_no_cases();
     match_default();
     fallthrough_several_cases_including_default();
+    fallthrough_several_midway_default();
 
     // For each of the tests above there will be identical cases that use scopes
     // for the case statements.
@@ -322,6 +392,7 @@ int main()
     scoped_match_no_cases();
     scoped_match_default();
     scoped_fallthrough_several_cases_including_default();
+    scoped_fallthrough_several_midway_default();
 
 	switch_issue67();
 	empty_switch();

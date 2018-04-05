@@ -1,5 +1,5 @@
 /*
-	Package main - transpiled by c2go version: v0.21.7 Zinc 2018-02-08
+	Package main - transpiled by c2go version: v0.21.16 Zinc 2018-04-02
 
 	If you have found any issues, please raise an issue at:
 	https://github.com/elliotchance/c2go/
