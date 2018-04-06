@@ -116,6 +116,7 @@ var otherStructType = map[string]string{
 	"struct __double2":   "github.com/elliotchance/c2go/darwin.Double2",
 	"Float2":             "github.com/elliotchance/c2go/darwin.Float2",
 	"Double2":            "github.com/elliotchance/c2go/darwin.Double2",
+	"struct __va_list_tag *": "github.com/elliotchance/c2go/noarch.VaList",
 }
 
 // NullPointer - is look : (double *)(nil) or (FILE *)(nil)

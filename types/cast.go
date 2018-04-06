@@ -98,6 +98,14 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 		return expr, nil
 	}
 
+	// Exception for va_list:
+	// A pointer to struct __va_list_tag is always a variable called
+	// "c2goVaList" in go.
+	if fromType == "va_list" && toType == "struct __va_list_tag *" {
+		ret := &goast.BasicLit{Kind: token.STRING, Value: "c2goVaList"}
+		return ret, nil
+	}
+
 	// casting
 	if fromType == "void *" && toType[len(toType)-1] == '*' && !strings.Contains(toType, "FILE") && toType[len(toType)-2] != '*' {
 		toType = strings.Replace(toType, "*", " ", -1)
