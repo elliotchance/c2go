@@ -5,4 +5,4 @@ package program
 //     c2go -v
 //
 // See https://github.com/elliotchance/c2go/wiki/Release-Process
-const Version = "v0.21.17 Zinc 2018-04-05"
+const Version = "v0.21.18 Zinc 2018-04-06"

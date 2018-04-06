@@ -126,11 +126,6 @@ func __init() {
 }
 ```
 
-# What Is Supported?
-
-See the
-[Project Progress](https://github.com/elliotchance/c2go/wiki/Project-Progress).
-
 # How It Works
 
 This is the process:

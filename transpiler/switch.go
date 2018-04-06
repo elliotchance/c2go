@@ -30,7 +30,7 @@ func transpileSwitchStmt(n *ast.SwitchStmt, p *program.Program) (
 		panic(fmt.Sprintf("Less than two children for switch: %#v", n))
 	}
 
-	// The condition is the expression to be evaulated against each of the
+	// The condition is the expression to be evaluated against each of the
 	// cases.
 	condition, _, newPre, newPost, err := transpileToExpr(n.Children()[len(n.Children())-2], p, false)
 	if err != nil {
@@ -45,20 +45,37 @@ func transpileSwitchStmt(n *ast.SwitchStmt, p *program.Program) (
 	// solving switch case without body
 	// case -1:
 	// default: ...
-checkAgain:
-	for i := range body.Children() {
-		if v, ok := body.Children()[i].(*ast.CaseStmt); ok {
-			if vv, ok := v.Children()[len(v.Children())-1].(*ast.CaseStmt); ok {
-				// TODO : add "vv" before next case, but not at the end
-				body.AddChild(vv)
-				v.Children()[len(v.Children())-1] = &ast.CompoundStmt{}
-				goto checkAgain
-			}
-			if vv, ok := v.Children()[len(v.Children())-1].(*ast.DefaultStmt); ok {
-				// TODO : add "vv" before next case, but not at the end
-				body.AddChild(vv)
-				v.Children()[len(v.Children())-1] = &ast.CompoundStmt{}
-				goto checkAgain
+	bodyLen := len(body.Children())
+	for i := 0; i < bodyLen; i++ {
+		cn := body.ChildNodes[i]
+		cs, ok1 := cn.(*ast.CaseStmt)
+		ds, ok2 := cn.(*ast.DefaultStmt)
+		if !ok1 && !ok2 {
+			// Do not consider a node which is not a case or default statement here
+			continue
+		}
+		lastCn := cn.Children()[len(cn.Children())-1]
+		_, isCase := lastCn.(*ast.CaseStmt)
+		_, isDefault := lastCn.(*ast.DefaultStmt)
+		if isCase || isDefault {
+			// Insert lastCn before next case in body (https://github.com/golang/go/wiki/SliceTricks)
+			body.ChildNodes = append(body.ChildNodes, &ast.CompoundStmt{})
+			copy(body.ChildNodes[i+2:], body.ChildNodes[i+1:])
+			body.ChildNodes[i+1] = lastCn
+			bodyLen++
+
+			if len(cn.Children()) == 1 {
+				// If cn child nodes would be empty without lastCn,
+				// replace lastCn by an empty CompoundStmt
+				cn.Children()[0] = &ast.CompoundStmt{}
+			} else {
+				// Remove lastCn from cn child nodes
+				if ok1 {
+					cs.ChildNodes = cs.ChildNodes[:len(cs.ChildNodes)-1]
+				}
+				if ok2 {
+					ds.ChildNodes = ds.ChildNodes[:len(ds.ChildNodes)-1]
+				}
 			}
 		}
 	}
