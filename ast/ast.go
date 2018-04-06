@@ -190,6 +190,8 @@ func Parse(fullline string) Node {
 		return parseParmVarDecl(line)
 	case "PointerType":
 		return parsePointerType(line)
+	case "DecayedType":
+		return parseDecayedType(line)
 	case "PredefinedExpr":
 		return parsePredefinedExpr(line)
 	case "PureAttr":

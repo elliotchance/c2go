@@ -477,8 +477,8 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 			Tok: token.VAR,
 			Specs: []goast.Spec{
 				&goast.ValueSpec{
-					Names:  []*goast.Ident{util.NewIdent(n.Name)},
-					Values: []goast.Expr{util.NewIdent("c2goArgs")},
+					Names:  []*goast.Ident{util.NewIdent("c2goVaList")},
+					Values: []goast.Expr{util.NewVaListTag()},
 				},
 			},
 		}}, "", nil
