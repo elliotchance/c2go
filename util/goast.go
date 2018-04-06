@@ -237,26 +237,25 @@ func NewFloatLit(value float64) *goast.BasicLit {
 // NewVaListTag creates a new VaList Literal.
 func NewVaListTag() goast.Expr {
 	var p token.Pos
-	elts := make([]goast.Expr,2)
+	elts := make([]goast.Expr, 2)
 	elts[0] = &goast.KeyValueExpr{
-			Key: &goast.BasicLit{Kind: token.STRING, Value: "Pos"},
-			Colon: p,
-			Value: &goast.BasicLit{Kind: token.STRING, Value: "0"},
-		}
+		Key:   &goast.BasicLit{Kind: token.STRING, Value: "Pos"},
+		Colon: p,
+		Value: &goast.BasicLit{Kind: token.STRING, Value: "0"},
+	}
 	elts[1] = &goast.KeyValueExpr{
-			Key: &goast.BasicLit{Kind: token.STRING, Value: "Args"},
-			Colon: p,
-			Value: &goast.BasicLit{Kind: token.STRING, Value: "c2goArgs"},
-		}
+		Key:   &goast.BasicLit{Kind: token.STRING, Value: "Args"},
+		Colon: p,
+		Value: &goast.BasicLit{Kind: token.STRING, Value: "c2goArgs"},
+	}
 
 	return &goast.CompositeLit{
-		Type: &goast.BasicLit{Kind: token.STRING, Value: "noarch.VaList"},
+		Type:   &goast.BasicLit{Kind: token.STRING, Value: "noarch.VaList"},
 		Lbrace: p,
-		Elts: elts,
+		Elts:   elts,
 		Rbrace: p,
 	}
 }
-
 
 // NewNil returns a Go AST identity that can be used to represent "nil".
 func NewNil() *goast.Ident {

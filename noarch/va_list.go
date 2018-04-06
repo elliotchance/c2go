@@ -1,7 +1,6 @@
 package noarch
 
 type VaList struct {
-	Pos int
+	Pos  int
 	Args []interface{}
 }
-

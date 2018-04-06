@@ -175,8 +175,8 @@ var builtInFunctionDefinitions = map[string][]string{
 		// darwin/stdio.h
 		"int __builtin___sprintf_chk(char*, int, int, char*) -> darwin.BuiltinSprintfChk",
 		"int __builtin___snprintf_chk(char*, int, int, int, char*) -> darwin.BuiltinSnprintfChk",
-		"int __builtin___vsprintf_chk(char*, int, int, char*) -> darwin.BuiltinVsprintfChk",
-		"int __builtin___vsnprintf_chk(char*, int, int, int, char*) -> darwin.BuiltinVsnprintfChk",
+		"int __builtin___vsprintf_chk(char*, int, int, char *, struct __va_list_tag *) -> darwin.BuiltinVsprintfChk",
+		"int __builtin___vsnprintf_chk(char*, int, int, int, char*, struct __va_list_tag *) -> darwin.BuiltinVsnprintfChk",
 	},
 	"string.h": []string{
 		// string.h

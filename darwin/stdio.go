@@ -3,13 +3,13 @@ package darwin
 import "github.com/elliotchance/c2go/noarch"
 
 // BuiltinVsprintfChk - implementation __builtin___vsprintf_chk
-func BuiltinVsprintfChk(buffer []byte, _ int, n int, format []byte, args ...interface{}) int {
-	return noarch.Sprintf(buffer, format, args)
+func BuiltinVsprintfChk(buffer []byte, _ int, n int, format []byte, args noarch.VaList) int {
+	return noarch.Sprintf(buffer, format, args.Args)
 }
 
 // BuiltinVsnprintfChk - implementation __builtin___vsnprintf_chk
-func BuiltinVsnprintfChk(buffer []byte, n int, _ int, _ int, format []byte, args ...interface{}) int {
-	return noarch.Sprintf(buffer, format, args)
+func BuiltinVsnprintfChk(buffer []byte, n int, _ int, _ int, format []byte, args noarch.VaList) int {
+	return noarch.Sprintf(buffer, format, args.Args)
 }
 
 // BuiltinSprintfChk - implementation __builtin___sprintf_chk
