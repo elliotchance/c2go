@@ -6,9 +6,9 @@ import (
 
 func TestDecayedType(t *testing.T) {
 	nodes := map[string]Node{
-		`0x7fa3b88bbb30 'struct _opaque_pthread_t *'`: &DecayedType{
-			Addr:       0x7fa3b88bbb30,
-			Type:       "struct _opaque_pthread_t *",
+		`0x7f1234567890 'struct __va_list_tag *' sugar`: &DecayedType{
+			Addr:       0x7f1234567890,
+			Type:       "struct __va_list_tag *",
 			ChildNodes: []Node{},
 		},
 	}
