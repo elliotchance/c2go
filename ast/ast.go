@@ -126,6 +126,8 @@ func Parse(fullline string) Node {
 		return parseFloatingLiteral(line)
 	case "FormatAttr":
 		return parseFormatAttr(line)
+	case "FormatArgAttr":
+		return parseFormatArgAttr(line)
 	case "FunctionDecl":
 		return parseFunctionDecl(line)
 	case "FullComment":
