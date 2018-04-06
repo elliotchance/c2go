@@ -293,6 +293,8 @@ func setPosition(node Node, position Position) {
 		n.Pos = position
 	case *FormatAttr:
 		n.Pos = position
+	case *FormatArgAttr:
+		n.Pos = position
 	case *FullComment:
 		n.Pos = position
 	case *FunctionDecl:
