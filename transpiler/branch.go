@@ -125,7 +125,6 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
 
 func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 	f goast.Stmt, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
-
 	// This `defer` is workaround
 	// Please remove after solving all problems
 	defer func() {
@@ -134,8 +133,6 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 			p.AddMessage(p.GenerateWarningMessage(err, n))
 		}
 	}()
-
-	children := n.Children()
 
 	// There are always 5 children in a ForStmt, for example:
 	//
@@ -149,18 +146,13 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 	// 3. conditionalExpression = BinaryStmt: c < n
 	// 4. stepExpression = BinaryStmt: c++
 	// 5. body = CompoundStmt: { CallExpr }
+	children := n.Children()
+	initExpression := children[0]
+	conditionalExpression := children[2]
+	stepExpression := children[3]
+	body := children[4]
 
-	if len(children) != 5 {
-		panic(fmt.Sprintf("Expected 5 children in ForStmt, got %#v", children))
-	}
-
-	// TODO: The second child of a ForStmt appears to always be null.
-	// Are there any cases where it is used?
-	if children[1] != nil {
-		panic("non-nil child 1 in ForStmt")
-	}
-
-	switch c := children[0].(type) {
+	switch c := initExpression.(type) {
 	case *ast.BinaryOperator:
 		if c.Operator == "," {
 			// If we have 2 and more initializations like
@@ -170,28 +162,28 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 			// a = 0;
 			// b = 0;
 			// for(c = 0 ; a < 5 ; a++)
-			before, newPre, newPost, err := transpileToStmt(children[0], p)
+			before, newPre, newPost, err := transpileToStmt(initExpression, p)
 			if err != nil {
 				return nil, nil, nil, err
 			}
 			preStmts = append(preStmts, combineStmts(before, newPre, newPost)...)
-			children[0] = c.Children()[1]
+			initExpression = c.Children()[1]
 		}
 	case *ast.DeclStmt:
 		{
 			// If we have 2 and more initializations like
 			// in operator for
 			// for(int a = 0, b = 0, c = 0; a < 5; a ++)
-			newPre, err := transpileToStmts(children[0], p)
+			newPre, err := transpileToStmts(initExpression, p)
 			if err != nil {
 				return nil, nil, nil, err
 			}
-			children[0] = nil
+			initExpression = nil
 			preStmts = append(preStmts, newPre...)
 		}
 	}
 
-	init, newPre, newPost, err := transpileToStmt(children[0], p)
+	init, newPre, newPost, err := transpileToStmt(initExpression, p)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -201,41 +193,38 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 	// If we have 2 and more increments
 	// in operator for
 	// for( a = 0; a < 5; a ++, b++, c+=2)
-	switch c := children[3].(type) {
-	case *ast.BinaryOperator:
-		if c.Operator == "," {
-			// recursive action to code like that:
-			// a = 0;
-			// b = 0;
-			// for(a = 0 ; a < 5 ; ){
-			// 		body
-			// 		a++;
-			// 		b++;
-			//		c+=2;
-			// }
-			//
-			var compound *ast.CompoundStmt
-			if children[4] != nil {
-				// if body is exist
-				if _, ok := children[4].(*ast.CompoundStmt); !ok {
-					compound = new(ast.CompoundStmt)
-					compound.AddChild(children[4])
-				} else {
-					compound = children[4].(*ast.CompoundStmt)
-				}
-			} else {
-				// if body is not exist
+	if c, ok := stepExpression.(*ast.BinaryOperator); ok && c.Operator == "," {
+		// recursive action to code like that:
+		// a = 0;
+		// b = 0;
+		// for(a = 0 ; a < 5 ; ){
+		// 		body
+		// 		a++;
+		// 		b++;
+		// 		c+=2;
+		// }
+		//
+		var compound *ast.CompoundStmt
+		if body != nil {
+			// if body is exist
+			if _, ok := body.(*ast.CompoundStmt); !ok {
 				compound = new(ast.CompoundStmt)
+				compound.AddChild(body)
+			} else {
+				compound = body.(*ast.CompoundStmt)
 			}
-			compound.ChildNodes = append(compound.Children(), c.Children()[0:len(c.Children())]...)
-			children[4] = compound
-			children[3] = nil
+		} else {
+			// if body is not exist
+			compound = new(ast.CompoundStmt)
 		}
+		compound.ChildNodes = append(compound.Children(), c.Children()[0:len(c.Children())]...)
+		body = compound
+		stepExpression = nil
 	}
 
 	var post goast.Stmt
 	var transpilate bool
-	if v, ok := children[3].(*ast.UnaryOperator); ok {
+	if v, ok := stepExpression.(*ast.UnaryOperator); ok {
 		if vv, ok := v.Children()[0].(*ast.DeclRefExpr); ok {
 			if !types.IsPointer(vv.Type) && !types.IsFunction(vv.Type) {
 				switch v.Operator {
@@ -260,7 +249,7 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 		}
 	}
 	if !transpilate {
-		post, newPre, newPost, err = transpileToStmt(children[3], p)
+		post, newPre, newPost, err = transpileToStmt(stepExpression, p)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -271,62 +260,59 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 	// If we have 2 and more conditions
 	// in operator for
 	// for( a = 0; b = c, b++, a < 5; a ++)
-	switch c := children[2].(type) {
-	case *ast.BinaryOperator:
-		if c.Operator == "," {
-			// recursive action to code like that:
-			// a = 0;
-			// b = 0;
-			// for(a = 0 ; ; c+=2){
-			// 		b = c;
-			// 		b++;
-			//		if (!(a < 5))
-			// 			break;
-			// 		body
-			// }
-			tempSlice := c.Children()[0 : len(c.Children())-1]
+	if c, ok := conditionalExpression.(*ast.BinaryOperator); ok && c.Operator == "," {
+		// recursive action to code like that:
+		// a = 0;
+		// b = 0;
+		// for(a = 0 ; ; c+=2){
+		// 		b = c;
+		// 		b++;
+		// 		if (!(a < 5))
+		// 			break;
+		// 		body
+		// }
+		tempSlice := c.Children()[0 : len(c.Children())-1]
 
-			var condition ast.IfStmt
-			condition.AddChild(nil)
-			var par ast.ParenExpr
-			par.Type = "bool"
-			par.AddChild(c.Children()[len(c.Children())-1])
-			var unitary ast.UnaryOperator
-			unitary.Type = "bool"
-			unitary.AddChild(&par)
-			unitary.Operator = "!"
-			condition.AddChild(&unitary)
-			var c ast.CompoundStmt
-			c.AddChild(&ast.BreakStmt{})
-			condition.AddChild(&c)
-			condition.AddChild(nil)
+		var condition ast.IfStmt
+		condition.AddChild(nil)
+		var par ast.ParenExpr
+		par.Type = "bool"
+		par.AddChild(c.Children()[len(c.Children())-1])
+		var unitary ast.UnaryOperator
+		unitary.Type = "bool"
+		unitary.AddChild(&par)
+		unitary.Operator = "!"
+		condition.AddChild(&unitary)
+		var c ast.CompoundStmt
+		c.AddChild(&ast.BreakStmt{})
+		condition.AddChild(&c)
+		condition.AddChild(nil)
 
-			tempSlice = append(tempSlice, &condition)
+		tempSlice = append(tempSlice, &condition)
 
-			var compound *ast.CompoundStmt
-			if children[4] != nil {
-				// if body is exist
-				compound = children[4].(*ast.CompoundStmt)
-			} else {
-				// if body is not exist
-				compound = new(ast.CompoundStmt)
-			}
-			compound.ChildNodes = append(tempSlice, compound.Children()...)
-			children[4] = compound
-			children[2] = nil
+		var compound *ast.CompoundStmt
+		if body != nil {
+			// if body is exist
+			compound = body.(*ast.CompoundStmt)
+		} else {
+			// if body is not exist
+			compound = new(ast.CompoundStmt)
 		}
+		compound.ChildNodes = append(tempSlice, compound.Children()...)
+		body = compound
+		conditionalExpression = nil
 	}
 
 	// The condition can be nil. This means an infinite loop and will be
 	// rendered in Go as "for {".
 	var condition goast.Expr
-	if children[2] != nil {
+	if conditionalExpression != nil {
 		var conditionType string
 		var newPre, newPost []goast.Stmt
 
 		// The last parameter must be false because we are transpiling an
 		// expression - assignment operators need to be wrapped in closures.
-		condition, conditionType, newPre, newPost, err = atomicOperation(children[2], p)
+		condition, conditionType, newPre, newPost, err = atomicOperation(conditionalExpression, p)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -346,11 +332,11 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 		}
 	}
 
-	body, newPre, newPost, err := transpileToBlockStmt(children[4], p)
+	parsedBody, newPre, newPost, err := transpileToBlockStmt(body, p)
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	if body == nil {
+	if parsedBody == nil {
 		return nil, nil, nil, fmt.Errorf("Body of For cannot be nil")
 	}
 
@@ -362,18 +348,18 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 			Init: init,
 			Cond: condition,
 			Post: post,
-			Body: body,
+			Body: parsedBody,
 		}, preStmts, postStmts, nil
 	}
 
-	// for avoid dublication of init values for
+	// for avoid duplication of init values for
 	// case with 2 for`s
 	var block goast.BlockStmt
 	var forStmt = goast.ForStmt{
 		Init: init,
 		Cond: condition,
 		Post: post,
-		Body: body,
+		Body: parsedBody,
 	}
 	block.List = combineStmts(&forStmt, preStmts, postStmts)
 	block.Lbrace = 1
@@ -388,10 +374,10 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 // - avoid dublicate of code in realization WHILE and FOR.
 // - create only one operator FOR powerful.
 // Example of C code with operator WHILE:
-//	while(i > 0){
-//		printf("While: %d\n",i);
-//		i--;
-//	}
+// 	while(i > 0){
+// 		printf("While: %d\n",i);
+// 		i--;
+// 	}
 // AST for that code:
 //    |-WhileStmt 0x2530a10 <line:6:2, line:9:2>
 //    | |-<<<NULL>>>
@@ -412,10 +398,10 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 //    |     `-DeclRefExpr 0x25309a0 <col:3> 'int' lvalue Var 0x25306f8 'i' 'int'
 //
 // Example of C code with operator FOR:
-//	for (;i > 0;){
-//		printf("For: %d\n",i);
-//		i--;
-//	}
+// 	for (;i > 0;){
+// 		printf("For: %d\n",i);
+// 		i--;
+// 	}
 // AST for that code:
 //    |-ForStmt 0x2530d08 <line:11:2, line:14:2>
 //    | |-<<<NULL>>>
@@ -460,10 +446,10 @@ func transpileWhileStmt(n *ast.WhileStmt, p *program.Program) (
 // - avoid dublicate of code in realization DO...WHILE and FOR.
 // - create only one powerful operator FOR.
 // Example of C code with operator DO...WHILE:
-//	do{
-//		printf("While: %d\n",i);
-//		i--;
-//	}while(i > 0);
+// 	do{
+// 		printf("While: %d\n",i);
+// 		i--;
+// 	}while(i > 0);
 // AST for that code:
 //    |-DoStmt 0x3bb1a68 <line:7:2, line:10:14>
 //    | |-CompoundStmt 0x3bb19b8 <line:7:4, line:10:2>
@@ -483,13 +469,13 @@ func transpileWhileStmt(n *ast.WhileStmt, p *program.Program) (
 //    |   `-IntegerLiteral 0x3bb1a08 <col:13> 'int' 0
 //
 // Example of C code with operator FOR:
-//	for(;;){
-//		printf("For: %d\n",i);
-//		i--;
-//		if(!(i>0)){
-//			break;
-//		}
-//	}
+// 	for(;;){
+// 		printf("For: %d\n",i);
+// 		i--;
+// 		if(!(i>0)){
+// 			break;
+// 		}
+// 	}
 // AST for that code:
 //    |-ForStmt 0x3bb1e08 <line:12:2, line:18:2>
 //    | |-<<<NULL>>>
@@ -525,6 +511,7 @@ func transpileDoStmt(n *ast.DoStmt, p *program.Program) (
 	forOperator.AddChild(nil)
 	forOperator.AddChild(nil)
 	forOperator.AddChild(nil)
+
 	var c *ast.CompoundStmt
 	if _, ok := n.Children()[0].(*ast.CompoundStmt); ok {
 		c = n.Children()[0].(*ast.CompoundStmt)
@@ -533,16 +520,18 @@ func transpileDoStmt(n *ast.DoStmt, p *program.Program) (
 		newComp.AddChild(n.Children()[0])
 		c = &newComp
 	}
+
 	ifBreak := createIfWithNotConditionAndBreak(n.Children()[1])
 	c.AddChild(&ifBreak)
 	forOperator.AddChild(c)
+
 	return transpileForStmt(&forOperator, p)
 }
 
 // createIfWithNotConditionAndBreak - create operator IF like on next example
 // of C code:
 // if ( !(condition) ) {
-//		break;
+// 		break;
 // }
 // Example of AST tree:
 //  `-IfStmt 0x3bb1da8 <line:15:3, line:17:3>

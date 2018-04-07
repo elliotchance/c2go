@@ -25,7 +25,7 @@ void test_ctime()
     char* s;
 
     // 1999-12-31 11:59:58
-    time_t now = 946670398;
+    time_t now = 946641598;
     s = ctime(&now);
     is_not_null(s);
 
