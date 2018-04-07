@@ -100,32 +100,25 @@ func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
 		if err != nil {
 			return nil, "", nil, nil, err
 		}
-		var argsName string
 		if a, ok := va.Children()[0].(*ast.ImplicitCastExpr); ok {
-			if a, ok := a.Children()[0].(*ast.DeclRefExpr); ok {
-				argsName = a.Name
-			} else {
-				return nil, "", nil, nil, fmt.Errorf("Expect DeclRefExpr for vaar, but we have %T", a)
-			}
 		} else {
 			return nil, "", nil, nil, fmt.Errorf("Expect ImplicitCastExpr for vaar, but we have %T", a)
 		}
 		src := fmt.Sprintf(`package main
 var temp = func() %s {
 	var ret %s
-	if v, ok := %s[c2goVaListPosition].(int32); ok{
+	if v, ok := c2goVaList.Args[c2goVaList.Pos].(int32); ok{
 		// for 'rune' type
 		ret = %s(v)
 	} else {
-		ret = %s[c2goVaListPosition].(%s)
+		ret = c2goVaList.Args[c2goVaList.Pos].(%s)
 	}
-	c2goVaListPosition++
+	c2goVaList.Pos++
 	return ret
 }()`, outType,
 			outType,
-			argsName,
 			outType,
-			argsName, outType)
+			outType)
 
 		// Create the AST by parsing src.
 		fset := token.NewFileSet() // positions are relative to fset

@@ -196,27 +196,6 @@ func transpileFunctionDecl(n *ast.FunctionDecl, p *program.Program) (
 			}
 		}
 
-		// for function argument: ...
-		// added for "variadic function"
-		if strings.Contains(n.Type, "...") {
-			body.List = append([]goast.Stmt{&goast.DeclStmt{&goast.GenDecl{
-				Tok: token.VAR,
-				Specs: []goast.Spec{&goast.ValueSpec{
-					Names: []*goast.Ident{util.NewIdent("c2goVaListPosition")},
-					Type:  goast.NewIdent("int"),
-					Values: []goast.Expr{&goast.BasicLit{
-						Kind:  token.INT,
-						Value: "0",
-					}},
-				}},
-			}}, &goast.AssignStmt{
-				Lhs: []goast.Expr{goast.NewIdent("_")},
-				Tok: token.ASSIGN,
-				Rhs: []goast.Expr{util.NewIdent("c2goVaListPosition")},
-			},
-			}, body.List...)
-		}
-
 		decls = append(decls, &goast.FuncDecl{
 			Name: util.NewIdent(n.Name),
 			Type: util.NewFuncType(fieldList, t, addReturnName),
@@ -246,6 +225,10 @@ func getFieldList(f *ast.FunctionDecl, p *program.Program) (_ *goast.FieldList, 
 				}
 				r = append(r, field)
 				continue
+			}
+			// when passing va_list to a function, always name it c2goVaList
+			if v.Type == "struct __va_list_tag *" {
+				v.Name = "c2goVaList"
 			}
 			t, err := types.ResolveType(p, v.Type)
 			p.AddMessage(p.GenerateWarningMessage(err, f))

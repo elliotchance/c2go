@@ -110,12 +110,13 @@ var otherStructType = map[string]string{
 	"time_t":    "github.com/elliotchance/c2go/noarch.TimeT",
 
 	// Darwin specific
-	"__darwin_ct_rune_t": "github.com/elliotchance/c2go/darwin.CtRuneT",
-	"fpos_t":             "int",
-	"struct __float2":    "github.com/elliotchance/c2go/darwin.Float2",
-	"struct __double2":   "github.com/elliotchance/c2go/darwin.Double2",
-	"Float2":             "github.com/elliotchance/c2go/darwin.Float2",
-	"Double2":            "github.com/elliotchance/c2go/darwin.Double2",
+	"__darwin_ct_rune_t":     "github.com/elliotchance/c2go/darwin.CtRuneT",
+	"fpos_t":                 "int",
+	"struct __float2":        "github.com/elliotchance/c2go/darwin.Float2",
+	"struct __double2":       "github.com/elliotchance/c2go/darwin.Double2",
+	"Float2":                 "github.com/elliotchance/c2go/darwin.Float2",
+	"Double2":                "github.com/elliotchance/c2go/darwin.Double2",
+	"struct __va_list_tag *": "github.com/elliotchance/c2go/noarch.VaList",
 }
 
 // NullPointer - is look : (double *)(nil) or (FILE *)(nil)

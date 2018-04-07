@@ -721,15 +721,10 @@ func Sprintf(buffer, format []byte, args ...interface{}) int {
 // format includes format specifiers (subsequences beginning with %), the
 // additional arguments following format are formatted and inserted in the
 // resulting string replacing their respective specifiers.
-func Vsprintf(buffer, format []byte, varList ...interface{}) int {
+func Vsprintf(buffer, format []byte, args VaList) int {
 	realArgs := []interface{}{}
 
-	if len(varList) > 1 {
-		// TODO : I don`t found the situation with more 1 size
-		return 0
-	}
-
-	realArgs = append(realArgs, convert(varList)...)
+	realArgs = append(realArgs, convert(args.Args)...)
 
 	result := fmt.Sprintf(CStringToString(format), realArgs...)
 	for i := range []byte(result) {
@@ -748,7 +743,7 @@ func Vsprintf(buffer, format []byte, varList ...interface{}) int {
 // additional arguments following format are formatted and inserted in the
 // resulting string replacing their respective specifiers.
 func Snprintf(buffer []byte, n int, format []byte, args ...interface{}) int {
-	return Vsnprintf(buffer, n, format, args)
+	return internalVsnprintf(buffer, n, format, args)
 }
 
 // convert - convert va_list
@@ -773,15 +768,14 @@ func convert(arg interface{}) (result []interface{}) {
 // format includes format specifiers (subsequences beginning with %), the
 // additional arguments following format are formatted and inserted in the
 // resulting string replacing their respective specifiers.
-func Vsnprintf(buffer []byte, n int, format []byte, varList ...interface{}) int {
+func Vsnprintf(buffer []byte, n int, format []byte, args VaList) int {
+	return internalVsnprintf(buffer, n, format, args.Args)
+}
+
+func internalVsnprintf(buffer []byte, n int, format []byte, args ...interface{}) int {
 	realArgs := []interface{}{}
 
-	if len(varList) > 1 {
-		// TODO : I don`t found the situation with more 1 size
-		return 0
-	}
-
-	realArgs = append(realArgs, convert(varList)...)
+	realArgs = append(realArgs, convert(args)...)
 
 	result := fmt.Sprintf(CStringToString(format), realArgs...)
 	if len(result) > n {
