@@ -15,7 +15,7 @@ import (
 	"go/token"
 )
 
-func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program, operator token.Token) (
+func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program, operator token.Token, exprIsStmt bool) (
 	expr goast.Expr, eType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 	defer func() {
 		if err != nil {
@@ -80,20 +80,27 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program, operato
 	}
 
 	if v, ok := n.Children()[0].(*ast.DeclRefExpr); ok {
-		switch n.Operator {
-		case "++":
-			return &goast.BinaryExpr{
-				X:  util.NewIdent(v.Name),
-				Op: token.ADD_ASSIGN,
-				Y:  &goast.BasicLit{Kind: token.INT, Value: "1"},
-			}, n.Type, nil, nil, nil
-		case "--":
-			return &goast.BinaryExpr{
-				X:  util.NewIdent(v.Name),
-				Op: token.SUB_ASSIGN,
-				Y:  &goast.BasicLit{Kind: token.INT, Value: "1"},
-			}, n.Type, nil, nil, nil
+		var e goast.Expr = &goast.BinaryExpr{
+			X:  util.NewIdent(v.Name),
+			Op: token.ADD_ASSIGN,
+			Y:  &goast.BasicLit{Kind: token.INT, Value: "1"},
 		}
+
+		if n.Operator == "--" {
+			e.(*goast.BinaryExpr).Op = token.SUB_ASSIGN
+		}
+
+		if !exprIsStmt {
+			e = util.NewFuncClosure(
+				v.Type,
+				util.NewExprStmt(e),
+				&goast.ReturnStmt{
+					Results: []goast.Expr{util.NewIdent(v.Name)},
+				},
+			)
+		}
+
+		return e, n.Type, nil, nil, nil
 	}
 
 	// Unfortunately we cannot use the Go increment operators because we are not
@@ -119,7 +126,7 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program, operato
 				ChildNodes: []ast.Node{},
 			},
 		},
-	}, p, false)
+	}, p, exprIsStmt)
 }
 
 func transpileUnaryOperatorNot(n *ast.UnaryOperator, p *program.Program) (
@@ -263,8 +270,8 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 		for i := range n.Children() {
 			switch v := n.Children()[i].(type) {
 			case *ast.ArraySubscriptExpr,
-				*ast.UnaryOperator,
-				*ast.DeclRefExpr:
+			*ast.UnaryOperator,
+			*ast.DeclRefExpr:
 				counter++
 				if counter > 1 {
 					err = fmt.Errorf("Not acceptable : change counter is more then 1. found = %T,%T", pointer, v)
@@ -572,7 +579,7 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 	return nil, "", nil, nil, fmt.Errorf("Cannot found : %#v", pointer)
 }
 
-func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
+func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program, exprIsStmt bool) (
 	_ goast.Expr, theType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 	defer func() {
 		if err != nil {
@@ -586,12 +593,12 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 	switch operator {
 	case token.MUL: // *
 		// Prefix "*" is not a multiplication.
-		// Prefix "*" used for pointer ariphmetic
+		// Prefix "*" used for pointer arithmetic
 		// Example of using:
 		// *(t + 1) = ...
 		return transpilePointerArith(n, p)
 	case token.INC, token.DEC: // ++, --
-		return transpileUnaryOperatorInc(n, p, operator)
+		return transpileUnaryOperatorInc(n, p, operator, exprIsStmt)
 	case token.NOT: // !
 		return transpileUnaryOperatorNot(n, p)
 	case token.AND: // &

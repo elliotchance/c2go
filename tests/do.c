@@ -3,7 +3,7 @@
 
 int main()
 {
-    plan(7);
+    plan(15);
 	
 	int i = 0;
 
@@ -28,11 +28,28 @@ int main()
 		if (i < 10) { break; }
 	} while ((i /= 10) > 0);
 	is_eq( i , 8 );
-	
+
 	diag("do without CompoundStmt");
 	int s = 1;
 	do s++; while(s < 10);
 	is_eq(s , 10);
+
+	diag("do while non-boolean expression")
+	{
+        int n = 3;
+        do {
+            pass("%d", n);
+        } while(--n);
+        is_eq(n, 0)
+	}
+
+	{
+        int n = -3;
+        do {
+            pass("%d", n);
+        } while(++n);
+        is_eq(n, 0)
+	}
 
 	done_testing();
 }
