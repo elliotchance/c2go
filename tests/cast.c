@@ -81,9 +81,20 @@ void test_strCh()
 	is_eq(strlenChar(z),11);
 }
 
+typedef unsigned int pcre_uint32;
+#define CHAR_NBSP                   ((unsigned char)'\xa0')
+
+void test_preprocessor()
+{
+    int tmp = 160;
+    pcre_uint32 chr = tmp;
+
+    is_eq(chr, CHAR_NBSP);
+}
+
 int main()
 {
-    plan(29);
+    plan(30);
 
     START_TEST(cast);
     START_TEST(castbool);
@@ -170,6 +181,9 @@ int main()
 	}
 
 	char_overflow();
+
+    diag("Compare preprocessor with type")
+    test_preprocessor();
 
     done_testing();
 }
