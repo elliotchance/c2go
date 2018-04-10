@@ -271,16 +271,16 @@ func decodeUCN(runes []rune) (rune, int) {
 	switch runes[0] {
 	case 'u':
 		hq, n := decodeHexQuad(runes[1:])
-		return rune(hq), n+2
+		return rune(hq), n + 2
 	case 'U':
 		hq, n := decodeHexQuad(runes[1:])
 		if n == 4 {
 			hq2, n2 := decodeHexQuad(runes[5:])
-			hq = hq << (4*uint(n2))
+			hq = hq << (4 * uint(n2))
 			hq = hq | hq2
 			n = n + n2
 		}
-		return rune(hq), n+2
+		return rune(hq), n + 2
 	default:
 		panic("internal error")
 	}
