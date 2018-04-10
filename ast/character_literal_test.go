@@ -331,20 +331,7 @@ func TestCharacterLiteralRepairFromSource(t *testing.T) {
 		{"# 2 \"x.c\"\n\n# 4 \"dummy.c\"ff\nxxxxx\nvar xyst = '\\n'\nyyyy", int('\n'), nil},
 	}
 	for _, test := range tests {
-		func() {
-			cc.ResetCache()
-			dir, err := ioutil.TempDir("", "c2go")
-			if err != nil {
-				t.Fatal(fmt.Errorf("Cannot create temp folder: %v", err))
-			}
-			defer os.RemoveAll(dir) // clean up
-
-			ppFilePath := path.Join(dir, "pp.c")
-			err = ioutil.WriteFile(ppFilePath, []byte(test.file), 0644)
-			if err != nil {
-				t.Fatal(fmt.Errorf("writing to %s failed: %v", ppFilePath, err))
-			}
-
+		prepareRepairFromSourceTest(t, test.file, func(ppFilePath string) {
 			errors := RepairCharacterLiteralsFromSource(root, ppFilePath)
 			if cl.Value != test.expected {
 				t.Errorf("RepairCharacterLiteralsFromSource - expected: %x, got: %x", test.expected, cl.Value)
@@ -354,6 +341,23 @@ func TestCharacterLiteralRepairFromSource(t *testing.T) {
 			} else if test.err != nil && errors[0].Err.Error() != test.err.Error() {
 				t.Errorf("RepairCharacterLiteralsFromSource - error should match: expected: %s, got: %s", test.err.Error(), errors[0].Err.Error())
 			}
-		}()
+		})
 	}
+}
+
+func prepareRepairFromSourceTest(t *testing.T, fileContent string, test func(filePath string)) {
+	cc.ResetCache()
+	dir, err := ioutil.TempDir("", "c2go")
+	if err != nil {
+		t.Fatal(fmt.Errorf("Cannot create temp folder: %v", err))
+	}
+	defer os.RemoveAll(dir) // clean up
+
+	ppFilePath := path.Join(dir, "pp.c")
+	err = ioutil.WriteFile(ppFilePath, []byte(fileContent), 0644)
+	if err != nil {
+		t.Fatal(fmt.Errorf("writing to %s failed: %v", ppFilePath, err))
+	}
+
+	test(ppFilePath)
 }
