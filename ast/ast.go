@@ -44,9 +44,6 @@ func Parse(fullline string) Node {
 	}
 
 	parts := strings.SplitN(line, " ", 2)
-	if ignoreNode(parts) {
-		return nil
-	}
 	nodeName := parts[0]
 
 	// skip node name
@@ -129,6 +126,8 @@ func Parse(fullline string) Node {
 		return parseFloatingLiteral(line)
 	case "FormatAttr":
 		return parseFormatAttr(line)
+	case "FormatArgAttr":
+		return parseFormatArgAttr(line)
 	case "FunctionDecl":
 		return parseFunctionDecl(line)
 	case "FullComment":
@@ -177,6 +176,8 @@ func Parse(fullline string) Node {
 		return parseNoThrowAttr(line)
 	case "NonNullAttr":
 		return parseNonNullAttr(line)
+	case "NotTailCalledAttr":
+		return parseNotTailCalledAttr(line)
 	case "OffsetOfExpr":
 		return parseOffsetOfExpr(line)
 	case "PackedAttr":
