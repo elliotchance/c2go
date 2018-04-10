@@ -261,6 +261,16 @@ func Start(args ProgramArgs) (err error) {
 	ast.FixPositions(tree)
 	p.SetNodes(tree)
 
+	// Repair the character literals. See RepairCharacterLiteralsFromSource for
+	// more information.
+	characterErrors := ast.RepairCharacterLiteralsFromSource(tree[0], ppFilePath)
+
+	for _, cErr := range characterErrors {
+		message := fmt.Sprintf("could not read exact character literal: %s",
+			cErr.Err.Error())
+		p.AddMessage(p.GenerateWarningMessage(errors.New(message), cErr.Node))
+	}
+
 	// Repair the floating literals. See RepairFloatingLiteralsFromSource for
 	// more information.
 	floatingErrors := ast.RepairFloatingLiteralsFromSource(tree[0], ppFilePath)
