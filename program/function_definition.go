@@ -234,6 +234,13 @@ var builtInFunctionDefinitions = map[string][]string{
 		"long long unsigned int strtoull(const char *, char **, int) -> noarch.Strtoull",
 		"void free(void*) -> _",
 	},
+	"syslog.h": []string{
+		"void openlog(const char *, int, int) -> noarch.Openlog",
+		"int setlogmask(int) -> noarch.Setlogmask",
+		"void syslog(int, const char *) -> noarch.Syslog",
+		"void vsyslog(int, const char *, struct __va_list_tag *) -> noarch.Vsyslog",
+		"void closelog(void) -> noarch.Closelog",
+	},
 	"time.h": []string{
 		// time.h
 		"time_t time(time_t *) -> noarch.Time",
