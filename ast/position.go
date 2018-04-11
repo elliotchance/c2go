@@ -337,6 +337,8 @@ func setPosition(node Node, position Position) {
 		n.Pos = position
 	case *NoThrowAttr:
 		n.Pos = position
+	case *NotTailCalledAttr:
+		n.Pos = position
 	case *NonNullAttr:
 		n.Pos = position
 	case *OffsetOfExpr:

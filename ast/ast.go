@@ -176,6 +176,8 @@ func Parse(fullline string) Node {
 		return parseNoThrowAttr(line)
 	case "NonNullAttr":
 		return parseNonNullAttr(line)
+	case "NotTailCalledAttr":
+		return parseNotTailCalledAttr(line)
 	case "OffsetOfExpr":
 		return parseOffsetOfExpr(line)
 	case "PackedAttr":
