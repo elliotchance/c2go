@@ -93,14 +93,25 @@ void test_preprocessor()
 }
 
 typedef unsigned char pcre_uchar;
+
 void caststr() {
     pcre_uchar str[] = "abcd";
     is_streq((char *) str, "abcd");
 }
 
+static const pcre_uchar TEST[] =  {
+  'x', (pcre_uchar) CHAR_NBSP, '\n', '\0' };
+
+void test_static_array()
+{
+    is_eq('x', TEST[0]);
+    is_eq((pcre_uchar) '\xa0', TEST[1]);
+    is_eq('\n', TEST[2]);
+}
+
 int main()
 {
-    plan(31);
+    plan(34);
 
     START_TEST(cast);
     START_TEST(castbool);
@@ -193,6 +204,9 @@ int main()
 
     diag("Typedef slice convertion")
     caststr();
+
+    diag("Compare with static array")
+    test_static_array();
 
     done_testing();
 }
