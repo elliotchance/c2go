@@ -83,9 +83,9 @@ func RepairCharacterLiteralsFromSource(rootNode Node, preprocessedFile string) [
 		cNode := node.(*CharacterLiteral)
 		pos := node.Position()
 		var (
-			err error
+			err      error
 			lastLine = pos.LineEnd
-			i int
+			i        int
 		)
 		if lastLine == 0 {
 			lastLine = pos.Line
@@ -124,14 +124,12 @@ func parseCharacterLiteralFromPosition(preprocessedFile string, pos Position, li
 	// Extract the exact value from the line.
 	if pos.Column-1 >= len(line) {
 		return 0, errors.New("cannot get exact value")
-	} else {
-		literal := line[pos.Column-1:]
-		if i, err := parseCharacterLiteralFromSource(literal); err == nil {
-			return i, nil
-		} else {
-			return 0, fmt.Errorf("cannot parse character literal: %v from %s", err, literal)
-		}
 	}
+	literal := line[pos.Column-1:]
+	if i, err := parseCharacterLiteralFromSource(literal); err == nil {
+		return i, nil
+	}
+	return 0, fmt.Errorf("cannot parse character literal: %v from %s", err, literal)
 }
 
 func parseCharacterLiteralFromSource(literal string) (ret int, err error) {
