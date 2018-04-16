@@ -102,16 +102,24 @@ void caststr() {
 static const pcre_uchar TEST[] =  {
   'x', (pcre_uchar) CHAR_NBSP, '\n', '\0' };
 
+#define CHAR_E ((unsigned char) 'e')
+static const pcre_uchar TEST2[] =  {
+  'x', (pcre_uchar) CHAR_NBSP, '\n',
+  (pcre_uchar) CHAR_E, '\0' };
+
+
 void test_static_array()
 {
     is_eq('x', TEST[0]);
     is_eq((pcre_uchar) '\xa0', TEST[1]);
     is_eq('\n', TEST[2]);
+    is_eq('x', TEST2[0]);
+    is_eq('e', TEST2[3]); // can distinguish character at same column in different lines
 }
 
 int main()
 {
-    plan(34);
+    plan(36);
 
     START_TEST(cast);
     START_TEST(castbool);
