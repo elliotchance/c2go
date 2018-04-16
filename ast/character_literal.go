@@ -126,8 +126,8 @@ func parseCharacterLiteralFromPosition(preprocessedFile string, pos Position, li
 		return 0, errors.New("cannot get exact value")
 	}
 	literal := line[pos.Column-1:]
-	if i, err := parseCharacterLiteralFromSource(literal); err == nil {
-		return i, nil
+	if ret, err = parseCharacterLiteralFromSource(literal); err == nil {
+		return ret, nil
 	}
 	return 0, fmt.Errorf("cannot parse character literal: %v from %s", err, literal)
 }
