@@ -225,9 +225,15 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 		return nil, "unknown53", nil, nil, err
 	}
 	if types.IsPointer(leftType) && types.IsPointer(rightType) &&
-		(operator == token.SUB || operator == token.NEQ || operator == token.EQL ||
+		(operator == token.SUB ||
 			operator == token.LSS || operator == token.GTR ||
 			operator == token.LEQ || operator == token.GEQ) {
+		left, leftType = util.GetUintptrForSlice(left)
+		right, rightType = util.GetUintptrForSlice(right)
+	}
+	if types.IsPointer(leftType) && types.IsPointer(rightType) &&
+		(operator == token.EQL || operator == token.NEQ) &&
+		leftType != "NullPointerType *" && rightType != "NullPointerType *" {
 		left, leftType = util.GetUintptrForSlice(left)
 		right, rightType = util.GetUintptrForSlice(right)
 	}

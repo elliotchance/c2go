@@ -27,11 +27,13 @@ void compare_pointers() {
     is_true(t);
     t = a >= b;
     is_true(t);
+    t = a == 0;
+    is_false(t);
 }
 
 int main()
 {
-    plan(15);
+    plan(16);
 
     int x = 1;
 
