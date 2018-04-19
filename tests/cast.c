@@ -92,9 +92,15 @@ void test_preprocessor()
     is_eq(chr, CHAR_NBSP);
 }
 
+typedef unsigned char pcre_uchar;
+void caststr() {
+    pcre_uchar str[] = "abcd";
+    is_streq((char *) str, "abcd");
+}
+
 int main()
 {
-    plan(30);
+    plan(31);
 
     START_TEST(cast);
     START_TEST(castbool);
@@ -184,6 +190,9 @@ int main()
 
     diag("Compare preprocessor with type")
     test_preprocessor();
+
+    diag("Typedef slice convertion")
+    caststr();
 
     done_testing();
 }
