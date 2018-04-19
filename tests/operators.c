@@ -37,7 +37,7 @@ double * return_null(){
 
 int main()
 {
-	plan(96);
+	plan(98);
 
     int i = 10;
     signed char j = 1;
@@ -373,6 +373,12 @@ int main()
 		is_eq(x, 54);
 		is_eq(y, 18);
 		is_eq(z, 6 );
+	}
+	{
+		int x, y = 2;
+		((x = 3),(y -= 1));
+		is_eq(x, 3);
+		is_eq(y, 1);
 	}
 
 	done_testing();
