@@ -5,9 +5,35 @@ int d(int v){
 	return 2*v;
 }
 
+void compare_pointers() {
+    char * str = "aaaaaaaaaa";
+    char * a = &str[2];
+    char * b = &str[3];
+    int t = a < b;
+    is_true(t);
+    b = &str[1];
+    t = a > b;
+    is_true(t);
+    t = a == b;
+    is_false(t);
+    t = a < b;
+    is_false(t);
+    b = &str[2];
+    t = a == b;
+    is_true(t);
+    t = a < b;
+    is_false(t);
+    t = a <= b;
+    is_true(t);
+    t = a >= b;
+    is_true(t);
+    t = a == 0;
+    is_false(t);
+}
+
 int main()
 {
-    plan(7);
+    plan(16);
 
     int x = 1;
 
@@ -56,6 +82,9 @@ int main()
 			pass("ok");
 		}
 	}
+
+	diag("Pointer comparisons");
+	compare_pointers();
 
     done_testing();
 }

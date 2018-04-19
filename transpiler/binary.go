@@ -224,7 +224,16 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 	if err != nil {
 		return nil, "unknown53", nil, nil, err
 	}
-	if types.IsPointer(leftType) && types.IsPointer(rightType) && operator == token.SUB {
+	if types.IsPointer(leftType) && types.IsPointer(rightType) &&
+		(operator == token.SUB ||
+			operator == token.LSS || operator == token.GTR ||
+			operator == token.LEQ || operator == token.GEQ) {
+		left, leftType = util.GetUintptrForSlice(left)
+		right, rightType = util.GetUintptrForSlice(right)
+	}
+	if types.IsPointer(leftType) && types.IsPointer(rightType) &&
+		(operator == token.EQL || operator == token.NEQ) &&
+		leftType != "NullPointerType *" && rightType != "NullPointerType *" {
 		left, leftType = util.GetUintptrForSlice(left)
 		right, rightType = util.GetUintptrForSlice(right)
 	}
@@ -296,6 +305,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 
 	if operator == token.NEQ || operator == token.EQL ||
 		operator == token.LSS || operator == token.GTR ||
+		operator == token.LEQ || operator == token.GEQ ||
 		operator == token.AND || operator == token.ADD ||
 		operator == token.SUB || operator == token.MUL ||
 		operator == token.QUO || operator == token.REM {
@@ -309,6 +319,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 			rightType = leftType
 			p.AddMessage(p.GenerateWarningOrErrorMessage(err, n, right == nil))
 		}
+
 	}
 
 	if operator == token.ASSIGN {
