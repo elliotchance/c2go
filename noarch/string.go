@@ -2,6 +2,7 @@ package noarch
 
 import (
 	"bytes"
+	"unsafe"
 )
 
 // Strlen returns the length of a string.
@@ -94,4 +95,24 @@ func Strchr(str []byte, ch int32) []byte {
 		i++
 	}
 	return nil
+}
+
+func Memset(dst interface{}, val int, size int) interface{} {
+	data := *(*[]byte)(unsafe.Pointer(UnsafeSliceToSlice(dst, 1, 1)))
+	var i int
+	var vb = byte(val)
+	for i = 0; i < size; i++ {
+		data[i] = vb
+	}
+	return dst
+}
+
+func Memcpy(dst interface{}, src interface{}, size int) interface{} {
+	bDst := *(*[]byte)(unsafe.Pointer(UnsafeSliceToSlice(dst, 1, 1)))
+	bSrc := *(*[]byte)(unsafe.Pointer(UnsafeSliceToSlice(src, 1, 1)))
+	var i int
+	for i = 0; i < size; i++ {
+		bDst[i] = bSrc[i]
+	}
+	return dst
 }

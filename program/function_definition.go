@@ -192,6 +192,12 @@ var builtInFunctionDefinitions = map[string][]string{
 		// in according to noarch.Strlen
 		"int strlen(const char*) -> noarch.Strlen",
 
+		// should be: "void* memset(void *, int, size_t) -> noarch.Memset"
+		"void* memset(void *, int, int) -> noarch.Memset",
+
+		// should be: "void* memcpy(void *, void *, size_t) -> noarch.Memcpy"
+		"void* memcpy(void *, void *, int) -> noarch.Memcpy",
+
 		// darwin/string.h
 		// should be: const char*, char*, size_t
 		"char* __builtin___strcpy_chk(const char*, char*, int) -> darwin.BuiltinStrcpy",
