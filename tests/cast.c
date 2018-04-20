@@ -117,9 +117,15 @@ void test_static_array()
     is_eq('e', TEST2[3]); // can distinguish character at same column in different lines
 }
 
+void castbitwise() {
+    pcre_uint32 x = 0xff;
+    x &= ~0x3c;
+    is_eq(x, 0xc3);
+}
+
 int main()
 {
-    plan(36);
+    plan(37);
 
     START_TEST(cast);
     START_TEST(castbool);
@@ -215,6 +221,9 @@ int main()
 
     diag("Compare with static array")
     test_static_array();
+
+    diag("Cast with compound assign operator")
+    castbitwise();
 
     done_testing();
 }
