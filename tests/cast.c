@@ -92,9 +92,15 @@ void test_preprocessor()
     is_eq(chr, CHAR_NBSP);
 }
 
+void castbitwise() {
+    pcre_uint32 x = 0xff;
+    x &= ~0x3c;
+    is_eq(x, 0xc3);
+}
+
 int main()
 {
-    plan(30);
+    plan(31);
 
     START_TEST(cast);
     START_TEST(castbool);
@@ -184,6 +190,9 @@ int main()
 
     diag("Compare preprocessor with type")
     test_preprocessor();
+
+    diag("Cast with compound assign operator")
+    castbitwise();
 
     done_testing();
 }
