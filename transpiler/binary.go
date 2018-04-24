@@ -490,7 +490,7 @@ func generateAlloc(p *program.Program, allocSize ast.Node, leftType string) (
 	right = util.NewCallExpr(
 		"make",
 		util.NewTypeIdent(toType),
-		util.NewBinaryExpr(allocSizeExpr, token.QUO, util.NewIntLit(elementSize), "int", false),
+		util.NewBinaryExpr(allocSizeExpr, token.QUO, util.NewIntLit(elementSize), "int32", false),
 	)
 	return
 }

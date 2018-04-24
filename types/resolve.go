@@ -68,14 +68,14 @@ var simpleResolveTypes = map[string]string{
 	"unsigned long":          "uint32",
 	"unsigned short":         "uint16",
 	"unsigned short int":     "uint16",
-	"void":                   "",
+	"void":                   "byte",
 	"_Bool":                  "int8",
 
 	// void*
 	"void*":  "interface{}",
 	"void *": "interface{}",
 
-	// null is a special case (it should probably have a less ambiguos name)
+	// null is a special case (it should probably have a less ambiguous name)
 	// when using the NULL macro.
 	"null": "null",
 
@@ -111,7 +111,7 @@ var otherStructType = map[string]string{
 
 	// Darwin specific
 	"__darwin_ct_rune_t":     "github.com/elliotchance/c2go/darwin.CtRuneT",
-	"fpos_t":                 "int",
+	"fpos_t":                 "int32",
 	"struct __float2":        "github.com/elliotchance/c2go/darwin.Float2",
 	"struct __double2":       "github.com/elliotchance/c2go/darwin.Double2",
 	"Float2":                 "github.com/elliotchance/c2go/darwin.Float2",

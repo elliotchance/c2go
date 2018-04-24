@@ -26,6 +26,7 @@ var resolveTestCases = []resolveTestCase{
 	{"div_t", "noarch.DivT"},
 	{"ldiv_t", "noarch.LdivT"},
 	{"lldiv_t", "noarch.LldivT"},
+	{"fpos_t", "int32"},
 	{"int [2]", "[]int32"},
 	{"int [2][3]", "[][]int32"},
 	{"int [2][3][4]", "[][][]int32"},

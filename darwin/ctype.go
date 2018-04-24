@@ -6,7 +6,7 @@ import (
 )
 
 // CtRuneT represents __darwin_ct_rune_t.
-type CtRuneT int
+type CtRuneT int32
 
 // Apple defines a bunch of magic values for the type of character, see
 // https://opensource.apple.com/source/Libc/Libc-320/include/ctype.h.auto.html

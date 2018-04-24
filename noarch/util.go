@@ -77,7 +77,7 @@ func GoPointerToCPointer(destination interface{}, value interface{}) {
 // UnsafeSliceToSlice takes a slice and transforms it into a slice of a different type.
 // For this we need to adjust the length and capacity in accordance with the sizes
 // of the underlying types.
-func UnsafeSliceToSlice(a interface{}, fromSize int, toSize int) *reflect.SliceHeader {
+func UnsafeSliceToSlice(a interface{}, fromSize int32, toSize int32) *reflect.SliceHeader {
 	v := reflect.ValueOf(a)
 
 	// v might not be addressable, use this trick to get v2 = v,
@@ -92,7 +92,7 @@ func UnsafeSliceToSlice(a interface{}, fromSize int, toSize int) *reflect.SliceH
 
 	// adjust header to adjust sizes for the new type
 	header := *(*reflect.SliceHeader)(ptr)
-	header.Len = (header.Len * fromSize) / toSize
-	header.Cap = (header.Cap * fromSize) / toSize
+	header.Len = (header.Len * int(fromSize)) / int(toSize)
+	header.Cap = (header.Cap * int(fromSize)) / int(toSize)
 	return &header
 }

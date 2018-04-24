@@ -8,14 +8,14 @@ import (
 )
 
 // BuiltinExpect handles __builtin_expect().
-func BuiltinExpect(a, b int) int {
+func BuiltinExpect(a, b int32) int32 {
 	return noarch.BoolToInt(a != b)
 }
 
 // AssertRtn handles __assert_rtn().
 func AssertRtn(
 	functionName, filePath []byte,
-	lineNumber int,
+	lineNumber int32,
 	expression []byte,
 ) bool {
 	fmt.Fprintf(

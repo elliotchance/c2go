@@ -84,11 +84,11 @@ func CtypeLoc() [][]uint16 {
 }
 
 // ToLower handles tolower().
-func ToLower(_c int) int {
-	return int(unicode.ToLower(rune(_c)))
+func ToLower(_c int32) int32 {
+	return int32(unicode.ToLower(rune(_c)))
 }
 
 // ToUpper handles toupper().
-func ToUpper(_c int) int {
-	return int(unicode.ToUpper(rune(_c)))
+func ToUpper(_c int32) int32 {
+	return int32(unicode.ToUpper(rune(_c)))
 }
