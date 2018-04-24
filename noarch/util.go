@@ -2,6 +2,7 @@ package noarch
 
 import (
 	"reflect"
+	"unsafe"
 )
 
 // CStringToString returns a string that contains all the bytes in the
@@ -71,4 +72,27 @@ func CPointerToGoPointer(a interface{}) interface{} {
 func GoPointerToCPointer(destination interface{}, value interface{}) {
 	v := reflect.ValueOf(destination).Elem()
 	reflect.ValueOf(value).Index(0).Set(v)
+}
+
+// UnsafeSliceToSlice takes a slice and transforms it into a slice of a different type.
+// For this we need to adjust the length and capacity in accordance with the sizes
+// of the underlying types.
+func UnsafeSliceToSlice(a interface{}, fromSize int, toSize int) *reflect.SliceHeader {
+	v := reflect.ValueOf(a)
+
+	// v might not be addressable, use this trick to get v2 = v,
+	// with v2 being addressable
+	v2 := reflect.New(v.Type()).Elem()
+	v2.Set(v)
+
+	// get a pointer to the SliceHeader
+	// Calling Pointer() on the slice directly only gets a pointer to the 1st element, not the slice header,
+	// which is why we first call Addr()
+	ptr := unsafe.Pointer(v2.Addr().Pointer())
+
+	// adjust header to adjust sizes for the new type
+	header := *(*reflect.SliceHeader)(ptr)
+	header.Len = (header.Len * fromSize) / toSize
+	header.Cap = (header.Cap * fromSize) / toSize
+	return &header
 }
