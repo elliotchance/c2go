@@ -128,7 +128,7 @@ func SizeOf(p *program.Program, cType string) (size int, err error) {
 	}
 
 	switch cType {
-	case "char", "void":
+	case "char", "void", "bool":
 		return 1, nil
 
 	case "short":

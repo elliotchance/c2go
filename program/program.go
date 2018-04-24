@@ -131,7 +131,7 @@ type IncludeHeader struct {
 func NewProgram() (p *Program) {
 	defer func() {
 		// Need for "stdbool.h"
-		p.TypedefType["_Bool"] = "int"
+		p.TypedefType["_Bool"] = "signed char"
 	}()
 	return &Program{
 		imports:             []string{},

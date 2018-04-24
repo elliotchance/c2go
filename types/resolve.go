@@ -52,7 +52,7 @@ var simpleResolveTypes = map[string]string{
 	"char*":                  "[]byte",
 	"double":                 "float64",
 	"float":                  "float32",
-	"int":                    "int",
+	"int":                    "int32",
 	"long double":            "float64",
 	"long int":               "int32",
 	"long long":              "int64",
@@ -69,7 +69,7 @@ var simpleResolveTypes = map[string]string{
 	"unsigned short":         "uint16",
 	"unsigned short int":     "uint16",
 	"void":                   "",
-	"_Bool":                  "int",
+	"_Bool":                  "int8",
 
 	// void*
 	"void*":  "interface{}",
@@ -164,7 +164,7 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 	s = CleanCType(s)
 
 	if s == "_Bool" {
-		p.TypedefType[s] = "int"
+		p.TypedefType[s] = "signed char"
 	}
 
 	// FIXME: This is a hack to avoid casting in some situations.
@@ -182,7 +182,7 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 	}
 
 	if s == "fpos_t" {
-		return "int", nil
+		return ResolveType(p, "int")
 	}
 
 	// FIXME: I have no idea, how to solve.
@@ -192,7 +192,7 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 		s = strings.Replace(s, "__locale_data", "int", -1)
 	}
 	if strings.Contains(s, "__locale_struct") {
-		return "int", nil
+		return ResolveType(p, "int")
 	}
 
 	// function type is pointer in Go by default
@@ -206,13 +206,13 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 	}
 
 	// No need resolve typedef types
-	if _, ok := p.TypedefType[s]; ok {
+	if ss, ok := p.TypedefType[s]; ok {
 		if tt, ok := otherStructType[s]; ok {
 			// "div_t":   "github.com/elliotchance/c2go/noarch.DivT",
 			ii := p.ImportType(tt)
 			return ii, nil
 		} else {
-			return s, nil
+			return ResolveType(p, ss)
 		}
 	}
 

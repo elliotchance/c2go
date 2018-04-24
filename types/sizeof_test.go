@@ -15,6 +15,9 @@ type sizeofTestCase struct {
 }
 
 var sizeofTestCases = []sizeofTestCase{
+	{"bool", 1, nil},
+	{"_Bool", 1, nil},
+	{"char", 1, nil},
 	{"int", 4, nil},
 	{"int [2]", 4 * 2, nil},
 	{"int [2][3]", 4 * 2 * 3, nil},
