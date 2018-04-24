@@ -68,7 +68,7 @@ var simpleResolveTypes = map[string]string{
 	"unsigned long":          "uint32",
 	"unsigned short":         "uint16",
 	"unsigned short int":     "uint16",
-	"void":                   "byte",
+	"void":                   "",
 	"_Bool":                  "int8",
 
 	// void*
@@ -211,9 +211,11 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 			// "div_t":   "github.com/elliotchance/c2go/noarch.DivT",
 			ii := p.ImportType(tt)
 			return ii, nil
-		} else {
+		}
+		if s == "_Bool" {
 			return ResolveType(p, ss)
 		}
+		return s, nil
 	}
 
 	if tt, ok := otherStructType[s]; ok {

@@ -347,7 +347,7 @@ func Tmpnam(str []byte) []byte {
 // When a file is closed, either because of a call to fclose or because the
 // program terminates, all the buffers associated with it are automatically
 // flushed.
-func Fflush(stream *File) int {
+func Fflush(stream *File) int32 {
 	err := stream.OsFile.Sync()
 	if err != nil {
 		return 1
@@ -365,7 +365,7 @@ func Fflush(stream *File) int {
 //
 // After the format parameter, the function expects at least as many additional
 // arguments as specified by format.
-func Fprintf(f *File, format []byte, args ...interface{}) int {
+func Fprintf(f *File, format []byte, args ...interface{}) int32 {
 	realArgs := []interface{}{}
 
 	// Convert any C strings into Go strings.
@@ -383,7 +383,7 @@ func Fprintf(f *File, format []byte, args ...interface{}) int {
 		return -1
 	}
 
-	return n
+	return int32(n)
 }
 
 // Fscanf handles fscanf().
@@ -472,7 +472,7 @@ func Fgetc(stream *File) int32 {
 //
 // The character is written at the position indicated by the internal position
 // indicator of the stream, which is then automatically advanced by one.
-func Fputc(c int, f *File) int32 {
+func Fputc(c int32, f *File) int32 {
 	n, err := f.OsFile.Write([]byte{byte(c)})
 	if err != nil {
 		return 0
@@ -721,7 +721,7 @@ func Sprintf(buffer, format []byte, args ...interface{}) int32 {
 // format includes format specifiers (subsequences beginning with %), the
 // additional arguments following format are formatted and inserted in the
 // resulting string replacing their respective specifiers.
-func Vsprintf(buffer, format []byte, args VaList) int {
+func Vsprintf(buffer, format []byte, args VaList) int32 {
 	realArgs := []interface{}{}
 
 	realArgs = append(realArgs, convert(args.Args)...)
@@ -733,7 +733,7 @@ func Vsprintf(buffer, format []byte, args VaList) int {
 	buffer[len(result)] = '\x00'
 
 	n := len(result)
-	return n
+	return int32(n)
 }
 
 // Snprintf handles snprintf().

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/elliotchance/c2go/util"
+	"math/rand"
 )
 
 // DivT is the representation of "div_t". It is used by div().
@@ -181,6 +182,11 @@ func Div(numer, denom int32) DivT {
 	}
 }
 
+// Exit uses os.Exit to stop program execution.
+func Exit(exitCode int32) {
+	os.Exit(int(exitCode))
+}
+
 // Getenv retrieves a C-string containing the value of the environment variable
 // whose name is specified as argument. If the requested variable is not part of
 // the environment list, the function returns a null pointer.
@@ -243,6 +249,11 @@ func Lldiv(numer, denom int64) LldivT {
 		Quot: numer / denom,
 		Rem:  numer % denom,
 	}
+}
+
+// Rand returns a random number using math/rand.Int().
+func Rand() int32 {
+	return int32(rand.Int())
 }
 
 // Strtod parses the C-string str interpreting its content as a floating point
