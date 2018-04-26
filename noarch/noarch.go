@@ -12,7 +12,7 @@ func BoolToInt(x bool) int32 {
 }
 
 // NotInt performs a logical not (!) on an integer and returns an integer.
-func NotInt(x int32) int32 {
+func NotInt(x int) int {
 	if x == 0 {
 		return 1
 	}
