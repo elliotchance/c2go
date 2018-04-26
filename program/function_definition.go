@@ -122,7 +122,7 @@ var builtInFunctionDefinitions = map[string][]string{
 		"double fabs(double) -> math.Abs",
 		"double floor(double) -> math.Floor",
 		"double fmod(double, double) -> math.Mod",
-		"double ldexp(double, int) -> math.Ldexp",
+		"double ldexp(double, int) -> noarch.Ldexp",
 		"double log(double) -> math.Log",
 		"double log10(double) -> math.Log10",
 		"double pow(double, double) -> math.Pow",

@@ -297,7 +297,7 @@ func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (
 	// main() function is not allowed to return a result. Use os.Exit if
 	// non-zero.
 	if p.Function != nil && p.Function.Name == "main" {
-		litExpr, isLiteral := e.(*goast.BasicLit)
+		litExpr, isLiteral := getReturnLiteral(e)
 		if !isLiteral || (isLiteral && litExpr.Value != "0") {
 			p.AddImport("os")
 			return util.NewExprStmt(util.NewCallExpr("os.Exit", util.NewCallExpr("int", results...))),
@@ -309,6 +309,24 @@ func transpileReturnStmt(n *ast.ReturnStmt, p *program.Program) (
 	return &goast.ReturnStmt{
 		Results: results,
 	}, preStmts, postStmts, nil
+}
+
+func getReturnLiteral(e goast.Expr) (litExpr *goast.BasicLit, ok bool) {
+	if litExpr, ok = e.(*goast.BasicLit); ok {
+		return
+	}
+	if callExpr, ok2 := e.(*goast.CallExpr); ok2 {
+		if funExpr, ok3 := callExpr.Fun.(*goast.Ident); !ok3 || funExpr.Name != "int32" {
+			return nil, false
+		}
+		if len(callExpr.Args) != 1 {
+			return nil, false
+		}
+		if litExpr, ok = callExpr.Args[0].(*goast.BasicLit); ok {
+			return
+		}
+	}
+	return nil, false
 }
 
 func getFunctionReturnType(f string) string {

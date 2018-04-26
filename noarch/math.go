@@ -19,3 +19,9 @@ func Signbitl(x float64) int32 {
 func IsNaN(x float64) int32 {
 	return BoolToInt(math.IsNaN(x))
 }
+
+// Ldexp is the inverse of Frexp.
+// Ldexp uses math.Ldexp to calculate the value.
+func Ldexp(frac float64, exp int32) float64 {
+	return math.Ldexp(frac, int(exp))
+}

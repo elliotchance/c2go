@@ -9,29 +9,29 @@ package code_quality
 
 // switch_function - transpiled function from  tests/code_quality/switch.c:1
 func switch_function() {
-	var i int32 = 34
+	var i int32 = int32(34)
 	switch i {
-	case (0):
+	case (int32(0)):
 		fallthrough
-	case (1):
+	case (int32(1)):
 		{
 			return
 		}
-	case (2):
+	case (int32(2)):
 		{
 			_ = (i)
 			return
 		}
-	case 3:
+	case int32(3):
 		{
 			var c int32
 			return
 		}
-	case 4:
-	case 5:
-	case 6:
+	case int32(4):
+	case int32(5):
+	case int32(6):
 		fallthrough
-	case 7:
+	case int32(7):
 		{
 			var d int32
 			break

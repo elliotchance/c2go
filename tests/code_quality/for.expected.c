@@ -10,22 +10,22 @@ package code_quality
 // f1 - transpiled function from  tests/code_quality/for.c:1
 func f1() {
 	var i int32
-	for i = 0; i < 10; i++ {
+	for i = int32(0); i < int32(10); i++ {
 	}
 }
 
 // f2 - transpiled function from  tests/code_quality/for.c:7
 func f2() {
 	var i int32
-	for i = 10; i > 0; i-- {
+	for i = int32(10); i > int32(0); i-- {
 	}
 }
 
 // f3 - transpiled function from  tests/code_quality/for.c:13
 func f3() {
 	{
-		var i int32 = 0
-		for ; i < 10; i++ {
+		var i int32 = int32(0)
+		for ; i < int32(10); i++ {
 		}
 	}
 }

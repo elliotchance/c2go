@@ -216,7 +216,7 @@ func Tmpfile() *File {
 // Notice that fgets is quite different from gets: not only fgets accepts a
 // stream argument, but also allows to specify the maximum size of str and
 // includes in the string any ending newline character.
-func Fgets(str []byte, num int, stream *File) []byte {
+func Fgets(str []byte, num int32, stream *File) []byte {
 	buf := make([]byte, num)
 	n, err := stream.OsFile.Read(buf)
 
@@ -233,7 +233,7 @@ func Fgets(str []byte, num int, stream *File) []byte {
 	//
 	// We do not trim off the NULL characters because we do not know if the file
 	// we are reading is in binary mode.
-	if n == num {
+	if n == int(num) {
 		// If it is the case that we have read the entire buffer with this read
 		// we need to make sure we leave room for what would be the NULL
 		// character at the end of the string in C.

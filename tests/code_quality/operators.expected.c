@@ -13,7 +13,7 @@ func operators_equals() {
 	var b int32
 	var c int32
 	var d int32
-	d = 42
+	d = int32(42)
 	c = d
 	b = c
 	a = b

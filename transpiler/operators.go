@@ -351,6 +351,11 @@ func transpileCompoundAssignOperator(
 		return nil, "", nil, nil, err
 	}
 
+	right, err = types.CastExpr(p, right, rightType, leftType)
+	if err != nil {
+		p.AddMessage(p.GenerateWarningMessage(err, n))
+	}
+
 	return util.NewBinaryExpr(left, operator, right, resolvedLeftType, exprIsStmt),
 		n.Type, preStmts, postStmts, nil
 }

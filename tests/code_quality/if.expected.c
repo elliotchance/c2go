@@ -9,13 +9,13 @@ package code_quality
 
 // if_1 - transpiled function from  tests/code_quality/if.c:1
 func if_1() {
-	var a int32 = 5
-	var b int32 = 2
-	var c int32 = 4
+	var a int32 = int32(5)
+	var b int32 = int32(2)
+	var c int32 = int32(4)
 	if a > b {
 		return
 	} else if c <= a {
-		a = 0
+		a = int32(0)
 	}
 	_ = (a)
 	_ = (b)

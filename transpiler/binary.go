@@ -363,6 +363,10 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 		}
 	}
 
+	if operator == token.ADD_ASSIGN || operator == token.SUB_ASSIGN {
+		right, err = types.CastExpr(p, right, rightType, returnType)
+	}
+
 	var resolvedLeftType = n.Type
 	if !types.IsFunction(n.Type) && !types.IsTypedefFunction(p, n.Type) {
 		resolvedLeftType, err = types.ResolveType(p, leftType)
