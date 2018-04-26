@@ -81,43 +81,55 @@ func RepairCharacterLiteralsFromSource(rootNode Node, preprocessedFile string) [
 
 	for _, node := range characterLiteralNodes {
 		cNode := node.(*CharacterLiteral)
-
-		// Use the node position to retrieve the original line from the
-		// preprocessed source.
 		pos := node.Position()
-		line, err :=
-			cc.GetLineFromPreprocessedFile(preprocessedFile, pos.File, pos.Line)
-
-		// If there was a problem reading the line we should raise a warning and
-		// use the value we have. Hopefully that will be an accurate enough
-		// representation.
+		var (
+			err      error
+			lastLine = pos.LineEnd
+			i        int
+		)
+		if lastLine == 0 {
+			lastLine = pos.Line
+		}
+		for line := pos.Line; line <= lastLine; line++ {
+			i, err = parseCharacterLiteralFromPosition(preprocessedFile, pos, line)
+			if err == nil {
+				cNode.Value = i
+				break
+			}
+		}
 		if err != nil {
 			errs = append(errs, CharacterLiteralError{
 				Node: cNode,
 				Err:  err,
 			})
 		}
-
-		// Extract the exact value from the line.
-		if pos.Column-1 >= len(line) {
-			errs = append(errs, CharacterLiteralError{
-				Node: cNode,
-				Err:  errors.New("cannot get exact value"),
-			})
-		} else {
-			literal := line[pos.Column-1:]
-			if i, err := parseCharacterLiteralFromSource(literal); err == nil {
-				cNode.Value = i
-			} else {
-				errs = append(errs, CharacterLiteralError{
-					Node: cNode,
-					Err:  fmt.Errorf("cannot parse character literal: %v from %s", err, literal),
-				})
-			}
-		}
 	}
 
 	return errs
+}
+
+func parseCharacterLiteralFromPosition(preprocessedFile string, pos Position, lineNbr int) (ret int, err error) {
+	// Use the node position to retrieve the original line from the
+	// preprocessed source.
+	line, err :=
+		cc.GetLineFromPreprocessedFile(preprocessedFile, pos.File, lineNbr)
+
+	// If there was a problem reading the line we should raise a warning and
+	// use the value we have. Hopefully that will be an accurate enough
+	// representation.
+	if err != nil {
+		return 0, err
+	}
+
+	// Extract the exact value from the line.
+	if pos.Column-1 >= len(line) {
+		return 0, errors.New("cannot get exact value")
+	}
+	literal := line[pos.Column-1:]
+	if ret, err = parseCharacterLiteralFromSource(literal); err == nil {
+		return ret, nil
+	}
+	return 0, fmt.Errorf("cannot parse character literal: %v from %s", err, literal)
 }
 
 func parseCharacterLiteralFromSource(literal string) (ret int, err error) {

@@ -361,3 +361,42 @@ func prepareRepairFromSourceTest(t *testing.T, fileContent string, test func(fil
 
 	test(ppFilePath)
 }
+
+func TestCharacterLiteralRepairFromSourceMultiline(t *testing.T) {
+	cl := &CharacterLiteral{
+		Addr:       0x7f980b858308,
+		Pos:        NewPositionFromString("col:12"),
+		Type:       "int",
+		Value:      10,
+		ChildNodes: []Node{},
+	}
+	cl.Pos.LineEnd = 6
+	root := &CompoundStmt{
+		Pos:        Position{File: "dummy.c", Line: 5},
+		ChildNodes: []Node{cl},
+	}
+	FixPositions([]Node{root})
+	type test struct {
+		file     string
+		expected int
+		err      error
+	}
+	tests := []test{
+		{"# 2 \"x.c\"\n\n# 4 \"dummy.c\"ff\nxxxxx\nvar xyst = '\nxxxxxxxxx, };\nyyyy", 10, fmt.Errorf("cannot parse character literal: illegal character '}' at index 0 from };")},
+		{"# 2 \"x.c\"\n\n# 4 \"dummy.c\"ff\nxxxxx\nvar xyst = 'A'zzz\nyyyy", int('A'), nil},
+		{"# 2 \"x.c\"\n\n# 4 \"dummy.c\"ff\nxxxxx\nvar xyst = {\nxxxxxxxxx, 'B'};\nyyyy", int('B'), nil},
+	}
+	for _, test := range tests {
+		prepareRepairFromSourceTest(t, test.file, func(ppFilePath string) {
+			errors := RepairCharacterLiteralsFromSource(root, ppFilePath)
+			if cl.Value != test.expected {
+				t.Errorf("RepairCharacterLiteralsFromSource - expected: %x, got: %x", test.expected, cl.Value)
+			}
+			if test.err != nil && len(errors) == 0 || test.err == nil && len(errors) != 0 {
+				t.Errorf("RepairCharacterLiteralsFromSource - error should match: expected: %v, got: %v", test.err, errors)
+			} else if test.err != nil && errors[0].Err.Error() != test.err.Error() {
+				t.Errorf("RepairCharacterLiteralsFromSource - error should match: expected: %s, got: %s", test.err.Error(), errors[0].Err.Error())
+			}
+		})
+	}
+}
