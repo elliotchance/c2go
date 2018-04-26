@@ -37,7 +37,7 @@ double * return_null(){
 
 int main()
 {
-	plan(98);
+	plan(99);
 
     int i = 10;
     signed char j = 1;
@@ -379,6 +379,12 @@ int main()
 		((x = 3),(y -= 1));
 		is_eq(x, 3);
 		is_eq(y, 1);
+	}
+	diag("Bitwise complement of array");
+	{
+		int a[] = { 0x3c, 0xff };
+		a[1] &= ~a[0];
+		is_eq(a[1], 0xc3);
 	}
 
 	done_testing();

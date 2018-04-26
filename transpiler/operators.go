@@ -483,7 +483,7 @@ func atomicOperation(n ast.Node, p *program.Program) (
 	switch v := n.(type) {
 	case *ast.UnaryOperator:
 		switch v.Operator {
-		case "&", "*", "!", "-":
+		case "&", "*", "!", "-", "~":
 			return
 		}
 		// UnaryOperator 0x252d798 <col:17, col:18> 'double' prefix '-'
