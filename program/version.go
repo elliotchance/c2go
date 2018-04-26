@@ -5,4 +5,4 @@ package program
 //     c2go -v
 //
 // See https://github.com/elliotchance/c2go/wiki/Release-Process
-const Version = "v0.22.4 Aluminium 2018-04-24"
+const Version = "v0.22.5 Aluminium 2018-04-26"
