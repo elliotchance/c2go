@@ -1,9 +1,14 @@
 #include <string.h>
 #include "tests.h"
 
+typedef struct mem {
+    int a;
+    int b;
+} mem;
+
 int main()
 {
-    plan(39);
+    plan(55);
 
     diag("TODO: __builtin_object_size")
     // https://github.com/elliotchance/c2go/issues/359
@@ -122,7 +127,7 @@ int main()
 		is_eq(amount,  4 );
 	}
     {
-        diag("memset")
+        diag("memset");
         char dest1[40];
         char *dest2;
         char *dest3;
@@ -136,7 +141,7 @@ int main()
         is_streq(dest3, "bba");
     }
     {
-        diag("memcpy")
+        diag("memcpy");
         char *src = "aaaabb";
         char dest1[40];
         char *dest2;
@@ -149,6 +154,48 @@ int main()
         is_streq(dest1, "abba");
         is_streq(dest2, "abba");
         is_streq(dest3, "bba");
+    }
+    {
+        diag("memset & memcpy of struct / array of struct");
+        int dest3 = 4;
+        int dest4 = 0xf;
+        memcpy(&dest3, &dest4, sizeof(int));
+        is_eq(dest3, 0xf);
+        memset(&dest4, 0, sizeof(int));
+        is_eq(dest4, 0);
+        mem dest5 = {
+            .a = 2,
+            .b = 3.0
+        };
+        memset(&dest5, 0, sizeof(mem));
+        is_eq(dest5.a, 0);
+        is_eq(dest5.b, 0.0);
+        mem dest6[] = {
+            {
+               .a = 2,
+               .b = 3.0
+            },
+            {
+               .a = 4,
+               .b = 5.0
+            }
+        };
+        mem dest7[2];
+        memcpy(dest7, dest6, sizeof(mem)*2);
+        memset(dest6, 0, sizeof(mem)*2);
+        is_eq(dest6[0].a, 0);
+        is_eq(dest6[0].b, 0.0);
+        is_eq(dest6[1].a, 0);
+        is_eq(dest6[1].b, 0.0);
+        is_eq(dest7[0].a, 2);
+        is_eq(dest7[0].b, 3.0);
+        is_eq(dest7[1].a, 4);
+        is_eq(dest7[1].b, 5.0);
+        memset(&dest7[1], 0, sizeof(mem));
+        is_eq(dest7[0].a, 2);
+        is_eq(dest7[0].b, 3.0);
+        is_eq(dest7[1].a, 0);
+        is_eq(dest7[1].b, 0.0);
     }
 
     done_testing();

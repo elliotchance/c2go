@@ -2,6 +2,7 @@ package noarch
 
 import (
 	"bytes"
+	"reflect"
 	"unsafe"
 )
 
@@ -98,7 +99,13 @@ func Strchr(str []byte, ch int32) []byte {
 }
 
 func Memset(dst interface{}, val int, size int) interface{} {
-	data := *(*[]byte)(unsafe.Pointer(UnsafeSliceToSlice(dst, 1, 1)))
+	vDst := reflect.ValueOf(dst).Type()
+	switch vDst.Kind() {
+	case reflect.Slice, reflect.Array:
+		vDst = vDst.Elem()
+	}
+	baseSizeDst := int(vDst.Size())
+	data := *(*[]byte)(unsafe.Pointer(UnsafeSliceToSlice(dst, baseSizeDst, 1)))
 	var i int
 	var vb = byte(val)
 	for i = 0; i < size; i++ {
@@ -108,8 +115,20 @@ func Memset(dst interface{}, val int, size int) interface{} {
 }
 
 func Memcpy(dst interface{}, src interface{}, size int) interface{} {
-	bDst := *(*[]byte)(unsafe.Pointer(UnsafeSliceToSlice(dst, 1, 1)))
-	bSrc := *(*[]byte)(unsafe.Pointer(UnsafeSliceToSlice(src, 1, 1)))
+	vDst := reflect.ValueOf(dst).Type()
+	switch vDst.Kind() {
+	case reflect.Slice, reflect.Array:
+		vDst = vDst.Elem()
+	}
+	baseSizeDst := int(vDst.Size())
+	vSrc := reflect.ValueOf(src).Type()
+	switch vSrc.Kind() {
+	case reflect.Slice, reflect.Array:
+		vSrc = vSrc.Elem()
+	}
+	baseSizeSrc := int(vSrc.Size())
+	bDst := *(*[]byte)(unsafe.Pointer(UnsafeSliceToSlice(dst, baseSizeDst, 1)))
+	bSrc := *(*[]byte)(unsafe.Pointer(UnsafeSliceToSlice(src, baseSizeSrc, 1)))
 	var i int
 	for i = 0; i < size; i++ {
 		bDst[i] = bSrc[i]
