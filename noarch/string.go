@@ -10,11 +10,11 @@ import (
 // C string is as long as the number of characters between the beginning of the
 // string and the terminating null character (without including the terminating
 // null character itself).
-func Strlen(a []byte) int {
+func Strlen(a []byte) int32 {
 	// TODO: The transpiler should have a syntax that means this proxy function
 	// does not need to exist.
 
-	return len(CStringToString(a))
+	return int32(len(CStringToString(a)))
 }
 
 // Strcpy copies the C string pointed by source into the array pointed by
@@ -49,9 +49,9 @@ func Strcpy(dest, src []byte) []byte {
 //
 // destination and source shall not overlap (see memmove for a safer alternative
 // when overlapping).
-func Strncpy(dest, src []byte, len int) []byte {
+func Strncpy(dest, src []byte, len int32) []byte {
 	// Copy up to the len or first NULL bytes - whichever comes first.
-	i := 0
+	var i int32
 	for ; i < len && src[i] != 0; i++ {
 		dest[i] = src[i]
 	}
@@ -76,19 +76,19 @@ func Strcat(dest, src []byte) []byte {
 
 // Strcmp - compare two strings
 // Compares the C string str1 to the C string str2.
-func Strcmp(str1, str2 []byte) int {
-	return bytes.Compare([]byte(CStringToString(str1)), []byte(CStringToString(str2)))
+func Strcmp(str1, str2 []byte) int32 {
+	return int32(bytes.Compare([]byte(CStringToString(str1)), []byte(CStringToString(str2))))
 }
 
 // Strchr - Locate first occurrence of character in string
 // See: http://www.cplusplus.com/reference/cstring/strchr/
-func Strchr(str []byte, ch int) []byte {
+func Strchr(str []byte, ch int32) []byte {
 	i := 0
 	for {
 		if str[i] == '\x00' {
 			break
 		}
-		if int(str[i]) == ch {
+		if int32(str[i]) == ch {
 			return str[i:]
 		}
 		i++

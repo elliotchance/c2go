@@ -363,6 +363,10 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 		}
 	}
 
+	if operator == token.ADD_ASSIGN || operator == token.SUB_ASSIGN {
+		right, err = types.CastExpr(p, right, rightType, returnType)
+	}
+
 	var resolvedLeftType = n.Type
 	if !types.IsFunction(n.Type) && !types.IsTypedefFunction(p, n.Type) {
 		resolvedLeftType, err = types.ResolveType(p, leftType)
@@ -490,7 +494,7 @@ func generateAlloc(p *program.Program, allocSize ast.Node, leftType string) (
 	right = util.NewCallExpr(
 		"make",
 		util.NewTypeIdent(toType),
-		util.NewBinaryExpr(allocSizeExpr, token.QUO, util.NewIntLit(elementSize), "int", false),
+		util.NewBinaryExpr(allocSizeExpr, token.QUO, util.NewIntLit(elementSize), "int32", false),
 	)
 	return
 }

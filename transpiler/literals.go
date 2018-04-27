@@ -38,11 +38,15 @@ func transpileStringLiteral(n *ast.StringLiteral) goast.Expr {
 		util.NewStringLit(strconv.Quote(buf.String())))
 }
 
-func transpileIntegerLiteral(n *ast.IntegerLiteral) *goast.BasicLit {
-	return &goast.BasicLit{
+func transpileIntegerLiteral(n *ast.IntegerLiteral) (ret goast.Expr) {
+	ret = &goast.BasicLit{
 		Kind:  token.INT,
 		Value: n.Value,
 	}
+	if n.Type == "int" {
+		ret = util.NewCallExpr("int32", ret)
+	}
+	return
 }
 
 func transpileCharacterLiteral(n *ast.CharacterLiteral) *goast.BasicLit {

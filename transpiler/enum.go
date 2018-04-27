@@ -45,7 +45,7 @@ func ctypeEnumValue(value int, t token.Token) goast.Expr {
 func transpileEnumConstantDecl(p *program.Program, n *ast.EnumConstantDecl) (
 	*goast.ValueSpec, []goast.Stmt, []goast.Stmt) {
 	var value goast.Expr = util.NewIdent("iota")
-	valueType := "int"
+	valueType := "int32"
 	preStmts := []goast.Stmt{}
 	postStmts := []goast.Stmt{}
 

@@ -7,12 +7,13 @@ import (
 	"strings"
 
 	"github.com/elliotchance/c2go/util"
+	"math/rand"
 )
 
 // DivT is the representation of "div_t". It is used by div().
 type DivT struct {
-	Quot int // quotient
-	Rem  int // remainder
+	Quot int32 // quotient
+	Rem  int32 // remainder
 }
 
 // LdivT is the representation of "ldiv_t". It is used by ldiv().
@@ -32,7 +33,7 @@ type LldivT struct {
 // In C++, this function is also overloaded in header <cmath> for floating-point
 // types (see cmath abs), in header <complex> for complex numbers (see complex
 // abs), and in header <valarray> for valarrays (see valarray abs).
-func Abs(n int) int {
+func Abs(n int32) int32 {
 	if n < 0 {
 		return -n
 	}
@@ -99,8 +100,8 @@ func Atof(str []byte) float64 {
 // integral number, or if no such sequence exists because either str is empty or
 // it contains only whitespace characters, no conversion is performed and zero
 // is returned.
-func Atoi(str []byte) int {
-	return int(Atol(str))
+func Atoi(str []byte) int32 {
+	return int32(Atol(str))
 }
 
 // Atol parses the C-string str interpreting its content as an integral number,
@@ -135,7 +136,7 @@ func Atoll(str []byte) int64 {
 	return x
 }
 
-func atoll(str []byte, radix int) (int64, int) {
+func atoll(str []byte, radix int32) (int64, int) {
 	// First start by removing any trailing whitespace. We need to record how
 	// much whitespace is trimmed off for the correct offset later.
 	cStr := CStringToString(str)
@@ -151,7 +152,8 @@ func atoll(str []byte, radix int) (int64, int) {
 	// We must stop consuming characters when we get to a character that is
 	// invalid for the radix. Build a regex to satisfy this.
 	rx := ""
-	for i := 0; i < radix; i++ {
+	var i int32
+	for ; i < radix; i++ {
 		if i < 10 {
 			rx += string(48 + i)
 		} else {
@@ -165,7 +167,7 @@ func atoll(str []byte, radix int) (int64, int) {
 	}
 
 	// We do not care about the error here because it should be impossible.
-	v, _ := strconv.ParseInt(match[1], radix, 64)
+	v, _ := strconv.ParseInt(match[1], int(radix), 64)
 
 	return v, whitespaceOffset + len(match[1])
 }
@@ -173,11 +175,16 @@ func atoll(str []byte, radix int) (int64, int) {
 // Div returns the integral quotient and remainder of the division of numer by
 // denom ( numer/denom ) as a structure of type div_t, ldiv_t or lldiv_t, which
 // has two members: quot and rem.
-func Div(numer, denom int) DivT {
+func Div(numer, denom int32) DivT {
 	return DivT{
 		Quot: numer / denom,
 		Rem:  numer % denom,
 	}
+}
+
+// Exit uses os.Exit to stop program execution.
+func Exit(exitCode int32) {
+	os.Exit(int(exitCode))
 }
 
 // Getenv retrieves a C-string containing the value of the environment variable
@@ -242,6 +249,11 @@ func Lldiv(numer, denom int64) LldivT {
 		Quot: numer / denom,
 		Rem:  numer % denom,
 	}
+}
+
+// Rand returns a random number using math/rand.Int().
+func Rand() int32 {
+	return int32(rand.Int())
 }
 
 // Strtod parses the C-string str interpreting its content as a floating point
@@ -316,12 +328,12 @@ func Strtold(str []byte, endptr [][]byte) float64 {
 //
 // For locales other than the "C" locale, additional subject sequence forms may
 // be accepted.
-func Strtol(str []byte, endptr [][]byte, radix int) int32 {
+func Strtol(str []byte, endptr [][]byte, radix int32) int32 {
 	return int32(Strtoll(str, endptr, radix))
 }
 
 // Strtoll works the same way as Strtol but returns a long long.
-func Strtoll(str []byte, endptr [][]byte, radix int) int64 {
+func Strtoll(str []byte, endptr [][]byte, radix int32) int64 {
 	x, xLen := atoll(str, radix)
 
 	// FIXME: This is actually creating new data for the returned pointer,
@@ -338,12 +350,12 @@ func Strtoll(str []byte, endptr [][]byte, radix int) int64 {
 }
 
 // Strtoul works the same way as Strtol but returns a long unsigned int.
-func Strtoul(str []byte, endptr [][]byte, radix int) uint32 {
+func Strtoul(str []byte, endptr [][]byte, radix int32) uint32 {
 	return uint32(Strtoll(str, endptr, radix))
 }
 
 // Strtoull works the same way as Strtol but returns a long long unsigned int.
-func Strtoull(str []byte, endptr [][]byte, radix int) uint64 {
+func Strtoull(str []byte, endptr [][]byte, radix int32) uint64 {
 	return uint64(Strtoll(str, endptr, radix))
 }
 
@@ -352,7 +364,7 @@ func Strtoull(str []byte, endptr [][]byte, radix int) uint64 {
 func Free(anything interface{}) {
 }
 
-func atof(str []byte) (float64, int) {
+func atof(str []byte) (float64, int32) {
 	// First start by removing any trailing whitespace. We have to record how
 	// much whitespace is trimmed off to correct for the final length.
 	cStr := CStringToString(str)
@@ -387,7 +399,7 @@ func atof(str []byte) (float64, int) {
 				f *= math.Pow(2, float64(p))
 			}
 
-			return f, whitespaceLength + len(match[0])
+			return f, int32(whitespaceLength + len(match[0]))
 		}
 
 		return 0, 0
@@ -399,17 +411,17 @@ func atof(str []byte) (float64, int) {
 	if match != nil {
 		f, err := strconv.ParseFloat(match[0], 64)
 		if err == nil {
-			return f, whitespaceLength + len(match[0])
+			return f, int32(whitespaceLength + len(match[0]))
 		}
 	}
 
 	// 3. Infinity?
 	if s == "infinity" || s == "+infinity" ||
 		s == "inf" || s == "+inf" {
-		return math.Inf(1), len(s)
+		return math.Inf(1), int32(len(s))
 	}
 	if s == "-infinity" || s == "-inf" {
-		return math.Inf(-1), len(s)
+		return math.Inf(-1), int32(len(s))
 	}
 
 	// 4. Not a number?

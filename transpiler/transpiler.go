@@ -97,7 +97,7 @@ func TranspileAST(fileName, packageName string, p *program.Program, root ast.Nod
 			Specs: []goast.Spec{
 				&goast.TypeSpec{
 					Name: goast.NewIdent("_Bool"),
-					Type: goast.NewIdent("int"),
+					Type: goast.NewIdent("int8"),
 				},
 			},
 		})

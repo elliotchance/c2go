@@ -290,7 +290,7 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 	}
 
 	// added for support "typedef enum {...} dd" with empty name of struct
-	// Result in Go: "type dd int"
+	// Result in Go: "type dd int32"
 	if strings.Contains(n.Type, "enum") {
 		// Registration new type in program.Program
 		if !p.IsTypeAlreadyDefined(n.Name) {
@@ -302,7 +302,7 @@ func transpileTypedefDecl(p *program.Program, n *ast.TypedefDecl) (decls []goast
 			Specs: []goast.Spec{
 				&goast.TypeSpec{
 					Name: util.NewIdent(name),
-					Type: util.NewTypeIdent("int"),
+					Type: util.NewTypeIdent("int32"),
 				},
 			},
 		})
