@@ -31,7 +31,7 @@ TRIANGLE_WARNINGS=`cat $TRIANGLE_TEMP_FOLDER/$TRIANGLE_FILE.go | grep "// Warnin
 echo "In file $TRIANGLE_FILE summary : $TRIANGLE_WARNINGS warnings."
 
 # Show amount error from `go build`:
-TRIANGLE_WARNINGS_GO=`go build $TRIANGLE_TEMP_FOLDER/$TRIANGLE_FILE.go 2>&1 | wc -l`
+TRIANGLE_WARNINGS_GO=`go build -gcflags="-e" $TRIANGLE_TEMP_FOLDER/$TRIANGLE_FILE.go 2>&1 | wc -l`
 echo "In file $TRIANGLE_FILE summary : $TRIANGLE_WARNINGS_GO warnings in go build."
 
 # Amount warning from gometalinter
