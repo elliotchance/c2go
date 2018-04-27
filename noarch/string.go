@@ -137,9 +137,6 @@ func Memcpy(dst interface{}, src interface{}, size int32) interface{} {
 	baseSizeSrc := int32(vSrc.Size())
 	bDst := *(*[]byte)(unsafe.Pointer(UnsafeSliceToSlice(dst, baseSizeDst, int32(1))))
 	bSrc := *(*[]byte)(unsafe.Pointer(UnsafeSliceToSlice(src, baseSizeSrc, int32(1))))
-	var i int32
-	for i = 0; i < size; i++ {
-		bDst[i] = bSrc[i]
-	}
+	copy(bDst[:size], bSrc[:size])
 	return dst
 }

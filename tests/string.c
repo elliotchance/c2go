@@ -8,7 +8,7 @@ typedef struct mem {
 
 int main()
 {
-    plan(55);
+    plan(60);
 
     diag("TODO: __builtin_object_size")
     // https://github.com/elliotchance/c2go/issues/359
@@ -151,6 +151,21 @@ int main()
         is_streq(dest1, "aaaa");
         is_streq(dest2, "aaaa");
         dest3 = (char*) memcpy(&dest2[1], &src[4], 2);
+        is_streq(dest1, "abba");
+        is_streq(dest2, "abba");
+        is_streq(dest3, "bba");
+    }
+    {
+        diag("memmove");
+        char *src = "aaaabb";
+        char dest1[40];
+        char *dest2;
+        char *dest3;
+        dest2 = (char*) memmove(dest1, src, 4);
+        dest1[4] = '\0';
+        is_streq(dest1, "aaaa");
+        is_streq(dest2, "aaaa");
+        dest3 = (char*) memmove(&dest2[1], &src[4], 2);
         is_streq(dest1, "abba");
         is_streq(dest2, "abba");
         is_streq(dest3, "bba");
