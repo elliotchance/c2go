@@ -52,8 +52,8 @@ func transpileSwitchStmt(n *ast.SwitchStmt, p *program.Program) (
 		cs, ok1 := cn.(*ast.CaseStmt)
 		ds, ok2 := cn.(*ast.DefaultStmt)
 		ls, ok3 := cn.(*ast.LabelStmt)
-		if !ok1 && !ok2 && !ok3 {
-			// Do not consider a node which is not a case or default statement here
+		if !ok1 && !ok2 && !ok3 || cn == nil || len(cn.Children()) == 0 {
+			// Do not consider a node which is not a case, label or default statement here
 			continue
 		}
 		lastCn := cn.Children()[len(cn.Children())-1]
@@ -97,6 +97,14 @@ func transpileSwitchStmt(n *ast.SwitchStmt, p *program.Program) (
 		}
 		// For simplification - each DefaultStmt will have CompoundStmt
 		if v, ok := body.Children()[i].(*ast.DefaultStmt); ok {
+			if _, ok := v.Children()[len(v.Children())-1].(*ast.CompoundStmt); !ok {
+				var compoundStmt ast.CompoundStmt
+				compoundStmt.AddChild(v.Children()[len(v.Children())-1])
+				v.Children()[len(v.Children())-1] = &compoundStmt
+			}
+		}
+		// For simplification - each LabelStmt will have CompoundStmt
+		if v, ok := body.Children()[i].(*ast.LabelStmt); ok {
 			if _, ok := v.Children()[len(v.Children())-1].(*ast.CompoundStmt); !ok {
 				var compoundStmt ast.CompoundStmt
 				compoundStmt.AddChild(v.Children()[len(v.Children())-1])
