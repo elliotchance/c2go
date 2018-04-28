@@ -319,8 +319,20 @@ func appendCaseOrDefaultToNormalizedCases(cases []goast.Stmt,
 			})
 		}
 		if ls, ok := cases[len(cases)-1].(*goast.LabeledStmt); ok {
-			ls.Stmt = &goast.BranchStmt{
+			ft := &goast.BranchStmt{
 				Tok: token.FALLTHROUGH,
+			}
+			if _, ok2 := ls.Stmt.(*goast.EmptyStmt); ok2 {
+				ls.Stmt = ft
+			} else if bs, ok2 := ls.Stmt.(*goast.BlockStmt); ok2 {
+				bs.List = append(bs.List, ft)
+			} else {
+				ls.Stmt = &goast.BlockStmt{
+					List: []goast.Stmt{
+						ls.Stmt,
+						ft,
+					},
+				}
 			}
 		}
 	}
@@ -340,6 +352,18 @@ func appendCaseOrDefaultToNormalizedCases(cases []goast.Stmt,
 
 	case *ast.LabelStmt:
 		singleCase, newPre, newPost, err = transpileLabelStmt(c, p)
+		lc, ok := singleCase.(*goast.LabeledStmt)
+		if !ok {
+			panic("expected *goast.LabeledStmt")
+		}
+		if len(newPost) == 1 {
+			lc.Stmt = newPost[0]
+		} else if len(newPost) > 1 {
+			lc.Stmt = &goast.BlockStmt{
+				List: newPost,
+			}
+		}
+		newPost = []goast.Stmt{}
 	}
 
 	if singleCase != nil {
@@ -433,6 +457,21 @@ func handleLabelCases(cases []goast.Stmt, p *program.Program) (newCases []goast.
 		Label: util.NewIdent(swEndLabel),
 		Tok:   token.GOTO,
 	})
+	funcTransformBreak := func(cursor *astutil.Cursor) bool {
+		if cursor == nil {
+			return true
+		}
+		node := cursor.Node()
+		if bs, ok := node.(*goast.BranchStmt); ok {
+			if bs.Tok == token.BREAK {
+				cursor.Replace(&goast.BranchStmt{
+					Label: util.NewIdent(swEndLabel),
+					Tok:   token.GOTO,
+				})
+			}
+		}
+		return true
+	}
 	for i, x := range cases {
 		switch c := x.(type) {
 		case *goast.CaseClause:
@@ -454,21 +493,7 @@ func handleLabelCases(cases []goast.Stmt, p *program.Program) (newCases []goast.
 			}
 
 			// Replace break's with goto swEndLabel
-			astutil.Apply(c, nil, func(cursor *astutil.Cursor) bool {
-				if cursor == nil {
-					return true
-				}
-				node := cursor.Node()
-				if bs, ok := node.(*goast.BranchStmt); ok {
-					if bs.Tok == token.BREAK {
-						cursor.Replace(&goast.BranchStmt{
-							Label: util.NewIdent(swEndLabel),
-							Tok:   token.GOTO,
-						})
-					}
-				}
-				return true
-			})
+			astutil.Apply(c, nil, funcTransformBreak)
 			body := c.Body
 
 			// append caseLabel label followed by case body
@@ -496,8 +521,36 @@ func handleLabelCases(cases []goast.Stmt, p *program.Program) (newCases []goast.
 			}
 			newCases = append(newCases, c)
 		case *goast.LabeledStmt:
-			c.Stmt = &goast.EmptyStmt{}
+			var isFallThrough bool
+			// Remove fallthrough if it's the only statement
+			if v, ok := c.Stmt.(*goast.BranchStmt); ok {
+				if v.Tok == token.FALLTHROUGH {
+					c.Stmt = &goast.EmptyStmt{}
+					isFallThrough = true
+				}
+			} else if b, ok := c.Stmt.(*goast.BlockStmt); ok {
+				// Remove fallthrough if LabeledStmt contains a BlockStmt
+				if v, ok := b.List[len(b.List)-1].(*goast.BranchStmt); ok {
+					if v.Tok == token.FALLTHROUGH {
+						b.List = b.List[:len(b.List)-1]
+						isFallThrough = true
+					}
+				}
+			}
+
+			// Replace break's with goto swEndLabel
+			astutil.Apply(c, nil, funcTransformBreak)
+
+			// append label followed by label body
 			postStmts = append(postStmts, c)
+
+			// If not last case && no fallthrough goto swEndLabel
+			if i != len(cases)-1 && !isFallThrough {
+				postStmts = append(postStmts, &goast.BranchStmt{
+					Label: util.NewIdent(swEndLabel),
+					Tok:   token.GOTO,
+				})
+			}
 		}
 	}
 	postStmts = append(postStmts, &goast.LabeledStmt{
