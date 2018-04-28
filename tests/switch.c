@@ -148,6 +148,7 @@ void goto_label(bool use_goto)
         LABELY:
         case 4:
         LABEL:
+            printf("x");
         case 1:
             pass(__func__);
             break;
@@ -341,7 +342,10 @@ void scoped_goto_label(bool use_goto)
             }
         LABELY: {}
         case 4: {}
-        LABEL: {}
+        LABEL:
+            {
+                printf("x");
+            }
         case 1:
             {
                 pass(__func__);
