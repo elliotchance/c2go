@@ -5,4 +5,4 @@ package program
 //     c2go -v
 //
 // See https://github.com/elliotchance/c2go/wiki/Release-Process
-const Version = "v0.23.0 Berkelium 2018-04-27"
+const Version = "v0.23.1 Berkelium 2018-04-30"
