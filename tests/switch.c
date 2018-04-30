@@ -316,7 +316,6 @@ void scoped_fallthrough_several_midway_default()
     }
 }
 
-
 void scoped_goto_label(bool use_goto)
 {
     for (;;) {
@@ -352,7 +351,11 @@ void scoped_goto_label(bool use_goto)
                 break;
             }
         case 2:
-            {}
+            {
+                int x = 0;
+                printf("%d", x);
+                break;
+            }
         LABELX: {}
         default:
             {

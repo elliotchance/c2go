@@ -196,7 +196,8 @@ func transpileSwitchStmt(n *ast.SwitchStmt, p *program.Program) (
 				if vv, ok := v.List[len(v.List)-1].(*goast.BranchStmt); ok {
 					if vv.Tok == token.BREAK {
 						if isFallThrough {
-							cs.Body = append(v.List[:len(v.List)-1])
+							v.List = v.List[:len(v.List)-1]
+							cs.Body = body[:len(body)-1]
 							continue
 						}
 					}
