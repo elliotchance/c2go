@@ -192,6 +192,15 @@ var builtInFunctionDefinitions = map[string][]string{
 		// in according to noarch.Strlen
 		"int strlen(const char*) -> noarch.Strlen",
 
+		// should be: "void* memset(void *, int, size_t) -> noarch.Memset"
+		"void* memset(void *, int, int) -> noarch.Memset",
+
+		// should be: "void* memcpy(void *, void *, size_t) -> noarch.Memcpy"
+		"void* memcpy(void *, void *, int) -> noarch.Memcpy",
+
+		// should be: "void* memmove(void *, void *, size_t) -> noarch.Memcpy"
+		"void* memmove(void *, void *, int) -> noarch.Memcpy",
+
 		// darwin/string.h
 		// should be: const char*, char*, size_t
 		"char* __builtin___strcpy_chk(const char*, char*, int) -> darwin.BuiltinStrcpy",
@@ -204,6 +213,12 @@ var builtInFunctionDefinitions = map[string][]string{
 		// see https://opensource.apple.com/source/Libc/Libc-763.12/include/secure/_string.h.auto.html
 		"char* __builtin___strcat_chk(char *, const char *, int) -> darwin.BuiltinStrcat",
 		"char* __inline_strcat_chk(char *, const char *) -> noarch.Strcat",
+		"void* __builtin___memset_chk(void *, int, int, int) -> darwin.Memset",
+		"void* __inline_memset_chk(void *, int, int) -> noarch.Memset",
+		"void* __builtin___memcpy_chk(void *, void *, int, int) -> darwin.Memcpy",
+		"void* __inline_memcpy_chk(void *, void *, int) -> noarch.Memcpy",
+		"void* __builtin___memmove_chk(void *, void *, int, int) -> darwin.Memcpy",
+		"void* __inline_memmove_chk(void *, void *, int) -> noarch.Memcpy",
 	},
 	"stdlib.h": []string{
 		// stdlib.h

@@ -378,6 +378,34 @@ func CreateSliceFromReference(goType string, expr goast.Expr) *goast.SliceExpr {
 	}
 }
 
+// CreateUnlimitedSliceFromReference - create a slice, like :
+// (*[1000000000]int)(unsafe.Pointer(&a))[:]
+func CreateUnlimitedSliceFromReference(goType string, expr goast.Expr) *goast.SliceExpr {
+	// If the Go type is blank it means that the C type is 'void'.
+	if goType == "" {
+		goType = "interface{}"
+	}
+
+	// This is a hack to convert a reference to a variable into a slice that
+	// points to the same location. It will look similar to:
+	//
+	//     (*[1000000000]int)(unsafe.Pointer(&a))[:]
+	//
+	// You must always call this Go before using CreateUnlimitedSliceFromReference:
+	//
+	//     p.AddImport("unsafe")
+	//
+	return &goast.SliceExpr{
+		X: NewCallExpr(
+			fmt.Sprintf("(*[1000000000]%s)", goType),
+			NewCallExpr("unsafe.Pointer", &goast.UnaryExpr{
+				X:  expr,
+				Op: token.AND,
+			}),
+		),
+	}
+}
+
 // NewFuncType - create a new function type, example:
 // func ...(fieldList)(returnType)
 func NewFuncType(fieldList *goast.FieldList, returnType string, addDefaultReturn bool) *goast.FuncType {

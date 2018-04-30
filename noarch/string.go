@@ -2,6 +2,8 @@ package noarch
 
 import (
 	"bytes"
+	"reflect"
+	"unsafe"
 )
 
 // Strlen returns the length of a string.
@@ -94,4 +96,47 @@ func Strchr(str []byte, ch int32) []byte {
 		i++
 	}
 	return nil
+}
+
+// Memset treats dst as a binary array and sets size bytes to the value val.
+// Returns dst.
+func Memset(dst interface{}, val int32, size int32) interface{} {
+	vDst := reflect.ValueOf(dst).Type()
+	switch vDst.Kind() {
+	case reflect.Slice, reflect.Array:
+		vDst = vDst.Elem()
+	}
+	baseSizeDst := int32(vDst.Size())
+	data := *(*[]byte)(unsafe.Pointer(UnsafeSliceToSlice(dst, baseSizeDst, int32(1))))
+	var i int32
+	var vb = byte(val)
+	for i = 0; i < size; i++ {
+		data[i] = vb
+	}
+	return dst
+}
+
+// Memcpy treats dst and src as binary arrays and copies size bytes from src to dst.
+// Returns dst.
+// While in C it it is undefined behavior to call memcpy with overlapping regions,
+// in Go we rely on the built-in copy function, which has no such limitation.
+// To copy overlapping regions in C memmove should be used, so we map that function
+// to Memcpy as well.
+func Memcpy(dst interface{}, src interface{}, size int32) interface{} {
+	vDst := reflect.ValueOf(dst).Type()
+	switch vDst.Kind() {
+	case reflect.Slice, reflect.Array:
+		vDst = vDst.Elem()
+	}
+	baseSizeDst := int32(vDst.Size())
+	vSrc := reflect.ValueOf(src).Type()
+	switch vSrc.Kind() {
+	case reflect.Slice, reflect.Array:
+		vSrc = vSrc.Elem()
+	}
+	baseSizeSrc := int32(vSrc.Size())
+	bDst := *(*[]byte)(unsafe.Pointer(UnsafeSliceToSlice(dst, baseSizeDst, int32(1))))
+	bSrc := *(*[]byte)(unsafe.Pointer(UnsafeSliceToSlice(src, baseSizeSrc, int32(1))))
+	copy(bDst[:size], bSrc[:size])
+	return dst
 }

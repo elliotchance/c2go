@@ -233,7 +233,7 @@ func transpileUnaryOperatorAmpersant(n *ast.UnaryOperator, p *program.Program) (
 	}
 
 	p.AddImport("unsafe")
-	expr = util.CreateSliceFromReference(resolvedType, expr)
+	expr = util.CreateUnlimitedSliceFromReference(resolvedType, expr)
 
 	// We now have a pointer to the original type.
 	eType += " *"
