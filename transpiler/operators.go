@@ -337,6 +337,12 @@ func transpileCompoundAssignOperator(
 		}
 	}
 
+	switch operator {
+	case token.AND_ASSIGN, token.OR_ASSIGN, token.XOR_ASSIGN, token.AND_NOT_ASSIGN:
+		right, err = types.CastExpr(p, right, rightType, leftType)
+		p.AddMessage(p.GenerateWarningMessage(err, n))
+	}
+
 	resolvedLeftType, err := types.ResolveType(p, leftType)
 	if err != nil {
 		p.AddMessage(p.GenerateWarningMessage(err, n))
