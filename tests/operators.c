@@ -35,9 +35,14 @@ double * return_null(){
 	return NULL;
 }
 
+typedef struct doubleEqual{
+    int a;
+    unsigned int b;
+} doubleEqual;
+
 int main()
 {
-	plan(99);
+	plan(114);
 
     int i = 10;
     signed char j = 1;
@@ -324,6 +329,37 @@ int main()
 		*b = *a = 42;
 		is_eq(*a, 42);
 		is_eq(*b, 42);
+	}
+	{
+	    doubleEqual de;
+	    de.a = de.b = 42;
+	    is_eq(de.a, 42);
+	    is_eq(de.b, 42);
+	    doubleEqual *dep = &de;
+	    dep->a = dep->b = 9;
+	    is_eq(dep->a, 9);
+	    is_eq(dep->b, 9);
+	    de.a += de.b -= 2;
+	    is_eq(de.a, 16);
+	    is_eq(de.b, 7);
+	    int n,m,p;
+	    n = m = p = 0;
+	    for(de.a = de.b = 0; de.a < 2; de.b = de.a++) {
+            is_eq(n, de.a);
+	        n = m = ++p ;
+            is_eq(n-1, de.a);
+	    }
+	    is_eq(de.a, 2);
+	    is_eq(de.b, 1);
+	    is_eq(n, 2);
+	    is_eq(m, 2);
+	    switch(de.a = de.b = 42) {
+	    case 42:
+	        pass("switch equals a=b=");
+	        break;
+        default:
+            fail("code should not reach here");
+	    }
 	}
 	{
 		int yy = 0;
