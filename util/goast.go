@@ -477,7 +477,7 @@ func NewAnonymousFunction(body, deferBody []goast.Stmt,
 	returnValue goast.Expr,
 	returnType string) *goast.CallExpr {
 
-	if deferBody != nil {
+	if len(deferBody) > 0 {
 		body = append(body, []goast.Stmt{&goast.DeferStmt{
 			Defer: 1,
 			Call: &goast.CallExpr{
