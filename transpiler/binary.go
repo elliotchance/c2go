@@ -160,9 +160,8 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 				bComma.AddChild(c)
 				bComma.AddChild(&bSecond)
 
-				// exprIsStmt now changes to false to stop any AST children from
-				// not being safely wrapped in a closure.
-				return transpileBinaryOperator(&bComma, p, false)
+				// goast.NewBinaryExpr takes care to wrap any AST children safely in a closure, if needed.
+				return transpileBinaryOperator(&bComma, p, exprIsStmt)
 			}
 		}
 	}
@@ -191,7 +190,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 	// | `-ImplicitCastExpr 0x21a7898 <col:6> 'int' <LValueToRValue>
 	// |   `-DeclRefExpr 0x21a7870 <col:6> 'int' lvalue Var 0x21a7748 'y' 'int'
 	if getTokenForOperator(n.Operator) == token.COMMA {
-		stmts, _, newPre, newPost, err := transpileToExpr(n.Children()[0], p, false)
+		stmts, _, newPre, newPost, err := transpileToExpr(n.Children()[0], p, exprIsStmt)
 		if err != nil {
 			return nil, "unknown50", nil, nil, err
 		}
@@ -200,7 +199,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 		preStmts = append(preStmts, newPost...)
 
 		var st string
-		stmts, st, newPre, newPost, err = transpileToExpr(n.Children()[1], p, false)
+		stmts, st, newPre, newPost, err = transpileToExpr(n.Children()[1], p, exprIsStmt)
 		if err != nil {
 			return nil, "unknown51", nil, nil, err
 		}
