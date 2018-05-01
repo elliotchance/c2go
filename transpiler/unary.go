@@ -76,6 +76,16 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program, operato
 			Op: token.ASSIGN,
 			Y:  expr,
 		}
+		if !exprIsStmt {
+			var lType string
+			lType, err = types.ResolveType(p, leftType)
+			if err != nil {
+				return
+			}
+			expr = util.NewAnonymousFunction([]goast.Stmt{&goast.ExprStmt{
+				X: expr,
+			}}, nil, goast.NewIdent(name), lType)
+		}
 		return
 	}
 
