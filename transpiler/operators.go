@@ -634,6 +634,8 @@ func atomicOperation(n ast.Node, p *program.Program) (
 				return
 			}
 
+			// since we will explicitly use an anonymous function, we can transpileToExpr as a statement
+			expr, exprType, preStmts, postStmts, err = transpileToExpr(n, p, true)
 			expr = util.NewAnonymousFunction(append(preStmts, &goast.ExprStmt{expr}),
 				postStmts,
 				util.NewIdent(varName),
@@ -812,7 +814,7 @@ func atomicOperation(n ast.Node, p *program.Program) (
 			//     `-DeclRefExpr 0x3c42400 <col:32> 'int' lvalue Var 0x3c3cf60 'iterator' 'int'
 			varName := "tempVar"
 
-			expr, exprType, preStmts, postStmts, err = transpileToExpr(v.Children()[0], p, false)
+			expr, exprType, preStmts, postStmts, err = transpileToExpr(v.Children()[0], p, true)
 			if err != nil {
 				return
 			}
@@ -891,7 +893,7 @@ func atomicOperation(n ast.Node, p *program.Program) (
 				return
 			}
 
-			e, _, newPre, newPost, _ := transpileToExpr(v, p, false)
+			e, _, newPre, newPost, _ := transpileToExpr(v, p, true)
 			body := combineStmts(&goast.ExprStmt{e}, newPre, newPost)
 
 			expr, exprType, _, _, _ = atomicOperation(v.Children()[0], p)

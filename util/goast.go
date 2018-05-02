@@ -175,7 +175,31 @@ func NewBinaryExpr(left goast.Expr, operator token.Token, right goast.Expr,
 		Op: operator,
 		Y:  right,
 	}
+	if !stmt && isAssignishOperator(operator) {
+		return NewFuncClosure(returnType, NewExprStmt(b), &goast.ReturnStmt{
+			Results: []goast.Expr{left},
+		})
+	}
 	return b
+}
+
+func isAssignishOperator(t token.Token) bool {
+	switch t {
+	case token.ADD_ASSIGN, // +=
+		token.SUB_ASSIGN,     // -=
+		token.MUL_ASSIGN,     // *=
+		token.QUO_ASSIGN,     // /=
+		token.REM_ASSIGN,     // %=
+		token.AND_ASSIGN,     // &=
+		token.OR_ASSIGN,      // |=
+		token.XOR_ASSIGN,     // ^=
+		token.SHL_ASSIGN,     // <<=
+		token.SHR_ASSIGN,     // >>=
+		token.AND_NOT_ASSIGN, // &^=
+		token.ASSIGN:         // =
+		return true
+	}
+	return false
 }
 
 // NewIdent - create a new Go ast Ident
@@ -453,7 +477,7 @@ func NewAnonymousFunction(body, deferBody []goast.Stmt,
 	returnValue goast.Expr,
 	returnType string) *goast.CallExpr {
 
-	if deferBody != nil {
+	if len(deferBody) > 0 {
 		body = append(body, []goast.Stmt{&goast.DeferStmt{
 			Defer: 1,
 			Call: &goast.CallExpr{

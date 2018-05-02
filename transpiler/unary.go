@@ -15,7 +15,7 @@ import (
 	"go/token"
 )
 
-func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program, operator token.Token) (
+func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program, operator token.Token, exprIsStmt bool) (
 	expr goast.Expr, eType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 	defer func() {
 		if err != nil {
@@ -76,6 +76,16 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program, operato
 			Op: token.ASSIGN,
 			Y:  expr,
 		}
+		if !exprIsStmt {
+			var lType string
+			lType, err = types.ResolveType(p, leftType)
+			if err != nil {
+				return
+			}
+			expr = util.NewAnonymousFunction([]goast.Stmt{&goast.ExprStmt{
+				X: expr,
+			}}, nil, goast.NewIdent(name), lType)
+		}
 		return
 	}
 
@@ -119,7 +129,7 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program, operato
 				ChildNodes: []ast.Node{},
 			},
 		},
-	}, p, false)
+	}, p, exprIsStmt)
 }
 
 func transpileUnaryOperatorNot(n *ast.UnaryOperator, p *program.Program) (
@@ -572,7 +582,7 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 	return nil, "", nil, nil, fmt.Errorf("Cannot found : %#v", pointer)
 }
 
-func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
+func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program, exprIsStmt bool) (
 	_ goast.Expr, theType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 	defer func() {
 		if err != nil {
@@ -591,7 +601,7 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 		// *(t + 1) = ...
 		return transpilePointerArith(n, p)
 	case token.INC, token.DEC: // ++, --
-		return transpileUnaryOperatorInc(n, p, operator)
+		return transpileUnaryOperatorInc(n, p, operator, exprIsStmt)
 	case token.NOT: // !
 		return transpileUnaryOperatorNot(n, p)
 	case token.AND: // &
@@ -599,7 +609,7 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program) (
 	}
 
 	// Otherwise handle like a unary operator.
-	e, eType, newPre, newPost, err := transpileToExpr(n.Children()[0], p, false)
+	e, eType, newPre, newPost, err := transpileToExpr(n.Children()[0], p, exprIsStmt)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}

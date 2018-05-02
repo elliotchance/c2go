@@ -159,13 +159,13 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 		expr, exprType, preStmts, postStmts, err = transpileConditionalOperator(n, p)
 
 	case *ast.ArraySubscriptExpr:
-		expr, exprType, preStmts, postStmts, err = transpileArraySubscriptExpr(n, p)
+		expr, exprType, preStmts, postStmts, err = transpileArraySubscriptExpr(n, p, exprIsStmt)
 
 	case *ast.BinaryOperator:
 		expr, exprType, preStmts, postStmts, err = transpileBinaryOperator(n, p, exprIsStmt)
 
 	case *ast.UnaryOperator:
-		expr, exprType, preStmts, postStmts, err = transpileUnaryOperator(n, p)
+		expr, exprType, preStmts, postStmts, err = transpileUnaryOperator(n, p, exprIsStmt)
 
 	case *ast.MemberExpr:
 		expr, exprType, preStmts, postStmts, err = transpileMemberExpr(n, p)

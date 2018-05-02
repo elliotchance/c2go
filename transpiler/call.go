@@ -79,7 +79,7 @@ func getName(p *program.Program, firstChild ast.Node) (name string, err error) {
 
 	case *ast.ArraySubscriptExpr:
 		var expr goast.Expr
-		expr, _, _, _, err = transpileArraySubscriptExpr(fc, p)
+		expr, _, _, _, err = transpileArraySubscriptExpr(fc, p, false)
 		if err != nil {
 			return
 		}
