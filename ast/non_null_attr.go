@@ -23,9 +23,14 @@ func parseNonNullAttr(line string) *NonNullAttr {
 	groups := groupsFromRegex(
 		`<(?P<position>.*)>
 		(?P<inherited> Inherited)?
-		(?P<a> \d+)(?P<b> \d+)?(?P<c> \d+)?(?P<d> \d+)?`,
+		(?P<a> \d+)?(?P<b> \d+)?(?P<c> \d+)?(?P<d> \d+)?`,
 		line,
 	)
+
+	a := 0
+	if groups["a"] != "" {
+		a = util.Atoi(strings.TrimSpace(groups["a"]))
+	}
 
 	b := 0
 	if groups["b"] != "" {
@@ -46,7 +51,7 @@ func parseNonNullAttr(line string) *NonNullAttr {
 		Addr:       ParseAddress(groups["address"]),
 		Pos:        NewPositionFromString(groups["position"]),
 		Inherited:  len(groups["inherited"]) > 0,
-		A:          util.Atoi(strings.TrimSpace(groups["a"])),
+		A:          a,
 		B:          b,
 		C:          c,
 		D:          d,

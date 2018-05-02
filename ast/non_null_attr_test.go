@@ -76,6 +76,16 @@ func TestNonNullAttr(t *testing.T) {
 			D:          0,
 			ChildNodes: []Node{},
 		},
+		`0x2c3d600 <line:304:19>`: &NonNullAttr{
+			Addr:       0x2c3d600,
+			Pos:        NewPositionFromString("line:304:19"),
+			Inherited:  false,
+			A:          0,
+			B:          0,
+			C:          0,
+			D:          0,
+			ChildNodes: []Node{},
+		},
 	}
 
 	runNodeTests(t, nodes)
