@@ -82,6 +82,24 @@ func Strcmp(str1, str2 []byte) int32 {
 	return int32(bytes.Compare([]byte(CStringToString(str1)), []byte(CStringToString(str2))))
 }
 
+// Strncmp - compare two strings
+// Compares the C string str1 to the C string str2 upto the first NULL character
+// or n-th character whichever comes first.
+func Strncmp(str1, str2 []byte, n int32) int32 {
+	a := []byte(CStringToString(str1))
+	a = a[:int(min(int(n), len(a)))]
+	b := []byte(CStringToString(str2))
+	b = b[:int(min(int(n), len(b)))]
+	return int32(bytes.Compare(a, b))
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
 // Strchr - Locate first occurrence of character in string
 // See: http://www.cplusplus.com/reference/cstring/strchr/
 func Strchr(str []byte, ch int32) []byte {

@@ -182,6 +182,9 @@ var builtInFunctionDefinitions = map[string][]string{
 		// string.h
 		"char* strcat(char *, const char *) -> noarch.Strcat",
 		"int strcmp(const char *, const char *) -> noarch.Strcmp",
+
+		// should be: "int strncmp(const char*, const char*, size_t) -> noarch.Strncmp",
+		"int strncmp(const char *, const char *, int) -> noarch.Strncmp",
 		"char * strchr(char *, int) -> noarch.Strchr",
 
 		"char* strcpy(const char*, char*) -> noarch.Strcpy",
