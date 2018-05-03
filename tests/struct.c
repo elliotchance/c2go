@@ -343,6 +343,16 @@ void struct_inside_union()
 	is_true(s.d != 0);
 }
 
+typedef int pointx;
+typedef struct  {
+    pointx x;
+    int y;
+} Point2;
+const Point2 p2[] = { { .y = 4, .x = 5 } };
+const Point2* getPoint(int index) {
+    return &(p2[index]);
+}
+
 int main()
 {
     plan(68);
