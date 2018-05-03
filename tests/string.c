@@ -8,7 +8,7 @@ typedef struct mem {
 
 int main()
 {
-    plan(60);
+    plan(66);
 
     diag("TODO: __builtin_object_size")
     // https://github.com/elliotchance/c2go/issues/359
@@ -113,6 +113,39 @@ int main()
 			is_true(strcmp(a,b) < 0);
 		}
 	}
+	{
+        diag("strncmp");
+        {
+            char* a = "ab";
+            char* b = "ab";
+            is_true(strncmp(a,b,10) == 0);
+        }
+        {
+            char* a = "bb";
+            char* b = "ab";
+            is_true(strncmp(a,b,10) > 0);
+        }
+        {
+            char* a = "ab";
+            char* b = "bb";
+            is_true(strncmp(a,b,10) < 0);
+        }
+        {
+            char* a = "aba";
+            char* b = "ab";
+            is_true(strncmp(a,b,10) > 0);
+        }
+        {
+            char* a = "ab";
+            char* b = "aba";
+            is_true(strncmp(a,b,10) < 0);
+        }
+        {
+            char* a = "aba";
+            char* b = "abc";
+            is_true(strncmp(a,b,2) == 0);
+        }
+    }
 	{
 		diag("strchr");
 		char str[] = "This is a sample string";
