@@ -158,3 +158,23 @@ func Memcpy(dst interface{}, src interface{}, size int32) interface{} {
 	copy(bDst[:size], bSrc[:size])
 	return dst
 }
+
+// Memcmp compares two binary arrays upto n bytes.
+// Different from strncmp, memcmp does not stop at the first NULL byte.
+func Memcmp(src1, src2 interface{}, n int32) int32 {
+	v1 := reflect.ValueOf(src1).Type()
+	switch v1.Kind() {
+	case reflect.Slice, reflect.Array:
+		v1 = v1.Elem()
+	}
+	baseSize1 := int32(v1.Size())
+	v2 := reflect.ValueOf(src2).Type()
+	switch v2.Kind() {
+	case reflect.Slice, reflect.Array:
+		v2 = v2.Elem()
+	}
+	baseSize2 := int32(v2.Size())
+	b1 := *(*[]byte)(unsafe.Pointer(UnsafeSliceToSlice(src1, baseSize1, int32(1))))
+	b2 := *(*[]byte)(unsafe.Pointer(UnsafeSliceToSlice(src2, baseSize2, int32(1))))
+	return int32(bytes.Compare(b1[:int(n)], b2[:int(n)]))
+}

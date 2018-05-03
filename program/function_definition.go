@@ -204,6 +204,9 @@ var builtInFunctionDefinitions = map[string][]string{
 		// should be: "void* memmove(void *, void *, size_t) -> noarch.Memcpy"
 		"void* memmove(void *, void *, int) -> noarch.Memcpy",
 
+		// should be: "int memmove(const void *, const void *, size_t) -> noarch.Memcmp"
+		"int memcmp(void *, void *, int) -> noarch.Memcmp",
+
 		// darwin/string.h
 		// should be: const char*, char*, size_t
 		"char* __builtin___strcpy_chk(const char*, char*, int) -> darwin.BuiltinStrcpy",
