@@ -248,12 +248,24 @@ func transpileInitListExpr(e *ast.InitListExpr, p *program.Program) (goast.Expr,
 			return nil, "", err
 		}
 		if goStruct != nil {
+			if fieldIndex >= len(goStruct.FieldNames) {
+				// index out of range
+				goto CONTINUE_INIT
+			}
+			fn := goStruct.FieldNames[fieldIndex]
+			if _, ok := goStruct.Fields[fn]; !ok {
+				// field name not in map
+				goto CONTINUE_INIT
+			}
 			if field, ok := goStruct.Fields[goStruct.FieldNames[fieldIndex]].(string); ok {
-				expr, err = types.CastExpr(p, expr, exprType, field)
+				expr2, err := types.CastExpr(p, expr, exprType, field)
+				if err == nil {
+					expr = expr2
+				}
 			}
 			fieldIndex++
 		}
-
+	CONTINUE_INIT:
 		resp = append(resp, expr)
 	}
 
