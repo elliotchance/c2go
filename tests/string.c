@@ -165,7 +165,7 @@ int main()
         char *dest2;
         char *dest3;
         dest2 = (char*) memset(dest1, 'a', 4);
-        dest1[5] = '\0';
+        dest1[4] = '\0';
         is_streq(dest1, "aaaa");
         is_streq(dest2, "aaaa");
         dest3 = (char*) memset(&dest2[1], 'b', 2);
