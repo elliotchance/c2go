@@ -355,7 +355,7 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program, 
 
 	children := n.Children()
 
-	expression, _, newPre, newPost, err := transpileToExpr(children[0], p, exprIsStmt)
+	expression, leftType, newPre, newPost, err := transpileToExpr(children[0], p, exprIsStmt)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
@@ -366,6 +366,14 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program, 
 		return nil, "", nil, nil, err
 	}
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+
+	isConst, indexInt := util.EvaluateConstExpr(index)
+	if isConst && indexInt < 0 {
+		indexInt = -indexInt
+		expression, leftType, newPre, newPost, err =
+			pointerArithmetic(p, expression, leftType, util.NewIntLit(int(indexInt)), "int", token.SUB)
+		index = util.NewIntLit(0)
+	}
 
 	return &goast.IndexExpr{
 		X:     expression,
