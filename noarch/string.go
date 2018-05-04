@@ -82,6 +82,24 @@ func Strcmp(str1, str2 []byte) int32 {
 	return int32(bytes.Compare([]byte(CStringToString(str1)), []byte(CStringToString(str2))))
 }
 
+// Strncmp - compare two strings
+// Compares the C string str1 to the C string str2 upto the first NULL character
+// or n-th character whichever comes first.
+func Strncmp(str1, str2 []byte, n int32) int32 {
+	a := []byte(CStringToString(str1))
+	a = a[:int(min(int(n), len(a)))]
+	b := []byte(CStringToString(str2))
+	b = b[:int(min(int(n), len(b)))]
+	return int32(bytes.Compare(a, b))
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
 // Strchr - Locate first occurrence of character in string
 // See: http://www.cplusplus.com/reference/cstring/strchr/
 func Strchr(str []byte, ch int32) []byte {
@@ -139,4 +157,24 @@ func Memcpy(dst interface{}, src interface{}, size int32) interface{} {
 	bSrc := *(*[]byte)(unsafe.Pointer(UnsafeSliceToSlice(src, baseSizeSrc, int32(1))))
 	copy(bDst[:size], bSrc[:size])
 	return dst
+}
+
+// Memcmp compares two binary arrays upto n bytes.
+// Different from strncmp, memcmp does not stop at the first NULL byte.
+func Memcmp(src1, src2 interface{}, n int32) int32 {
+	v1 := reflect.ValueOf(src1).Type()
+	switch v1.Kind() {
+	case reflect.Slice, reflect.Array:
+		v1 = v1.Elem()
+	}
+	baseSize1 := int32(v1.Size())
+	v2 := reflect.ValueOf(src2).Type()
+	switch v2.Kind() {
+	case reflect.Slice, reflect.Array:
+		v2 = v2.Elem()
+	}
+	baseSize2 := int32(v2.Size())
+	b1 := *(*[]byte)(unsafe.Pointer(UnsafeSliceToSlice(src1, baseSize1, int32(1))))
+	b2 := *(*[]byte)(unsafe.Pointer(UnsafeSliceToSlice(src2, baseSize2, int32(1))))
+	return int32(bytes.Compare(b1[:int(n)], b2[:int(n)]))
 }

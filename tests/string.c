@@ -8,7 +8,7 @@ typedef struct mem {
 
 int main()
 {
-    plan(60);
+    plan(70);
 
     diag("TODO: __builtin_object_size")
     // https://github.com/elliotchance/c2go/issues/359
@@ -114,6 +114,39 @@ int main()
 		}
 	}
 	{
+        diag("strncmp");
+        {
+            char* a = "ab";
+            char* b = "ab";
+            is_true(strncmp(a,b,10) == 0);
+        }
+        {
+            char* a = "bb";
+            char* b = "ab";
+            is_true(strncmp(a,b,10) > 0);
+        }
+        {
+            char* a = "ab";
+            char* b = "bb";
+            is_true(strncmp(a,b,10) < 0);
+        }
+        {
+            char* a = "aba";
+            char* b = "ab";
+            is_true(strncmp(a,b,10) > 0);
+        }
+        {
+            char* a = "ab";
+            char* b = "aba";
+            is_true(strncmp(a,b,10) < 0);
+        }
+        {
+            char* a = "aba";
+            char* b = "abc";
+            is_true(strncmp(a,b,2) == 0);
+        }
+    }
+	{
 		diag("strchr");
 		char str[] = "This is a sample string";
 		char * pch;
@@ -132,7 +165,7 @@ int main()
         char *dest2;
         char *dest3;
         dest2 = (char*) memset(dest1, 'a', 4);
-        dest1[5] = '\0';
+        dest1[4] = '\0';
         is_streq(dest1, "aaaa");
         is_streq(dest2, "aaaa");
         dest3 = (char*) memset(&dest2[1], 'b', 2);
@@ -211,6 +244,29 @@ int main()
         is_eq(dest7[0].b, 3.0);
         is_eq(dest7[1].a, 0);
         is_eq(dest7[1].b, 0.0);
+    }
+    {
+        diag("memcmp");
+        {
+            char* a = "ab\0c";
+            char* b = "ab\0c";
+            is_true(memcmp(a,b,4) == 0);
+        }
+        {
+            char* a = "ab\0a";
+            char* b = "ab\0c";
+            is_true(memcmp(a,b,4) < 0);
+        }
+        {
+            char* a = "ab\0c";
+            char* b = "ab\0a";
+            is_true(memcmp(a,b,4) > 0);
+        }
+        {
+            char* a = "ab\0c";
+            char* b = "ab\0a";
+            is_true(memcmp(a,b,3) == 0);
+        }
     }
 
     done_testing();
