@@ -355,7 +355,7 @@ const Point2* getPoint(int index) {
 
 int main()
 {
-    plan(68);
+    plan(69);
 
     struct programming variable;
     char *s = "Programming in Software Development.";
@@ -430,6 +430,11 @@ int main()
 	struct Point p = { .y = 2, .x = 3 };
 	is_eq(p.x, 3);
 	is_eq(p.y, 2);
+
+	diag("Initialization of a const struct pointer")
+	const Point2* pp2 = getPoint(0);
+	int pointSum = pp2->x + pp2->y;
+	is_eq(pointSum, 9);
 
 	diag("ImplicitValueInitExpr")
 	{
