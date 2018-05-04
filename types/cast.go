@@ -311,7 +311,22 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 		// Darwin specific
 		"__darwin_ct_rune_t", "darwin.CtRuneT",
 	}
+	unsigned := map[string]bool{"byte": true, "uint8": true, "uint16": true, "uint32": true, "uint64": true,
+		"__uint16_t": true, "size_t": true, "darwin_ct_rune_t": true, "darwin.CtRuneT": true}
+	var isFromNumber, isFromUnsigned, isToNumber, isToUnsigned bool
 	for _, v := range types {
+		if fromType == v {
+			isFromNumber = true
+			if b, ok := unsigned[v]; ok && b {
+				isFromUnsigned = true
+			}
+		}
+		if toType == v {
+			isToNumber = true
+			if b, ok := unsigned[v]; ok && b {
+				isToUnsigned = true
+			}
+		}
 		if fromType == v && toType == "bool" {
 			e := util.NewBinaryExpr(
 				expr,
@@ -328,6 +343,14 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 			// Swap replaceme with the current expression
 			e.(*goast.IndexExpr).Index = expr
 			return CastExpr(p, e, "int", cToType)
+		}
+	}
+	if isFromNumber && isToNumber && isToUnsigned && !isFromUnsigned {
+		// To fix x overflows unsigned we swap cast and complement operator.
+		if e, ok := expr.(*goast.UnaryExpr); ok && e.Op == token.XOR {
+			c, err := CastExpr(p, e.X, cFromType, cToType)
+			e.X = c
+			return e, err
 		}
 	}
 
