@@ -79,6 +79,9 @@ func (v *calcVisitor) Visit(node goast.Node) int64 {
 		}
 		return v.Visit(ce.Args[0])
 	}
+	if pe, ok := node.(*goast.ParenExpr); ok {
+		return v.Visit(pe.X)
+	}
 	if ie, ok := node.(*goast.BasicLit); ok {
 		if ie.Kind == token.INT {
 			ret, err := strconv.Atoi(ie.Value)
