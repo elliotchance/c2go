@@ -223,10 +223,15 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 	if err != nil {
 		return nil, "unknown53", nil, nil, err
 	}
+	var adjustPointerDiff int
 	if types.IsPointer(leftType) && types.IsPointer(rightType) &&
 		(operator == token.SUB ||
 			operator == token.LSS || operator == token.GTR ||
 			operator == token.LEQ || operator == token.GEQ) {
+		baseSize, err := types.SizeOf(p, types.GetBaseType(leftType))
+		if operator == token.SUB && err == nil && baseSize > 1 {
+			adjustPointerDiff = baseSize
+		}
 		left, leftType = util.GetUintptrForSlice(left)
 		right, rightType = util.GetUintptrForSlice(right)
 	}
@@ -400,6 +405,14 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 		err = fmt.Errorf("right part of binary operation is nil. right : %#v", n.Children()[1])
 		p.AddMessage(p.GenerateWarningMessage(err, n))
 		return nil, "", nil, nil, err
+	}
+
+	if adjustPointerDiff > 0 {
+		expr := util.NewBinaryExpr(left, operator, right, resolvedLeftType, exprIsStmt)
+		returnType = types.ResolveTypeForBinaryOperator(p, n.Operator, leftType, rightType)
+		return util.NewBinaryExpr(expr, token.QUO, util.NewIntLit(adjustPointerDiff), returnType, exprIsStmt),
+			returnType,
+			preStmts, postStmts, nil
 	}
 
 	return util.NewBinaryExpr(left, operator, right, resolvedLeftType, exprIsStmt),
