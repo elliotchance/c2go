@@ -250,7 +250,7 @@ void test_pointer_minus_pointer()
 
 int main()
 {
-    plan(148);
+    plan(151);
 
     START_TEST(intarr);
     START_TEST(doublearr);
@@ -707,6 +707,15 @@ int main()
 
 	test_pointer_arith_size_t();
 	test_pointer_minus_pointer();
+
+	diag("negative array index");
+    {
+        char arr[] = "abcdef";
+        char *a = &arr[2];
+        is_eq(*a, 'c');
+        is_eq(a[-1], 'b');
+        is_eq(a[-2+1], 'b');
+    }
 
     done_testing();
 }
