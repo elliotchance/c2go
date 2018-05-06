@@ -40,9 +40,11 @@ typedef struct doubleEqual{
     unsigned int b;
 } doubleEqual;
 
+typedef unsigned char pcre_uint8;
+
 int main()
 {
-	plan(114);
+	plan(115);
 
     int i = 10;
     signed char j = 1;
@@ -421,6 +423,9 @@ int main()
 		int a[] = { 0x3c, 0xff };
 		a[1] &= ~a[0];
 		is_eq(a[1], 0xc3);
+		pcre_uint8 b[] = { 0xff };
+		b[0] &= ~0x3c;
+		is_eq(b[0], 0xc3);
 	}
 
 	done_testing();
