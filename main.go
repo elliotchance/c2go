@@ -6,7 +6,7 @@
 //
 // Usage
 //
-//     c2go myfile.c
+//     c2go transpile myfile.c
 //
 package main
 
