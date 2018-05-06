@@ -194,6 +194,7 @@ double *dvector(long nl, long nh)
 	return v-nl+1;
 }
 
+typedef struct s structs;
 void test_pointer_arith_size_t()
 {
 	size_t size = 1;
@@ -208,6 +209,25 @@ void test_pointer_arith_size_t()
 	is_eq(*left_ptr , arr[1]);
 	left_ptr += size;
 	is_eq(*left_ptr , arr[2]);
+
+	// tests for pointer to struct with size > 1
+	structs a[] = {{1, 'a'}, {2, 'b'}, {3, 'c'}};
+    is_eq(a[0].i, 1);
+    is_eq(a[0].c, 'a');
+    is_eq(a[1].i, 2);
+    is_eq(a[1].c, 'b');
+    is_eq(a[2].i, 3);
+    is_eq(a[2].c, 'c');
+    structs *ps = &a;
+    structs *ps2;
+    is_eq(ps->i, 1);
+    ps2 = ps + size;
+    is_eq(ps2->i, 2);
+    ps2 += size;
+    is_eq(ps2->i, 3);
+    is_eq(ps2-ps, 2);
+    ps2 -= size;
+    is_eq(ps2->i, 2);
 }
 
 void test_pointer_minus_pointer()
@@ -219,11 +239,18 @@ void test_pointer_minus_pointer()
 	right_ptr = &arr[20];
 
 	is_eq(right_ptr - left_ptr, 20);
+
+	// tests for pointer to struct with size > 1
+	structs arr2[30];
+	structs *left_ptr2 = &arr2[0];
+	structs *right_ptr2 = &arr2[20];
+
+	is_eq(right_ptr2 - left_ptr2, 20);
 }
 
 int main()
 {
-    plan(136);
+    plan(148);
 
     START_TEST(intarr);
     START_TEST(doublearr);
