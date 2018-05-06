@@ -328,10 +328,10 @@ func ConvertFunctionNameFromCtoGo(name string) string {
 // GetUintptrForSlice - return uintptr for slice
 // Example : uint64(uintptr(unsafe.Pointer((*(**int)(unsafe.Pointer(& ...slice... )))))))
 func GetUintptrForSlice(expr goast.Expr) (goast.Expr, string) {
-	returnType := "long"
+	returnType := "long long"
 
 	return &goast.CallExpr{
-		Fun:    goast.NewIdent("uint64"),
+		Fun:    goast.NewIdent("int64"),
 		Lparen: 1,
 		Args: []goast.Expr{&goast.CallExpr{
 			Fun:    goast.NewIdent("uintptr"),

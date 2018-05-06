@@ -123,9 +123,15 @@ void castbitwise() {
     is_eq(x, 0xc3);
 }
 
+void cast_pointer_diff(pcre_uchar *str, int *x) {
+    pcre_uchar *p = str;
+    pcre_uchar ab = '\0';
+    *x = (int)(p - str) - ab;
+}
+
 int main()
 {
-    plan(37);
+    plan(38);
 
     START_TEST(cast);
     START_TEST(castbool);
@@ -224,6 +230,14 @@ int main()
 
     diag("Cast with compound assign operator")
     castbitwise();
+
+    diag("Cast pointer diff");
+    {
+        pcre_uchar s[] = "abcd";
+        int b = 42;
+        cast_pointer_diff(&s[0], &b);
+        is_eq(b, 0);
+    }
 
     done_testing();
 }
