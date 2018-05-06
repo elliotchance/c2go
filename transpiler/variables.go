@@ -211,6 +211,28 @@ func transpileInitListExpr(e *ast.InitListExpr, p *program.Program) (goast.Expr,
 	e.Type1 = types.GenerateCorrectType(e.Type1)
 	e.Type2 = types.GenerateCorrectType(e.Type2)
 
+	var goType string
+	arrayType, arraySize := types.GetArrayTypeAndSize(e.Type1)
+	if arraySize != -1 {
+		goArrayType, err := types.ResolveType(p, arrayType)
+		if err == nil {
+			goType = goArrayType
+		}
+	} else {
+		goType2, err := types.ResolveType(p, e.Type1)
+		if err == nil {
+			goType = goType2
+		}
+	}
+	var goStruct *program.Struct
+	if e.Type1 == e.Type2 {
+		goStruct = p.GetStruct(goType)
+		if goStruct == nil {
+			goStruct = p.GetStruct("struct " + goType)
+		}
+	}
+	fieldIndex := 0
+
 	for _, node := range e.Children() {
 		// Skip ArrayFiller
 		if _, ok := node.(*ast.ArrayFiller); ok {
@@ -219,19 +241,38 @@ func transpileInitListExpr(e *ast.InitListExpr, p *program.Program) (goast.Expr,
 		}
 
 		var expr goast.Expr
+		var exprType string
 		var err error
-		expr, _, _, _, err = transpileToExpr(node, p, true)
+		expr, exprType, _, _, err = transpileToExpr(node, p, true)
 		if err != nil {
 			return nil, "", err
 		}
-
+		if goStruct != nil {
+			if fieldIndex >= len(goStruct.FieldNames) {
+				// index out of range
+				goto CONTINUE_INIT
+			}
+			fn := goStruct.FieldNames[fieldIndex]
+			if _, ok := goStruct.Fields[fn]; !ok {
+				// field name not in map
+				goto CONTINUE_INIT
+			}
+			if field, ok := goStruct.Fields[goStruct.FieldNames[fieldIndex]].(string); ok {
+				expr2, err := types.CastExpr(p, expr, exprType, field)
+				if err == nil {
+					expr = expr2
+				}
+			}
+			fieldIndex++
+		}
+	CONTINUE_INIT:
 		resp = append(resp, expr)
 	}
 
 	var t goast.Expr
 	var cTypeString string
 
-	arrayType, arraySize := types.GetArrayTypeAndSize(e.Type1)
+	arrayType, arraySize = types.GetArrayTypeAndSize(e.Type1)
 	if arraySize != -1 {
 		goArrayType, err := types.ResolveType(p, arrayType)
 		p.AddMessage(p.GenerateWarningMessage(err, e))

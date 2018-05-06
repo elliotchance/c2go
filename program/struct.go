@@ -20,22 +20,29 @@ type Struct struct {
 	// Each of the fields and their C type. The field may be a string or an
 	// instance of Struct for nested structures.
 	Fields map[string]interface{}
+
+	// Each of the field names in the order they were defined.
+	FieldNames []string
 }
 
 // NewStruct creates a new Struct definition from an ast.RecordDecl.
 func NewStruct(n *ast.RecordDecl) *Struct {
 	fields := make(map[string]interface{})
+	fieldNames := make([]string, 0, len(n.Children()))
 
 	for _, field := range n.Children() {
 		switch f := field.(type) {
 		case *ast.FieldDecl:
 			fields[f.Name] = f.Type
+			fieldNames = append(fieldNames, f.Name)
 
 		case *ast.IndirectFieldDecl:
 			fields[f.Name] = f.Type
+			fieldNames = append(fieldNames, f.Name)
 
 		case *ast.RecordDecl:
 			fields[f.Name] = NewStruct(f)
+			fieldNames = append(fieldNames, f.Name)
 
 		case *ast.MaxFieldAlignmentAttr,
 			*ast.AlignedAttr,
@@ -49,9 +56,10 @@ func NewStruct(n *ast.RecordDecl) *Struct {
 	}
 
 	return &Struct{
-		Name:    n.Name,
-		IsUnion: n.Kind == "union",
-		Fields:  fields,
+		Name:       n.Name,
+		IsUnion:    n.Kind == "union",
+		Fields:     fields,
+		FieldNames: fieldNames,
 	}
 }
 
