@@ -3,6 +3,7 @@ package noarch
 import (
 	"bytes"
 	"reflect"
+	"strings"
 	"unsafe"
 )
 
@@ -66,6 +67,18 @@ func Strncpy(dest, src []byte, len int32) []byte {
 	return dest
 }
 
+// Strcasestr - function is similar to Strstr(),
+// but ignores the case of both strings.
+func Strcasestr(str1, str2 []byte) []byte {
+	a := strings.ToLower(CStringToString(str1))
+	b := strings.ToLower(CStringToString(str2))
+	index := strings.Index(a, b)
+	if index == -1 {
+		return nil
+	}
+	return str1[index : index+len(b)]
+}
+
 // Strcat - concatenate strings
 // Appends a copy of the source string to the destination string.
 // The terminating null character in destination is overwritten by the first
@@ -91,6 +104,19 @@ func Strncmp(str1, str2 []byte, n int32) int32 {
 	b := []byte(CStringToString(str2))
 	b = b[:int(min(int(n), len(b)))]
 	return int32(bytes.Compare(a, b))
+}
+
+// Strstr - locate a substring in a string
+// function locates the first occurrence of the null-terminated string needle
+// in the null-terminated string haystack.
+func Strstr(str1, str2 []byte) []byte {
+	a := CStringToString(str1)
+	b := CStringToString(str2)
+	index := strings.Index(a, b)
+	if index == -1 {
+		return nil
+	}
+	return str1[index : index+len(b)]
 }
 
 func min(a, b int) int {

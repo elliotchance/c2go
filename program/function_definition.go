@@ -180,6 +180,7 @@ var builtInFunctionDefinitions = map[string][]string{
 	},
 	"string.h": []string{
 		// string.h
+		"char* strcasestr(const char*, const char*) -> noarch.Strcasestr",
 		"char* strcat(char *, const char *) -> noarch.Strcat",
 		"int strcmp(const char *, const char *) -> noarch.Strcmp",
 
@@ -194,6 +195,8 @@ var builtInFunctionDefinitions = map[string][]string{
 		// real return type is "size_t", but it is changed to "int"
 		// in according to noarch.Strlen
 		"int strlen(const char*) -> noarch.Strlen",
+
+		"char* strstr(const char*, const char*) -> noarch.Strstr",
 
 		// should be: "void* memset(void *, int, size_t) -> noarch.Memset"
 		"void* memset(void *, int, int) -> noarch.Memset",
