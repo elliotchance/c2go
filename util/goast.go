@@ -330,6 +330,16 @@ func ConvertFunctionNameFromCtoGo(name string) string {
 func GetUintptrForSlice(expr goast.Expr) (goast.Expr, string) {
 	returnType := "long long"
 
+	var unsafePointer goast.Expr
+	if IsAddressable(expr) {
+		unsafePointer = NewCallExpr("unsafe.Pointer", &goast.UnaryExpr{
+			Op: token.AND,
+			X:  expr,
+		})
+	} else {
+		// pointer to a tempVar, but since we directly dereference, we are good
+		unsafePointer = ToUnsafePointer(expr)
+	}
 	return &goast.CallExpr{
 		Fun:    goast.NewIdent("int64"),
 		Lparen: 1,
@@ -356,17 +366,7 @@ func GetUintptrForSlice(expr goast.Expr) (goast.Expr, string) {
 							},
 						},
 						Lparen: 1,
-						Args: []goast.Expr{&goast.CallExpr{
-							Fun: &goast.SelectorExpr{
-								X:   goast.NewIdent("unsafe"),
-								Sel: goast.NewIdent("Pointer"),
-							},
-							Lparen: 1,
-							Args: []goast.Expr{&goast.UnaryExpr{
-								Op: token.AND,
-								X:  expr,
-							}},
-						}},
+						Args:   []goast.Expr{unsafePointer},
 					},
 				}},
 			}},
@@ -502,4 +502,37 @@ func NewAnonymousFunction(body, deferBody []goast.Stmt,
 			}),
 		},
 	}}
+}
+
+// IsAddressable returns whether it's possible to obtain an address of expr
+// using the unary & operator.
+func IsAddressable(expr goast.Expr) bool {
+	if _, ok := expr.(*goast.Ident); ok {
+		return true
+	}
+	if ie, ok := expr.(*goast.IndexExpr); ok {
+		return IsAddressable(ie.X)
+	}
+	if pe, ok := expr.(*goast.ParenExpr); ok {
+		return IsAddressable(pe.X)
+	}
+	return false
+}
+
+// ToUnsafePointer returns an unsafe Pointer to a temporary Variable to which the
+// given expr is assigned.
+func ToUnsafePointer(expr goast.Expr) goast.Expr {
+	var body []goast.Stmt
+	varName := "tempVar"
+
+	body = append(body, &goast.AssignStmt{
+		Lhs: []goast.Expr{NewIdent(varName)},
+		Tok: token.DEFINE,
+		Rhs: []goast.Expr{expr},
+	})
+	returnValue := NewCallExpr("unsafe.Pointer", &goast.UnaryExpr{
+		X:  NewIdent(varName),
+		Op: token.AND,
+	})
+	return NewAnonymousFunction(body, nil, returnValue, "unsafe.Pointer")
 }
