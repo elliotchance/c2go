@@ -248,9 +248,12 @@ void test_pointer_minus_pointer()
 	is_eq(right_ptr2 - left_ptr2, 20);
 }
 
+typedef unsigned char pcre_uchar;
+#define CHAR_B 'b'
+
 int main()
 {
-    plan(151);
+    plan(152);
 
     START_TEST(intarr);
     START_TEST(doublearr);
@@ -710,11 +713,12 @@ int main()
 
 	diag("negative array index");
     {
-        char arr[] = "abcdef";
-        char *a = &arr[2];
+        pcre_uchar arr[] = "abcdef";
+        pcre_uchar *a = &arr[2];
         is_eq(*a, 'c');
         is_eq(a[-1], 'b');
         is_eq(a[-2+1], 'b');
+        is_eq(*(a-1), CHAR_B);
     }
 
     done_testing();
