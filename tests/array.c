@@ -248,9 +248,12 @@ void test_pointer_minus_pointer()
 	is_eq(right_ptr2 - left_ptr2, 20);
 }
 
+typedef unsigned char pcre_uchar;
+#define CHAR_B 'b'
+
 int main()
 {
-    plan(148);
+    plan(152);
 
     START_TEST(intarr);
     START_TEST(doublearr);
@@ -707,6 +710,16 @@ int main()
 
 	test_pointer_arith_size_t();
 	test_pointer_minus_pointer();
+
+	diag("negative array index");
+    {
+        pcre_uchar arr[] = "abcdef";
+        pcre_uchar *a = &arr[2];
+        is_eq(*a, 'c');
+        is_eq(a[-1], 'b');
+        is_eq(a[-2+1], 'b');
+        is_eq(*(a-1), CHAR_B);
+    }
 
     done_testing();
 }

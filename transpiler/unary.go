@@ -250,7 +250,7 @@ func transpileUnaryOperatorAmpersant(n *ast.UnaryOperator, p *program.Program) (
 	return
 }
 
-// transpilePointerArith - transpile pointer aripthmetic
+// transpilePointerArith - transpile pointer arithmetic
 // Example of using:
 // *(t + 1) = ...
 func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
@@ -495,28 +495,51 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 
 	switch v := pointer.(type) {
 	case *ast.MemberExpr:
-		arr, _, newPre, newPost, err2 := transpileToExpr(v, p, false)
+		arr, arrType, newPre, newPost, err2 := transpileToExpr(v, p, false)
 		if err2 != nil {
 			return
 		}
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+		isConst, indexInt := util.EvaluateConstExpr(e)
+		if isConst && indexInt < 0 {
+			indexInt = -indexInt
+			arr, eType, newPre, newPost, err =
+				pointerArithmetic(p, arr, arrType, util.NewIntLit(int(indexInt)), "int", token.SUB)
+			e = util.NewIntLit(0)
+		}
 		return &goast.IndexExpr{
 			X:     arr,
 			Index: e,
 		}, eType, preStmts, postStmts, err
 
 	case *ast.DeclRefExpr:
+		var ident goast.Expr
+		ident = util.NewIdent(v.Name)
+		isConst, indexInt := util.EvaluateConstExpr(e)
+		if isConst && indexInt < 0 {
+			indexInt = -indexInt
+			ident, _, newPre, newPost, err =
+				pointerArithmetic(p, ident, eType+" *", util.NewIntLit(int(indexInt)), "int", token.SUB)
+			e = util.NewIntLit(0)
+		}
 		return &goast.IndexExpr{
-			X:     util.NewIdent(v.Name),
+			X:     ident,
 			Index: e,
 		}, eType, preStmts, postStmts, err
 
 	case *ast.ArraySubscriptExpr:
-		arr, _, newPre, newPost, err2 := transpileToExpr(v, p, false)
+		arr, arrType, newPre, newPost, err2 := transpileToExpr(v, p, false)
 		if err2 != nil {
 			return
 		}
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+		isConst, indexInt := util.EvaluateConstExpr(e)
+		if isConst && indexInt < 0 {
+			indexInt = -indexInt
+			arr, eType, newPre, newPost, err =
+				pointerArithmetic(p, arr, arrType, util.NewIntLit(int(indexInt)), "int", token.SUB)
+			e = util.NewIntLit(0)
+		}
 		return &goast.IndexExpr{
 			X: &goast.ParenExpr{
 				Lparen: 1,
@@ -526,11 +549,18 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 		}, eType, preStmts, postStmts, err
 
 	case *ast.CallExpr:
-		arr, _, newPre, newPost, err2 := transpileToExpr(v, p, false)
+		arr, arrType, newPre, newPost, err2 := transpileToExpr(v, p, false)
 		if err2 != nil {
 			return
 		}
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+		isConst, indexInt := util.EvaluateConstExpr(e)
+		if isConst && indexInt < 0 {
+			indexInt = -indexInt
+			arr, eType, newPre, newPost, err =
+				pointerArithmetic(p, arr, arrType, util.NewIntLit(int(indexInt)), "int", token.SUB)
+			e = util.NewIntLit(0)
+		}
 		return &goast.IndexExpr{
 			X: &goast.ParenExpr{
 				Lparen: 1,
@@ -540,11 +570,18 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 		}, eType, preStmts, postStmts, err
 
 	case *ast.CStyleCastExpr:
-		arr, _, newPre, newPost, err2 := transpileToExpr(v, p, false)
+		arr, arrType, newPre, newPost, err2 := transpileToExpr(v, p, false)
 		if err2 != nil {
 			return
 		}
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
+		isConst, indexInt := util.EvaluateConstExpr(e)
+		if isConst && indexInt < 0 {
+			indexInt = -indexInt
+			arr, eType, newPre, newPost, err =
+				pointerArithmetic(p, arr, arrType, util.NewIntLit(int(indexInt)), "int", token.SUB)
+			e = util.NewIntLit(0)
+		}
 		return &goast.IndexExpr{
 			X: &goast.ParenExpr{
 				Lparen: 1,
@@ -554,7 +591,7 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 		}, eType, preStmts, postStmts, err
 
 	case *ast.UnaryOperator:
-		arr, _, newPre, newPost, err2 := atomicOperation(v, p)
+		arr, arrType, newPre, newPost, err2 := atomicOperation(v, p)
 		if err2 != nil {
 			return
 		}
@@ -570,6 +607,13 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 					Value: "0",
 				},
 			}, eType, preStmts, postStmts, err
+		}
+		isConst, indexInt := util.EvaluateConstExpr(e)
+		if isConst && indexInt < 0 {
+			indexInt = -indexInt
+			arr, eType, newPre, newPost, err =
+				pointerArithmetic(p, arr, arrType, util.NewIntLit(int(indexInt)), "int", token.SUB)
+			e = util.NewIntLit(0)
 		}
 		return &goast.IndexExpr{
 			X: &goast.ParenExpr{
