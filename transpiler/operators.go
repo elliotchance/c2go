@@ -246,10 +246,21 @@ func pointerArithmetic(p *program.Program,
 		s.Operator = "-"
 	}
 
-	src := `package main
+	var src string
+	if util.IsAddressable(left) {
+		src = `package main
 func main(){
 	a := (*(*[1000000000]{{ .Type }})(unsafe.Pointer(uintptr(unsafe.Pointer(&{{ .Name }}[0])) {{ .Operator }} (uintptr)({{ .Condition }})*unsafe.Sizeof({{ .Name }}[0]))))[:]
 }`
+	} else {
+		src = `package main
+func main(){
+	a := (*(*[1000000000]{{ .Type }})(unsafe.Pointer(func()uintptr{
+		tempVar := {{ .Name }}
+		return uintptr(unsafe.Pointer(&tempVar[0])) {{ .Operator }} (uintptr)({{ .Condition }})*unsafe.Sizeof(tempVar[0])
+	}())))[:]
+}`
+	}
 	tmpl := template.Must(template.New("").Parse(src))
 	var source bytes.Buffer
 	err = tmpl.Execute(&source, s)
