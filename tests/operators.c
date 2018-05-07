@@ -41,10 +41,11 @@ typedef struct doubleEqual{
 } doubleEqual;
 
 typedef unsigned char pcre_uint8;
+typedef unsigned char pcre_uchar;
 
 int main()
 {
-	plan(115);
+	plan(118);
 
     int i = 10;
     signed char j = 1;
@@ -427,6 +428,17 @@ int main()
 		b[0] &= ~0x3c;
 		is_eq(b[0], 0xc3);
 	}
+	diag("Take address of complex expression");
+    {
+        pcre_uchar s[] = "abcd";
+        pcre_uchar *a = &s[1];
+        pcre_uchar *b = &s[0];
+        is_eq(a + 2 - 1 - b, 2);
+        is_true(a + 2 - 1 == b + 2)
+        pcre_uchar *c;
+        c = &(*(&s[1] + 1));
+        is_true(c == a+1);
+    }
 
 	done_testing();
 }
