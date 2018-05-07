@@ -517,6 +517,9 @@ func atomicOperation(n ast.Node, p *program.Program) (
 			return
 		}
 
+		// ++, -- anonymous functions are handled here below
+		expr, exprType, preStmts, postStmts, err = transpileToExpr(n, p, true)
+
 		// UnaryOperator 0x3001768 <col:204, col:206> 'int' prefix '++'
 		// `-DeclRefExpr 0x3001740 <col:206> 'int' lvalue Var 0x303e888 'current_test' 'int'
 		// OR
