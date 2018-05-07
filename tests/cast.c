@@ -93,6 +93,10 @@ void test_preprocessor()
 }
 
 typedef unsigned char pcre_uchar;
+typedef unsigned char pcre_uint8;
+typedef struct pcre_study_data {
+    pcre_uint8 start_bits[32];
+} pcre_study_data;
 
 void caststr() {
     pcre_uchar str[] = "abcd";
@@ -131,7 +135,7 @@ void cast_pointer_diff(pcre_uchar *str, int *x) {
 
 int main()
 {
-    plan(38);
+    plan(39);
 
     START_TEST(cast);
     START_TEST(castbool);
@@ -237,6 +241,15 @@ int main()
         int b = 42;
         cast_pointer_diff(&s[0], &b);
         is_eq(b, 0);
+    }
+	diag("Cast array to slice");
+    {
+        pcre_study_data sdata;
+        sdata.start_bits[1] = 42;
+        const pcre_study_data *study = &sdata;
+        const pcre_uint8 *p = 0;
+        p = study->start_bits;
+        is_eq(p[1], 42);
     }
 
     done_testing();
