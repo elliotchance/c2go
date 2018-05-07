@@ -518,7 +518,7 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 		isConst, indexInt := util.EvaluateConstExpr(e)
 		if isConst && indexInt < 0 {
 			indexInt = -indexInt
-			ident, eType, newPre, newPost, err =
+			ident, _, newPre, newPost, err =
 				pointerArithmetic(p, ident, eType+" *", util.NewIntLit(int(indexInt)), "int", token.SUB)
 			e = util.NewIntLit(0)
 		}
