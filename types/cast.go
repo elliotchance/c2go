@@ -292,6 +292,13 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 	}
 
 	if fromType == toType {
+		match := util.GetRegex(`\[(\d+)\]$`).FindStringSubmatch(cFromType)
+		if strings.HasSuffix(cToType, "*") && len(match) > 0 {
+			// we need to convert from array to slice
+			return &goast.SliceExpr{
+				X: expr,
+			}, nil
+		}
 		return expr, nil
 	}
 
