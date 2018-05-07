@@ -45,7 +45,7 @@ typedef unsigned char pcre_uchar;
 
 int main()
 {
-	plan(118);
+	plan(134);
 
     int i = 10;
     signed char j = 1;
@@ -428,6 +428,39 @@ int main()
 		b[0] &= ~0x3c;
 		is_eq(b[0], 0xc3);
 	}
+	diag("Pointer increment/decrement");
+    {
+        pcre_uchar s[] = "abcd";
+        pcre_uchar *a = &s[1];
+        pcre_uchar *b = a++;
+        is_true(a == &s[2]);
+        is_true(b == &s[1]);
+        b = ++a;
+        is_true(a == &s[3]);
+        is_true(b == &s[3]);
+        b = a--;
+        is_true(a == &s[2]);
+        is_true(b == &s[3]);
+        b = --a;
+        is_true(a == &s[1]);
+        is_true(b == &s[1]);
+    }
+    diag("Value increment/decrement");
+    {
+        pcre_uint8 a = 4;
+        pcre_uint8 b = a++;
+        is_eq(a, 5);
+        is_eq(b, 4);
+        b = ++a;
+        is_eq(a, 6);
+        is_eq(b, 6);
+        b = a--;
+        is_eq(a, 5);
+        is_eq(b, 6);
+        b = --a;
+        is_eq(a, 4);
+        is_eq(b, 4);
+    }
 	diag("Take address of complex expression");
     {
         pcre_uchar s[] = "abcd";
