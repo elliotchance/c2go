@@ -323,13 +323,8 @@ func transpileCompoundAssignOperator(
 			return nil, "", nil, nil, fmt.Errorf("Expr is nil")
 		}
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
-		var name string
-		name, err = getName(p, n.Children()[0])
-		if err != nil {
-			return nil, "", nil, nil, err
-		}
 		v = &goast.BinaryExpr{
-			X:  goast.NewIdent(name),
+			X:  left,
 			Op: token.ASSIGN,
 			Y:  v,
 		}
