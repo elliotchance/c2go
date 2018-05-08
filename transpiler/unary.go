@@ -35,15 +35,16 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program, operato
 		case token.DEC:
 			operator = token.SUB
 		}
-		if _, ok := n.Children()[0].(*ast.DeclRefExpr); !ok {
-			err = fmt.Errorf("Unsupported type %T", n.Children()[0])
+		var declRefExpr *ast.DeclRefExpr
+		declRefExpr, err = getSoleChildDeclRefExpr(n)
+		if err != nil {
 			return
 		}
 
 		var left goast.Expr
 		var leftType string
 		var newPre, newPost []goast.Stmt
-		left, leftType, newPre, newPost, err = transpileToExpr(n.Children()[0], p, false)
+		left, leftType, newPre, newPost, err = transpileToExpr(declRefExpr, p, false)
 		if err != nil {
 			return
 		}
@@ -130,6 +131,30 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program, operato
 			},
 		},
 	}, p, exprIsStmt)
+}
+
+func getSoleChildDeclRefExpr(n *ast.UnaryOperator) (result *ast.DeclRefExpr, err error) {
+	var inspect ast.Node = n
+	for {
+		if inspect == nil {
+			break
+		}
+		if ret, ok := inspect.Children()[0].(*ast.DeclRefExpr); ok {
+			return ret, nil
+		}
+		if len(inspect.Children()) > 1 {
+			return nil, fmt.Errorf("node has to many children: %T", inspect)
+		} else if len(inspect.Children()) == 1 {
+			if _, ok := inspect.Children()[0].(*ast.ParenExpr); !ok {
+				err = fmt.Errorf("unsupported type %T", n.Children()[0])
+				return
+			}
+			inspect = inspect.Children()[0]
+		} else {
+			break
+		}
+	}
+	return nil, fmt.Errorf("could not find supported type DeclRefExpr")
 }
 
 func transpileUnaryOperatorNot(n *ast.UnaryOperator, p *program.Program) (
