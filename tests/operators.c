@@ -40,12 +40,15 @@ typedef struct doubleEqual{
     unsigned int b;
 } doubleEqual;
 
+typedef unsigned int pcre_uint32;
 typedef unsigned char pcre_uint8;
 typedef unsigned char pcre_uchar;
+#define UCHAR21INCTEST(eptr) (*(eptr)++)
+#define PCRE_PUCHAR const pcre_uchar *
 
 int main()
 {
-	plan(134);
+	plan(136);
 
     int i = 10;
     signed char j = 1;
@@ -64,7 +67,7 @@ int main()
 
     i *= 2;
 	is_eq(i, 16);
-	
+
     i /= 4;
 	is_eq(i, 4);
 
@@ -79,10 +82,10 @@ int main()
 
     i |= 0xFFFF;
 	is_eq(i, 65535);
-	
+
     i &= 0x0000;
 	is_eq(i, 0);
-	
+
 	diag("Other types");
 
     f += 1.0f;
@@ -90,10 +93,10 @@ int main()
 
     d += 1.25f;
 	is_eq(d, 1.25);
-	
+
     i -= 255l;
 	is_eq(i, -255);
-	
+
     i += 'A';
 	is_eq(i, -190);
 
@@ -124,7 +127,7 @@ int main()
 	x = y = 1;
 		is_eq(x, 1);
 		is_eq(y, 1);
-	
+
 	diag("Operator comma in initialization");
 	int x2 = 0, y2 = 1;
 		is_eq(x2, 0);
@@ -136,7 +139,7 @@ int main()
 		is_eq(a, 3);
 		is_eq(b, 3);
 		is_eq(c2, 3);
-	
+
 	diag("Huge comma problem for Equal operator")
 	int q,w,e;
 	q = 7, w = q + 3, e = q + w;
@@ -150,7 +153,7 @@ int main()
 	float expectedQ = 7.;
 	float expectedW = 7. * 3.;
 	float expectedE = 7. * (7. * 3.);
-		is_eq(qF, expectedQ); 
+		is_eq(qF, expectedQ);
 		is_eq(wF, expectedW);
 		is_eq(eF, expectedE);
 
@@ -228,10 +231,10 @@ int main()
 	{ double     *const*az; (void)(az); }
 	{ int             **az; (void)(az); }
 	{ float   *volatile*az; (void)(az); }
-	
+
 	diag("CStyleCast <ToVoid> with comma");
 	{ unsigned int *ui; (void)(empty(),ui);}
-	{ 
+	{
 		long int *li;
 		int counter_li = 0;
 		(void)(counter_li++,empty(),li);
@@ -257,7 +260,7 @@ int main()
 	is_eq(sMul("rrr"),36);
 	is_eq(sMin("rrrrrrrrrrrrr"),1);
 	is_eq(sDiv("rrrrrrrrrrrr"),1);
-	
+
 	diag("Operators +=, -=, *= , /= ... inside []");
 	{
 		int a[3];
@@ -377,7 +380,7 @@ int main()
 		pass("ok");
 	}
 	(void)(cd);
-	
+
 	diag("increment for char");
 	{
 		char N = 'g';
@@ -471,6 +474,15 @@ int main()
         pcre_uchar *c;
         c = &(*(&s[1] + 1));
         is_true(c == a+1);
+    }
+    diag("Increment with parenthesis");
+    {
+        const pcre_uchar str[] = "abcdef";
+        PCRE_PUCHAR p = str;
+        pcre_uint32 pp = UCHAR21INCTEST(p);
+        pcre_uint32 pp2 = *p;
+        is_eq(pp, 'a');
+        is_eq(pp2, 'b');
     }
 
 	done_testing();
