@@ -526,7 +526,8 @@ func atomicOperation(n ast.Node, p *program.Program) (
 		// UnaryOperator 0x3001768 <col:204, col:206> 'int' postfix '++'
 		// `-DeclRefExpr 0x3001740 <col:206> 'int' lvalue Var 0x303e888 'current_test' 'int'
 		var varName string
-		if vv, ok := v.Children()[0].(*ast.DeclRefExpr); ok {
+		var vv *ast.DeclRefExpr
+		if vv, err = getSoleChildDeclRefExpr(v); err == nil {
 			varName = vv.Name
 
 			var exprResolveType string
