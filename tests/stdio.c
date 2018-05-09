@@ -6,7 +6,6 @@
 #include <stdarg.h>
 #include <assert.h>
 #include <errno.h>
-#include <error.h>
 #include "tests.h"
 
 #define START_TEST(t) \
@@ -14,7 +13,7 @@
     test_##t();
 
 // size of that file
-int filesize = 10874;
+int filesize = 11192;
 
 void test_putchar()
 {
