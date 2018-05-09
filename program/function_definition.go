@@ -183,6 +183,7 @@ var builtInFunctionDefinitions = map[string][]string{
 		"char* strcasestr(const char*, const char*) -> noarch.Strcasestr",
 		"char* strcat(char *, const char *) -> noarch.Strcat",
 		"int strcmp(const char *, const char *) -> noarch.Strcmp",
+		"char* strerror(int) -> noarch.Strerror",
 
 		// should be: "int strncmp(const char*, const char*, size_t) -> noarch.Strncmp",
 		"int strncmp(const char *, const char *, int) -> noarch.Strncmp",
@@ -278,6 +279,13 @@ var builtInFunctionDefinitions = map[string][]string{
 		// I'm not sure which header file these comes from?
 		"uint32 __builtin_bswap32(uint32) -> darwin.BSwap32",
 		"uint64 __builtin_bswap64(uint64) -> darwin.BSwap64",
+	},
+	"errno.h": []string{
+		// linux
+		"int * __errno_location() -> noarch.Errno",
+
+		// darwin
+		"int * __error() -> noarch.Errno",
 	},
 }
 
