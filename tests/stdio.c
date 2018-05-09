@@ -5,6 +5,8 @@
 #include <string.h>
 #include <stdarg.h>
 #include <assert.h>
+#include <errno.h>
+#include <error.h>
 #include "tests.h"
 
 #define START_TEST(t) \
@@ -111,6 +113,16 @@ void test_tmpfile()
     rewind(pFile);
     fputs(fgets(buffer, 256, pFile), stdout);
     fclose(pFile);
+}
+
+void test_strerror()
+{
+    FILE *pFile;
+    pFile = fopen("/tmp/nonexistantfile.dfjisz985bed9ztszosvep98zwibvezgrxdizbseiu.txt", "r");
+    is_true(pFile == NULL);
+    is_eq(errno, ENOENT);
+    char *error = strerror(errno);
+    is_streq(error, "No such file or directory");
 }
 
 void test_tmpnam()
@@ -540,7 +552,7 @@ void test_eof()
 
 int main()
 {
-    plan(61);
+    plan(64);
 
     START_TEST(putchar)
     START_TEST(puts)
@@ -574,6 +586,7 @@ int main()
     START_TEST(vsprintf)
     START_TEST(vsnprintf)
 	START_TEST(eof)
+	START_TEST(strerror)
 
     done_testing();
 }
