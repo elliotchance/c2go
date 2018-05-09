@@ -2,6 +2,7 @@ package noarch
 
 import (
 	"reflect"
+	"sync"
 	"unsafe"
 )
 
@@ -95,4 +96,29 @@ func UnsafeSliceToSlice(a interface{}, fromSize int32, toSize int32) *reflect.Sl
 	header.Len = (header.Len * int(fromSize)) / int(toSize)
 	header.Cap = (header.Cap * int(fromSize)) / int(toSize)
 	return &header
+}
+
+// Safe contains a thread-safe value
+type Safe struct {
+	value interface{}
+	lock  sync.RWMutex
+}
+
+// NewSafe create a new Safe instance given a value
+func NewSafe(value interface{}) *Safe {
+	return &Safe{value: value, lock: sync.RWMutex{}}
+}
+
+// Get returns the value
+func (s *Safe) Get() interface{} {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+	return s.value
+}
+
+// Set sets a new value
+func (s *Safe) Set(value interface{}) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	s.value = value
 }
