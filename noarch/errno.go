@@ -287,6 +287,7 @@ func init() {
 	}
 }
 
+// Strerror translates an errno error code into an error message.
 func Strerror(errno int32) []byte {
 	b, ok := err2bytes[int(errno)]
 	if ok {
@@ -311,6 +312,7 @@ func setCurrentErrno(err error) {
 	}
 }
 
+// Errno returns a pointer to the current errno.
 func Errno() []int32 {
 	i := currentErrno.Get().(int)
 	return []int32{int32(i)}
