@@ -503,6 +503,10 @@ func generateAlloc(p *program.Program, allocSize ast.Node, leftType string) (
 		return nil, preStmts, postStmts, err
 	}
 
+	if toType == "interface{}" {
+		toType = "[]uint8"
+	}
+
 	right = util.NewCallExpr(
 		"make",
 		util.NewTypeIdent(toType),

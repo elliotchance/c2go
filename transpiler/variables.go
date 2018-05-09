@@ -84,6 +84,9 @@ func getDefaultValueForVar(p *program.Program, a *ast.VarDecl) (
 		if v, ok := a.Children()[0].(*ast.CStyleCastExpr); ok {
 			t = v.Type
 		}
+		if v, ok := a.Children()[0].(*ast.CallExpr); ok {
+			t = v.Type
+		}
 		if t != "" {
 			right, newPre, newPost, err := generateAlloc(p, allocSize, t)
 			if err != nil {
