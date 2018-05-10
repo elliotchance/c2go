@@ -13,7 +13,7 @@
     test_##t();
 
 // size of that file
-int filesize = 11192;
+int filesize = 11228;
 
 void test_putchar()
 {
@@ -122,6 +122,8 @@ void test_strerror()
     is_eq(errno, ENOENT);
     char *error = strerror(errno);
     is_streq(error, "No such file or directory");
+    errno = 0;
+    is_eq(errno, 0);
 }
 
 void test_tmpnam()
@@ -551,7 +553,7 @@ void test_eof()
 
 int main()
 {
-    plan(64);
+    plan(65);
 
     START_TEST(putchar)
     START_TEST(puts)

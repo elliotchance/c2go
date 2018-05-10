@@ -1,6 +1,9 @@
 package noarch
 
-import "strings"
+import (
+	"strings"
+	"unsafe"
+)
 
 const (
 	EPERM   = 1  // Operation not permitted
@@ -298,24 +301,26 @@ func Strerror(errno int32) []byte {
 	return err2bytes[0]
 }
 
-// thread safe holder for the current errno
-var currentErrno = NewSafe(0)
+var currentErrno int32
 
-func setCurrentErrno(err error) {
+func setCurrentErrnoErr(err error) {
 	if err == nil {
-		currentErrno.Set(0)
+		currentErrno = 0
 	} else {
 		errStr := strings.ToLower(err.Error())
 		if i, ok := errInverse[errStr]; ok {
-			currentErrno.Set(i)
+			currentErrno = int32(i)
 		} else {
-			currentErrno.Set(ENODATA)
+			currentErrno = ENODATA
 		}
 	}
 }
 
+func setCurrentErrno(errno int32) {
+	currentErrno = errno
+}
+
 // Errno returns a pointer to the current errno.
 func Errno() []int32 {
-	i := currentErrno.Get().(int)
-	return []int32{int32(i)}
+	return (*[1]int32)(unsafe.Pointer(&currentErrno))[:]
 }
