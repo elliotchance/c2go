@@ -85,10 +85,16 @@ func Fopen(filePath, mode []byte) *File {
 	}
 
 	if err != nil {
+		setFopenErrno(err)
 		return nil
 	}
 
 	return NewFile(file)
+}
+
+func setFopenErrno(err error) {
+	pe := err.(*os.PathError)
+	setCurrentErrnoErr(pe.Err)
 }
 
 // Fclose handles fclose().
@@ -104,8 +110,14 @@ func Fopen(filePath, mode []byte) *File {
 func Fclose(f *File) int32 {
 	err := f.OsFile.Close()
 	if err != nil {
-		// Is this the correct error code?
-		return 1
+		if err == os.ErrInvalid {
+			setCurrentErrno(EINVAL)
+		} else if pe, ok := err.(*os.PathError); ok {
+			setCurrentErrnoErr(pe.Err)
+		} else {
+			setCurrentErrnoErr(err)
+		}
+		return 1 // TODO: this should be EOF
 	}
 
 	return 0
