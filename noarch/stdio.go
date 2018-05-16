@@ -265,7 +265,7 @@ func Fgets(str []byte, num int32, stream *File) []byte {
 	if str == nil {
 		str = buf
 	} else {
-		copy(str, buf[:newlinepos])
+		copy(str, buf[:newlinepos+1])
 	}
 	str[newlinepos+1] = 0
 	if newlinepos < n {
