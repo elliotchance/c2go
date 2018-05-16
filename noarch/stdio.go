@@ -66,8 +66,7 @@ func Fopen(filePath, mode []byte) *File {
 
 	sFilePath := CStringToString(filePath)
 
-	// TODO: Only some modes are supported by fopen()
-	// https://github.com/elliotchance/c2go/issues/89
+	var flags int32
 	switch CStringToString(mode) {
 	case "r":
 		flags |= io_NO_WRITES
