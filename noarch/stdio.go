@@ -345,7 +345,7 @@ func Ferror(stream *File) int32 {
 
 const (
 	// constants for the File flags
-	io_MAGIC             = 0xFBAD0000 // Magic number
+	io_MAGIC             = 0x7BAD0000 // Magic number
 	io_MAGIC_MASK        = 0xFFFF0000
 	io_USER_BUF          = 1 // User owns buffer; don't delete it on close.
 	io_UNBUFFERED        = 2
@@ -485,7 +485,7 @@ func Fscanf(f *File, format []byte, args ...interface{}) int32 {
 
 	finalizeArgsForScanf(realArgs, args)
 
-	return n
+	return int32(n)
 }
 
 func finalizeArgsForScanf(realArgs []interface{}, args []interface{}) {
