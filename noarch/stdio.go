@@ -86,6 +86,7 @@ func Fopen(filePath, mode []byte) *File {
 		m = strings.Replace(m, "b", "", -1)
 		// no other action needed, we are always using binary mode
 	}
+	var flags int32
 	switch m {
 	case "r":
 		flags |= io_NO_WRITES
