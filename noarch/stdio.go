@@ -916,5 +916,5 @@ func Perror(str []byte) {
 	}
 	copy(seek, errstr)
 	seek[len(seek)-1] = '\n'
-	fmt.Fprint(Stderr.OsFile, "%s", string(buffer))
+	fmt.Fprint(Stderr.OsFile, string(buffer))
 }
