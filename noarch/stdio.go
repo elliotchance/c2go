@@ -258,18 +258,12 @@ func Fgets(str []byte, num int32, stream *File) []byte {
 	var newlinepos int
 	for ; newlinepos < n-1; newlinepos++ {
 		if buf[newlinepos] == '\n' {
-			buf = buf[:newlinepos+1]
 			break
 		}
 	}
-	if str == nil {
-		str = buf
-	} else {
-		copy(str, buf[:newlinepos+1])
-	}
-	str[newlinepos+1] = 0
-	if newlinepos < n {
-		stream.OsFile.Seek(int64(n-newlinepos), 1)
+	buf[newlinepos+1] = 0
+	if newlinepos < n-1 {
+		stream.OsFile.Seek(int64(newlinepos-n+1), 1)
 	}
 	if err != nil {
 		if n == 0 && err == io.EOF {
@@ -279,7 +273,7 @@ func Fgets(str []byte, num int32, stream *File) []byte {
 		}
 		return nil
 	}
-
+	copy(str, buf[:newlinepos+2])
 	return str
 }
 
