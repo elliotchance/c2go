@@ -46,6 +46,7 @@ type File struct {
 	// struct __sbuf _lb;
 	// int _blksize;
 	// fpos_t _offset;
+	_flags int32
 }
 
 // Fopen handles fopen().
@@ -85,12 +86,15 @@ func Fopen(filePath, mode []byte) *File {
 		m = strings.Replace(m, "b", "", -1)
 		// no other action needed, we are always using binary mode
 	}
+	var flags int32
 	switch m {
 	case "r":
+		flags |= io_NO_WRITES
 		file, err = os.OpenFile(sFilePath, os.O_RDONLY, 0655)
 	case "r+":
 		file, err = os.OpenFile(sFilePath, os.O_RDWR, 0655)
 	case "a":
+		flags |= io_NO_READS
 		file, err = os.OpenFile(sFilePath, os.O_WRONLY|os.O_APPEND, 0655)
 	case "a+":
 		file, err = os.OpenFile(sFilePath, os.O_RDWR|os.O_APPEND, 0655)
@@ -107,7 +111,9 @@ func Fopen(filePath, mode []byte) *File {
 		return nil
 	}
 
-	return NewFile(file)
+	nf := NewFile(file)
+	nf._flags |= flags
+	return nf
 }
 
 func setFopenErrno(err error) {
@@ -135,7 +141,7 @@ func Fclose(f *File) int32 {
 		} else {
 			setCurrentErrnoErr(err)
 		}
-		return 1 // TODO: this should be EOF
+		return EOF
 	}
 
 	return 0
@@ -248,29 +254,40 @@ func Tmpfile() *File {
 // includes in the string any ending newline character.
 func Fgets(str []byte, num int32, stream *File) []byte {
 	buf := make([]byte, num)
-	n, err := stream.OsFile.Read(buf)
-
-	// FIXME: Is this the right thing to do in this case?
+	n, err := stream.OsFile.Read(buf[:num-1])
+	var newlinepos int
+	for ; newlinepos < n-1; newlinepos++ {
+		if buf[newlinepos] == '\n' {
+			break
+		}
+	}
+	buf[newlinepos+1] = 0
+	if newlinepos < n-1 {
+		stream.OsFile.Seek(int64(newlinepos-n+1), 1)
+	}
 	if err != nil {
-		return []byte{}
+		if n == 0 && err == io.EOF {
+			stream._flags |= io_EOF_SEEN
+		} else {
+			stream._flags |= io_ERR_SEEN
+		}
+		return nil
 	}
+	copy(str, buf[:newlinepos+2])
+	return str
+}
 
-	// TODO: Allow arguments to be passed by reference.
-	// https://github.com/elliotchance/c2go/issues/90
-	// This appears in multiple locations.
-
-	// Be careful to crop the buffer to the real number of bytes read.
-	//
-	// We do not trim off the NULL characters because we do not know if the file
-	// we are reading is in binary mode.
-	if n == int(num) {
-		// If it is the case that we have read the entire buffer with this read
-		// we need to make sure we leave room for what would be the NULL
-		// character at the end of the string in C.
-		return buf[:n-1]
-	}
-
-	return buf[:n]
+// Clearerr handles clearerr().
+//
+// Resets both the error and the eof indicators of the stream.
+//
+// When a i/o function fails either because of an error or because the end of
+// the file has been reached, one of these internal indicators may be set for
+// the stream. The state of these indicators is cleared by a call to this
+// function, or by a call to any of: rewind, fseek, fsetpos and freopen.
+func Clearerr(stream *File) {
+	stream._flags &= ^io_EOF_SEEN
+	stream._flags &= ^io_ERR_SEEN
 }
 
 // Rewind handles rewind().
@@ -285,7 +302,7 @@ func Fgets(str []byte, num int32, stream *File) []byte {
 // On streams open for update (read+write), a call to rewind allows to switch
 // between reading and writing.
 func Rewind(stream *File) {
-	stream.OsFile.Seek(0, 0)
+	Fseek(stream, 0, 0)
 }
 
 // Feof handles feof().
@@ -304,26 +321,53 @@ func Rewind(stream *File) {
 // freopen. Although if the position indicator is not repositioned by such a
 // call, the next i/o operation is likely to set the indicator again.
 func Feof(stream *File) int32 {
-	// FIXME: This is a really bad way of doing this. Basically try and peek
-	// ahead to test for EOF.
-	buf := make([]byte, 1)
-	_, err := stream.OsFile.Read(buf)
-
-	result := 0
-	if err == io.EOF {
-		result = 1
+	if stream._flags&io_EOF_SEEN != 0 {
+		return 1
 	}
-
-	// Undo cursor before returning.
-	stream.OsFile.Seek(-1, 1)
-
-	return int32(result)
+	return int32(0)
 }
+
+// Ferror handles ferror().
+//
+// Checks if the error indicator associated with stream is set,
+// returning a value different from zero if it is.
+//
+// This indicator is generally set by a previous operation on the stream that
+// failed, and is cleared by a call to clearerr, rewind or freopen.
+func Ferror(stream *File) int32 {
+	if stream._flags&io_ERR_SEEN != 0 {
+		return 1
+	}
+	return int32(0)
+}
+
+const (
+	// constants for the File flags
+	io_MAGIC             = 0x7BAD0000 // Magic number
+	io_MAGIC_MASK        = 0xFFFF0000
+	io_USER_BUF          = 1 // User owns buffer; don't delete it on close.
+	io_UNBUFFERED        = 2
+	io_NO_READS          = 4 // Reading not allowed
+	io_NO_WRITES         = 8 // Writing not allowed
+	io_EOF_SEEN          = 0x10
+	io_ERR_SEEN          = 0x20
+	io_DELETE_DONT_CLOSE = 0x40 // Don't call close(_fileno) on cleanup.
+	io_LINKED            = 0x80 // Set if linked (using _chain) to streambuf::_list_all.
+	io_IN_BACKUP         = 0x100
+	io_LINE_BUF          = 0x200
+	io_TIED_PUT_GET      = 0x400 // Set if put and get pointer logicly tied.
+	io_CURRENTLY_PUTTING = 0x800
+	io_IS_APPENDING      = 0x1000
+	io_IS_FILEBUF        = 0x2000
+	io_BAD_SEEN          = 0x4000
+	io_USER_LOCK         = 0x8000
+)
 
 // NewFile creates a File pointer from a Go file pointer.
 func NewFile(f *os.File) *File {
 	return &File{
 		OsFile: f,
+		_flags: io_MAGIC,
 	}
 }
 
@@ -346,20 +390,20 @@ func NewFile(f *os.File) *File {
 // those created with tmpfile is not automatically deleted when closed; A
 // program shall call remove to delete this file once closed.
 func Tmpnam(str []byte) []byte {
-	// TODO: Allow arguments to be passed by reference.
-	// https://github.com/elliotchance/c2go/issues/90
-	// This appears in multiple locations.
-
 	// TODO: There must be a better way of doing this. This way allows the same
 	// great distinct Go temp file generation (that also checks for existing
 	// files), but unfortunately creates the file in the process; even if you
 	// don't intend to use it.
 	f, err := ioutil.TempFile("", "")
 	if err != nil {
-		return []byte{}
+		return nil
 	}
 
 	f.Close()
+	if str != nil {
+		copy(str, f.Name())
+		str[len(f.Name())] = 0
+	}
 	return []byte(f.Name())
 }
 
@@ -424,7 +468,7 @@ func Fprintf(f *File, format []byte, args ...interface{}) int32 {
 // The additional arguments should point to already allocated objects of the
 // type specified by their corresponding format specifier within the format
 // string.
-func Fscanf(f *File, format []byte, args ...interface{}) int {
+func Fscanf(f *File, format []byte, args ...interface{}) int32 {
 	realArgs := prepareArgsForScanf(args)
 
 	// format is ignored
@@ -433,12 +477,13 @@ func Fscanf(f *File, format []byte, args ...interface{}) int {
 
 	n, err := fmt.Fscan(f.OsFile, realArgs...)
 	if err != nil {
-		return -1
+		f._flags |= io_EOF_SEEN
+		return EOF
 	}
 
 	finalizeArgsForScanf(realArgs, args)
 
-	return n
+	return int32(n)
 }
 
 func finalizeArgsForScanf(realArgs []interface{}, args []interface{}) {
@@ -468,11 +513,13 @@ func prepareArgsForScanf(args []interface{}) []interface{} {
 	return realArgs
 }
 
+const EOF = -int32(1)
+
 func getc(f *os.File) int32 {
 	buffer := make([]byte, 1)
 	_, err := f.Read(buffer)
 	if err != nil {
-		return -1
+		return EOF
 	}
 
 	return int32(buffer[0])
@@ -492,8 +539,12 @@ func getc(f *os.File) int32 {
 //
 // fgetc and getc are equivalent, except that getc may be implemented as a macro
 // in some libraries.
-func Fgetc(stream *File) int32 {
-	return getc(stream.OsFile)
+func Fgetc(stream *File) (ret int32) {
+	ret = getc(stream.OsFile)
+	if ret == EOF {
+		stream._flags |= io_EOF_SEEN
+	}
+	return
 }
 
 // Fputc handles fputc().
@@ -543,8 +594,10 @@ func Getchar() int32 {
 func Fseek(f *File, offset int32, origin int32) int32 {
 	n, err := f.OsFile.Seek(int64(offset), int(origin))
 	if err != nil {
-		return -1
+		f._flags |= io_EOF_SEEN
+		return EOF
 	}
+	Clearerr(f)
 
 	return int32(n)
 }
@@ -587,7 +640,12 @@ func Fread(ptr *[]byte, size1, size2 int32, f *File) int32 {
 
 	// Now we can handle the success or failure.
 	if err != nil {
-		return -1
+		if err == io.EOF {
+			f._flags |= io_EOF_SEEN
+		} else {
+			f._flags |= io_ERR_SEEN
+		}
+		return EOF
 	}
 
 	return int32(n)
@@ -817,4 +875,40 @@ func internalVsnprintf(buffer []byte, n int32, format []byte, args ...interface{
 	buffer[len(result)] = '\x00'
 
 	return int32(len(result))
+}
+
+// Perror handles perror().
+//
+// Interprets the value of errno as an error message, and prints it to stderr
+// (the standard error output stream, usually the console), optionally preceding
+// it with the custom message specified in str.
+//
+// errno is an integral variable whose value describes the error condition or
+// diagnostic information produced by a call to a library function (any function of
+// the C standard library may set a value for errno, even if not explicitly specified
+// in this reference, and even if no error happened), see errno for more info.
+//
+// If the parameter str is not a null pointer, str is printed followed by a colon (:)
+// and a space. Then, whether str was a null pointer or not, the generated error
+// description is printed followed by a newline character ('\n').
+//
+// perror should be called right after the error was produced, otherwise it can be
+// overwritten by calls to other functions.
+func Perror(str []byte) {
+	var buffer []byte
+	var seek []byte
+	errstr := Strerror(Errno()[0])
+	if lenStr := Strlen(str); lenStr > 0 {
+		buffer = make([]byte, int(lenStr)+1+len(errstr))
+		copy(buffer, str)
+		seek = buffer[lenStr:]
+		copy(seek, []byte(": "))
+		seek = seek[2:]
+	} else {
+		buffer = make([]byte, len(errstr))
+		seek = buffer[:]
+	}
+	copy(seek, errstr)
+	seek[len(seek)-1] = '\n'
+	fmt.Fprint(Stderr.OsFile, string(buffer))
 }

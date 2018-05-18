@@ -152,6 +152,7 @@ var builtInFunctionDefinitions = map[string][]string{
 		"char* fgets(char*, int, FILE*) -> noarch.Fgets",
 		"void rewind(FILE*) -> noarch.Rewind",
 		"int feof(FILE*) -> noarch.Feof",
+		"int ferror(FILE*) -> noarch.Ferror",
 		"char* tmpnam(char*) -> noarch.Tmpnam",
 		"int fflush(FILE*) -> noarch.Fflush",
 		"int fprintf(FILE*, const char*) -> noarch.Fprintf",
@@ -171,6 +172,8 @@ var builtInFunctionDefinitions = map[string][]string{
 		"int snprintf(char*, int, const char *) -> noarch.Snprintf",
 		"int vsprintf(char*, const char *, struct __va_list_tag *) -> noarch.Vsprintf",
 		"int vsnprintf(char*, int, const char *, struct __va_list_tag *) -> noarch.Vsnprintf",
+		"void perror(char*) -> noarch.Perror",
+		"void clearerr(FILE*) -> noarch.Clearerr",
 
 		// darwin/stdio.h
 		"int __builtin___sprintf_chk(char*, int, int, char*) -> darwin.BuiltinSprintfChk",
