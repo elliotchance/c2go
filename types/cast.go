@@ -113,13 +113,21 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 		if err != nil {
 			return nil, err
 		}
-		return &goast.TypeAssertExpr{
-			X:      expr,
-			Lparen: 1,
-			Type: &goast.ArrayType{
-				Lbrack: 1,
-				Elt:    util.NewIdent(t),
-			}}, nil
+		p.AddImport("unsafe")
+		p.AddImport("github.com/elliotchance/c2go/noarch")
+		return &goast.UnaryExpr{
+			Op: token.MUL,
+			X: &goast.CallExpr{
+				Fun: &goast.StarExpr{
+					X: &goast.ArrayType{
+						Lbrack: 1,
+						Elt:    util.NewIdent(t),
+					},
+				},
+				Args: []goast.Expr{util.NewCallExpr("unsafe.Pointer",
+					util.NewCallExpr("noarch.UnsafeSliceToSliceUnlimited", expr))},
+			},
+		}, nil
 	}
 
 	// Checking amount recursive typedef element
