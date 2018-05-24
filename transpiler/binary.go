@@ -342,7 +342,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 		} else {
 			right, err = types.CastExpr(p, right, rightType, returnType)
 
-			if _, ok := right.(*goast.UnaryExpr); ok && types.IsDereferenceType(rightType) {
+			if ue, ok := right.(*goast.UnaryExpr); ok && types.IsDereferenceType(rightType) && ue.Op == token.AND {
 				deref, err := types.GetDereferenceType(rightType)
 
 				if !p.AddMessage(p.GenerateWarningMessage(err, n)) {
