@@ -135,6 +135,8 @@ void goto_label(bool use_goto)
             continue;
         case 0:
             if (use_goto) {
+                for (;;)
+                    break;
                 goto LABEL;
                 fail("code should not reach here");
             } else if (false) {
@@ -328,6 +330,9 @@ void scoped_goto_label(bool use_goto)
         case 0:
             {
                 if (use_goto) {
+                    for (;;) {
+                        break;
+                    }
                     goto LABEL;
                     fail("code should not reach here");
                 } else if (false) {
