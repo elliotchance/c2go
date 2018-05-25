@@ -479,6 +479,21 @@ func handleLabelCases(cases []goast.Stmt, p *program.Program) (newCases []goast.
 				})
 			}
 		}
+		if _, ok := node.(*goast.ForStmt); ok {
+			return false
+		}
+		if _, ok := node.(*goast.RangeStmt); ok {
+			return false
+		}
+		if _, ok := node.(*goast.SwitchStmt); ok {
+			return false
+		}
+		if _, ok := node.(*goast.TypeSwitchStmt); ok {
+			return false
+		}
+		if _, ok := node.(*goast.SelectStmt); ok {
+			return false
+		}
 		return true
 	}
 	for i, x := range cases {
@@ -502,7 +517,7 @@ func handleLabelCases(cases []goast.Stmt, p *program.Program) (newCases []goast.
 			}
 
 			// Replace break's with goto swEndLabel
-			astutil.Apply(c, nil, funcTransformBreak)
+			astutil.Apply(c, funcTransformBreak, nil)
 			body := c.Body
 
 			// append caseLabel label followed by case body
@@ -548,7 +563,7 @@ func handleLabelCases(cases []goast.Stmt, p *program.Program) (newCases []goast.
 			}
 
 			// Replace break's with goto swEndLabel
-			astutil.Apply(c, nil, funcTransformBreak)
+			astutil.Apply(c, funcTransformBreak, nil)
 
 			// append label followed by label body
 			postStmts = append(postStmts, c)
