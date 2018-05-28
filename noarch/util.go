@@ -98,6 +98,28 @@ func UnsafeSliceToSlice(a interface{}, fromSize int32, toSize int32) *reflect.Sl
 	return &header
 }
 
+// UnsafeSliceToSliceUnlimited takes a slice and transforms it into a slice of a different type.
+// The length and capacity will be set to unlimited.
+func UnsafeSliceToSliceUnlimited(a interface{}) *reflect.SliceHeader {
+	v := reflect.ValueOf(a)
+
+	// v might not be addressable, use this trick to get v2 = v,
+	// with v2 being addressable
+	v2 := reflect.New(v.Type()).Elem()
+	v2.Set(v)
+
+	// get a pointer to the SliceHeader
+	// Calling Pointer() on the slice directly only gets a pointer to the 1st element, not the slice header,
+	// which is why we first call Addr()
+	ptr := unsafe.Pointer(v2.Addr().Pointer())
+
+	// adjust header to adjust sizes for the new type
+	header := *(*reflect.SliceHeader)(ptr)
+	header.Len = 1000000000
+	header.Cap = 1000000000
+	return &header
+}
+
 // Safe contains a thread-safe value
 type Safe struct {
 	value interface{}

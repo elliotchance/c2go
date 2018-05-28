@@ -133,14 +133,37 @@ void cast_pointer_diff(pcre_uchar *str, int *x) {
     *x = (int)(p - str) - ab;
 }
 
+typedef unsigned char x_uint;
+typedef unsigned char y_uint;
+typedef struct {
+    unsigned char a;
+    unsigned char b;
+} z_struct;
+
+void test_voidcast()
+{
+    x_uint x = 42;
+    void * y = &x;
+    y_uint *z = (y_uint*) y;
+    is_eq(42, *z);
+    x_uint arr1[] = { 1, 2, 3, 4 };
+    y = arr1;
+    z_struct *arr2 = (z_struct*) y;
+    is_eq(1, arr2[0].a);
+    is_eq(2, arr2[0].b);
+    is_eq(3, arr2[1].a);
+    is_eq(4, arr2[1].b);
+}
+
 int main()
 {
-    plan(39);
+    plan(44);
 
     START_TEST(cast);
     START_TEST(castbool);
     START_TEST(vertex);
     START_TEST(strCh);
+    START_TEST(voidcast);
 
 	{
 	typedef unsigned int u32;
