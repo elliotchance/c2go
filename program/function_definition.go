@@ -164,7 +164,7 @@ var builtInFunctionDefinitions = map[string][]string{
 		"int putc(int, FILE*) -> noarch.Fputc",
 		"int fseek(FILE*, long int, int) -> noarch.Fseek",
 		"long ftell(FILE*) -> noarch.Ftell",
-		"int fread(void*, int, int, FILE*) -> $0 = noarch.Fread(&1, $2, $3, $4)",
+		"int fread(void*, int, int, FILE*) -> noarch.Fread",
 		"int fwrite(char*, int, int, FILE*) -> noarch.Fwrite",
 		"int fgetpos(FILE*, int*) -> noarch.Fgetpos",
 		"int fsetpos(FILE*, int*) -> noarch.Fsetpos",

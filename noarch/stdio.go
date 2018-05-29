@@ -626,7 +626,7 @@ func Ftell(f *File) int32 {
 // read.
 //
 // The total amount of bytes read if successful is (size*count).
-func Fread(ptr *[]byte, size1, size2 int32, f *File) int32 {
+func Fread(ptr []byte, size1, size2 int32, f *File) int32 {
 	// Create a new buffer so that we can ensure we read up to the correct
 	// number of bytes from the file.
 	newBuffer := make([]byte, size1*size2)
@@ -635,7 +635,7 @@ func Fread(ptr *[]byte, size1, size2 int32, f *File) int32 {
 	// Despite any error we need to make sure the bytes read are copied to the
 	// destination buffer.
 	for i, b := range newBuffer {
-		(*ptr)[i] = b
+		ptr[i] = b
 	}
 
 	// Now we can handle the success or failure.
