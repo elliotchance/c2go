@@ -370,6 +370,11 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program, 
 	}
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
+	if se, ok := expression.(*goast.SliceExpr); ok && se.High == nil && se.Low == nil && se.Max == nil {
+		// simplify the expression
+		expression = se.X
+	}
+
 	isConst, indexInt := util.EvaluateConstExpr(index)
 	if isConst && indexInt < 0 {
 		indexInt = -indexInt
