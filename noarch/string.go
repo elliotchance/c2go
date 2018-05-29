@@ -145,20 +145,13 @@ func Strchr(str []byte, ch int32) []byte {
 // Memset treats dst as a binary array and sets size bytes to the value val.
 // Returns dst.
 func Memset(dst interface{}, val int32, size int32) interface{} {
-	v := reflect.ValueOf(dst)
-	vDst := v.Type()
+	vDst := reflect.ValueOf(dst).Type()
 	switch vDst.Kind() {
-	case reflect.Array:
-		// v might not be addressable
-		v2 := reflect.New(v.Type()).Elem()
-		v2.Set(v)
-		v = v2.Slice(0, v.Len())
-		fallthrough
-	case reflect.Slice:
+	case reflect.Slice, reflect.Array:
 		vDst = vDst.Elem()
 	}
 	baseSizeDst := int32(vDst.Size())
-	data := (*(*[]byte)(unsafe.Pointer(UnsafeSliceToSlice(v.Interface(), baseSizeDst, int32(1)))))[:]
+	data := *(*[]byte)(unsafe.Pointer(UnsafeSliceToSlice(dst, baseSizeDst, int32(1))))
 	var i int32
 	var vb = byte(val)
 	for i = 0; i < size; i++ {
@@ -174,34 +167,20 @@ func Memset(dst interface{}, val int32, size int32) interface{} {
 // To copy overlapping regions in C memmove should be used, so we map that function
 // to Memcpy as well.
 func Memcpy(dst interface{}, src interface{}, size int32) interface{} {
-	vD := reflect.ValueOf(dst)
-	vDst := vD.Type()
+	vDst := reflect.ValueOf(dst).Type()
 	switch vDst.Kind() {
-	case reflect.Array:
-		// vD might not be addressable
-		v2 := reflect.New(vD.Type()).Elem()
-		v2.Set(vD)
-		vD = v2.Slice(0, vD.Len())
-		fallthrough
-	case reflect.Slice:
+	case reflect.Slice, reflect.Array:
 		vDst = vDst.Elem()
 	}
 	baseSizeDst := int32(vDst.Size())
-	vS := reflect.ValueOf(src)
-	vSrc := vS.Type()
+	vSrc := reflect.ValueOf(src).Type()
 	switch vSrc.Kind() {
-	case reflect.Array:
-		// vS might not be addressable
-		v2 := reflect.New(vS.Type()).Elem()
-		v2.Set(vS)
-		vS = v2.Slice(0, vS.Len())
-		fallthrough
-	case reflect.Slice:
+	case reflect.Slice, reflect.Array:
 		vSrc = vSrc.Elem()
 	}
 	baseSizeSrc := int32(vSrc.Size())
-	bDst := (*(*[]byte)(unsafe.Pointer(UnsafeSliceToSlice(vD.Interface(), baseSizeDst, int32(1)))))[:]
-	bSrc := (*(*[]byte)(unsafe.Pointer(UnsafeSliceToSlice(vS.Interface(), baseSizeSrc, int32(1)))))[:]
+	bDst := *(*[]byte)(unsafe.Pointer(UnsafeSliceToSlice(dst, baseSizeDst, int32(1))))
+	bSrc := *(*[]byte)(unsafe.Pointer(UnsafeSliceToSlice(src, baseSizeSrc, int32(1))))
 	copy(bDst[:size], bSrc[:size])
 	return dst
 }
@@ -221,7 +200,7 @@ func Memcmp(src1, src2 interface{}, n int32) int32 {
 		v2 = v2.Elem()
 	}
 	baseSize2 := int32(v2.Size())
-	b1 := (*(*[]byte)(unsafe.Pointer(UnsafeSliceToSlice(src1, baseSize1, int32(1)))))[:]
-	b2 := (*(*[]byte)(unsafe.Pointer(UnsafeSliceToSlice(src2, baseSize2, int32(1)))))[:]
+	b1 := *(*[]byte)(unsafe.Pointer(UnsafeSliceToSlice(src1, baseSize1, int32(1))))
+	b2 := *(*[]byte)(unsafe.Pointer(UnsafeSliceToSlice(src2, baseSize2, int32(1))))
 	return int32(bytes.Compare(b1[:int(n)], b2[:int(n)]))
 }
