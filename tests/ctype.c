@@ -24,6 +24,8 @@
 char *strnul = "this string has a \0 NUL";
 char arrnul[] = "this string has a \0 NUL";
 
+#define PRINTF_BOOL(v) { if(v) printf("T"); else printf("F"); }
+
 int main()
 {
   plan(104);
@@ -48,6 +50,23 @@ int main()
   _CTYPE(isspace, F, F, F, F, F, T, T, F);
   _CTYPE(isupper, F, T, F, F, F, F, F, F);
   CTYPE(isxdigit, T, T, T, F, F, F, F, F);
+
+  diag("char properties for characters 0-255:");
+  for(int i=0; i<256; i++) {
+    printf("%x: ", i);
+    PRINTF_BOOL(isalnum(i));
+    PRINTF_BOOL(isalpha(i));
+    PRINTF_BOOL(iscntrl(i));
+    PRINTF_BOOL(isdigit(i));
+    PRINTF_BOOL(isgraph(i));
+    PRINTF_BOOL(islower(i));
+    PRINTF_BOOL(isprint(i));
+    PRINTF_BOOL(ispunct(i));
+    PRINTF_BOOL(isspace(i));
+    PRINTF_BOOL(isupper(i));
+    PRINTF_BOOL(isxdigit(i));
+    printf("\n");
+  }
 
   diag("tolower");
   is_eq(tolower('a'), 'a');
