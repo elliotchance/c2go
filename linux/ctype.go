@@ -7,7 +7,7 @@ import (
 var characterTable []uint16
 
 func generateCharacterTable() {
-	for i := 0; i < 255; i++ {
+	for i := 0; i < 256; i++ {
 		var c uint16
 
 		// Each of the bitwise expressions below were copied from the enum
