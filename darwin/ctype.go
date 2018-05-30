@@ -42,48 +42,52 @@ const (
 // to handle this, so if you know one please consider putting in a PR :)
 func IsType(_c CtRuneT, _f uint32) uint32 {
 	// These are the easy ones.
-	if _f&CtypeA != 0 && unicode.IsLetter(rune(_c)) {
+	if _f&CtypeA != 0 && unicode.IsLetter(rune(_c)) && rune(_c) < 0x80 {
 		return 1
 	}
 
-	if _f&CtypeC != 0 && unicode.IsControl(rune(_c)) {
+	if _f&CtypeC != 0 && unicode.IsControl(rune(_c)) && rune(_c) < 0x80 {
 		return 1
 	}
 
-	if _f&CtypeD != 0 && unicode.IsDigit(rune(_c)) {
+	if _f&CtypeD != 0 && unicode.IsDigit(rune(_c)) && rune(_c) < 0x80 {
 		return 1
 	}
 
 	// The IsSpace check is required because Go treats spaces as graphic
 	// characters, which C does not.
-	if _f&CtypeG != 0 && unicode.IsGraphic(rune(_c)) && !unicode.IsSpace(rune(_c)) {
+	if _f&CtypeG != 0 && unicode.IsGraphic(rune(_c)) && !unicode.IsSpace(rune(_c)) && rune(_c) < 0x80 {
 		return 1
 	}
 
-	if _f&CtypeL != 0 && unicode.IsLower(rune(_c)) {
+	if _f&CtypeL != 0 && unicode.IsLower(rune(_c)) && rune(_c) < 0x80 {
 		return 1
 	}
 
-	if _f&CtypeP != 0 && unicode.IsPunct(rune(_c)) {
+	// Need to check for 0x24, 0x2b, 0x3c-0x3e, 0x5e, 0x60, 0x7c, 0x7e
+	// because Go doesn't treat $+<=>^`|~ as punctuation.
+	if _f&CtypeP != 0 && rune(_c) < 0x80 && (unicode.IsPunct(rune(_c)) || rune(_c) == 0x24 || rune(_c) == 0x2b ||
+		(rune(_c) >= 0x3c && rune(_c) <= 0x3e) || rune(_c) == 0x5e || rune(_c) == 0x60 ||
+		rune(_c) == 0x7c || rune(_c) == 0x7e) {
 		return 1
 	}
 
-	if _f&CtypeS != 0 && unicode.IsSpace(rune(_c)) {
+	if _f&CtypeS != 0 && unicode.IsSpace(rune(_c)) && rune(_c) < 0x80 {
 		return 1
 	}
 
-	if _f&CtypeU != 0 && unicode.IsUpper(rune(_c)) {
+	if _f&CtypeU != 0 && unicode.IsUpper(rune(_c)) && rune(_c) < 0x80 {
 		return 1
 	}
 
-	if _f&CtypeR != 0 && unicode.IsPrint(rune(_c)) {
+	if _f&CtypeR != 0 && unicode.IsPrint(rune(_c)) && rune(_c) < 0x80 {
 		return 1
 	}
 
 	// TODO: Is this really the right way to do this?
 	if _f&CtypeX != 0 && (unicode.IsDigit(rune(_c)) ||
 		(_c >= 'a' && _c <= 'f') ||
-		(_c >= 'A' && _c <= 'F')) {
+		(_c >= 'A' && _c <= 'F')) && rune(_c) < 0x80 {
 		return 1
 	}
 
