@@ -6,9 +6,21 @@ typedef struct mem {
     int b;
 } mem;
 
+typedef struct mem2 {
+    int a[2];
+} mem2;
+typedef int altint;
+
+void setptr(int *arr, int val) {
+    arr[0] = val;
+}
+void setarr(int arr[], int val) {
+    arr[0] = val;
+}
+
 int main()
 {
-    plan(74);
+    plan(80);
 
     diag("TODO: __builtin_object_size")
     // https://github.com/elliotchance/c2go/issues/359
@@ -244,6 +256,21 @@ int main()
         is_eq(dest7[0].b, 3.0);
         is_eq(dest7[1].a, 0);
         is_eq(dest7[1].b, 0.0);
+        mem2 dest8;
+        dest8.a[0] = 42;
+        memset(dest8.a, 0, sizeof(int)*2);
+        is_eq(dest8.a[0], 0);
+        is_eq(dest8.a[1], 0);
+        dest8.a[0] = 42;
+        mem2 dest9;
+        altint *test = (altint *) dest9.a;
+        memcpy(dest9.a, dest8.a, sizeof(int)*2);
+        is_eq(dest9.a[0], 42);
+        is_eq(test[0], 42);
+        setarr(dest9.a, 1);
+        is_eq(dest9.a[0], 1);
+        setptr(dest9.a, 2);
+        is_eq(dest9.a[0], 2);
     }
     {
         diag("memcmp");

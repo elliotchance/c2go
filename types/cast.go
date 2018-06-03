@@ -490,6 +490,9 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 		if err != nil {
 			return nil, err
 		}
+		if _, arrSize := GetArrayTypeAndSize(cFromType); arrSize > 0 {
+			expr = &goast.SliceExpr{X: expr}
+		}
 		return &goast.StarExpr{
 			X: &goast.CallExpr{
 				Fun: &goast.StarExpr{
