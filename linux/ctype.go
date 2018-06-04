@@ -7,7 +7,7 @@ import (
 var characterTable []uint16
 
 func generateCharacterTable() {
-	for i := 0; i < 255; i++ {
+	for i := 0; i < 0x80; i++ {
 		var c uint16
 
 		// Each of the bitwise expressions below were copied from the enum
@@ -60,7 +60,10 @@ func generateCharacterTable() {
 			c |= ((1 << (9)) >> 8)
 		}
 
-		if unicode.IsPunct(rune(i)) {
+		// Need to check for 0x24, 0x2b, 0x3c-0x3e, 0x5e, 0x60, 0x7c, 0x7e
+		// because Go doesn't treat $+<=>^`|~ as punctuation.
+		if unicode.IsPunct(rune(i)) || i == 0x24 || i == 0x2b || (i >= 0x3c && i <= 0x3e) || i == 0x5e || i == 0x60 ||
+			i == 0x7c || i == 0x7e {
 			c |= ((1 << (10)) >> 8)
 		}
 
@@ -71,6 +74,10 @@ func generateCharacterTable() {
 		// Yes, I know this is a hideously slow way to do it but I just want to
 		// test if this works right now.
 		characterTable = append(characterTable, c)
+	}
+	for i := 0x80; i < 256; i++ {
+		// false for all characters > 0x7f
+		characterTable = append(characterTable, 0)
 	}
 }
 
