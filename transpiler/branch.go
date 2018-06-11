@@ -570,9 +570,9 @@ func (c *continueDetector) Visit(node goast.Node) goast.Visitor {
 		}
 		// we have found the outer for loop
 		c.forLevel = append(c.forLevel, c.level)
-	case *goast.RangeStmt, *goast.SwitchStmt, *goast.TypeSwitchStmt, *goast.SelectStmt:
-		// Do not look for continue within the children of these AST node types,
-		// since a continue would refer to them and not the outer for loop.
+	case *goast.RangeStmt:
+		// Do not look for continue within the children of this AST node type,
+		// since a continue would refer to it and not the outer for loop.
 		c.level--
 		return nil
 	case *goast.BranchStmt:
@@ -621,9 +621,9 @@ func adaptContinueStmt(e goast.Stmt, p *program.Program) {
 			forLevel = append(forLevel, level)
 			beforeConditionLabel = setConditionLabel(n, p)
 			return true
-		case *goast.RangeStmt, *goast.SwitchStmt, *goast.TypeSwitchStmt, *goast.SelectStmt:
-			// Do not look for continue within the children of these AST node types,
-			// since a continue would refer to them and not the outer for loop.
+		case *goast.RangeStmt:
+			// Do not look for continue within the children of this AST node type,
+			// since a continue would refer to it and not the outer for loop.
 			level--
 			return false
 		}
