@@ -601,7 +601,8 @@ func adaptContinueStmt(e goast.Stmt, p *program.Program) {
 		node := cursor.Node()
 		switch n := node.(type) {
 		case *goast.BranchStmt:
-			if n.Tok == token.CONTINUE {
+			// only replace continue within the outer for loop
+			if n.Tok == token.CONTINUE && len(forLevel) > 0 {
 				if beforeConditionLabel == "" {
 					panic("Before condition label not set")
 				}
