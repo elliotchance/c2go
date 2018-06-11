@@ -636,7 +636,7 @@ func adaptContinueStmt(e goast.Stmt, p *program.Program) {
 		level--
 		return true
 	}
-	// Replace break's with goto swEndLabel
+	// Replace continue's with goto doWhileCondLabel
 	astutil.Apply(e, funcTransformBreak, postFunc)
 }
 
