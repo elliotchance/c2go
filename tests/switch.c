@@ -11,6 +11,7 @@
 // CompoundStmt with 12 children.
 
 #include <stdio.h>
+#include <stdbool.h>
 #include "tests.h"
 
 void match_a_single_case()
@@ -122,6 +123,45 @@ void fallthrough_several_midway_default()
             break;
         }
         is_eq(j, expected);
+    }
+}
+
+void goto_label(bool use_goto)
+{
+    for (;;) {
+        switch (0)
+        {
+        case 3:
+            continue;
+        case 0:
+            if (use_goto) {
+                for (;;)
+                    break;
+                goto LABEL;
+                fail("code should not reach here");
+            } else if (false) {
+                goto LABELX;
+                goto LABELY;
+                fail("code should not reach here");
+            }
+            /* other comment */
+            // some comment
+            /* fallthrough */
+        LABELY:
+        case 4:
+        LABEL:
+            printf("x");
+        case 1:
+            pass(__func__);
+            break;
+        case 2:
+            ;
+        LABELX:
+        default:
+            fail("code should not reach here");
+            break;
+        }
+        break;
     }
 }
 
@@ -278,6 +318,60 @@ void scoped_fallthrough_several_midway_default()
     }
 }
 
+void scoped_goto_label(bool use_goto)
+{
+    for (;;) {
+        switch (0)
+        {
+        case 3:
+            {
+                continue;
+            }
+        case 0:
+            {
+                if (use_goto) {
+                    for (;;) {
+                        break;
+                    }
+                    goto LABEL;
+                    fail("code should not reach here");
+                } else if (false) {
+                    goto LABELX;
+                    goto LABELY;
+                    fail("code should not reach here");
+                }
+                /* other comment */
+                // some comment
+                /* fallthrough */
+            }
+        LABELY: {}
+        case 4: {}
+        LABEL:
+            {
+                printf("x");
+            }
+        case 1:
+            {
+                pass(__func__);
+                break;
+            }
+        case 2:
+            {
+                int x = 0;
+                printf("%d", x);
+                break;
+            }
+        LABELX: {}
+        default:
+            {
+                fail("code should not reach here");
+                break;
+            }
+        }
+        break;
+    }
+}
+
 typedef struct I67 I67;
 struct I67{
 	int x,y;
@@ -376,7 +470,7 @@ void switch_without_input()
 
 int main()
 {
-    plan(33);
+    plan(37);
 
     match_a_single_case();
     fallthrough_to_next_case();
@@ -384,6 +478,8 @@ int main()
     match_default();
     fallthrough_several_cases_including_default();
     fallthrough_several_midway_default();
+    goto_label(false);
+    goto_label(true);
 
     // For each of the tests above there will be identical cases that use scopes
     // for the case statements.
@@ -393,6 +489,8 @@ int main()
     scoped_match_default();
     scoped_fallthrough_several_cases_including_default();
     scoped_fallthrough_several_midway_default();
+    scoped_goto_label(false);
+    scoped_goto_label(true);
 
 	switch_issue67();
 	empty_switch();
