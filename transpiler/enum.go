@@ -17,7 +17,7 @@ import (
 
 // ctypeEnumValue generates a specific expression for values used by some
 // constants in ctype.h. This is to get around an issue that the real values
-// need to be evaulated by the compiler; which c2go does not yet do.
+// need to be evaluated by the compiler; which c2go does not yet do.
 //
 // TODO: Ability to evaluate constant expressions at compile time
 // https://github.com/elliotchance/c2go/issues/77
@@ -167,6 +167,28 @@ func transpileEnumDecl(p *program.Program, n *ast.EnumDecl) (decls []goast.Decl,
 					counter = value
 					counter++
 
+				case *goast.CallExpr:
+					e = val
+					if id, ok := v.Fun.(*goast.Ident); !ok || len(v.Args) != 1 ||
+						!types.IsGoIntegerType(id.Name) {
+						p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Add support of continues counter for type : *goast.CallExpr != integer cast"), n))
+						break
+					}
+					if lit, ok := v.Args[0].(*goast.BasicLit); ok {
+						var value int
+						e, value, err = parseEnumBasicLit(lit)
+						if err != nil {
+							e = val
+							counter++
+							p.AddMessage(p.GenerateWarningMessage(
+								fmt.Errorf("Cannot parse '%s' in BasicLit", lit.Value), n))
+							break
+						}
+						counter = value
+						counter++
+					} else {
+						p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Add support of continues counter for type : *goast.CallExpr (integer cast) with argument type : %T", v), n))
+					}
 				default:
 					e = val
 					p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("Add support of continues counter for type : %T", v), n))
