@@ -41,11 +41,13 @@ typedef enum {
  */
 typedef enum e_strategy {RANDOM, IMMEDIATE = 5, SEARCH} strategy;
 
+enum { ESC_A = 1, ESC_d };
+
 // main function
 
 int main()
 {
-	plan(29);
+	plan(30);
 
 	// step 1
 	enum number n;
@@ -103,6 +105,8 @@ int main()
 	// step 
 	is_eq( FLY  , 0 );
 	is_eq( JUMP , 1 );
+
+	is_eq(ESC_d, 2);
 
 	diag("sizeof")
 	is_eq(sizeof(JUMP ),sizeof(int));
