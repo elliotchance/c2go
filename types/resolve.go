@@ -659,7 +659,7 @@ var goIntegerType = []string{
 	"uint64",
 }
 
-// IsGoNumberType - return whether the given Go type is an integer type
+// IsGoIntegerType - return whether the given Go type is an integer type
 func IsGoIntegerType(s string) bool {
 	for _, i := range goIntegerType {
 		if i == s {
