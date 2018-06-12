@@ -875,11 +875,6 @@ func atomicOperation(n ast.Node, p *program.Program) (
 			return
 
 		case "=":
-			// Find ast.DeclRefExpr in Children[0]
-			decl, ok := getDeclRefExpr(v.Children()[0])
-			if !ok {
-				return
-			}
 			// BinaryOperator 0x2a230c0 <col:8, col:13> 'int' '='
 			// |-UnaryOperator 0x2a23080 <col:8, col:9> 'int' lvalue prefix '*'
 			// | `-ImplicitCastExpr 0x2a23068 <col:9> 'int *' <LValueToRValue>
@@ -895,7 +890,8 @@ func atomicOperation(n ast.Node, p *program.Program) (
 			//       |-DeclRefExpr 0x328dd00 <col:25> 'int' lvalue Var 0x328dbd8 'c' 'int'
 			//       `-IntegerLiteral 0x328dd28 <col:29> 'int' 42
 
-			varName := decl.Name
+			var body []goast.Stmt
+			varName := "tempVar"
 
 			var exprResolveType string
 			exprResolveType, err = types.ResolveType(p, v.Type)
@@ -904,24 +900,29 @@ func atomicOperation(n ast.Node, p *program.Program) (
 			}
 
 			e, _, newPre, newPost, _ := transpileToExpr(v, p, true)
-			body := combineStmts(&goast.ExprStmt{e}, newPre, newPost)
+			if assign, ok := e.(*goast.BinaryExpr); !ok || assign.Op != token.ASSIGN {
+				panic("not a valid assignment")
+			} else {
+				body = append(body, &goast.AssignStmt{
+					Lhs: []goast.Expr{util.NewIdent(varName)},
+					Tok: token.DEFINE,
+					Rhs: []goast.Expr{assign.Y},
+				})
+				body = append(body, &goast.ExprStmt{
+					&goast.BinaryExpr{
+						X:  assign.X,
+						Op: token.ASSIGN,
+						Y:  util.NewIdent(varName),
+					},
+				})
+			}
 
-			expr, exprType, _, _, _ = atomicOperation(v.Children()[0], p)
+			body = combineMultipleStmts(body, newPre, newPost)
 
 			preStmts = nil
 			postStmts = nil
 
 			var returnValue goast.Expr = util.NewIdent(varName)
-			if types.IsPointer(decl.Type) && !types.IsPointer(v.Type) {
-				returnValue = &goast.IndexExpr{
-					X: returnValue,
-					Index: &goast.BasicLit{
-						Kind:  token.INT,
-						Value: "0",
-					},
-				}
-			}
-
 			expr = util.NewAnonymousFunction(body,
 				nil,
 				returnValue,
