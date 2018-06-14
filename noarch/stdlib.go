@@ -8,6 +8,7 @@ import (
 
 	"github.com/elliotchance/c2go/util"
 	"math/rand"
+	"sync"
 	"unsafe"
 )
 
@@ -356,9 +357,35 @@ func Strtoull(str *byte, endptr **byte, radix int32) uint64 {
 	return uint64(Strtoll(str, endptr, radix))
 }
 
-// Free doesn't do anything since memory is managed by the Go garbage collector.
-// However, I will leave it here as a placeholder for now.
-func Free(anything interface{}) {
+var (
+	memMgmt map[uint64]interface{}
+	memSync sync.Mutex
+)
+
+func init() {
+	memMgmt = make(map[uint64]interface{})
+}
+
+// Malloc returns a pointer to a memory block of the given length.
+//
+// To prevent the Go garbage collector from collecting this memory,
+// we store the whole block in a map.
+func Malloc(numBytes int32) unsafe.Pointer {
+	memBlock := make([]byte, numBytes)
+	addr := uint64(uintptr(unsafe.Pointer(&memBlock[0])))
+	memSync.Lock()
+	defer memSync.Unlock()
+	memMgmt[addr] = memBlock
+	return &memBlock[0]
+}
+
+// Free removes the reference to this memory address,
+// so that the Go GC can free it.
+func Free(anything unsafe.Pointer) {
+	addr := uint64(uintptr(anything))
+	memSync.Lock()
+	defer memSync.Unlock()
+	delete(memMgmt, addr)
 }
 
 func atof(str *byte) (float64, int32) {
