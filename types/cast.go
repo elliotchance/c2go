@@ -108,25 +108,15 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 
 	// casting
 	if fromType == "void *" && toType[len(toType)-1] == '*' && !strings.Contains(toType, "FILE") && toType[len(toType)-2] != '*' {
-		toType = strings.Replace(toType, "*", " ", -1)
-		t, err := ResolveType(p, toType)
+		toType, err := ResolveType(p, toType)
 		if err != nil {
 			return nil, err
 		}
-		p.AddImport("unsafe")
-		p.AddImport("github.com/elliotchance/c2go/noarch")
-		return &goast.UnaryExpr{
-			Op: token.MUL,
-			X: &goast.CallExpr{
-				Fun: &goast.StarExpr{
-					X: &goast.ArrayType{
-						Lbrack: 1,
-						Elt:    util.NewIdent(t),
-					},
-				},
-				Args: []goast.Expr{util.NewCallExpr("unsafe.Pointer",
-					util.NewCallExpr("noarch.UnsafeSliceToSliceUnlimited", expr))},
+		return &goast.CallExpr{
+			Fun: &goast.ParenExpr{
+				X: util.NewTypeIdent(toType),
 			},
+			Args: []goast.Expr{expr},
 		}, nil
 	}
 

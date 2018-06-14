@@ -47,9 +47,9 @@ func IsCInteger(p *program.Program, cType string) bool {
 // Please keep them sorted by name.
 var simpleResolveTypes = map[string]string{
 	"bool":                   "bool",
-	"char *":                 "[]byte",
+	"char *":                 "*byte",
 	"char":                   "byte",
-	"char*":                  "[]byte",
+	"char*":                  "*byte",
 	"double":                 "float64",
 	"float":                  "float32",
 	"int":                    "int32",
@@ -72,8 +72,8 @@ var simpleResolveTypes = map[string]string{
 	"_Bool":                  "int8",
 
 	// void*
-	"void*":  "interface{}",
-	"void *": "interface{}",
+	"void*":  "unsafe.Pointer",
+	"void *": "unsafe.Pointer",
 
 	// null is a special case (it should probably have a less ambiguous name)
 	// when using the NULL macro.
@@ -95,7 +95,7 @@ var simpleResolveTypes = map[string]string{
 	"__int128":                     "int64",
 	"__mbstate_t":                  "int64",
 	"__sbuf":                       "int64",
-	"__sFILEX":                     "interface{}",
+	"__sFILEX":                     "unsafe.Pointer",
 	"FILE":                         "github.com/elliotchance/c2go/noarch.File",
 }
 
@@ -169,16 +169,16 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 
 	// FIXME: This is a hack to avoid casting in some situations.
 	if s == "" {
-		return "interface{}", errors.New("probably an incorrect type translation 1")
+		return "unsafe.Pointer", errors.New("probably an incorrect type translation 1")
 	}
 
 	// FIXME: I have no idea what this is.
 	if s == "const" {
-		return "interface{}", errors.New("probably an incorrect type translation 4")
+		return "unsafe.Pointer", errors.New("probably an incorrect type translation 4")
 	}
 
 	if s == "char *[]" {
-		return "interface{}", errors.New("probably an incorrect type translation 2")
+		return "unsafe.Pointer", errors.New("probably an incorrect type translation 2")
 	}
 
 	if s == "fpos_t" {
@@ -276,7 +276,7 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 
 			var t string
 			t, err = ResolveType(p, s)
-			return "[]" + t, err
+			return "*" + t, err
 		}
 
 		s = s[start:]
@@ -301,7 +301,7 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 
 	// I have no idea how to handle this yet.
 	if strings.Contains(s, "anonymous union") {
-		return "interface{}", errors.New("probably an incorrect type translation 3")
+		return "unsafe.Pointer", errors.New("probably an incorrect type translation 3")
 	}
 
 	// It may be a pointer of a simple type. For example, float *, int *,
@@ -314,9 +314,9 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 		// Pointers are always converted into slices, except with some specific
 		// entities that are shared in the Go libraries.
 		prefix := "*"
-		if !strings.Contains(t, "noarch.") {
-			prefix = "[]"
-		}
+		//if !strings.Contains(t, "noarch.") {
+		//	prefix = "[]"
+		//}
 
 		return prefix + t, err
 	}
@@ -352,7 +352,7 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 
 	errMsg := fmt.Sprintf(
 		"I couldn't find an appropriate Go type for the C type '%s'.", s)
-	return "interface{}", errors.New(errMsg)
+	return "unsafe.Pointer", errors.New(errMsg)
 }
 
 // resolveType determines the Go type from a C type.
