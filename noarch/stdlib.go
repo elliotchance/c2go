@@ -376,7 +376,7 @@ func Malloc(numBytes int32) unsafe.Pointer {
 	memSync.Lock()
 	defer memSync.Unlock()
 	memMgmt[addr] = memBlock
-	return &memBlock[0]
+	return unsafe.Pointer(&memBlock[0])
 }
 
 // Free removes the reference to this memory address,
