@@ -9,9 +9,9 @@ import (
 
 // AssertFail handles __assert_fail().
 func AssertFail(
-	expression, filePath []byte,
+	expression, filePath *byte,
 	lineNumber uint32,
-	functionName []byte,
+	functionName *byte,
 ) bool {
 	fmt.Fprintf(
 		os.Stderr,

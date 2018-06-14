@@ -68,6 +68,6 @@ func SincospiStret(x float64) Double2 {
 	return Double2{0, 0}
 }
 
-func NaN(s []byte) float64 {
+func NaN(s *byte) float64 {
 	return math.NaN()
 }
