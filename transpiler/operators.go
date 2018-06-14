@@ -187,7 +187,7 @@ func transpileParenExpr(n *ast.ParenExpr, p *program.Program) (
 
 // pointerArithmetic - operations between 'int' and pointer
 // Example C code : ptr += i
-// ptr = (*(*[1]int)(unsafe.Pointer(uintptr(unsafe.Pointer(&ptr[0])) + (i)*unsafe.Sizeof(ptr[0]))))[:]
+// ptr = ((*int)(unsafe.Pointer(uintptr(unsafe.Pointer(ptr)) + (i)*unsafe.Sizeof(*ptr))))
 // , where i  - left
 //        '+' - operator
 //      'ptr' - right
@@ -250,15 +250,15 @@ func pointerArithmetic(p *program.Program,
 	if util.IsAddressable(left) {
 		src = `package main
 func main(){
-	a := (*(*[1000000000]{{ .Type }})(unsafe.Pointer(uintptr(unsafe.Pointer(&{{ .Name }}[0])) {{ .Operator }} (uintptr)({{ .Condition }})*unsafe.Sizeof({{ .Name }}[0]))))[:]
+	a := (({{ .Type }})(unsafe.Pointer(uintptr(unsafe.Pointer({{ .Name }})) {{ .Operator }} (uintptr)({{ .Condition }})*unsafe.Sizeof(*{{ .Name }}))))
 }`
 	} else {
 		src = `package main
 func main(){
-	a := (*(*[1000000000]{{ .Type }})(unsafe.Pointer(func()uintptr{
+	a := (({{ .Type }})(func()unsafe.Pointer{
 		tempVar := {{ .Name }}
-		return uintptr(unsafe.Pointer(&tempVar[0])) {{ .Operator }} (uintptr)({{ .Condition }})*unsafe.Sizeof(tempVar[0])
-	}())))[:]
+		return unsafe.Pointer(uintptr(unsafe.Pointer(tempVar)) {{ .Operator }} (uintptr)({{ .Condition }})*unsafe.Sizeof(*tempVar))
+	}()))[:]
 }`
 	}
 	tmpl := template.Must(template.New("").Parse(src))
