@@ -232,14 +232,14 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 		if operator == token.SUB && err == nil && baseSize > 1 {
 			adjustPointerDiff = baseSize
 		}
-		left, leftType = util.GetUintptrForSlice(left)
-		right, rightType = util.GetUintptrForSlice(right)
+		left, leftType = util.GetUintptrForPointer(left)
+		right, rightType = util.GetUintptrForPointer(right)
 	}
 	if types.IsPointer(leftType) && types.IsPointer(rightType) &&
 		(operator == token.EQL || operator == token.NEQ) &&
 		leftType != "NullPointerType *" && rightType != "NullPointerType *" {
-		left, leftType = util.GetUintptrForSlice(left)
-		right, rightType = util.GetUintptrForSlice(right)
+		left, leftType = util.GetUintptrForPointer(left)
+		right, rightType = util.GetUintptrForPointer(right)
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
@@ -350,12 +350,12 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 
 					// FIXME: I'm not sure how this situation arises.
 					if resolvedDeref == "" {
-						resolvedDeref = "interface{}"
+						resolvedDeref = "unsafe.Pointer"
 					}
 
 					if !p.AddMessage(p.GenerateWarningMessage(err, n)) {
 						p.AddImport("unsafe")
-						right = util.CreateSliceFromReference(resolvedDeref, right)
+						right = util.CreatePointerFromReference(resolvedDeref, right)
 					}
 				}
 			}
