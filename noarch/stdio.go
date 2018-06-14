@@ -209,17 +209,10 @@ func Rename(oldName, newName *byte) int32 {
 // Notice that fputs not only differs from puts in that the destination stream
 // can be specified, but also fputs does not write additional characters, while
 // puts appends a newline character at the end automatically.
-func Fputs(str []byte, stream *File) int32 {
-	length := 0
-	for _, b := range []byte(str) {
-		if b == 0 {
-			break
-		}
+func Fputs(str *byte, stream *File) int32 {
+	goStr := CStringToString(str)
 
-		length++
-	}
-
-	n, err := stream.OsFile.WriteString(string(str[:length]))
+	n, err := stream.OsFile.WriteString(goStr)
 	if err != nil {
 		panic(err)
 	}
@@ -261,7 +254,7 @@ func Tmpfile() *File {
 // Notice that fgets is quite different from gets: not only fgets accepts a
 // stream argument, but also allows to specify the maximum size of str and
 // includes in the string any ending newline character.
-func Fgets(str []byte, num int32, stream *File) []byte {
+func Fgets(str *byte, num int32, stream *File) *byte {
 	buf := make([]byte, num)
 	n, err := stream.OsFile.Read(buf[:num-1])
 	var newlinepos int
@@ -282,7 +275,7 @@ func Fgets(str []byte, num int32, stream *File) []byte {
 		}
 		return nil
 	}
-	copy(str, buf[:newlinepos+2])
+	copy(toByteSlice(str, num), buf[:newlinepos+2])
 	return str
 }
 
@@ -398,7 +391,7 @@ func NewFile(f *os.File) *File {
 // using fopen to be used as a temporary file. The file created this way, unlike
 // those created with tmpfile is not automatically deleted when closed; A
 // program shall call remove to delete this file once closed.
-func Tmpnam(str []byte) []byte {
+func Tmpnam(str *byte) *byte {
 	// TODO: There must be a better way of doing this. This way allows the same
 	// great distinct Go temp file generation (that also checks for existing
 	// files), but unfortunately creates the file in the process; even if you
@@ -410,10 +403,11 @@ func Tmpnam(str []byte) []byte {
 
 	f.Close()
 	if str != nil {
-		copy(str, f.Name())
-		str[len(f.Name())] = 0
+		pStr := toByteSlice(str, int32(len(f.Name()))+1)
+		copy(pStr, f.Name())
+		pStr[len(f.Name())] = 0
 	}
-	return []byte(f.Name())
+	return &[]byte(f.Name() + "\x00")[0]
 }
 
 // Fflush handles fflush().
@@ -477,7 +471,7 @@ func Fprintf(f *File, format *byte, args ...interface{}) int32 {
 // The additional arguments should point to already allocated objects of the
 // type specified by their corresponding format specifier within the format
 // string.
-func Fscanf(f *File, format []byte, args ...interface{}) int32 {
+func Fscanf(f *File, format *byte, args ...interface{}) int32 {
 	realArgs := prepareArgsForScanf(args)
 
 	// format is ignored
@@ -635,16 +629,17 @@ func Ftell(f *File) int32 {
 // read.
 //
 // The total amount of bytes read if successful is (size*count).
-func Fread(ptr []byte, size1, size2 int32, f *File) int32 {
+func Fread(ptr *byte, size1, size2 int32, f *File) int32 {
 	// Create a new buffer so that we can ensure we read up to the correct
 	// number of bytes from the file.
 	newBuffer := make([]byte, size1*size2)
+	ptrSlice := toByteSlice(ptr, size1*size2)
 	n, err := f.OsFile.Read(newBuffer)
 
 	// Despite any error we need to make sure the bytes read are copied to the
 	// destination buffer.
 	for i, b := range newBuffer {
-		ptr[i] = b
+		ptrSlice[i] = b
 	}
 
 	// Now we can handle the success or failure.
@@ -671,8 +666,8 @@ func Fread(ptr []byte, size1, size2 int32, f *File) int32 {
 // Internally, the function interprets the block pointed by ptr as if it was an
 // array of (size*count) elements of type unsigned char, and writes them
 // sequentially to stream as if fputc was called for each byte.
-func Fwrite(str []byte, size1, size2 int32, stream *File) int32 {
-	n, err := stream.OsFile.Write(str[:size1*size2])
+func Fwrite(str *byte, size1, size2 int32, stream *File) int32 {
+	n, err := stream.OsFile.Write(toByteSlice(str, size1*size2))
 	if err != nil {
 		return -1
 	}
@@ -691,10 +686,10 @@ func Fwrite(str []byte, size1, size2 int32, stream *File) int32 {
 //
 // The ftell function can be used to retrieve the current position in the stream
 //as an integer value.
-func Fgetpos(f *File, pos []int32) int32 {
+func Fgetpos(f *File, pos *int32) int32 {
 	absolutePos := Fseek(f, 0, 1)
 	if pos != nil {
-		pos[0] = absolutePos
+		*pos = absolutePos
 	}
 
 	return absolutePos
@@ -717,8 +712,8 @@ func Fgetpos(f *File, pos []int32) int32 {
 //
 // A similar function, fseek, can be used to set arbitrary positions on streams
 // open in binary mode.
-func Fsetpos(stream *File, pos []int32) int32 {
-	return Fseek(stream, int32(pos[0]), 0)
+func Fsetpos(stream *File, pos *int32) int32 {
+	return Fseek(stream, int32(*pos), 0)
 }
 
 // Printf handles printf().
@@ -919,8 +914,8 @@ func Perror(str *byte) {
 	var (
 		lenStr      = Strlen(str)
 		lenErrStr   = Strlen(errstr)
-		strSlice    = toByteSlice(str, int(lenStr))
-		errstrSlice = toByteSlice(errstr, int(lenErrStr))
+		strSlice    = toByteSlice(str, lenStr)
+		errstrSlice = toByteSlice(errstr, lenErrStr)
 	)
 	if lenStr := Strlen(str); lenStr > 0 {
 		buffer = make([]byte, int(lenStr)+3+int(lenErrStr))
