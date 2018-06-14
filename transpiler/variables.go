@@ -449,7 +449,9 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 
 	x := lhs
 	if n.IsPointer {
-		x = &goast.IndexExpr{X: x, Index: util.NewIntLit(0)}
+		x = &goast.ParenExpr{
+			X: &goast.StarExpr{X: x},
+		}
 	}
 
 	// Check for member name translation.

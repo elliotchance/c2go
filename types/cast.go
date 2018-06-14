@@ -250,7 +250,7 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 
 	// Let's assume that anything can be converted to a void pointer.
 	if toType == "void *" {
-		return expr, nil
+		return util.NewCallExpr("unsafe.Pointer", expr), nil
 	}
 
 	fromType, err := ResolveType(p, fromType)
@@ -263,7 +263,7 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 		return expr, err
 	}
 
-	if fromType == "null" && toType == "[][]byte" {
+	if fromType == "null" && strings.HasPrefix(toType, "*") {
 		return util.NewNil(), nil
 	}
 
@@ -289,12 +289,17 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 		return expr, nil
 	}
 
-	if fromType == toType {
+	if strings.HasPrefix(fromType, "[]") && strings.HasPrefix(toType, "*") &&
+		fromType[2:] == toType[1:] {
 		match := util.GetRegex(`\[(\d+)\]$`).FindStringSubmatch(cFromType)
 		if strings.HasSuffix(cToType, "*") && len(match) > 0 {
-			// we need to convert from array to slice
-			return &goast.SliceExpr{
-				X: expr,
+			// we need to convert from array to pointer
+			return &goast.UnaryExpr{
+				Op: token.AND,
+				X: &goast.IndexExpr{
+					X:     expr,
+					Index: util.NewIntLit(0),
+				},
 			}, nil
 		}
 		return expr, nil
@@ -360,9 +365,9 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 	}
 
 	// In the forms of:
-	// - `string` -> `[]byte`
+	// - `string` -> `*byte`
 	// - `string` -> `char *[13]`
-	match1 := util.GetRegex(`\[\]byte`).FindStringSubmatch(toType)
+	match1 := util.GetRegex(`\*byte`).FindStringSubmatch(toType)
 	match2 := util.GetRegex(`char \*\[(\d+)\]`).FindStringSubmatch(toType)
 	if fromType == "string" && (len(match1) > 0 || len(match2) > 0) {
 		// Construct a byte array from "first":
@@ -390,7 +395,13 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 
 		value.Elts = append(value.Elts, util.NewIntLit(0))
 
-		return value, nil
+		return &goast.UnaryExpr{
+			Op: token.AND,
+			X: &goast.IndexExpr{
+				X:     value,
+				Index: util.NewIntLit(0),
+			},
+		}, nil
 	}
 
 	// In the forms of:
@@ -426,7 +437,7 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 		return e, nil
 	}
 
-	if fromType == "[]byte" && toType == "bool" {
+	if fromType == "*byte" && toType == "bool" {
 		return util.NewUnaryExpr(
 			token.NOT, util.NewCallExpr("noarch.CStringIsNull", expr),
 		), nil
@@ -445,6 +456,17 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 
 	if util.InStrings(fromType, types) && util.InStrings(toType, types) {
 		return util.NewCallExpr(toType, expr), nil
+	}
+
+	if strings.HasPrefix(toType, "*") && strings.HasPrefix(fromType, "*") {
+		return &goast.CallExpr{
+			Fun: &goast.ParenExpr{
+				X: util.NewTypeIdent(toType),
+			},
+			Args: []goast.Expr{
+				util.NewCallExpr("unsafe.Pointer", expr),
+			},
+		}, nil
 	}
 
 	p.AddImport("github.com/elliotchance/c2go/noarch")
