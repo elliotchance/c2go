@@ -27,15 +27,27 @@ func transpileStringLiteral(n *ast.StringLiteral) goast.Expr {
 	// StringLiteral 0x280b918 <col:29> 'char [30]' lvalue "%0"
 	s, err := types.GetAmountArraySize(n.Type)
 	if err != nil {
-		return util.NewCallExpr("[]byte",
-			util.NewStringLit(strconv.Quote(n.Value+"\x00")))
+		return toBytePointer(util.NewCallExpr("[]byte",
+			util.NewStringLit(strconv.Quote(n.Value+"\x00"))))
 	}
 	buf := bytes.NewBufferString(n.Value + "\x00")
 	if buf.Len() < s {
 		buf.Write(make([]byte, s-buf.Len()))
 	}
-	return util.NewCallExpr("[]byte",
-		util.NewStringLit(strconv.Quote(buf.String())))
+	return toBytePointer(util.NewCallExpr("[]byte",
+		util.NewStringLit(strconv.Quote(buf.String()))))
+}
+
+func toBytePointer(expr goast.Expr) goast.Expr {
+	return &goast.ParenExpr{
+		X: &goast.UnaryExpr{
+			Op: token.AND,
+			X: &goast.IndexExpr{
+				X:     expr,
+				Index: util.NewIntLit(0),
+			},
+		},
+	}
 }
 
 func transpileIntegerLiteral(n *ast.IntegerLiteral) (ret goast.Expr) {
