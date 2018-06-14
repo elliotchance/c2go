@@ -348,7 +348,7 @@ func transpileDeclStmt(n *ast.DeclStmt, p *program.Program) (stmts []goast.Stmt,
 }
 
 func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program, exprIsStmt bool) (
-	_ *goast.IndexExpr, theType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
+	_ goast.Expr, theType string, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 	defer func() {
 		if err != nil {
 			err = fmt.Errorf("Cannot transpile ArraySubscriptExpr. err = %v", err)
@@ -364,7 +364,7 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program, 
 	}
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	index, _, newPre, newPost, err := atomicOperation(children[1], p)
+	index, indexType, newPre, newPost, err := atomicOperation(children[1], p)
 	if err != nil {
 		return nil, "", nil, nil, err
 	}
@@ -380,7 +380,15 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program, 
 		indexInt = -indexInt
 		expression, leftType, newPre, newPost, err =
 			pointerArithmetic(p, expression, leftType, util.NewIntLit(int(indexInt)), "int", token.SUB)
-		index = util.NewIntLit(0)
+		return &goast.StarExpr{
+			X: expression,
+		}, n.Type, newPre, newPost, err
+	} else if types.IsPointer(leftType) {
+		expression, leftType, newPre, newPost, err =
+			pointerArithmetic(p, expression, leftType, index, indexType, token.ADD)
+		return &goast.StarExpr{
+			X: expression,
+		}, n.Type, newPre, newPost, err
 	}
 
 	return &goast.IndexExpr{
