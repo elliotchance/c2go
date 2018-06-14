@@ -162,7 +162,7 @@ func Strchr(str *byte, ch int32) *byte {
 
 // Memset treats dst as a binary array and sets size bytes to the value val.
 // Returns dst.
-func Memset(dst unsafe.Pointer, val int32, size int32) interface{} {
+func Memset(dst unsafe.Pointer, val int32, size int32) unsafe.Pointer {
 	data := toByteSlice((*byte)(dst), int(size))
 	var i int32
 	var vb = byte(val)
@@ -178,7 +178,7 @@ func Memset(dst unsafe.Pointer, val int32, size int32) interface{} {
 // in Go we rely on the built-in copy function, which has no such limitation.
 // To copy overlapping regions in C memmove should be used, so we map that function
 // to Memcpy as well.
-func Memcpy(dst unsafe.Pointer, src unsafe.Pointer, size int32) interface{} {
+func Memcpy(dst unsafe.Pointer, src unsafe.Pointer, size int32) unsafe.Pointer {
 	bDst := toByteSlice((*byte)(dst), int(size))
 	bSrc := toByteSlice((*byte)(src), int(size))
 	copy(bDst, bSrc)

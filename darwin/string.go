@@ -2,6 +2,7 @@ package darwin
 
 import (
 	"github.com/elliotchance/c2go/noarch"
+	"unsafe"
 )
 
 // BuiltinStrcpy is for __builtin___strcpy_chk.
@@ -30,12 +31,12 @@ func BuiltinStrcat(dest, src *byte, _ int32) *byte {
 
 // Memset is for __builtin___memset_chk
 // https://opensource.apple.com/source/Libc/Libc-498/include/secure/_string.h
-func Memset(dst interface{}, val int32, size int32, _ int32) interface{} {
+func Memset(dst unsafe.Pointer, val int32, size int32, _ int32) unsafe.Pointer {
 	return noarch.Memset(dst, val, size)
 }
 
 // Memcpy  is for __builtin___memcpy_chk and __builtin___memmove_chk
 //// https://opensource.apple.com/source/Libc/Libc-498/include/secure/_string.h
-func Memcpy(dst interface{}, src interface{}, size int32, _ int32) interface{} {
+func Memcpy(dst, src unsafe.Pointer, size int32, _ int32) unsafe.Pointer {
 	return noarch.Memcpy(dst, src, size)
 }
