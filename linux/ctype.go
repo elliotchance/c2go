@@ -2,6 +2,7 @@ package linux
 
 import (
 	"unicode"
+	"unsafe"
 )
 
 var characterTable []uint16
@@ -82,12 +83,12 @@ func generateCharacterTable() {
 }
 
 // CtypeLoc handles __ctype_b_loc(). It returns a character table.
-func CtypeLoc() [][]uint16 {
+func CtypeLoc() **uint16 {
 	if len(characterTable) == 0 {
 		generateCharacterTable()
 	}
 
-	return [][]uint16{characterTable}
+	return (**uint16)(unsafe.Pointer(&characterTable))
 }
 
 // ToLower handles tolower().

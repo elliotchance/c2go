@@ -14,9 +14,9 @@ func BuiltinExpect(a, b int32) int32 {
 
 // AssertRtn handles __assert_rtn().
 func AssertRtn(
-	functionName, filePath []byte,
+	functionName, filePath *byte,
 	lineNumber int32,
-	expression []byte,
+	expression *byte,
 ) bool {
 	fmt.Fprintf(
 		os.Stderr,
