@@ -529,7 +529,9 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 		}
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 		isConst, indexInt := util.EvaluateConstExpr(e)
-		if isConst && indexInt < 0 {
+		if isConst && indexInt == 0 {
+			// nop
+		} else if isConst && indexInt < 0 {
 			indexInt = -indexInt
 			arr, eType, newPre, newPost, err =
 				pointerArithmetic(p, arr, arrType, util.NewIntLit(int(indexInt)), "int", token.SUB)
@@ -545,7 +547,9 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 		var ident goast.Expr
 		ident = util.NewIdent(v.Name)
 		isConst, indexInt := util.EvaluateConstExpr(e)
-		if isConst && indexInt < 0 {
+		if isConst && indexInt == 0 {
+			// nop
+		} else if isConst && indexInt < 0 {
 			indexInt = -indexInt
 			ident, eType, newPre, newPost, err =
 				pointerArithmetic(p, ident, n.Type+" *", util.NewIntLit(int(indexInt)), "int", token.SUB)
@@ -565,7 +569,9 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 		}
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 		isConst, indexInt := util.EvaluateConstExpr(e)
-		if isConst && indexInt < 0 {
+		if isConst && indexInt == 0 {
+			// nop
+		} else if isConst && indexInt < 0 {
 			indexInt = -indexInt
 			arr, eType, newPre, newPost, err =
 				pointerArithmetic(p, arr, arrType, util.NewIntLit(int(indexInt)), "int", token.SUB)
@@ -592,7 +598,9 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 			}, eType, preStmts, postStmts, err
 		}
 		isConst, indexInt := util.EvaluateConstExpr(e)
-		if isConst && indexInt < 0 {
+		if isConst && indexInt == 0 {
+			// nop
+		} else if isConst && indexInt < 0 {
 			indexInt = -indexInt
 			arr, eType, newPre, newPost, err =
 				pointerArithmetic(p, arr, arrType, util.NewIntLit(int(indexInt)), "int", token.SUB)
