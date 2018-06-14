@@ -163,7 +163,7 @@ func Strchr(str *byte, ch int32) *byte {
 // Memset treats dst as a binary array and sets size bytes to the value val.
 // Returns dst.
 func Memset(dst unsafe.Pointer, val int32, size int32) unsafe.Pointer {
-	data := toByteSlice((*byte)(dst), int(size))
+	data := toByteSlice((*byte)(dst), size)
 	var i int32
 	var vb = byte(val)
 	for i = 0; i < size; i++ {
@@ -179,8 +179,8 @@ func Memset(dst unsafe.Pointer, val int32, size int32) unsafe.Pointer {
 // To copy overlapping regions in C memmove should be used, so we map that function
 // to Memcpy as well.
 func Memcpy(dst unsafe.Pointer, src unsafe.Pointer, size int32) unsafe.Pointer {
-	bDst := toByteSlice((*byte)(dst), int(size))
-	bSrc := toByteSlice((*byte)(src), int(size))
+	bDst := toByteSlice((*byte)(dst), size)
+	bSrc := toByteSlice((*byte)(src), size)
 	copy(bDst, bSrc)
 	return dst
 }
@@ -188,7 +188,7 @@ func Memcpy(dst unsafe.Pointer, src unsafe.Pointer, size int32) unsafe.Pointer {
 // Memcmp compares two binary arrays upto n bytes.
 // Different from strncmp, memcmp does not stop at the first NULL byte.
 func Memcmp(src1, src2 unsafe.Pointer, n int32) int32 {
-	b1 := toByteSlice((*byte)(src1), int(n))
-	b2 := toByteSlice((*byte)(src2), int(n))
+	b1 := toByteSlice((*byte)(src1), n)
+	b2 := toByteSlice((*byte)(src2), n)
 	return int32(bytes.Compare(b1, b2))
 }

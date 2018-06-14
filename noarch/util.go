@@ -25,7 +25,7 @@ func CStringToString(s *byte) string {
 		return ""
 	}
 
-	return string(toByteSlice(s, end))
+	return string(toByteSlice(s, int32(end)))
 }
 
 // StringToCString returns the C string (also known as a null terminated string)
@@ -63,11 +63,11 @@ func CPointerToGoPointer(a interface{}) interface{} {
 }
 
 // toByteSlice returns a byte slice to a with the given length.
-func toByteSlice(a *byte, length int) []byte {
+func toByteSlice(a *byte, length int32) []byte {
 	header := reflect.SliceHeader{
 		uintptr(unsafe.Pointer(a)),
-		length,
-		length,
+		int(length),
+		int(length),
 	}
 	return (*(*[]byte)(unsafe.Pointer(&header)))[:]
 }
