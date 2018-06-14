@@ -488,29 +488,20 @@ func generateAlloc(p *program.Program, allocSize ast.Node, leftType string) (
 		return nil, preStmts, postStmts, err
 	}
 
-	derefType, err := types.GetDereferenceType(leftType)
-	if err != nil {
-		return nil, preStmts, postStmts, err
-	}
-
 	toType, err := types.ResolveType(p, leftType)
 	if err != nil {
 		return nil, preStmts, postStmts, err
 	}
 
-	elementSize, err := types.SizeOf(p, derefType)
-	if err != nil {
-		return nil, preStmts, postStmts, err
-	}
-
-	if toType == "interface{}" {
-		toType = "[]uint8"
-	}
-
 	right = util.NewCallExpr(
-		"make",
-		util.NewTypeIdent(toType),
-		util.NewBinaryExpr(allocSizeExpr, token.QUO, util.NewIntLit(elementSize), "int32", false),
+		"noarch.Malloc",
+		allocSizeExpr,
 	)
+	if toType != "unsafe.Pointer" {
+		right = &goast.CallExpr{
+			Fun:  util.NewTypeIdent(toType),
+			Args: []goast.Expr{right},
+		}
+	}
 	return
 }
