@@ -519,7 +519,7 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 		return
 	}
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
-	//eType = n.Type
+	eType = n.Type
 
 	switch v := pointer.(type) {
 	case *ast.MemberExpr:
