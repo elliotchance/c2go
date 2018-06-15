@@ -480,7 +480,7 @@ func getAllocationSizeNode(p *program.Program, node ast.Node) ast.Node {
 func generateAlloc(p *program.Program, allocSize ast.Node, leftType string) (
 	right goast.Expr, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 
-	allocSizeExpr, _, newPre, newPost, err := transpileToExpr(allocSize, p, false)
+	allocSizeExpr, allocType, newPre, newPost, err := transpileToExpr(allocSize, p, false)
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
@@ -492,6 +492,10 @@ func generateAlloc(p *program.Program, allocSize ast.Node, leftType string) (
 	if err != nil {
 		return nil, preStmts, postStmts, err
 	}
+	allocSizeExpr, err = types.CastExpr(p, allocSizeExpr, allocType, "int")
+	if err != nil {
+		return nil, preStmts, postStmts, err
+	}
 
 	right = util.NewCallExpr(
 		"noarch.Malloc",
@@ -499,7 +503,9 @@ func generateAlloc(p *program.Program, allocSize ast.Node, leftType string) (
 	)
 	if toType != "unsafe.Pointer" {
 		right = &goast.CallExpr{
-			Fun:  util.NewTypeIdent(toType),
+			Fun: &goast.ParenExpr{
+				X: util.NewTypeIdent(toType),
+			},
 			Args: []goast.Expr{right},
 		}
 	}
