@@ -629,7 +629,7 @@ func transpileUnaryOperator(n *ast.UnaryOperator, p *program.Program, exprIsStmt
 	switch operator {
 	case token.MUL: // *
 		// Prefix "*" is not a multiplication.
-		// Prefix "*" used for pointer ariphmetic
+		// Prefix "*" used for pointer arithmetic
 		// Example of using:
 		// *(t + 1) = ...
 		return transpilePointerArith(n, p)
