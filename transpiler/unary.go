@@ -28,7 +28,7 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program, operato
 		return
 	}
 
-	if types.IsPointer(n.Type) {
+	if types.IsPointer(p, n.Type) {
 		switch operator {
 		case token.INC:
 			operator = token.ADD
