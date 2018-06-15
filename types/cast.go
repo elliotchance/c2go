@@ -248,11 +248,6 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 		return CastExpr(p, &in, toType, toType)
 	}
 
-	// Let's assume that anything can be converted to a void pointer.
-	if toType == "void *" {
-		return util.NewCallExpr("unsafe.Pointer", expr), nil
-	}
-
 	fromType, err := ResolveType(p, fromType)
 	if err != nil {
 		return expr, err
@@ -261,6 +256,20 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 	toType, err = ResolveType(p, toType)
 	if err != nil {
 		return expr, err
+	}
+
+	// Let's assume that anything can be converted to a void pointer.
+	if cToType == "void *" {
+		if strings.HasPrefix(fromType, "[]") {
+			cNewFromType := string(util.GetRegex(`\[(\d+)\]$`).ReplaceAllLiteral([]byte(cFromType), []byte("*")))
+			if cNewFromType != cFromType {
+				expr, err = CastExpr(p, expr, cFromType, cNewFromType)
+				if err != nil {
+					return expr, err
+				}
+			}
+		}
+		return util.NewCallExpr("unsafe.Pointer", expr), nil
 	}
 
 	if fromType == "null" && strings.HasPrefix(toType, "*") {
@@ -471,6 +480,10 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 
 	p.AddImport("github.com/elliotchance/c2go/noarch")
 
+	if strings.HasPrefix(toType, "[]") && strings.HasPrefix(fromType, "*") && isArrayToPointerExpr(expr) {
+		expr = extractArrayFromPointer(expr)
+		fromType = "[]" + fromType[1:]
+	}
 	leftName := fromType
 	rightName := toType
 
@@ -528,6 +541,32 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 	}
 
 	return util.NewCallExpr(functionName, expr), nil
+}
+
+func isArrayToPointerExpr(expr goast.Expr) bool {
+	if p1, ok := expr.(*goast.ParenExpr); ok {
+		if p2, ok := p1.X.(*goast.UnaryExpr); ok && p2.Op == token.AND {
+			if p3, ok := p2.X.(*goast.IndexExpr); ok {
+				if p4, ok := p3.Index.(*goast.BasicLit); ok &&
+					p4.Kind == token.INT &&
+					p4.Value == "0" {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
+}
+func extractArrayFromPointer(expr goast.Expr) goast.Expr {
+	if p1, ok := expr.(*goast.ParenExpr); ok {
+		if p2, ok := p1.X.(*goast.UnaryExpr); ok && p2.Op == token.AND {
+			if p3, ok := p2.X.(*goast.IndexExpr); ok {
+				return p3.X
+			}
+		}
+	}
+	return nil
 }
 
 // IsNullExpr tries to determine if the expression is the result of the NULL
