@@ -224,7 +224,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 		return nil, "unknown53", nil, nil, err
 	}
 	var adjustPointerDiff int
-	if types.IsPointer(leftType) && types.IsPointer(rightType) &&
+	if types.IsPointer(p, leftType) && types.IsPointer(p, rightType) &&
 		(operator == token.SUB ||
 			operator == token.LSS || operator == token.GTR ||
 			operator == token.LEQ || operator == token.GEQ) {
@@ -235,7 +235,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 		left, leftType = util.GetUintptrForPointer(left)
 		right, rightType = util.GetUintptrForPointer(right)
 	}
-	if types.IsPointer(leftType) && types.IsPointer(rightType) &&
+	if types.IsPointer(p, leftType) && types.IsPointer(p, rightType) &&
 		(operator == token.EQL || operator == token.NEQ) &&
 		leftType != "NullPointerType *" && rightType != "NullPointerType *" {
 		left, leftType = util.GetUintptrForPointer(left)
@@ -285,9 +285,9 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 	}
 
 	// pointer arithmetic
-	if types.IsPointer(n.Type) {
+	if types.IsPointer(p, n.Type) {
 		if operator == token.ADD || operator == token.SUB {
-			if types.IsPointer(leftType) {
+			if types.IsPointer(p, leftType) {
 				expr, eType, newPre, newPost, err =
 					pointerArithmetic(p, left, leftType, right, rightType, operator)
 			} else {

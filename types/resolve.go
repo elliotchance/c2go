@@ -415,8 +415,14 @@ func IsFunction(s string) bool {
 }
 
 // IsPointer - check type is pointer
-func IsPointer(s string) bool {
-	return strings.ContainsAny(s, "*[]")
+func IsPointer(p *program.Program, s string) bool {
+	if strings.ContainsAny(s, "*[]") {
+		return true
+	}
+	if v, ok := p.TypedefType[s]; ok {
+		return IsPointer(p, v)
+	}
+	return false
 }
 
 // IsLastArray - check type have array '[]'
