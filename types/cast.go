@@ -258,6 +258,10 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 		return expr, err
 	}
 
+	if toType == fromType {
+		return expr, nil
+	}
+
 	// Let's assume that anything can be converted to a void pointer.
 	if cToType == "void *" {
 		if strings.HasPrefix(fromType, "[]") {
