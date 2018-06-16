@@ -86,7 +86,7 @@ func transpilePredefinedExpr(n *ast.PredefinedExpr, p *program.Program) (goast.E
 	case "__func__":
 		e = util.NewCallExpr(
 			"[]byte",
-			util.NewStringLit(strconv.Quote(p.Function.Name)+"\x00"),
+			util.NewStringLit(strconv.Quote(p.Function.Name+"\x00")),
 		)
 
 	default:
