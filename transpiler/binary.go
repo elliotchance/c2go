@@ -232,14 +232,26 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 		if operator == token.SUB && err == nil && baseSize > 1 {
 			adjustPointerDiff = baseSize
 		}
-		left, leftType = util.GetUintptrForPointer(left)
-		right, rightType = util.GetUintptrForPointer(right)
+		left, leftType, err = GetUintptrForPointer(p, left, leftType)
+		if err != nil {
+			p.AddMessage(p.GenerateWarningMessage(err, n))
+		}
+		right, rightType, err = GetUintptrForPointer(p, right, rightType)
+		if err != nil {
+			p.AddMessage(p.GenerateWarningMessage(err, n))
+		}
 	}
 	if types.IsPointer(p, leftType) && types.IsPointer(p, rightType) &&
 		(operator == token.EQL || operator == token.NEQ) &&
 		leftType != "NullPointerType *" && rightType != "NullPointerType *" {
-		left, leftType = util.GetUintptrForPointer(left)
-		right, rightType = util.GetUintptrForPointer(right)
+		left, leftType, err = GetUintptrForPointer(p, left, leftType)
+		if err != nil {
+			p.AddMessage(p.GenerateWarningMessage(err, n))
+		}
+		right, rightType, err = GetUintptrForPointer(p, right, rightType)
+		if err != nil {
+			p.AddMessage(p.GenerateWarningMessage(err, n))
+		}
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)

@@ -325,16 +325,6 @@ func ConvertFunctionNameFromCtoGo(name string) string {
 	return name
 }
 
-// GetUintptrForPointer - return uintptr for pointer
-// Example : uint64(uintptr(unsafe.Pointer( ...pointer... )))
-func GetUintptrForPointer(expr goast.Expr) (goast.Expr, string) {
-	returnType := "long long"
-
-	return NewCallExpr("int64",
-		NewCallExpr("uintptr",
-			NewCallExpr("unsafe.Pointer", expr))), returnType
-}
-
 // CreatePointerFromReference - create a pointer, like :
 // (*int)(unsafe.Pointer(&a))
 func CreatePointerFromReference(goType string, expr goast.Expr) (e goast.Expr) {
