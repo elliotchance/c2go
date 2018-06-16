@@ -13,6 +13,7 @@ import (
 // cIntegerType - slice of C integer type
 var cIntegerType = []string{
 	"int",
+	"char",
 	"long long",
 	"long long int",
 	"long long unsigned int",
@@ -20,6 +21,7 @@ var cIntegerType = []string{
 	"long",
 	"short",
 	"unsigned int",
+	"unsigned char",
 	"unsigned long long",
 	"unsigned long",
 	"unsigned short",
