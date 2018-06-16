@@ -254,6 +254,13 @@ func transpileUnaryOperatorAmpersant(n *ast.UnaryOperator, p *program.Program) (
 		} else {
 			eType = eType[:f] + "*" + eType[e+1:]
 		}
+		expr = &goast.UnaryExpr{
+			X: &goast.IndexExpr{
+				X:     expr,
+				Index: util.NewIntLit(0),
+			},
+			Op: token.AND,
+		}
 		return
 	}
 
