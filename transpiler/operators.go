@@ -272,7 +272,10 @@ func main(){
 	// Create the AST by parsing src.
 	fset := token.NewFileSet() // positions are relative to fset
 	body := strings.Replace(source.String(), "&#43;", "+", -1)
+	body = strings.Replace(body, "&#39;", "'", -1)
 	body = strings.Replace(body, "&amp;", "&", -1)
+	body = strings.Replace(body, "&lt;", "<", -1)
+	body = strings.Replace(body, "&gt;", ">", -1)
 	f, err := parser.ParseFile(fset, "", body, 0)
 	if err != nil {
 		err = fmt.Errorf("Cannot parse file. err = %v", err)
