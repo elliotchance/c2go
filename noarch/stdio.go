@@ -494,9 +494,9 @@ func finalizeArgsForScanf(realArgs []interface{}, args []interface{}) {
 	for i, arg := range realArgs {
 		if reflect.TypeOf(arg) == typeOfStringRef {
 			s := *arg.(*string)
-			copy(args[i].([]byte), []byte(s))
-		} else {
-			GoPointerToCPointer(arg, args[i])
+			byteSlice := toByteSlice(args[i].(*byte), int32(len(s)+1))
+			copy(byteSlice, []byte(s))
+			byteSlice[len(s)] = 0
 		}
 	}
 }
@@ -504,12 +504,12 @@ func finalizeArgsForScanf(realArgs []interface{}, args []interface{}) {
 func prepareArgsForScanf(args []interface{}) []interface{} {
 	realArgs := []interface{}{}
 
-	typeOfByteSlice := reflect.TypeOf([]byte(nil))
+	typeOfBytePointer := reflect.TypeOf((*byte)(nil))
 	for _, arg := range args {
-		if reflect.TypeOf(arg) == typeOfByteSlice {
+		if reflect.TypeOf(arg) == typeOfBytePointer {
 			realArgs = append(realArgs, new(string))
 		} else {
-			realArgs = append(realArgs, CPointerToGoPointer(arg))
+			realArgs = append(realArgs, arg)
 		}
 	}
 
