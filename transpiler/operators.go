@@ -927,12 +927,8 @@ func atomicOperation(n ast.Node, p *program.Program) (
 
 			var returnValue goast.Expr = util.NewIdent(varName)
 			if types.IsPointer(p, decl.Type) && !types.IsPointer(p, v.Type) {
-				returnValue = &goast.IndexExpr{
+				returnValue = &goast.StarExpr{
 					X: returnValue,
-					Index: &goast.BasicLit{
-						Kind:  token.INT,
-						Value: "0",
-					},
 				}
 			}
 
