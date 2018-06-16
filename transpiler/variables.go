@@ -383,12 +383,20 @@ func transpileArraySubscriptExpr(n *ast.ArraySubscriptExpr, p *program.Program, 
 		return &goast.StarExpr{
 			X: expression,
 		}, n.Type, newPre, newPost, err
-	} else if types.IsPointer(p, leftType) {
-		expression, leftType, newPre, newPost, err =
-			pointerArithmetic(p, expression, leftType, index, indexType, token.ADD)
-		return &goast.StarExpr{
-			X: expression,
-		}, n.Type, newPre, newPost, err
+	} else {
+		resolvedLeftType, err := types.ResolveType(p, leftType)
+		if err != nil {
+			return nil, "", nil, nil, err
+		}
+		if types.IsPurePointer(p, resolvedLeftType) {
+			if !isConst || indexInt != 0 {
+				expression, leftType, newPre, newPost, err =
+					pointerArithmetic(p, expression, leftType, index, indexType, token.ADD)
+			}
+			return &goast.StarExpr{
+				X: expression,
+			}, n.Type, newPre, newPost, err
+		}
 	}
 
 	return &goast.IndexExpr{

@@ -224,6 +224,14 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 		return ii, nil
 	}
 
+	// Try resolving correct type (covers anonymous structs/unions)
+	correctType := GenerateCorrectType(s)
+	if correctType != s {
+		if res, err := ResolveType(p, correctType); err == nil {
+			return res, nil
+		}
+	}
+
 	// For function
 	if IsFunction(s) {
 		g, e := resolveFunction(p, s)
@@ -421,6 +429,17 @@ func IsPointer(p *program.Program, s string) bool {
 	}
 	if v, ok := p.TypedefType[s]; ok {
 		return IsPointer(p, v)
+	}
+	return false
+}
+
+// IsPurePointer - check type is pointer
+func IsPurePointer(p *program.Program, s string) bool {
+	if strings.ContainsAny(s, "*") {
+		return true
+	}
+	if v, ok := p.TypedefType[s]; ok {
+		return IsPurePointer(p, v)
 	}
 	return false
 }
