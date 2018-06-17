@@ -540,10 +540,10 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 			// nop
 		} else if isConst && indexInt < 0 {
 			indexInt = -indexInt
-			arr, eType, newPre, newPost, err =
+			arr, _, newPre, newPost, err =
 				pointerArithmetic(p, arr, arrType, util.NewIntLit(int(indexInt)), "int", token.SUB)
 		} else {
-			arr, eType, newPre, newPost, err =
+			arr, _, newPre, newPost, err =
 				pointerArithmetic(p, arr, arrType, e, eType, token.ADD)
 		}
 		return &goast.StarExpr{
@@ -558,10 +558,10 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 			// nop
 		} else if isConst && indexInt < 0 {
 			indexInt = -indexInt
-			ident, eType, newPre, newPost, err =
+			ident, _, newPre, newPost, err =
 				pointerArithmetic(p, ident, n.Type+" *", util.NewIntLit(int(indexInt)), "int", token.SUB)
 		} else {
-			ident, eType, newPre, newPost, err =
+			ident, _, newPre, newPost, err =
 				pointerArithmetic(p, ident, n.Type+" *", e, eType, token.ADD)
 		}
 
@@ -580,10 +580,10 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 			// nop
 		} else if isConst && indexInt < 0 {
 			indexInt = -indexInt
-			arr, eType, newPre, newPost, err =
+			arr, _, newPre, newPost, err =
 				pointerArithmetic(p, arr, arrType, util.NewIntLit(int(indexInt)), "int", token.SUB)
 		} else {
-			arr, eType, newPre, newPost, err =
+			arr, _, newPre, newPost, err =
 				pointerArithmetic(p, arr, arrType, e, eType, token.ADD)
 		}
 		return &goast.StarExpr{
@@ -609,10 +609,10 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 			// nop
 		} else if isConst && indexInt < 0 {
 			indexInt = -indexInt
-			arr, eType, newPre, newPost, err =
+			arr, _, newPre, newPost, err =
 				pointerArithmetic(p, arr, arrType, util.NewIntLit(int(indexInt)), "int", token.SUB)
 		} else {
-			arr, eType, newPre, newPost, err =
+			arr, _, newPre, newPost, err =
 				pointerArithmetic(p, arr, arrType, e, eType, token.ADD)
 		}
 		return &goast.StarExpr{
