@@ -48,7 +48,7 @@ typedef unsigned char pcre_uchar;
 
 int main()
 {
-	plan(136);
+	plan(139);
 
     int i = 10;
     signed char j = 1;
@@ -482,6 +482,19 @@ int main()
         pcre_uint32 pp = UCHAR21INCTEST(p);
         pcre_uint32 pp2 = *p;
         is_eq(pp, 'a');
+        is_eq(pp2, 'b');
+    }
+    diag("Increment with assign");
+    {
+        pcre_uchar str[] = "abcdef";
+        pcre_uchar *p = str;
+        pcre_uint32 pp;
+        pcre_uint32 pp2 = *p;
+        PCRE_PUCHAR p2 = p;
+        pp = *p++ = 'z';
+        pp2 = *p;
+        is_eq(*p2, 'z');
+        is_eq(pp, 'z');
         is_eq(pp2, 'b');
     }
 

@@ -62,3 +62,8 @@ func combineStmts(stmt goast.Stmt, preStmts, postStmts []goast.Stmt) (stmts []go
 	}
 	return
 }
+
+// combineMultipleStmts - combine elements to slice
+func combineMultipleStmts(stmts, preStmts, postStmts []goast.Stmt) []goast.Stmt {
+	return combineStmts(nil, preStmts, append(stmts, postStmts...))
+}
