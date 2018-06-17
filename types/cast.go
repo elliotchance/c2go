@@ -87,6 +87,10 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 	// cFromType  : double (int, float, double)
 	// cToType    : double (*)(int, float, double)
 	if IsFunction(cFromType) {
+		if cToType == "void *" {
+			p.AddImport("github.com/elliotchance/c2go/noarch")
+			return util.NewCallExpr("noarch.CastInterfaceToPointer", expr), nil
+		}
 		return expr, nil
 	}
 

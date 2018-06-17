@@ -519,7 +519,11 @@ func transpileVarDecl(p *program.Program, n *ast.VarDecl) (
 									Names: []*goast.Ident{{Name: nameVar1}},
 									Type:  functionType,
 									Values: []goast.Expr{&goast.TypeAssertExpr{
-										X:    &goast.Ident{Name: nameVar2},
+										X: &goast.SelectorExpr{
+											X: util.NewCallExpr("*noarch.InterfaceWrapper",
+												&goast.Ident{Name: nameVar2}),
+											Sel: util.NewIdent("X"),
+										},
 										Type: functionType,
 									}},
 									Doc: p.GetMessageComments(),

@@ -118,8 +118,14 @@ func NewCallExpr(functionName string, args ...goast.Expr) *goast.CallExpr {
 	for i := range args {
 		PanicIfNil(args[i], "Argument of function is cannot be nil")
 	}
+	fun := typeToExpr(functionName)
+	if strings.HasPrefix(functionName, "*") {
+		fun = &goast.ParenExpr{
+			X: fun,
+		}
+	}
 	return &goast.CallExpr{
-		Fun:  typeToExpr(functionName),
+		Fun:  fun,
 		Args: args,
 	}
 }
