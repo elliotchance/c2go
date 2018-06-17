@@ -1,6 +1,7 @@
 // Tests for structures.
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "tests.h"
 
 struct programming
@@ -353,6 +354,8 @@ const Point2* getPoint(int index) {
     return &(p2[index]);
 }
 typedef unsigned char pcre_uchar;
+typedef unsigned char pcre_uint8;
+typedef unsigned int pcre_uint32;
 typedef struct spu {
     pcre_uchar *hvm;
 } spu;
@@ -368,9 +371,43 @@ void pointer_arithm_in_struct() {
 
 }
 
+typedef struct pcre_extra {
+  unsigned long int flags;
+  void *study_data;
+  unsigned long int match_limit;
+  void *callout_data;
+  const unsigned char *tables;
+  unsigned long int match_limit_recursion;
+  unsigned char **mark;
+  void *executable_jit;
+} pcre_extra;
+typedef struct pcre_study_data {
+  pcre_uint32 size;
+  pcre_uint32 flags;
+  pcre_uint8 start_bits[32];
+  pcre_uint32 minlength;
+} pcre_study_data;
+
+void test_mark()
+{
+    pcre_extra *extra = NULL;
+    pcre_study_data *study;
+    pcre_uint8 *markptr;
+    void * allocated = malloc(sizeof(pcre_extra) + sizeof(pcre_study_data));
+    extra = (pcre_extra *)allocated;
+    study = (pcre_study_data *)((char *)extra + sizeof(pcre_extra));
+    memset(study->start_bits, 0, 32 * sizeof(pcre_uint8));
+    extra->study_data = study;
+    study->size = sizeof(pcre_study_data);
+    extra->mark = &markptr;
+    is_eq(study->size, 44);
+    for (int i=0; i<32; i++)
+        is_eq(study->start_bits[i], 0);
+}
+
 int main()
 {
-    plan(71);
+    plan(104);
 
     struct programming variable;
     char *s = "Programming in Software Development.";
@@ -630,6 +667,8 @@ int main()
 	struct_inside_union();
 
 	pointer_arithm_in_struct();
+
+	test_mark();
 
     done_testing();
 }
