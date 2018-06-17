@@ -151,3 +151,38 @@ func (s *Safe) Set(value interface{}) {
 	defer s.lock.Unlock()
 	s.value = value
 }
+
+var (
+	interfaceMgmt map[reflect.Value]*InterfaceWrapper
+	interfaceSync sync.Mutex
+)
+
+func init() {
+	interfaceMgmt = make(map[reflect.Value]*InterfaceWrapper)
+}
+
+// InterfaceWrapper is used for those case where we cannot use unsafe.Pointer
+// the default catch all data type for c2go.
+// For the moment this is the case for function pointers.
+type InterfaceWrapper struct {
+	X interface{}
+}
+
+// CastInterfaceToPointer will take an interface and store it in a map by its reflect.Value
+// the unsafe.Pointer to its containing InterfaceWrapper is returned.
+// Since no element is ever removed from the map this should only be used for a limited amount
+// of elements, like function pointers.
+func CastInterfaceToPointer(in interface{}) unsafe.Pointer {
+	interfaceSync.Lock()
+	defer interfaceSync.Unlock()
+	val := reflect.ValueOf(in)
+	if iw, ok := interfaceMgmt[val]; ok {
+		return unsafe.Pointer(iw)
+	} else {
+		iw := &InterfaceWrapper{
+			X: in,
+		}
+		interfaceMgmt[val] = iw
+		return unsafe.Pointer(iw)
+	}
+}
