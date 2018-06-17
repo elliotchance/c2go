@@ -497,7 +497,7 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 			typesParentBefore = append(typesParentBefore, v.Type)
 			v.Type = "int"
 		default:
-			panic(fmt.Errorf("Not support parent type %T in pointer seaching", v))
+			panic(fmt.Errorf("Not support parent type %T in pointer searching", v))
 		}
 	}
 	defer func() {
@@ -516,7 +516,7 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 			case *ast.MemberExpr:
 				v.Type = typesParentBefore[i]
 			default:
-				panic(fmt.Errorf("Not support parent type %T in pointer seaching", v))
+				panic(fmt.Errorf("Not support parent type %T in pointer searching", v))
 			}
 		}
 	}()
