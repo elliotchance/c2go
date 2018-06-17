@@ -206,8 +206,8 @@ func pointerArithmetic(p *program.Program,
 			err = fmt.Errorf("Cannot transpile pointerArithmetic. err = %v", err)
 		}
 	}()
-	if !types.IsCInteger(p, rightType) {
-		err = fmt.Errorf("right type is not C integer type : '%s'", rightType)
+	right, err = types.CastExpr(p, right, rightType, "int")
+	if err != nil {
 		return
 	}
 	if !types.IsPointer(p, leftType) {
