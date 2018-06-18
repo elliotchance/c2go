@@ -926,11 +926,6 @@ func atomicOperation(n ast.Node, p *program.Program) (
 			postStmts = nil
 
 			var returnValue goast.Expr = util.NewIdent(varName)
-			if types.IsPointer(p, decl.Type) && !types.IsPointer(p, v.Type) {
-				returnValue = &goast.StarExpr{
-					X: returnValue,
-				}
-			}
 
 			expr = util.NewAnonymousFunction(body,
 				nil,
