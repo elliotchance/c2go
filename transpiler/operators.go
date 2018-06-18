@@ -272,6 +272,7 @@ func main(){
 	// Create the AST by parsing src.
 	fset := token.NewFileSet() // positions are relative to fset
 	body := strings.Replace(source.String(), "&#43;", "+", -1)
+	body = strings.Replace(body, "&#34;", "\"", -1)
 	body = strings.Replace(body, "&#39;", "'", -1)
 	body = strings.Replace(body, "&amp;", "&", -1)
 	body = strings.Replace(body, "&lt;", "<", -1)
