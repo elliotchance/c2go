@@ -308,7 +308,7 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 
 	if strings.HasPrefix(fromType, "[]") && strings.HasPrefix(toType, "*") &&
 		fromType[2:] == toType[1:] {
-		match := util.GetRegex(`\[(\d+)\]$`).FindStringSubmatch(cFromType)
+		match := util.GetRegex(`\[(\d*)\]$`).FindStringSubmatch(cFromType)
 		if strings.HasSuffix(cToType, "*") && len(match) > 0 {
 			// we need to convert from array to pointer
 			return &goast.UnaryExpr{
