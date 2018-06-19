@@ -555,7 +555,12 @@ func transpilePointerArith(n *ast.UnaryOperator, p *program.Program) (
 		ident = util.NewIdent(v.Name)
 		isConst, indexInt := util.EvaluateConstExpr(e)
 		if isConst && indexInt == 0 {
-			// nop
+			if strings.HasSuffix(v.Type, "]") {
+				return &goast.IndexExpr{
+					X:     ident,
+					Index: util.NewIntLit(0),
+				}, eType, preStmts, postStmts, err
+			}
 		} else if isConst && indexInt < 0 {
 			indexInt = -indexInt
 			ident, _, newPre, newPost, err =
