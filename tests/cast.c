@@ -153,11 +153,30 @@ void test_voidcast()
     is_eq(2, arr2[0].b);
     is_eq(3, arr2[1].a);
     is_eq(4, arr2[1].b);
+
+    pcre_uchar **stringlist;
+    y = &x;
+    void * py = &y;
+    stringlist = (pcre_uchar **)(py);
+    is_eq(**((x_uint **)py), 42);
+    is_eq(**stringlist, 42);
+
+    *((const char **)py) = NULL;
+    is_eq(x, 42);
+    is_true(y == NULL);
+    y = &x;
+    *((const pcre_uint8 **)py) = NULL;
+    is_eq(x, 42);
+    is_true(y == NULL);
+    y = &x;
+    *((const pcre_uchar **)py) = NULL;
+    is_eq(x, 42);
+    is_true(y == NULL);
 }
 
 int main()
 {
-    plan(44);
+    plan(52);
 
     START_TEST(cast);
     START_TEST(castbool);
