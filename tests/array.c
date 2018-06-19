@@ -249,7 +249,9 @@ void test_pointer_minus_pointer()
 }
 
 typedef unsigned char pcre_uchar;
+typedef unsigned char pcre_uint8;
 typedef unsigned short pcre_uint16;
+typedef unsigned int pcre_uint32;
 
 #define PT_ANY        0    /* Any property - matches all chars */
 #define PT_SC         4    /* Script (e.g. Han) */
@@ -303,11 +305,23 @@ void test_arr_to_pointer() {
     is_true(comp("Arabic", 2) != 0);
     is_true(comp("Armenian", 2) == 0);
     is_true(comp("Armenian", 1) != 0);
+    pcre_uint32 copynames[1024];
+    pcre_uint8 *copynames8 = (pcre_uint8 *)copynames;
+    *copynames8 = 42;
+    is_eq(copynames[0], 42);
+    *copynames = 0;
+    is_eq(copynames[0], 0);
+    pcre_uint32 c = 0;
+    pcre_uchar buffer[8];
+    buffer[0] = 7;
+    is_eq(c, 0);
+    c = *buffer;
+    is_eq(c, 7);
 }
 
 int main()
 {
-    plan(158);
+    plan(162);
 
     START_TEST(intarr);
     START_TEST(doublearr);
