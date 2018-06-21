@@ -646,3 +646,25 @@ func GetBaseType(s string) string {
 	}
 	return s
 }
+
+// goIntegerType - slice of Go integer type
+var goIntegerType = []string{
+	"int8",
+	"int16",
+	"int32",
+	"int64",
+	"uint8",
+	"uint16",
+	"uint32",
+	"uint64",
+}
+
+// IsGoIntegerType - return whether the given Go type is an integer type
+func IsGoIntegerType(s string) bool {
+	for _, i := range goIntegerType {
+		if i == s {
+			return true
+		}
+	}
+	return false
+}
