@@ -172,6 +172,8 @@ func Parse(fullline string) Node {
 		return parseMemberExpr(line)
 	case "ModeAttr":
 		return parseModeAttr(line)
+	case "NoAliasAttr":
+		return parseNoAliasAttr(line)
 	case "NoInlineAttr":
 		return parseNoInlineAttr(line)
 	case "NoThrowAttr":
