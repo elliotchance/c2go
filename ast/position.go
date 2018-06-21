@@ -249,6 +249,8 @@ func setPosition(node Node, position Position) {
 		n.Pos = position
 	case *BreakStmt:
 		n.Pos = position
+	case *C11NoReturnAttr:
+		n.Pos = position
 	case *CallExpr:
 		n.Pos = position
 	case *CaseStmt:
