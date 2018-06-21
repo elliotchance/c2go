@@ -113,7 +113,7 @@ func NewPositionFromString(s string) Position {
 	}
 
 	// This must be below all of the others.
-	re = util.GetRegex(`^([^:]+):(\d+):(\d+), col:(\d+)$`)
+	re = util.GetRegex(`^((?:[a-zA-Z]\:)?[^:]+):(\d+):(\d+), col:(\d+)$`)
 	if groups := re.FindStringSubmatch(s); len(groups) > 0 {
 		return Position{
 			StringValue: s,
@@ -124,7 +124,7 @@ func NewPositionFromString(s string) Position {
 		}
 	}
 
-	re = util.GetRegex(`^([^:]+):(\d+):(\d+), line:(\d+):(\d+)$`)
+	re = util.GetRegex(`^((?:[a-zA-Z]\:)?[^:]+):(\d+):(\d+), line:(\d+):(\d+)$`)
 	if groups := re.FindStringSubmatch(s); len(groups) > 0 {
 		return Position{
 			StringValue: s,
@@ -136,7 +136,7 @@ func NewPositionFromString(s string) Position {
 		}
 	}
 
-	re = util.GetRegex(`^([^:]+):(\d+):(\d+)$`)
+	re = util.GetRegex(`^((?:[a-zA-Z]\:)?[^:]+):(\d+):(\d+)$`)
 	if groups := re.FindStringSubmatch(s); len(groups) > 0 {
 		return Position{
 			StringValue: s,
@@ -146,7 +146,7 @@ func NewPositionFromString(s string) Position {
 		}
 	}
 
-	re = util.GetRegex(`^([^:]+):(\d+):(\d+)$`)
+	re = util.GetRegex(`^((?:[a-zA-Z]\:)?[^:]+):(\d+):(\d+)$`)
 	if groups := re.FindStringSubmatch(s); len(groups) > 0 {
 		return Position{
 			StringValue: s,
@@ -156,7 +156,7 @@ func NewPositionFromString(s string) Position {
 		}
 	}
 
-	re = util.GetRegex(`^col:(\d+), ([^:]+):(\d+):(\d+)$`)
+	re = util.GetRegex(`^col:(\d+), ((?:[a-zA-Z]\:)?[^:]+):(\d+):(\d+)$`)
 	if groups := re.FindStringSubmatch(s); len(groups) > 0 {
 		return Position{
 			StringValue: s,
@@ -164,7 +164,7 @@ func NewPositionFromString(s string) Position {
 		}
 	}
 
-	re = util.GetRegex(`^([^:]+):(\d+):(\d+), ([^:]+):(\d+):(\d+)$`)
+	re = util.GetRegex(`^((?:[a-zA-Z]\:)?[^:]+):(\d+):(\d+), ((?:[a-zA-Z]\:)?[^:]+):(\d+):(\d+)$`)
 	if groups := re.FindStringSubmatch(s); len(groups) > 0 {
 		return Position{
 			StringValue: s,
