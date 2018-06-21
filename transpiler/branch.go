@@ -9,12 +9,13 @@ import (
 	"fmt"
 	"go/token"
 
+	goast "go/ast"
+
 	"github.com/elliotchance/c2go/ast"
 	"github.com/elliotchance/c2go/program"
 	"github.com/elliotchance/c2go/types"
 	"github.com/elliotchance/c2go/util"
-
-	goast "go/ast"
+	"golang.org/x/tools/go/ast/astutil"
 )
 
 func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
@@ -519,7 +520,7 @@ func transpileWhileStmt(n *ast.WhileStmt, p *program.Program) (
 //    |     | `-BreakStmt 0x3bb1d80 <line:16:4>
 //    |     `-<<<NULL>>>
 func transpileDoStmt(n *ast.DoStmt, p *program.Program) (
-	goast.Stmt, []goast.Stmt, []goast.Stmt, error) {
+	f goast.Stmt, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 	var forOperator ast.ForStmt
 	forOperator.AddChild(nil)
 	forOperator.AddChild(nil)
@@ -536,7 +537,124 @@ func transpileDoStmt(n *ast.DoStmt, p *program.Program) (
 	ifBreak := createIfWithNotConditionAndBreak(n.Children()[1])
 	c.AddChild(&ifBreak)
 	forOperator.AddChild(c)
-	return transpileForStmt(&forOperator, p)
+	f, preStmts, postStmts, err = transpileForStmt(&forOperator, p)
+
+	if hasContinueStmt(f) {
+		adaptContinueStmt(f, p)
+	}
+	return
+}
+
+type continueDetector struct {
+	level       int
+	forLevel    []int
+	hasContinue bool
+}
+
+func (c *continueDetector) Visit(node goast.Node) goast.Visitor {
+	if node == nil {
+		if len(c.forLevel) > 0 && c.level == c.forLevel[len(c.forLevel)-1] {
+			// we are exiting a for loop
+			c.forLevel = c.forLevel[:len(c.forLevel)-1]
+		}
+		c.level--
+		return nil
+	}
+	c.level++
+	switch n := node.(type) {
+	case *goast.ForStmt:
+		if len(c.forLevel) > 0 {
+			// Do not look for continue within an inner for loop
+			c.level--
+			return nil
+		}
+		// we have found the outer for loop
+		c.forLevel = append(c.forLevel, c.level)
+	case *goast.RangeStmt:
+		// Do not look for continue within the children of this AST node type,
+		// since a continue would refer to it and not the outer for loop.
+		c.level--
+		return nil
+	case *goast.BranchStmt:
+		// only look for continue within the outer for loop
+		if n.Tok == token.CONTINUE && len(c.forLevel) > 0 {
+			c.hasContinue = true
+		}
+	}
+	return c
+}
+
+func hasContinueStmt(e goast.Stmt) bool {
+	var c continueDetector
+	goast.Walk(&c, e)
+	return c.hasContinue
+}
+
+func adaptContinueStmt(e goast.Stmt, p *program.Program) {
+	var (
+		level                int
+		forLevel             []int
+		beforeConditionLabel string
+	)
+	funcTransformBreak := func(cursor *astutil.Cursor) bool {
+		level++
+		node := cursor.Node()
+		switch n := node.(type) {
+		case *goast.BranchStmt:
+			// only replace continue within the outer for loop
+			if n.Tok == token.CONTINUE && len(forLevel) > 0 {
+				if beforeConditionLabel == "" {
+					panic("Before condition label not set")
+				}
+				cursor.Replace(&goast.BranchStmt{
+					Label: util.NewIdent(beforeConditionLabel),
+					Tok:   token.GOTO,
+				})
+			}
+		case *goast.ForStmt:
+			if len(forLevel) > 0 {
+				// Do not look for continue within an inner for loop
+				level--
+				return false
+			}
+			// we have found the outer for loop
+			forLevel = append(forLevel, level)
+			beforeConditionLabel = setConditionLabel(n, p)
+			return true
+		case *goast.RangeStmt:
+			// Do not look for continue within the children of this AST node type,
+			// since a continue would refer to it and not the outer for loop.
+			level--
+			return false
+		}
+		return true
+	}
+	postFunc := func(cursor *astutil.Cursor) bool {
+		if len(forLevel) > 0 && level == forLevel[len(forLevel)-1] {
+			// we are exiting a for loop
+			forLevel = forLevel[:len(forLevel)-1]
+		}
+		level--
+		return true
+	}
+	// Replace continue's with goto doWhileCondLabel
+	astutil.Apply(e, funcTransformBreak, postFunc)
+}
+
+func setConditionLabel(f *goast.ForStmt, p *program.Program) (label string) {
+	if f.Body == nil || len(f.Body.List) == 0 {
+		return ""
+	}
+	lastStmt := f.Body.List[len(f.Body.List)-1]
+	if _, ok := lastStmt.(*goast.IfStmt); ok {
+		doWhileCondLabel := p.GetNextIdentifier("DO_WHILE_COND_LABEL_")
+		f.Body.List[len(f.Body.List)-1] = &goast.LabeledStmt{
+			Label: util.NewIdent(doWhileCondLabel),
+			Stmt:  lastStmt,
+		}
+		return doWhileCondLabel
+	}
+	return ""
 }
 
 // createIfWithNotConditionAndBreak - create operator IF like on next example

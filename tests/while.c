@@ -6,7 +6,7 @@ typedef float **triangle;
 
 int main()
 {
-    plan(8);
+    plan(15);
 
     int value = 1;
 
@@ -51,6 +51,47 @@ int main()
 		}
 	}while(*ok);
 	is_eq(*ok, 0);
+	is_eq(iterator, 2);
+	*ok = 1;
+    iterator = 0;
+    do{
+        iterator ++;
+        if (iterator >10){
+            break;
+        }
+    }while(*ok);
+    is_eq(*ok, 1);
+    is_eq(iterator, 11);
+    iterator = 0;
+    do{
+        iterator ++;
+        *ok = 0;
+        if (iterator >10){
+            fail("execution should not reach here");
+            break;
+        }
+        continue;
+        fail("execution should not reach here");
+    }while(*ok);
+    is_eq(*ok, 0);
+    is_eq(iterator, 1);
+    iterator = 0;
+    do{
+        iterator ++;
+        *ok = 0;
+        for (int i=0; i<5; i++) {
+            iterator ++;
+            continue; // this will only continue the inner loop
+        }
+        if (iterator >10){
+            fail("execution should not reach here");
+            break;
+        }
+        continue;
+        fail("execution should not reach here");
+    }while(*ok);
+    is_eq(*ok, 0);
+    is_eq(iterator, 6);
 	}
 
 	diag("while with --");
