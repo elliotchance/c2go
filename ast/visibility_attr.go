@@ -7,6 +7,7 @@ type VisibilityAttr struct {
 	ChildNodes  []Node
 	IsDefault   bool
 	IsInherited bool
+	IsHidden    bool
 }
 
 func parseVisibilityAttr(line string) *VisibilityAttr {
@@ -14,6 +15,7 @@ func parseVisibilityAttr(line string) *VisibilityAttr {
 		`<(?P<position>.*)>
 		(?P<inherited> Inherited)?
 		(?P<default> Default)?
+		(?P<hidden> Hidden)?
 		`,
 		line,
 	)
@@ -24,6 +26,7 @@ func parseVisibilityAttr(line string) *VisibilityAttr {
 		ChildNodes:  []Node{},
 		IsDefault:   len(groups["default"]) > 0,
 		IsInherited: len(groups["inherited"]) > 0,
+		IsHidden:    len(groups["hidden"]) > 0,
 	}
 }
 

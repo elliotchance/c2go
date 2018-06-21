@@ -12,6 +12,7 @@ func TestVisibilityAttr(t *testing.T) {
 			ChildNodes:  []Node{},
 			IsInherited: false,
 			IsDefault:   true,
+			IsHidden:    false,
 		},
 		`0x7f8e7b00bb80 </cmark/src/cmark.h:497:16, col:36> Inherited Default`: &VisibilityAttr{
 			Addr:        0x7f8e7b00bb80,
@@ -19,6 +20,15 @@ func TestVisibilityAttr(t *testing.T) {
 			ChildNodes:  []Node{},
 			IsInherited: true,
 			IsDefault:   true,
+			IsHidden:    false,
+		},
+		`0x55ab30581650 <line:24:16, col:35> Hidden`: &VisibilityAttr{
+			Addr:        0x55ab30581650,
+			Pos:         NewPositionFromString("line:24:16, col:35"),
+			ChildNodes:  []Node{},
+			IsInherited: false,
+			IsDefault:   false,
+			IsHidden:    true,
 		},
 	}
 
