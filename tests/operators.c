@@ -45,10 +45,12 @@ typedef unsigned char pcre_uint8;
 typedef unsigned char pcre_uchar;
 #define UCHAR21INCTEST(eptr) (*(eptr)++)
 #define PCRE_PUCHAR const pcre_uchar *
+#define PREP_A 0x0002
+#define PREP_B 0x0010
 
 int main()
 {
-	plan(139);
+	plan(140);
 
     int i = 10;
     signed char j = 1;
@@ -496,6 +498,12 @@ int main()
         is_eq(*p2, 'z');
         is_eq(pp, 'z');
         is_eq(pp2, 'b');
+    }
+    diag("Test complement");
+    {
+        unsigned long int flags = 32;
+        flags &= ~(PREP_A|PREP_B);
+        is_eq(flags, 32);
     }
 
 	done_testing();

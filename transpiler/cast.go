@@ -87,11 +87,15 @@ func swapCastAndComplement(n *ast.ImplicitCastExpr, p *program.Program, exprIsSt
 	postStmts []goast.Stmt,
 	err error) {
 	uo := n.Children()[0].(*ast.UnaryOperator)
+	copyUnary := &ast.UnaryOperator{}
+	copyImplicit := &ast.ImplicitCastExpr{}
+	*copyUnary = *uo
+	*copyImplicit = *n
 	unaryChildren := uo.ChildNodes
-	uo.ChildNodes = []ast.Node{n}
-	uo.Type = n.Type
-	n.ChildNodes = unaryChildren
-	return transpileToExpr(uo, p, exprIsStmt)
+	copyUnary.ChildNodes = []ast.Node{copyImplicit}
+	copyUnary.Type = copyImplicit.Type
+	copyImplicit.ChildNodes = unaryChildren
+	return transpileToExpr(copyUnary, p, exprIsStmt)
 }
 
 func transpileCStyleCastExpr(n *ast.CStyleCastExpr, p *program.Program, exprIsStmt bool) (
