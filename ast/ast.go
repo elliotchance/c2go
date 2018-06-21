@@ -72,6 +72,8 @@ func Parse(fullline string) Node {
 		return parseBreakStmt(line)
 	case "BuiltinType":
 		return parseBuiltinType(line)
+	case "C11NoReturnAttr":
+		return parseC11NoReturnAttr(line)
 	case "CallExpr":
 		return parseCallExpr(line)
 	case "CaseStmt":
