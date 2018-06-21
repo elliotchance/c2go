@@ -13,7 +13,7 @@
     test_##t();
 
 // size of that file
-int filesize = 12274;
+int filesize = 12848;
 
 void test_putchar()
 {
@@ -166,7 +166,27 @@ void test_fflush()
     fputs("test", pFile);
     fflush(pFile); // flushing or repositioning required
     fgets(mybuffer, 80, pFile);
+    is_streq(mybuffer, "");
     fclose(pFile);
+
+    // check correct value written to file
+    pFile = fopen("/tmp/example.txt", "r");
+    is_not_null(pFile) or_return();
+    fgets(mybuffer, 80, pFile);
+    is_streq(mybuffer, "test");
+    fclose(pFile);
+
+    // check that fopen with w flag truncates the file
+    pFile = fopen("/tmp/example.txt", "w");
+    is_not_null(pFile) or_return();
+    fputs(".", pFile);
+    fclose(pFile);
+    pFile = fopen("/tmp/example.txt", "r");
+    is_not_null(pFile) or_return();
+    fgets(mybuffer, 80, pFile);
+    is_streq(mybuffer, ".");
+    fclose(pFile);
+
     // remove temp file
     is_eq(remove("/tmp/example.txt"),0)
 }
@@ -595,7 +615,7 @@ void test_eof()
 
 int main()
 {
-    plan(85);
+    plan(91);
 
     START_TEST(putchar)
     START_TEST(puts)
