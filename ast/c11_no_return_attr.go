@@ -1,7 +1,7 @@
 package ast
 
-// C11NoReturnAttr is a type of attribute that is optionally attached to a variable
-// or struct field definition.
+// C11NoReturnAttr is a type of attribute that is optionally attached to a function
+// with return type void.
 type C11NoReturnAttr struct {
 	Addr       Address
 	Pos        Position
