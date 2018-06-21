@@ -306,8 +306,8 @@ void test_arr_to_pointer() {
     is_true(comp("Armenian", 2) == 0);
     is_true(comp("Armenian", 1) != 0);
     pcre_uint32 copynames[1024];
-    pcre_uint8 *copynames8 = (pcre_uint8 *)copynames;
-    *copynames8 = 42;
+    pcre_uint32 *copynames32 = (pcre_uint32 *)copynames;
+    *copynames32 = 42;
     is_eq(copynames[0], 42);
     *copynames = 0;
     is_eq(copynames[0], 0);
