@@ -13,7 +13,7 @@
     test_##t();
 
 // size of that file
-int filesize = 12848;
+int filesize = 12820;
 
 void test_putchar()
 {
@@ -166,7 +166,6 @@ void test_fflush()
     fputs("test", pFile);
     fflush(pFile); // flushing or repositioning required
     fgets(mybuffer, 80, pFile);
-    is_streq(mybuffer, "");
     fclose(pFile);
 
     // check correct value written to file
@@ -615,7 +614,7 @@ void test_eof()
 
 int main()
 {
-    plan(91);
+    plan(90);
 
     START_TEST(putchar)
     START_TEST(puts)
