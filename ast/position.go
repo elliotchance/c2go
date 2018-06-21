@@ -333,6 +333,8 @@ func setPosition(node Node, position Position) {
 		n.Pos = position
 	case *ModeAttr:
 		n.Pos = position
+	case *NoAliasAttr:
+		n.Pos = position
 	case *NoInlineAttr:
 		n.Pos = position
 	case *NoThrowAttr:
