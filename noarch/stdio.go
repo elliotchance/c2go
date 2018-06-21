@@ -66,19 +66,21 @@ func Fopen(filePath, mode []byte) *File {
 	var err error
 
 	sFilePath := CStringToString(filePath)
+	var fileExists bool
+	var info os.FileInfo
+	info, err = os.Stat(sFilePath)
+	if info != nil || !os.IsNotExist(err) {
+		fileExists = true
+	}
 
 	m := CStringToString(mode)
 	// no-overwrite flag
 	if strings.Contains(m, "x") {
 		m = strings.Replace(m, "x", "", -1)
-		if strings.Contains(m, "w") {
+		if strings.Contains(m, "w") && fileExists {
 			// only applies when writing to a file
-			var info os.FileInfo
-			info, err = os.Stat(sFilePath)
-			if info != nil || !os.IsNotExist(err) {
-				setCurrentErrno(EEXIST)
-				return nil
-			}
+			setCurrentErrno(EEXIST)
+			return nil
 		}
 	}
 	// binary flag
@@ -100,8 +102,14 @@ func Fopen(filePath, mode []byte) *File {
 		file, err = os.OpenFile(sFilePath, os.O_RDWR|os.O_APPEND, 0655)
 	case "w":
 		file, err = os.OpenFile(sFilePath, os.O_RDWR|os.O_CREATE, 0655)
+		if err == nil && fileExists {
+			err = file.Truncate(0)
+		}
 	case "w+":
 		file, err = os.OpenFile(sFilePath, os.O_RDWR|os.O_CREATE, 0655)
+		if err == nil && fileExists {
+			err = file.Truncate(0)
+		}
 	default:
 		panic(fmt.Sprintf("unsupported file mode: %s", mode))
 	}
