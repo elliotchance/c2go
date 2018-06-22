@@ -322,9 +322,6 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 		// Pointers are always converted into slices, except with some specific
 		// entities that are shared in the Go libraries.
 		prefix := "*"
-		//if !strings.Contains(t, "noarch.") {
-		//	prefix = "[]"
-		//}
 
 		return prefix + t, err
 	}
