@@ -5,4 +5,4 @@ package program
 //     c2go -v
 //
 // See https://github.com/elliotchance/c2go/wiki/Release-Process
-const Version = "v0.24.7 Caesium 2018-06-21"
+const Version = "v0.24.8 Caesium 2018-06-25"
