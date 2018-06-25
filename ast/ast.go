@@ -62,6 +62,8 @@ func Parse(fullline string) Node {
 		return parseArraySubscriptExpr(line)
 	case "AsmLabelAttr":
 		return parseAsmLabelAttr(line)
+	case "AttributedType":
+		return parseAttributedType(line)
 	case "AvailabilityAttr":
 		return parseAvailabilityAttr(line)
 	case "BinaryOperator":
