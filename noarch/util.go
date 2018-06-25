@@ -8,48 +8,45 @@ import (
 
 // CStringToString returns a string that contains all the bytes in the
 // provided C string up until the first NULL character.
-func CStringToString(s []byte) string {
+func CStringToString(s *byte) string {
 	if s == nil {
 		return ""
 	}
 
 	end := -1
-	for i, b := range s {
-		if b == 0 {
+	for i := 0; ; i++ {
+		if *(*byte)(unsafe.Pointer(uintptr(unsafe.Pointer(s)) + uintptr(i))) == 0 {
 			end = i
 			break
 		}
 	}
 
 	if end == -1 {
-		end = len(s)
+		return ""
 	}
 
-	newSlice := make([]byte, end)
-	copy(newSlice, s)
-
-	return string(newSlice)
+	return string(toByteSlice(s, int32(end)))
 }
 
 // StringToCString returns the C string (also known as a null terminated string)
 // to be as used as a string in C.
-func StringToCString(s string) []byte {
+func StringToCString(s string) *byte {
 	cString := make([]byte, len(s)+1)
 	copy(cString, []byte(s))
 	cString[len(s)] = 0
 
-	return cString
+	return &cString[0]
 }
 
 // CStringIsNull will test if a C string is NULL. This is equivalent to:
 //
 //    s == NULL
-func CStringIsNull(s []byte) bool {
-	if s == nil || len(s) < 1 {
+func CStringIsNull(s *byte) bool {
+	if s == nil {
 		return true
 	}
 
-	return s[0] == 0
+	return *s == 0
 }
 
 // CPointerToGoPointer converts a C-style pointer into a Go-style pointer.
@@ -63,6 +60,16 @@ func CPointerToGoPointer(a interface{}) interface{} {
 	t := reflect.TypeOf(a).Elem()
 
 	return reflect.New(t).Elem().Addr().Interface()
+}
+
+// toByteSlice returns a byte slice to a with the given length.
+func toByteSlice(a *byte, length int32) []byte {
+	header := reflect.SliceHeader{
+		uintptr(unsafe.Pointer(a)),
+		int(length),
+		int(length),
+	}
+	return (*(*[]byte)(unsafe.Pointer(&header)))[:]
 }
 
 // GoPointerToCPointer does the opposite of CPointerToGoPointer.
@@ -143,4 +150,39 @@ func (s *Safe) Set(value interface{}) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	s.value = value
+}
+
+var (
+	interfaceMgmt map[reflect.Value]*InterfaceWrapper
+	interfaceSync sync.Mutex
+)
+
+func init() {
+	interfaceMgmt = make(map[reflect.Value]*InterfaceWrapper)
+}
+
+// InterfaceWrapper is used for those case where we cannot use unsafe.Pointer
+// the default catch all data type for c2go.
+// For the moment this is the case for function pointers.
+type InterfaceWrapper struct {
+	X interface{}
+}
+
+// CastInterfaceToPointer will take an interface and store it in a map by its reflect.Value
+// the unsafe.Pointer to its containing InterfaceWrapper is returned.
+// Since no element is ever removed from the map this should only be used for a limited amount
+// of elements, like function pointers.
+func CastInterfaceToPointer(in interface{}) unsafe.Pointer {
+	interfaceSync.Lock()
+	defer interfaceSync.Unlock()
+	val := reflect.ValueOf(in)
+	if iw, ok := interfaceMgmt[val]; ok {
+		return unsafe.Pointer(iw)
+	} else {
+		iw := &InterfaceWrapper{
+			X: in,
+		}
+		interfaceMgmt[val] = iw
+		return unsafe.Pointer(iw)
+	}
 }

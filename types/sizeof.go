@@ -72,7 +72,7 @@ func SizeOf(p *program.Program, cType string) (size int, err error) {
 
 		// The size of a struct is rounded up to fit the size of the pointer of
 		// the OS.
-		if totalBytes%pointerSize != 0 {
+		if totalBytes < 32 && totalBytes%pointerSize != 0 {
 			totalBytes += pointerSize - (totalBytes % pointerSize)
 		}
 
@@ -111,7 +111,7 @@ func SizeOf(p *program.Program, cType string) (size int, err error) {
 
 		// The size of an union is rounded up to fit the size of the pointer of
 		// the OS.
-		if byteCount%pointerSize != 0 {
+		if byteCount < 32 && byteCount%pointerSize != 0 {
 			byteCount += pointerSize - (byteCount % pointerSize)
 		}
 

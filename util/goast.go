@@ -118,8 +118,14 @@ func NewCallExpr(functionName string, args ...goast.Expr) *goast.CallExpr {
 	for i := range args {
 		PanicIfNil(args[i], "Argument of function is cannot be nil")
 	}
+	fun := typeToExpr(functionName)
+	if strings.HasPrefix(functionName, "*") {
+		fun = &goast.ParenExpr{
+			X: fun,
+		}
+	}
 	return &goast.CallExpr{
-		Fun:  typeToExpr(functionName),
+		Fun:  fun,
 		Args: args,
 	}
 }
@@ -325,81 +331,31 @@ func ConvertFunctionNameFromCtoGo(name string) string {
 	return name
 }
 
-// GetUintptrForSlice - return uintptr for slice
-// Example : uint64(uintptr(unsafe.Pointer((*(**int)(unsafe.Pointer(& ...slice... )))))))
-func GetUintptrForSlice(expr goast.Expr) (goast.Expr, string) {
-	returnType := "long long"
-
-	var unsafePointer goast.Expr
-	if IsAddressable(expr) {
-		unsafePointer = NewCallExpr("unsafe.Pointer", &goast.UnaryExpr{
-			Op: token.AND,
-			X:  expr,
-		})
-	} else {
-		// pointer to a tempVar, but since we directly dereference, we are good
-		unsafePointer = ToUnsafePointer(expr)
-	}
-	return &goast.CallExpr{
-		Fun:    goast.NewIdent("int64"),
-		Lparen: 1,
-		Args: []goast.Expr{&goast.CallExpr{
-			Fun:    goast.NewIdent("uintptr"),
-			Lparen: 1,
-			Args: []goast.Expr{&goast.CallExpr{
-				Fun: &goast.SelectorExpr{
-					X:   goast.NewIdent("unsafe"),
-					Sel: goast.NewIdent("Pointer"),
-				},
-				Lparen: 1,
-				Args: []goast.Expr{&goast.StarExpr{
-					Star: 1,
-					X: &goast.CallExpr{
-						Fun: &goast.ParenExpr{
-							Lparen: 1,
-							X: &goast.StarExpr{
-								Star: 1,
-								X: &goast.StarExpr{
-									Star: 1,
-									X:    goast.NewIdent("int"),
-								},
-							},
-						},
-						Lparen: 1,
-						Args:   []goast.Expr{unsafePointer},
-					},
-				}},
-			}},
-		}},
-	}, returnType
-}
-
-// CreateSliceFromReference - create a slice, like :
-// (*[1]int)(unsafe.Pointer(&a))[:]
-func CreateSliceFromReference(goType string, expr goast.Expr) *goast.SliceExpr {
+// CreatePointerFromReference - create a pointer, like :
+// (*int)(unsafe.Pointer(&a))
+func CreatePointerFromReference(goType string, expr goast.Expr) (e goast.Expr) {
 	// If the Go type is blank it means that the C type is 'void'.
 	if goType == "" {
-		goType = "interface{}"
+		goType = "unsafe.Pointer"
 	}
 
-	// This is a hack to convert a reference to a variable into a slice that
-	// points to the same location. It will look similar to:
-	//
-	//     (*[1]int)(unsafe.Pointer(&a))[:]
-	//
-	// You must always call this Go before using CreateSliceFromReference:
+	// You must always call this Go before using CreatePointerFromReference:
 	//
 	//     p.AddImport("unsafe")
 	//
-	return &goast.SliceExpr{
-		X: NewCallExpr(
-			fmt.Sprintf("(*[1]%s)", goType),
-			NewCallExpr("unsafe.Pointer", &goast.UnaryExpr{
-				X:  expr,
-				Op: token.AND,
-			}),
-		),
+	e = NewCallExpr("unsafe.Pointer", &goast.UnaryExpr{
+		X:  expr,
+		Op: token.AND,
+	})
+	if goType != "unsafe.Pointer" {
+		e = &goast.CallExpr{
+			Fun: &goast.ParenExpr{
+				X: NewTypeIdent(goType),
+			},
+			Args: []goast.Expr{expr},
+		}
 	}
+	return
 }
 
 // CreateUnlimitedSliceFromReference - create a slice, like :
@@ -517,22 +473,4 @@ func IsAddressable(expr goast.Expr) bool {
 		return IsAddressable(pe.X)
 	}
 	return false
-}
-
-// ToUnsafePointer returns an unsafe Pointer to a temporary Variable to which the
-// given expr is assigned.
-func ToUnsafePointer(expr goast.Expr) goast.Expr {
-	var body []goast.Stmt
-	varName := "tempVar"
-
-	body = append(body, &goast.AssignStmt{
-		Lhs: []goast.Expr{NewIdent(varName)},
-		Tok: token.DEFINE,
-		Rhs: []goast.Expr{expr},
-	})
-	returnValue := NewCallExpr("unsafe.Pointer", &goast.UnaryExpr{
-		X:  NewIdent(varName),
-		Op: token.AND,
-	})
-	return NewAnonymousFunction(body, nil, returnValue, "unsafe.Pointer")
 }

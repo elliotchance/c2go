@@ -8,6 +8,8 @@ import (
 
 	"github.com/elliotchance/c2go/util"
 	"math/rand"
+	"sync"
+	"unsafe"
 )
 
 // DivT is the representation of "div_t". It is used by div().
@@ -78,7 +80,7 @@ func Abs(n int32) int32 {
 // valid floating-point number as just defined, or if no such sequence exists
 // because either str is empty or contains only whitespace characters, no
 // conversion is performed and the function returns 0.0.
-func Atof(str []byte) float64 {
+func Atof(str *byte) float64 {
 	f, _ := atof(str)
 
 	return f
@@ -100,7 +102,7 @@ func Atof(str []byte) float64 {
 // integral number, or if no such sequence exists because either str is empty or
 // it contains only whitespace characters, no conversion is performed and zero
 // is returned.
-func Atoi(str []byte) int32 {
+func Atoi(str *byte) int32 {
 	return int32(Atol(str))
 }
 
@@ -120,7 +122,7 @@ func Atoi(str []byte) int32 {
 // integral number, or if no such sequence exists because either str is empty or
 // it contains only whitespace characters, no conversion is performed and zero
 // is returned.
-func Atol(str []byte) int32 {
+func Atol(str *byte) int32 {
 	return int32(Atoll(str))
 }
 
@@ -130,13 +132,13 @@ func Atol(str []byte) int32 {
 // This function operates like atol to interpret the string, but produces
 // numbers of type long long int (see atol for details on the interpretation
 // process).
-func Atoll(str []byte) int64 {
+func Atoll(str *byte) int64 {
 	x, _ := atoll(str, 10)
 
 	return x
 }
 
-func atoll(str []byte, radix int32) (int64, int) {
+func atoll(str *byte, radix int32) (int64, int) {
 	// First start by removing any trailing whitespace. We need to record how
 	// much whitespace is trimmed off for the correct offset later.
 	cStr := CStringToString(str)
@@ -199,7 +201,7 @@ func Exit(exitCode int32) {
 // modified by the program. Some systems and library implementations may allow
 // to change environmental variables with specific functions (putenv,
 // setenv...), but such functionality is non-portable.
-func Getenv(name []byte) []byte {
+func Getenv(name *byte) *byte {
 	key := CStringToString(name)
 
 	if env, found := os.LookupEnv(key); found {
@@ -267,7 +269,7 @@ func Rand() int32 {
 // following a syntax resembling that of floating point literals (see below),
 // and interprets them as a numerical value. A pointer to the rest of the string
 // after the last valid character is stored in the object pointed by endptr.
-func Strtod(str []byte, endptr [][]byte) float64 {
+func Strtod(str *byte, endptr **byte) float64 {
 	f, fLen := atof(str)
 
 	// FIXME: This is actually creating new data for the returned pointer,
@@ -275,21 +277,19 @@ func Strtod(str []byte, endptr [][]byte) float64 {
 	// that modify the returned pointer will not be manipulating the original
 	// str.
 	if endptr != nil {
-		end := CPointerToGoPointer(endptr).(*[]byte)
-		*end = str[fLen:]
-		GoPointerToCPointer(end, endptr)
+		*endptr = (*byte)(unsafe.Pointer(uintptr(unsafe.Pointer(str)) + uintptr(fLen)))
 	}
 
 	return f
 }
 
 // Strtof works the same way as Strtod but returns a float.
-func Strtof(str []byte, endptr [][]byte) float32 {
+func Strtof(str *byte, endptr **byte) float32 {
 	return float32(Strtod(str, endptr))
 }
 
 // Strtold works the same way as Strtod but returns a long double.
-func Strtold(str []byte, endptr [][]byte) float64 {
+func Strtold(str *byte, endptr **byte) float64 {
 	return Strtod(str, endptr)
 }
 
@@ -328,12 +328,12 @@ func Strtold(str []byte, endptr [][]byte) float64 {
 //
 // For locales other than the "C" locale, additional subject sequence forms may
 // be accepted.
-func Strtol(str []byte, endptr [][]byte, radix int32) int32 {
+func Strtol(str *byte, endptr **byte, radix int32) int32 {
 	return int32(Strtoll(str, endptr, radix))
 }
 
 // Strtoll works the same way as Strtol but returns a long long.
-func Strtoll(str []byte, endptr [][]byte, radix int32) int64 {
+func Strtoll(str *byte, endptr **byte, radix int32) int64 {
 	x, xLen := atoll(str, radix)
 
 	// FIXME: This is actually creating new data for the returned pointer,
@@ -341,30 +341,54 @@ func Strtoll(str []byte, endptr [][]byte, radix int32) int64 {
 	// that modify the returned pointer will not be manipulating the original
 	// str.
 	if endptr != nil {
-		end := CPointerToGoPointer(endptr).(*[]byte)
-		*end = str[xLen:]
-		GoPointerToCPointer(end, endptr)
+		*endptr = (*byte)(unsafe.Pointer(uintptr(unsafe.Pointer(str)) + uintptr(xLen)))
 	}
 
 	return x
 }
 
 // Strtoul works the same way as Strtol but returns a long unsigned int.
-func Strtoul(str []byte, endptr [][]byte, radix int32) uint32 {
+func Strtoul(str *byte, endptr **byte, radix int32) uint32 {
 	return uint32(Strtoll(str, endptr, radix))
 }
 
 // Strtoull works the same way as Strtol but returns a long long unsigned int.
-func Strtoull(str []byte, endptr [][]byte, radix int32) uint64 {
+func Strtoull(str *byte, endptr **byte, radix int32) uint64 {
 	return uint64(Strtoll(str, endptr, radix))
 }
 
-// Free doesn't do anything since memory is managed by the Go garbage collector.
-// However, I will leave it here as a placeholder for now.
-func Free(anything interface{}) {
+var (
+	memMgmt map[uint64]interface{}
+	memSync sync.Mutex
+)
+
+func init() {
+	memMgmt = make(map[uint64]interface{})
 }
 
-func atof(str []byte) (float64, int32) {
+// Malloc returns a pointer to a memory block of the given length.
+//
+// To prevent the Go garbage collector from collecting this memory,
+// we store the whole block in a map.
+func Malloc(numBytes int32) unsafe.Pointer {
+	memBlock := make([]byte, numBytes)
+	addr := uint64(uintptr(unsafe.Pointer(&memBlock[0])))
+	memSync.Lock()
+	defer memSync.Unlock()
+	memMgmt[addr] = memBlock
+	return unsafe.Pointer(&memBlock[0])
+}
+
+// Free removes the reference to this memory address,
+// so that the Go GC can free it.
+func Free(anything unsafe.Pointer) {
+	addr := uint64(uintptr(anything))
+	memSync.Lock()
+	defer memSync.Unlock()
+	delete(memMgmt, addr)
+}
+
+func atof(str *byte) (float64, int32) {
 	// First start by removing any trailing whitespace. We have to record how
 	// much whitespace is trimmed off to correct for the final length.
 	cStr := CStringToString(str)

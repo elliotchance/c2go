@@ -249,11 +249,79 @@ void test_pointer_minus_pointer()
 }
 
 typedef unsigned char pcre_uchar;
+typedef unsigned char pcre_uint8;
+typedef unsigned short pcre_uint16;
+typedef unsigned int pcre_uint32;
+
+#define PT_ANY        0    /* Any property - matches all chars */
+#define PT_SC         4    /* Script (e.g. Han) */
+
 #define CHAR_B 'b'
+#define STR_A                       "\101"
+#define STR_a                       "\141"
+#define STR_b                       "\142"
+#define STR_c                       "\143"
+#define STR_e                       "\145"
+#define STR_i                       "\151"
+#define STR_m                       "\155"
+#define STR_n                       "\156"
+#define STR_r                       "\162"
+#define STR_y                       "\171"
+
+#define STRING_Any0 STR_A STR_n STR_y "\0"
+#define STRING_Arabic0 STR_A STR_r STR_a STR_b STR_i STR_c "\0"
+#define STRING_Armenian0 STR_A STR_r STR_m STR_e STR_n STR_i STR_a STR_n "\0"
+
+const char _test_utt_names[] =
+  STRING_Any0
+  STRING_Arabic0
+  STRING_Armenian0;
+
+enum {
+  ucp_Arabic,
+  ucp_Armenian,
+};
+
+typedef struct {
+  pcre_uint16 name_offset;
+  pcre_uint16 type;
+  pcre_uint16 value;
+} ucp_type_table;
+
+const ucp_type_table _test_utt[] = {
+  {   0, PT_ANY, 0 },
+  {   4, PT_SC, ucp_Arabic },
+  {  11, PT_SC, ucp_Armenian }
+};
+
+int comp (char* name, int i) {
+    return strcmp(name, _test_utt_names + _test_utt[i].name_offset);
+}
+
+void test_arr_to_pointer() {
+    is_true(comp("Any", 0) == 0);
+    is_true(comp("Any", 1) != 0);
+    is_true(comp("Arabic", 1) == 0);
+    is_true(comp("Arabic", 2) != 0);
+    is_true(comp("Armenian", 2) == 0);
+    is_true(comp("Armenian", 1) != 0);
+    pcre_uint32 copynames[1024];
+    pcre_uint32 *copynames32 = (pcre_uint32 *)copynames;
+    *copynames32 = 42;
+    is_eq(copynames[0], 42);
+    *copynames = 0;
+    is_eq(copynames[0], 0);
+    pcre_uint32 c = 0;
+    pcre_uchar buffer[8];
+    buffer[0] = 7;
+    is_eq(c, 0);
+    c = *buffer;
+    is_eq(c, 7);
+}
 
 int main()
 {
-    plan(152);
+    plan(162);
 
     START_TEST(intarr);
     START_TEST(doublearr);
@@ -720,6 +788,9 @@ int main()
         is_eq(a[-2+1], 'b');
         is_eq(*(a-1), CHAR_B);
     }
+
+    diag("array to pointer");
+    test_arr_to_pointer();
 
     done_testing();
 }

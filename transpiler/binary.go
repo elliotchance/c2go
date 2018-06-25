@@ -224,7 +224,7 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 		return nil, "unknown53", nil, nil, err
 	}
 	var adjustPointerDiff int
-	if types.IsPointer(leftType) && types.IsPointer(rightType) &&
+	if types.IsPointer(p, leftType) && types.IsPointer(p, rightType) &&
 		(operator == token.SUB ||
 			operator == token.LSS || operator == token.GTR ||
 			operator == token.LEQ || operator == token.GEQ) {
@@ -232,14 +232,26 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 		if operator == token.SUB && err == nil && baseSize > 1 {
 			adjustPointerDiff = baseSize
 		}
-		left, leftType = util.GetUintptrForSlice(left)
-		right, rightType = util.GetUintptrForSlice(right)
+		left, leftType, err = GetUintptrForPointer(p, left, leftType)
+		if err != nil {
+			p.AddMessage(p.GenerateWarningMessage(err, n))
+		}
+		right, rightType, err = GetUintptrForPointer(p, right, rightType)
+		if err != nil {
+			p.AddMessage(p.GenerateWarningMessage(err, n))
+		}
 	}
-	if types.IsPointer(leftType) && types.IsPointer(rightType) &&
+	if types.IsPointer(p, leftType) && types.IsPointer(p, rightType) &&
 		(operator == token.EQL || operator == token.NEQ) &&
 		leftType != "NullPointerType *" && rightType != "NullPointerType *" {
-		left, leftType = util.GetUintptrForSlice(left)
-		right, rightType = util.GetUintptrForSlice(right)
+		left, leftType, err = GetUintptrForPointer(p, left, leftType)
+		if err != nil {
+			p.AddMessage(p.GenerateWarningMessage(err, n))
+		}
+		right, rightType, err = GetUintptrForPointer(p, right, rightType)
+		if err != nil {
+			p.AddMessage(p.GenerateWarningMessage(err, n))
+		}
 	}
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
@@ -285,9 +297,9 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 	}
 
 	// pointer arithmetic
-	if types.IsPointer(n.Type) {
+	if types.IsPointer(p, n.Type) {
 		if operator == token.ADD || operator == token.SUB {
-			if types.IsPointer(leftType) {
+			if types.IsPointer(p, leftType) {
 				expr, eType, newPre, newPost, err =
 					pointerArithmetic(p, left, leftType, right, rightType, operator)
 			} else {
@@ -341,24 +353,6 @@ func transpileBinaryOperator(n *ast.BinaryOperator, p *program.Program, exprIsSt
 
 		} else {
 			right, err = types.CastExpr(p, right, rightType, returnType)
-
-			if ue, ok := right.(*goast.UnaryExpr); ok && types.IsDereferenceType(rightType) && ue.Op == token.AND {
-				deref, err := types.GetDereferenceType(rightType)
-
-				if !p.AddMessage(p.GenerateWarningMessage(err, n)) {
-					resolvedDeref, err := types.ResolveType(p, deref)
-
-					// FIXME: I'm not sure how this situation arises.
-					if resolvedDeref == "" {
-						resolvedDeref = "interface{}"
-					}
-
-					if !p.AddMessage(p.GenerateWarningMessage(err, n)) {
-						p.AddImport("unsafe")
-						right = util.CreateSliceFromReference(resolvedDeref, right)
-					}
-				}
-			}
 
 			if p.AddMessage(p.GenerateWarningMessage(err, n)) && right == nil {
 				right = util.NewNil()
@@ -480,15 +474,10 @@ func getAllocationSizeNode(p *program.Program, node ast.Node) ast.Node {
 func generateAlloc(p *program.Program, allocSize ast.Node, leftType string) (
 	right goast.Expr, preStmts []goast.Stmt, postStmts []goast.Stmt, err error) {
 
-	allocSizeExpr, _, newPre, newPost, err := transpileToExpr(allocSize, p, false)
+	allocSizeExpr, allocType, newPre, newPost, err := transpileToExpr(allocSize, p, false)
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-	if err != nil {
-		return nil, preStmts, postStmts, err
-	}
-
-	derefType, err := types.GetDereferenceType(leftType)
 	if err != nil {
 		return nil, preStmts, postStmts, err
 	}
@@ -497,20 +486,22 @@ func generateAlloc(p *program.Program, allocSize ast.Node, leftType string) (
 	if err != nil {
 		return nil, preStmts, postStmts, err
 	}
-
-	elementSize, err := types.SizeOf(p, derefType)
+	allocSizeExpr, err = types.CastExpr(p, allocSizeExpr, allocType, "int")
 	if err != nil {
 		return nil, preStmts, postStmts, err
 	}
 
-	if toType == "interface{}" {
-		toType = "[]uint8"
-	}
-
 	right = util.NewCallExpr(
-		"make",
-		util.NewTypeIdent(toType),
-		util.NewBinaryExpr(allocSizeExpr, token.QUO, util.NewIntLit(elementSize), "int32", false),
+		"noarch.Malloc",
+		allocSizeExpr,
 	)
+	if toType != "unsafe.Pointer" {
+		right = &goast.CallExpr{
+			Fun: &goast.ParenExpr{
+				X: util.NewTypeIdent(toType),
+			},
+			Args: []goast.Expr{right},
+		}
+	}
 	return
 }

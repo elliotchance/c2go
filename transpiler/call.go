@@ -205,25 +205,21 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 		}
 
 		var varName string
-		if v, ok := element[0].(*goast.Ident); ok {
-			varName = v.Name
-		} else if se, ok := element[0].(*goast.SliceExpr); ok {
-			if v, ok2 := se.X.(*goast.Ident); ok2 {
-				varName = v.Name
-			} else {
-				return nil, "", nil, nil,
-					fmt.Errorf("golang ast for variable name have type %T, expect ast.Ident", element[0])
-			}
+		id := extractArray(element[0])
+		if id != nil {
+			varName = id.Name
+		} else {
+			return nil, "", nil, nil, fmt.Errorf("cannot determine variable to be sorted")
 		}
 
 		p.AddImport("sort")
 		src := fmt.Sprintf(`package main
 		var %s func(a,b interface{})int
 		var temp = func(i, j int) bool {
-			c2goTempVarA := ([]%s{%s[i]})
-			c2goTempVarB := ([]%s{%s[j]})
+			c2goTempVarA := unsafe.Pointer(&%s[i])
+			c2goTempVarB := unsafe.Pointer(&%s[j])
 			return %s(c2goTempVarA, c2goTempVarB) <= 0
-		}`, compareFunc, t, varName, t, varName, compareFunc)
+		}`, compareFunc, varName, varName, compareFunc)
 
 		// Create the AST by parsing src.
 		fset := token.NewFileSet() // positions are relative to fset
@@ -241,7 +237,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 				Sel: goast.NewIdent("SliceStable"),
 			},
 			Args: []goast.Expr{
-				element[0],
+				id,
 				convertExpr,
 			},
 		}, "", preStmts, postStmts, nil
@@ -420,7 +416,7 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 			}
 
 			if len(functionDef.ArgumentTypes) > i {
-				if !types.IsPointer(functionDef.ArgumentTypes[i]) {
+				if !types.IsPointer(p, functionDef.ArgumentTypes[i]) {
 					if strings.HasPrefix(functionDef.ArgumentTypes[i], "union ") {
 						a = &goast.CallExpr{
 							Fun: &goast.SelectorExpr{
@@ -455,4 +451,31 @@ func transpileCallExpr(n *ast.CallExpr, p *program.Program) (
 
 	return util.NewCallExpr(functionName, realArgs...),
 		functionDef.ReturnType, preStmts, postStmts, nil
+}
+
+func extractArray(expr goast.Expr) *goast.Ident {
+	if v, ok := expr.(*goast.Ident); ok {
+		return v
+	}
+	if se, ok := expr.(*goast.SliceExpr); ok {
+		if v, ok2 := se.X.(*goast.Ident); ok2 {
+			return v
+		}
+	}
+	if ce, ok2 := expr.(*goast.CallExpr); ok2 && len(ce.Args) == 1 {
+		if fid, ok3 := ce.Fun.(*goast.Ident); !ok3 || fid.Name != "unsafe.Pointer" {
+			return nil
+		}
+		if ue, ok3 := ce.Args[0].(*goast.UnaryExpr); !ok3 || ue.Op != token.AND {
+			return nil
+		} else if idx, ok4 := ue.X.(*goast.IndexExpr); ok4 {
+			if index, ok5 := idx.Index.(*goast.BasicLit); !ok5 || index.Value != "0" {
+				return nil
+			}
+			if id, ok5 := idx.X.(*goast.Ident); ok5 {
+				return id
+			}
+		}
+	}
+	return nil
 }

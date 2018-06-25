@@ -2,7 +2,6 @@ package noarch
 
 import (
 	"strings"
-	"unsafe"
 )
 
 const (
@@ -293,12 +292,12 @@ func init() {
 }
 
 // Strerror translates an errno error code into an error message.
-func Strerror(errno int32) []byte {
+func Strerror(errno int32) *byte {
 	b, ok := err2bytes[int(errno)]
 	if ok {
-		return b
+		return &b[0]
 	}
-	return err2bytes[0]
+	return &err2bytes[0][0]
 }
 
 var currentErrno int32
@@ -321,6 +320,6 @@ func setCurrentErrno(errno int32) {
 }
 
 // Errno returns a pointer to the current errno.
-func Errno() []int32 {
-	return (*[1]int32)(unsafe.Pointer(&currentErrno))[:]
+func Errno() *int32 {
+	return &currentErrno
 }

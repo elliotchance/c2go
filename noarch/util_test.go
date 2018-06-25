@@ -5,9 +5,9 @@ import (
 	"testing"
 )
 
-func TestNullTerminatedByteSlice(t *testing.T) {
+func TestNullTerminatedBytePointer(t *testing.T) {
 	type args struct {
-		s []byte
+		s *byte
 	}
 	tests := []struct {
 		name string
@@ -15,10 +15,8 @@ func TestNullTerminatedByteSlice(t *testing.T) {
 		want string
 	}{
 		{"nil slice", args{nil}, ""},
-		{"empty slice", args{[]byte{}}, ""},
-		{"single null-terminated", args{[]byte{0}}, ""},
-		{"multi null-terminated", args{[]byte{'a', 0, 'b', 0}}, "a"},
-		{"not null-terminated", args{[]byte{'a', 'b', 'c'}}, "abc"},
+		{"single null-terminated", args{&[]byte{0}[0]}, ""},
+		{"multi null-terminated", args{&[]byte{'a', 0, 'b', 0}[0]}, "a"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

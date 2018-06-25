@@ -67,7 +67,7 @@ func transpileConditionalOperator(n *ast.ConditionalOperator, p *program.Program
 	if err != nil {
 		return
 	}
-	// Theorephly, length is must be zero
+	// Theoretically, length is must be zero
 	if len(newPre) > 0 || len(newPost) > 0 {
 		p.AddMessage(p.GenerateWarningMessage(
 			fmt.Errorf("length of pre or post in body must be zero. {%d,%d}", len(newPre), len(newPost)), n))
@@ -187,7 +187,7 @@ func transpileParenExpr(n *ast.ParenExpr, p *program.Program) (
 
 // pointerArithmetic - operations between 'int' and pointer
 // Example C code : ptr += i
-// ptr = (*(*[1]int)(unsafe.Pointer(uintptr(unsafe.Pointer(&ptr[0])) + (i)*unsafe.Sizeof(ptr[0]))))[:]
+// ptr = ((*int)(unsafe.Pointer(uintptr(unsafe.Pointer(ptr)) + (i)*unsafe.Sizeof(*ptr))))
 // , where i  - left
 //        '+' - operator
 //      'ptr' - right
@@ -206,11 +206,11 @@ func pointerArithmetic(p *program.Program,
 			err = fmt.Errorf("Cannot transpile pointerArithmetic. err = %v", err)
 		}
 	}()
-	if !types.IsCInteger(p, rightType) {
-		err = fmt.Errorf("right type is not C integer type : '%s'", rightType)
+	right, err = types.CastExpr(p, right, rightType, "int")
+	if err != nil {
 		return
 	}
-	if !types.IsPointer(leftType) {
+	if !types.IsPointer(p, leftType) {
 		err = fmt.Errorf("left type is not a pointer : '%s'", leftType)
 		return
 	}
@@ -239,7 +239,7 @@ func pointerArithmetic(p *program.Program,
 		_ = printer.Fprint(&buf, token.NewFileSet(), right)
 		s.Condition = buf.String()
 	}
-	s.Type = resolvedLeftType[2:]
+	s.Type = resolvedLeftType
 
 	s.Operator = "+"
 	if operator == token.SUB {
@@ -250,15 +250,15 @@ func pointerArithmetic(p *program.Program,
 	if util.IsAddressable(left) {
 		src = `package main
 func main(){
-	a := (*(*[1000000000]{{ .Type }})(unsafe.Pointer(uintptr(unsafe.Pointer(&{{ .Name }}[0])) {{ .Operator }} (uintptr)({{ .Condition }})*unsafe.Sizeof({{ .Name }}[0]))))[:]
+	a := (({{ .Type }})(unsafe.Pointer(uintptr(unsafe.Pointer({{ .Name }})) {{ .Operator }} (uintptr)({{ .Condition }})*unsafe.Sizeof(*{{ .Name }}))))
 }`
 	} else {
 		src = `package main
 func main(){
-	a := (*(*[1000000000]{{ .Type }})(unsafe.Pointer(func()uintptr{
+	a := (({{ .Type }})(func()unsafe.Pointer{
 		tempVar := {{ .Name }}
-		return uintptr(unsafe.Pointer(&tempVar[0])) {{ .Operator }} (uintptr)({{ .Condition }})*unsafe.Sizeof(tempVar[0])
-	}())))[:]
+		return unsafe.Pointer(uintptr(unsafe.Pointer(tempVar)) {{ .Operator }} (uintptr)({{ .Condition }})*unsafe.Sizeof(*tempVar))
+	}()))
 }`
 	}
 	tmpl := template.Must(template.New("").Parse(src))
@@ -272,7 +272,11 @@ func main(){
 	// Create the AST by parsing src.
 	fset := token.NewFileSet() // positions are relative to fset
 	body := strings.Replace(source.String(), "&#43;", "+", -1)
+	body = strings.Replace(body, "&#34;", "\"", -1)
+	body = strings.Replace(body, "&#39;", "'", -1)
 	body = strings.Replace(body, "&amp;", "&", -1)
+	body = strings.Replace(body, "&lt;", "<", -1)
+	body = strings.Replace(body, "&gt;", ">", -1)
 	f, err := parser.ParseFile(fset, "", body, 0)
 	if err != nil {
 		err = fmt.Errorf("Cannot parse file. err = %v", err)
@@ -312,7 +316,7 @@ func transpileCompoundAssignOperator(
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
 	// Pointer arithmetic
-	if types.IsPointer(n.Type) &&
+	if types.IsPointer(p, n.Type) &&
 		(operator == token.ADD_ASSIGN || operator == token.SUB_ASSIGN) {
 		operator = convertToWithoutAssign(operator)
 		v, vType, newPre, newPost, err := pointerArithmetic(p, left, leftType, right, rightType, operator)
@@ -662,7 +666,7 @@ func atomicOperation(n ast.Node, p *program.Program) (
 		if vv, ok := v.Children()[0].(*ast.UnaryOperator); ok && vv.IsPrefix && vv.Operator == "*" {
 			if vvv, ok := vv.Children()[0].(*ast.ImplicitCastExpr); ok {
 				if vvvv, ok := vvv.Children()[0].(*ast.DeclRefExpr); ok {
-					if types.IsPointer(vvvv.Type) {
+					if types.IsPointer(p, vvvv.Type) {
 						var varName string
 						varName = vvvv.Name
 
@@ -793,7 +797,7 @@ func atomicOperation(n ast.Node, p *program.Program) (
 		if exprType == types.NullPointer {
 			return
 		}
-		if !types.IsFunction(exprType) && v.Kind != ast.ImplicitCastExprArrayToPointerDecay {
+		if !types.IsFunction(exprType) && !strings.ContainsAny(v.Type, "[]") {
 			expr, err = types.CastExpr(p, expr, exprType, v.Type)
 			if err != nil {
 				return nil, "", nil, nil, err
@@ -923,6 +927,7 @@ func atomicOperation(n ast.Node, p *program.Program) (
 			postStmts = nil
 
 			var returnValue goast.Expr = util.NewIdent(varName)
+
 			expr = util.NewAnonymousFunction(body,
 				nil,
 				returnValue,

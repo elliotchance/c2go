@@ -28,6 +28,30 @@ struct MyStruct
     char c;
 };
 
+struct MyStruct2
+{
+    double a;
+    char b;
+    char c;
+    char d[10];
+};
+
+struct MyStruct3
+{
+    double a;
+    char b;
+    char c;
+    char d[20];
+};
+
+struct MyStruct4
+{
+    double a;
+    char b;
+    char c;
+    char d[30];
+};
+
 union MyUnion
 {
     double a;
@@ -40,7 +64,7 @@ int b;
 
 int main()
 {
-    plan(39);
+    plan(42);
 
     diag("Integer types");
     check_sizes(char, 1);
@@ -66,12 +90,21 @@ int main()
     b = 456;
     struct MyStruct s1;
     s1.b = 0;
+    struct MyStruct2 s2;
+    s2.b = 0;
+    struct MyStruct3 s3;
+    s3.b = 0;
+    struct MyStruct4 s4;
+    s4.b = 0;
     union MyUnion u1;
     u1.b = 0;
 
     is_eq(sizeof(a), 2);
     is_eq(sizeof(b), 4);
     is_eq(sizeof(s1), 16);
+    is_eq(sizeof(s2), 24);
+    is_eq(sizeof(s3), 32);
+    is_eq(sizeof(s4), 40);
     is_eq(sizeof(u1), 8);
 
     diag("Structures");

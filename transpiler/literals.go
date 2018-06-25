@@ -27,15 +27,27 @@ func transpileStringLiteral(n *ast.StringLiteral) goast.Expr {
 	// StringLiteral 0x280b918 <col:29> 'char [30]' lvalue "%0"
 	s, err := types.GetAmountArraySize(n.Type)
 	if err != nil {
-		return util.NewCallExpr("[]byte",
-			util.NewStringLit(strconv.Quote(n.Value+"\x00")))
+		return toBytePointer(util.NewCallExpr("[]byte",
+			util.NewStringLit(strconv.Quote(n.Value+"\x00"))))
 	}
 	buf := bytes.NewBufferString(n.Value + "\x00")
 	if buf.Len() < s {
 		buf.Write(make([]byte, s-buf.Len()))
 	}
-	return util.NewCallExpr("[]byte",
-		util.NewStringLit(strconv.Quote(buf.String())))
+	return toBytePointer(util.NewCallExpr("[]byte",
+		util.NewStringLit(strconv.Quote(buf.String()))))
+}
+
+func toBytePointer(expr goast.Expr) goast.Expr {
+	return &goast.ParenExpr{
+		X: &goast.UnaryExpr{
+			Op: token.AND,
+			X: &goast.IndexExpr{
+				X:     expr,
+				Index: util.NewIntLit(0),
+			},
+		},
+	}
 }
 
 func transpileIntegerLiteral(n *ast.IntegerLiteral) (ret goast.Expr) {
@@ -63,23 +75,34 @@ func transpilePredefinedExpr(n *ast.PredefinedExpr, p *program.Program) (goast.E
 	// TODO: Predefined expressions are not evaluated
 	// https://github.com/elliotchance/c2go/issues/81
 
+	var e goast.Expr
 	switch n.Name {
 	case "__PRETTY_FUNCTION__":
-		return util.NewCallExpr(
+		e = util.NewCallExpr(
 			"[]byte",
-			util.NewStringLit(`"void print_number(int *)"`),
-		), "const char*", nil
+			util.NewStringLit(`"void print_number(int *)\x00"`),
+		)
 
 	case "__func__":
-		return util.NewCallExpr(
+		e = util.NewCallExpr(
 			"[]byte",
-			util.NewStringLit(strconv.Quote(p.Function.Name)),
-		), "const char*", nil
+			util.NewStringLit(strconv.Quote(p.Function.Name+"\x00")),
+		)
 
 	default:
 		// There are many more.
 		panic(fmt.Sprintf("unknown PredefinedExpr: %s", n.Name))
 	}
+	e = &goast.ParenExpr{
+		X: &goast.UnaryExpr{
+			Op: token.AND,
+			X: &goast.IndexExpr{
+				X:     e,
+				Index: util.NewIntLit(0),
+			},
+		},
+	}
+	return e, "const char*", nil
 }
 
 func transpileCompoundLiteralExpr(n *ast.CompoundLiteralExpr, p *program.Program) (goast.Expr, string, error) {

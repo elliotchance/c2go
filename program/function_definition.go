@@ -260,7 +260,7 @@ var builtInFunctionDefinitions = map[string][]string{
 		"long long strtoll(const char *, char **, int) -> noarch.Strtoll",
 		"long unsigned int strtoul(const char *, char **, int) -> noarch.Strtoul",
 		"long long unsigned int strtoull(const char *, char **, int) -> noarch.Strtoull",
-		"void free(void*) -> _",
+		"void free(void*) -> noarch.Free",
 	},
 	"syslog.h": []string{
 		"void openlog(const char *, int, int) -> noarch.Openlog",
