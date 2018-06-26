@@ -78,7 +78,7 @@ mkdir -p $SQLITE_TEMP_FOLDER
 
 # Download/unpack SQLite if required.
 if [ ! -e $SQLITE_TEMP_FOLDER/$SQLITE3_FILE.zip ]; then
-    cp ./travis/$SQLITE3_FILE.zip $SQLITE_TEMP_FOLDER/$SQLITE3_FILE.zip
+    curl https://sqlite.org/2017/$SQLITE3_FILE.zip > $SQLITE_TEMP_FOLDER/$SQLITE3_FILE.zip
     unzip $SQLITE_TEMP_FOLDER/$SQLITE3_FILE.zip -d $SQLITE_TEMP_FOLDER
 fi
 

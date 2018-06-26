@@ -15,7 +15,7 @@ export TRIANGLE_FILE="triangle"
 
 # Download/unpack SQLite if required.
 if [ ! -e $TRIANGLE_TEMP_FOLDER/$TRIANGLE_FILE.zip ]; then
-    cp ./travis/$TRIANGLE_FILE.zip $TRIANGLE_TEMP_FOLDER/$TRIANGLE_FILE.zip
+    curl http://www.netlib.org/voronoi/$TRIANGLE_FILE.zip > $TRIANGLE_TEMP_FOLDER/$TRIANGLE_FILE.zip
     unzip $TRIANGLE_TEMP_FOLDER/$TRIANGLE_FILE.zip -d $TRIANGLE_TEMP_FOLDER
 fi
 
