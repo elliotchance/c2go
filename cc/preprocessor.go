@@ -49,7 +49,9 @@ func GetLineFromPreprocessedFile(inputFilePath, filePath string, lineNumber int)
 				}
 
 				currentLine = util.Atoi(matches[1])
-				currentFile = matches[2]
+
+				// unescape windows file paths
+				currentFile = strings.Replace(matches[2], "\\\\", "\\", -1)
 
 				if _, ok := fileCache[currentFile]; !ok {
 					fileCache[currentFile] = map[int]string{}
