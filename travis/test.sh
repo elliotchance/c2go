@@ -70,7 +70,7 @@ if [ $($C2GO ast $C2GO_DIR/examples/prime.c | wc -l) -eq 0 ]; then exit 1; fi
 echo "----------------------"
 # This will have to be updated every so often to the latest version. You can
 # find the latest version here: https://sqlite.org/download.html
-export SQLITE3_FILE=sqlite-amalgamation-3210000
+export SQLITE3_FILE=sqlite-amalgamation-3240000
 
 # Variable for location of temp sqlite files
 SQLITE_TEMP_FOLDER="/tmp/SQLITE"
@@ -78,7 +78,7 @@ mkdir -p $SQLITE_TEMP_FOLDER
 
 # Download/unpack SQLite if required.
 if [ ! -e $SQLITE_TEMP_FOLDER/$SQLITE3_FILE.zip ]; then
-    curl https://sqlite.org/2017/$SQLITE3_FILE.zip > $SQLITE_TEMP_FOLDER/$SQLITE3_FILE.zip
+    curl https://sqlite.org/2018/$SQLITE3_FILE.zip > $SQLITE_TEMP_FOLDER/$SQLITE3_FILE.zip
     unzip $SQLITE_TEMP_FOLDER/$SQLITE3_FILE.zip -d $SQLITE_TEMP_FOLDER
 fi
 
@@ -123,6 +123,3 @@ echo "In file sqlite.go summary : $SQLITE_WARNINGS_GO warnings in go build."
 echo "Calculation warnings by gometalinter"
 GOMETALINTER_WARNINGS=`$GOPATH/bin/gometalinter $SQLITE_TEMP_FOLDER/sqlite.go 2>&1 | wc -l`
 echo "Amount found warnings by gometalinter at 30 second : $GOMETALINTER_WARNINGS warnings."
-
-# Run script triangle
-source ./travis/triangle.sh
