@@ -5,4 +5,4 @@ package program
 //     c2go -v
 //
 // See https://github.com/elliotchance/c2go/wiki/Release-Process
-const Version = "v0.25.1 Dubnium 2018-06-27"
+const Version = "v0.25.2 Dubnium 2018-06-29"
