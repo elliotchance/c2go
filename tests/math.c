@@ -11,7 +11,7 @@ unsigned long long ullmax = 18446744073709551615ull;
 
 int main()
 {
-  plan(359);
+  plan(372);
 
   // Note: There are some tests that must be disabled because they return
   // different values under different compilers. See the comment surrounding the
