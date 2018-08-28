@@ -131,7 +131,7 @@ func __init() {
 This is the process:
 
 1. The C code is preprocessed with clang. This generates a larger file (`pp.c`),
-but removes all the platform specific directives and macros.
+but removes all the platform-specific directives and macros.
 
 2. `pp.c` is parsed with the clang AST and dumps it in a colourful text format
 that
@@ -142,7 +142,7 @@ that the code must compile successfully under clang for the AST to also be
 usable.
 
 3. Since we have all the types in the AST it's just a matter of traversing the
-tree is a semi-intelligent way and producing Go. Easy, right!?
+tree in a semi-intelligent way and producing Go. Easy, right!?
 
 # Testing
 
@@ -170,7 +170,7 @@ Contributing is done with pull requests. There is no help that is too small! :)
 
 If you're looking for where to start I can suggest
 [finding a simple C program](http://www.programmingsimplified.com/c-program-examples)
-(like the other examples) that do not successfully translate into Go.
+(like the other examples) that does not successfully translate into Go.
 
 Or, if you don't want to do that you can submit it as an issue so that it can be
 picked up by someone else.
