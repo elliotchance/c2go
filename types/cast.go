@@ -366,9 +366,9 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 			return e, nil
 		}
 		if fromType == "bool" && toType == v {
-			e := util.NewGoExpr(`map[bool]int32{false: 0, true: 1}[replaceme]`)
+			e := util.NewGoExpr(`func(val bool) int32 { if val { return 1 } else { return 0 } }(replaceme)`)
 			// Swap replaceme with the current expression
-			e.(*goast.IndexExpr).Index = expr
+			e.(*goast.CallExpr).Args = []goast.Expr{expr}
 			return CastExpr(p, e, "int", cToType)
 		}
 	}
