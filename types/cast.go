@@ -486,8 +486,6 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 		}, nil
 	}
 
-	p.AddImport("github.com/elliotchance/c2go/noarch")
-
 	if strings.HasPrefix(toType, "[]") && strings.HasPrefix(fromType, "*") && isArrayToPointerExpr(expr) {
 		expr = extractArrayFromPointer(expr)
 		fromType = "[]" + fromType[1:]
@@ -507,6 +505,13 @@ func CastExpr(p *program.Program, expr goast.Expr, cFromType, cToType string) (
 	if cFromType == "void *" && cToType == "char *" {
 		return expr, nil
 	}
+
+	if toType == fromType {
+		return expr, nil
+	}
+
+	p.AddImport("github.com/elliotchance/c2go/noarch")
+	p.AddImport("unsafe")
 
 	exportedLeftName := util.GetExportedName(leftName)
 	exportedRightName := util.GetExportedName(rightName)
