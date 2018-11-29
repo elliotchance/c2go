@@ -329,13 +329,13 @@ func (p *Program) String() string {
 	var buf bytes.Buffer
 
 	buf.WriteString(fmt.Sprintf(`/*
-	Package main - transpiled by c2go version: %s
+	Package %s - transpiled by c2go version: %s
 
 	If you have found any issues, please raise an issue at:
 	https://github.com/elliotchance/c2go/
 */
 
-`, Version))
+`, p.File.Name.Name, Version))
 
 	// First write all the messages. The double newline afterwards is important
 	// so that the package statement has a newline above it so that the warnings
