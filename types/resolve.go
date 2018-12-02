@@ -60,8 +60,11 @@ var simpleResolveTypes = map[string]string{
 	"long long unsigned int": "uint64",
 	"long unsigned int":      "uint32",
 	"long":                   "int32",
+	"ptrdiff_t":              "int32",
 	"short":                  "int16",
 	"signed char":            "int8",
+	"size_t":                 "uint32",
+	"uintptr_t":              "uintptr",
 	"unsigned char":          "uint8",
 	"unsigned int":           "uint32",
 	"unsigned long long":     "uint64",
@@ -69,6 +72,7 @@ var simpleResolveTypes = map[string]string{
 	"unsigned short":         "uint16",
 	"unsigned short int":     "uint16",
 	"void":                   "",
+	"wchar_t":                "rune",
 	"_Bool":                  "int8",
 
 	// void*
@@ -80,8 +84,31 @@ var simpleResolveTypes = map[string]string{
 	"null": "null",
 
 	// Non platform-specific types.
+	"int8":       "int8",
+	"int8_t":     "int8",
+	"int16":      "int16",
+	"int16_t":    "int16",
+	"int32":      "int32",
+	"int32_t":    "int32",
+	"int64":      "int64",
+	"int64_t":    "int64",
+	"uint8":      "uint8",
+	"uint8_t":    "uint8",
+	"uint16":     "uint16",
+	"uint16_t":   "uint16",
 	"uint32":     "uint32",
+	"uint32_t":   "uint32",
 	"uint64":     "uint64",
+	"uint64_t":   "uint64",
+	"u_int8_t":   "uint8",
+	"u_int16_t":  "uint16",
+	"u_int32_t":  "uint32",
+	"u_int64_t":  "uint64",
+	"__int8_t":   "int8",
+	"__int16_t":  "int16",
+	"__int32_t":  "int32",
+	"__int64_t":  "int64",
+	"__uint8_t":  "uint8",
 	"__uint16_t": "uint16",
 	"__uint32_t": "uint32",
 	"__uint64_t": "uint64",
@@ -205,6 +232,12 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 		}
 	}
 
+	// The simple resolve types are the types that we know there is an exact Go
+	// equivalent. For example float, int, etc.
+	if v, ok := simpleResolveTypes[s]; ok {
+		return p.ImportType(v), nil
+	}
+
 	// No need resolve typedef types
 	if ss, ok := p.TypedefType[s]; ok {
 		if tt, ok := otherStructType[s]; ok {
@@ -236,14 +269,6 @@ func ResolveType(p *program.Program, s string) (_ string, err error) {
 	if IsFunction(s) {
 		g, e := resolveFunction(p, s)
 		return g, e
-	}
-
-	// The simple resolve types are the types that we know there is an exact Go
-	// equivalent. For example float, int, etc.
-	for k, v := range simpleResolveTypes {
-		if k == s {
-			return p.ImportType(v), nil
-		}
 	}
 
 	// Check is it typedef enum
