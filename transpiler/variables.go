@@ -417,6 +417,7 @@ func transpileMemberExpr(n *ast.MemberExpr, p *program.Program) (
 	}
 
 	lhsType = types.GenerateCorrectType(lhsType)
+	lhsType = types.CleanCType(lhsType)
 
 	preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
