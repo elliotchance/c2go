@@ -136,7 +136,7 @@ func getSoleChildIncrementable(n ast.Node) (result ast.Node, err error) {
 	switch c := children[0].(type) {
 	case *ast.ParenExpr:
 		return getSoleChildIncrementable(c)
-	case *ast.DeclRefExpr, *ast.MemberExpr:
+	case *ast.DeclRefExpr, *ast.MemberExpr, *ast.UnaryOperator:
 		return c, nil
 	default:
 		return nil, fmt.Errorf("unsupported type %T", c)
