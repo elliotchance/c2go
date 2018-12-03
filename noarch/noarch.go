@@ -38,6 +38,15 @@ func NotUint16(x uint16) uint16 {
 	return 0
 }
 
+// NotUint32 works the same as NotInt, but on a uint32.
+func NotUint32(x uint32) uint32 {
+	if x == 0 {
+		return 1
+	}
+
+	return 0
+}
+
 // NotInt8 works the same as NotInt, but on a int8.
 func NotInt8(x int8) int8 {
 	if x == 0 {
