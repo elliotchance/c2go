@@ -112,7 +112,7 @@ func Fopen(filePath, mode *byte) *File {
 			err = file.Truncate(0)
 		}
 	default:
-		panic(fmt.Sprintf("unsupported file mode: %s", mode))
+		panic(fmt.Sprintf("unsupported file mode: %s", m))
 	}
 
 	if err != nil {

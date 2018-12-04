@@ -35,8 +35,8 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program, operato
 		case token.DEC:
 			operator = token.SUB
 		}
-		var declRefExpr *ast.DeclRefExpr
-		declRefExpr, err = getSoleChildDeclRefExpr(n)
+		var e ast.Node
+		e, err = getSoleChildIncrementable(n)
 		if err != nil {
 			return
 		}
@@ -44,7 +44,7 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program, operato
 		var left goast.Expr
 		var leftType string
 		var newPre, newPost []goast.Stmt
-		left, leftType, newPre, newPost, err = transpileToExpr(declRefExpr, p, false)
+		left, leftType, newPre, newPost, err = transpileToExpr(e, p, false)
 		if err != nil {
 			return
 		}
@@ -67,13 +67,8 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program, operato
 
 		preStmts, postStmts = combinePreAndPostStmts(preStmts, postStmts, newPre, newPost)
 
-		var name string
-		name, err = getName(p, n.Children()[0])
-		if err != nil {
-			return
-		}
 		expr = &goast.BinaryExpr{
-			X:  goast.NewIdent(name),
+			X:  left,
 			Op: token.ASSIGN,
 			Y:  expr,
 		}
@@ -85,7 +80,7 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program, operato
 			}
 			expr = util.NewAnonymousFunction([]goast.Stmt{&goast.ExprStmt{
 				X: expr,
-			}}, nil, goast.NewIdent(name), lType)
+			}}, nil, left, lType)
 		}
 		return
 	}
@@ -131,6 +126,21 @@ func transpileUnaryOperatorInc(n *ast.UnaryOperator, p *program.Program, operato
 			},
 		},
 	}, p, exprIsStmt)
+}
+
+func getSoleChildIncrementable(n ast.Node) (result ast.Node, err error) {
+	children := n.Children()
+	if len(children) != 1 {
+		return nil, fmt.Errorf("expected one child node, got %d", len(children))
+	}
+	switch c := children[0].(type) {
+	case *ast.ParenExpr:
+		return getSoleChildIncrementable(c)
+	case *ast.DeclRefExpr, *ast.MemberExpr, *ast.UnaryOperator:
+		return c, nil
+	default:
+		return nil, fmt.Errorf("unsupported type %T", c)
+	}
 }
 
 func getSoleChildDeclRefExpr(n *ast.UnaryOperator) (result *ast.DeclRefExpr, err error) {
