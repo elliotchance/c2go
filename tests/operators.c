@@ -54,7 +54,7 @@ void unusedInt(int n) {
 
 int main()
 {
-	plan(140);
+	plan(142);
 
     int i = 10;
     signed char j = 1;
@@ -510,6 +510,22 @@ int main()
         flags &= ~(PREP_A|PREP_B);
         is_eq(flags, 32);
     }
+	diag("Increment pointer in struct");
+	{
+		struct aStruct {
+			char *a;
+		} v;
+		v.a = "Hello";
+		++v.a;
+		is_streq(v.a, "ello");
+	}
+	diag("Increment pointer via poiter");
+	{
+		char *s = "World";
+		char **p = &s;
+		++*p;
+		is_streq(s, "orld");
+	}
 
 	done_testing();
 }
