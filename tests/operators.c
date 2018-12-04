@@ -48,6 +48,10 @@ typedef unsigned char pcre_uchar;
 #define PREP_A 0x0002
 #define PREP_B 0x0010
 
+void unusedInt(int n) {
+	;
+}
+
 int main()
 {
 	plan(140);
@@ -371,6 +375,7 @@ int main()
 	}
 	{
 		int yy = 0;
+		unusedInt(yy);
 		if ((yy = simple_repeat(42)) > 3)
 		{
 			pass("ok")
