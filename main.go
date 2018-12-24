@@ -177,10 +177,6 @@ func Start(args ProgramArgs) (err error) {
 		fmt.Println("Start tanspiling ...")
 	}
 
-	if os.Getenv("GOPATH") == "" {
-		return fmt.Errorf("The $GOPATH must be set")
-	}
-
 	// 1. Compile it first (checking for errors)
 	for _, in := range args.inputFiles {
 		_, err := os.Stat(in)
