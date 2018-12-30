@@ -340,35 +340,6 @@ func TestStartPreprocess(t *testing.T) {
 	}
 }
 
-func TestGoPath(t *testing.T) {
-	gopath := "GOPATH"
-
-	existEnv := os.Getenv(gopath)
-	if existEnv == "" {
-		t.Errorf("$GOPATH is not set")
-	}
-
-	// return env.var.
-	defer func() {
-		err := os.Setenv(gopath, existEnv)
-		if err != nil {
-			t.Errorf("Cannot restore the value of $GOPATH")
-		}
-	}()
-
-	// reset value of env.var.
-	err := os.Setenv(gopath, "")
-	if err != nil {
-		t.Errorf("Cannot set value of $GOPATH")
-	}
-
-	// testing
-	err = Start(DefaultProgramArgs())
-	if err == nil {
-		t.Errorf(err.Error())
-	}
-}
-
 func TestMultifileTranspilation(t *testing.T) {
 	tcs := []struct {
 		source         []string
