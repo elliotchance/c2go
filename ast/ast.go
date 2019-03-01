@@ -2,6 +2,7 @@
 package ast
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -283,7 +284,7 @@ func groupsFromRegex(rx, line string) map[string]string {
 
 	match := re.FindStringSubmatch(line)
 	if len(match) == 0 {
-		panic("could not match regexp with string\n" + rx + "\n" + line + "\n")
+		panic(fmt.Sprintf("could not match regexp %q for %q", rx, line))
 	}
 
 	result := make(map[string]string)
