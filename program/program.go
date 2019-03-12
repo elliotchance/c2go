@@ -421,7 +421,7 @@ func (p *Program) String() string {
 	return string(reg.ReplaceAll(buf.Bytes(), []byte("interface {}")))
 }
 
-// IncudeHeaderIsExist - return true if C #include header is inside list
+// IncludeHeaderIsExists - return true if C #include header is inside list
 func (p *Program) IncludeHeaderIsExists(includeHeader string) bool {
 	for _, inc := range p.IncludeHeaders {
 		if strings.HasSuffix(inc.HeaderName, includeHeader) {
