@@ -1,56 +1,30 @@
 language: go
+dist: xenial
 
 go:
-  - "1.9.x"
-
-os:
-  - linux
-  - osx
+  - "1.13.x"
 
 env:
   global:
     secure: "p/4P6/KQKnkUmTQPUkkuu/Q9n4KR9tno5i6gBf9yJ/SbBRg1YTM5G5QvvZUasOAOeb8sxQaoJqd+H6Jmnj3sgB/zBFrAId+S8IMckuUMPLGvt928MXA+R1DdRDr9arHGKodyaF6VUJkQU78IQusv71FDvV2bdesMJPNc27l3WbEJPEoPGpQMiM6pgZgYFEnpRHTgi3Fmp5FN9jR+evQpPOwvsAVfNuLH2kZ3prk7XDpP2Nx0SmdwVzSKiKFW8XyiM6aHmjWLOOIDbmIynD1Hl2iUTEhbzubIPgBmYt3AbgYL4WzmnnZEfKMFmVGjHmdNIiW1EndI4iLjCpqdTWqOLY7kge8DW+/eURb0WsIAJJsllc/D6P9l2SU1v9PJROdY2dLI5oO06PSvFgXgpyCz0IG1ARYw2JF9JxG1kkNtdcPindn3mlPTcfwHUh41y7mZEYBD22NMl9AyWE1Igqgx2TEYZf+TcyUpV2pLxY7QwcCrga77iCiSrzylKLvrgABaU/zgQXEUe2Oymv4LvgtiwMBJl6x+80yVEMdIMHb10IShThzEgcmMDd1rNDt8k48A3GUVaFi4xu4i3Zoiq2OGQLNOKmejWpNYYHP7iD6gTqRwV5h9t+iTobbxs1WkJfh5VMHKaLN1qQmEz3Nzr08zZ8rkAJ9X3Xf588HhZKVvVsQ="
-  matrix:
-    - SCRIPT=test CLANG=3.9
 
 matrix:
   include:
-    - env: SCRIPT=test CLANG=3.4
-      os: linux
-    - env: SCRIPT=test CLANG=3.5
-      os: linux
-    - env: SCRIPT=test CLANG=3.6
-      os: linux
-    - env: SCRIPT=test CLANG=3.7
-      os: linux
-    - env: SCRIPT=test CLANG=3.8
-      os: linux
-    - env: SCRIPT=test CLANG=5.0
-      os: linux
-    - env: SCRIPT=lint CLANG=3.9
+    - env: SCRIPT=test
+      os: osx
+    - env: SCRIPT=test
       os: linux
 
 before_install:
-  - |
-      if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-        wget -O - http://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-        sudo apt-add-repository "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-$CLANG main"
-        sudo apt-get update
-        sudo apt-cache search clang
-        sudo apt-get install -f -y --force-yes clang-$CLANG lldb-$CLANG
-      fi
-
   # gocovmerge is used to merge all the separate unit/integration test coverage
   # profiles.
   - go get -u -v github.com/wadey/gocovmerge
 
   # install gometalinter
-  - go get -u github.com/alecthomas/gometalinter
-  - gometalinter --install
+  - curl -L https://git.io/vp6lP | sh
 
 script:
-  - . ./travis/$SCRIPT.sh
+  - ./travis/$SCRIPT.sh
 
 after_success:
   - include_cov=coverage.txt bash <(curl -s https://codecov.io/bash)

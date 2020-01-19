@@ -4,18 +4,21 @@ package ast
 type IfStmt struct {
 	Addr       Address
 	Pos        Position
+	HasElse    bool
 	ChildNodes []Node
 }
 
 func parseIfStmt(line string) *IfStmt {
 	groups := groupsFromRegex(
-		"<(?P<position>.*)>",
+		`<(?P<position>.*)>
+		(?P<has_else> has_else)?`,
 		line,
 	)
 
 	return &IfStmt{
 		Addr:       ParseAddress(groups["address"]),
 		Pos:        NewPositionFromString(groups["position"]),
+		HasElse:    len(groups["has_else"]) > 0,
 		ChildNodes: []Node{},
 	}
 }

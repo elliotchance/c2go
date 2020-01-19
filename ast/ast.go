@@ -82,6 +82,8 @@ func Parse(fullline string) Node {
 		return parseCaseStmt(line)
 	case "CharacterLiteral":
 		return parseCharacterLiteral(line)
+	case "ColdAttr":
+		return parseColdAttr(line)
 	case "CompoundLiteralExpr":
 		return parseCompoundLiteralExpr(line)
 	case "CompoundStmt":
@@ -96,6 +98,8 @@ func Parse(fullline string) Node {
 		return parseContinueStmt(line)
 	case "CompoundAssignOperator":
 		return parseCompoundAssignOperator(line)
+	case "ConstantExpr":
+		return parseConstantExpr(line)
 	case "CStyleCastExpr":
 		return parseCStyleCastExpr(line)
 	case "DeclRefExpr":
@@ -176,6 +180,8 @@ func Parse(fullline string) Node {
 		return parseModeAttr(line)
 	case "NoAliasAttr":
 		return parseNoAliasAttr(line)
+	case "NoEscapeAttr":
+		return parseNoEscapeAttr(line)
 	case "NoInlineAttr":
 		return parseNoInlineAttr(line)
 	case "NoThrowAttr":

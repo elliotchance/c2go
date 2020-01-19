@@ -40,6 +40,12 @@ func Atoi(s string) int {
 	return i
 }
 
+func AtoiOrZero(s string) int {
+	i, _ := strconv.Atoi(s)
+
+	return i
+}
+
 // GetExportedName returns a deterministic and Go safe name for a C type. For
 // example, "*__foo[]" will return "FooSlice".
 func GetExportedName(field string) string {

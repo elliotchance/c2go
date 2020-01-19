@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 OUTFILE=/tmp/out.txt
 
@@ -11,7 +11,7 @@ function cleanup {
         [ ! -f $OUTFILE ] || cat $OUTFILE
     fi
 
-    exit $EXIT_STATUS
+    echo $EXIT_STATUS
 }
 trap cleanup EXIT
 
@@ -34,7 +34,8 @@ export PKGS_DELIM=$(echo "$PKGS" | paste -sd "," -)
 #
 # Exit code 123 will be returned if any of the tests fail.
 rm -f $OUTFILE
-go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS | xargs -I{} bash -c "{} >> $OUTFILE"
+go test -v -tags integration -race ./...
+#go list -f 'go test -v -tags integration -race -covermode atomic -coverprofile {{.Name}}.coverprofile -coverpkg $PKGS_DELIM {{.ImportPath}}' $PKGS | xargs -I{} bash -c "{} >> $OUTFILE"
 
 # Merge coverage profiles.
 COVERAGE_FILES=`ls -1 *.coverprofile 2>/dev/null | wc -l`
@@ -121,5 +122,5 @@ echo "In file sqlite.go summary : $SQLITE_WARNINGS_GO warnings in go build."
 
 # Amount warning from gometalinter
 echo "Calculation warnings by gometalinter"
-GOMETALINTER_WARNINGS=`$GOPATH/bin/gometalinter $SQLITE_TEMP_FOLDER/sqlite.go 2>&1 | wc -l`
+GOMETALINTER_WARNINGS=`gometalinter $SQLITE_TEMP_FOLDER/sqlite.go 2>&1 | wc -l`
 echo "Amount found warnings by gometalinter at 30 second : $GOMETALINTER_WARNINGS warnings."

@@ -257,6 +257,8 @@ func setPosition(node Node, position Position) {
 		n.Pos = position
 	case *CharacterLiteral:
 		n.Pos = position
+	case *ColdAttr:
+		n.Pos = position
 	case *CompoundStmt:
 		n.Pos = position
 	case *ConditionalOperator:
@@ -268,6 +270,8 @@ func setPosition(node Node, position Position) {
 	case *CompoundAssignOperator:
 		n.Pos = position
 	case *CompoundLiteralExpr:
+		n.Pos = position
+	case *ConstantExpr:
 		n.Pos = position
 	case *CStyleCastExpr:
 		n.Pos = position
@@ -336,6 +340,8 @@ func setPosition(node Node, position Position) {
 	case *ModeAttr:
 		n.Pos = position
 	case *NoAliasAttr:
+		n.Pos = position
+	case *NoEscapeAttr:
 		n.Pos = position
 	case *NoInlineAttr:
 		n.Pos = position

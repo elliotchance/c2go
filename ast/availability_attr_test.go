@@ -110,6 +110,19 @@ func TestAvailabilityAttr(t *testing.T) {
 			IsInherited:   true,
 			ChildNodes:    []Node{},
 		},
+		`0x7f97ba030d30 <col:113, col:148> macos 10.7 0 0 "" "" 0`: &AvailabilityAttr{
+			Addr:          0x7f9bd588b1a8,
+			Pos:           NewPositionFromString("/usr/include/gethostuuid.h:39:65, col:100"),
+			OS:            "macos",
+			Version:       "10.5",
+			Unknown1:      0,
+			Unknown2:      0,
+			IsUnavailable: false,
+			Message1:      "",
+			Message2:      "",
+			IsInherited:   true,
+			ChildNodes:    []Node{},
+		},
 	}
 
 	runNodeTests(t, nodes)

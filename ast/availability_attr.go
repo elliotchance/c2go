@@ -2,6 +2,7 @@ package ast
 
 import (
 	"github.com/elliotchance/c2go/util"
+	"strings"
 )
 
 // AvailabilityAttr is a type of attribute that is optionally attached to a variable
@@ -13,6 +14,7 @@ type AvailabilityAttr struct {
 	Version       string
 	Unknown1      float64
 	Unknown2      int
+	Unknown3      int
 	IsUnavailable bool
 	Message1      string
 	Message2      string
@@ -30,7 +32,8 @@ func parseAvailabilityAttr(line string) *AvailabilityAttr {
 		 (?P<unknown2>[\d.]+)
 		(?P<unavalable> Unavailable)?
 		 "(?P<message1>.*?)"
-		(?P<message2> ".*?")?`,
+		(?P<message2> ".*?")?
+		(?P<unknown3> [\d.]+)?`,
 		line,
 	)
 
@@ -41,6 +44,7 @@ func parseAvailabilityAttr(line string) *AvailabilityAttr {
 		Version:       groups["version"],
 		Unknown1:      atof(groups["unknown1"]),
 		Unknown2:      util.Atoi(groups["unknown2"]),
+		Unknown3:      util.AtoiOrZero(strings.TrimSpace(groups["unknown3"])),
 		IsUnavailable: len(groups["unavalable"]) > 0,
 		Message1:      removeQuotes(groups["message1"]),
 		Message2:      removeQuotes(groups["message2"]),

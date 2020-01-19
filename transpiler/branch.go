@@ -53,7 +53,7 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
 
 	// From here on there must be 4 children.
 	if len(children) != 4 {
-		panic(fmt.Sprintf("Expected 4 children in IfStmt, got %#v", children))
+		children = append([]ast.Node{nil}, children...)
 	}
 
 	// Maybe we will discover what the nil value is?
@@ -101,7 +101,7 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
 		Body: body,
 	}
 
-	if children[3] != nil {
+	if len(children) > 3 && children[3] != nil {
 		elseBody, newPre, newPost, err := transpileToBlockStmt(children[3], p)
 		if err != nil {
 			return nil, nil, nil, err
@@ -152,7 +152,7 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 	// 5. body = CompoundStmt: { CallExpr }
 
 	if len(children) != 5 {
-		panic(fmt.Sprintf("Expected 5 children in ForStmt, got %#v", children))
+		children = append([]ast.Node{nil}, children...)
 	}
 
 	// TODO: The second child of a ForStmt appears to always be null.
@@ -442,14 +442,18 @@ func transpileWhileStmt(n *ast.WhileStmt, p *program.Program) (
 	var forOperator ast.ForStmt
 	forOperator.AddChild(nil)
 	forOperator.AddChild(nil)
-	forOperator.AddChild(n.Children()[1])
+	children := n.Children()
+	forOperator.AddChild(children[1])
 	forOperator.AddChild(nil)
-	if n.Children()[2] == nil {
-		// added for case if WHILE haven't body, for example:
-		// while(0);
-		n.Children()[2] = &ast.CompoundStmt{}
+	if len(children) > 2 {
+		if children[2] == nil {
+			// added for case if WHILE haven't body, for example:
+			// while(0);
+			children[2] = &ast.CompoundStmt{}
+		}
+
+		forOperator.AddChild(children[2])
 	}
-	forOperator.AddChild(n.Children()[2])
 
 	return transpileForStmt(&forOperator, p)
 }

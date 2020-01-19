@@ -2,14 +2,15 @@ package ast
 
 // UnaryOperator is type of unary operator
 type UnaryOperator struct {
-	Addr       Address
-	Pos        Position
-	Type       string
-	Type2      string
-	IsLvalue   bool
-	IsPrefix   bool
-	Operator   string
-	ChildNodes []Node
+	Addr           Address
+	Pos            Position
+	Type           string
+	Type2          string
+	IsLvalue       bool
+	IsPrefix       bool
+	Operator       string
+	CannotOverflow bool
+	ChildNodes     []Node
 }
 
 func parseUnaryOperator(line string) *UnaryOperator {
@@ -19,19 +20,21 @@ func parseUnaryOperator(line string) *UnaryOperator {
 		(?P<lvalue> lvalue)?
 		(?P<prefix> prefix)?
 		(?P<postfix> postfix)?
-		 '(?P<operator>.*?)'`,
+		 '(?P<operator>.*?)'
+		(?P<cannot_overflow> cannot overflow)?`,
 		line,
 	)
 
 	return &UnaryOperator{
-		Addr:       ParseAddress(groups["address"]),
-		Pos:        NewPositionFromString(groups["position"]),
-		Type:       groups["type"],
-		Type2:      groups["type2"],
-		IsLvalue:   len(groups["lvalue"]) > 0,
-		IsPrefix:   len(groups["prefix"]) > 0,
-		Operator:   groups["operator"],
-		ChildNodes: []Node{},
+		Addr:           ParseAddress(groups["address"]),
+		Pos:            NewPositionFromString(groups["position"]),
+		Type:           groups["type"],
+		Type2:          groups["type2"],
+		IsLvalue:       len(groups["lvalue"]) > 0,
+		IsPrefix:       len(groups["prefix"]) > 0,
+		Operator:       groups["operator"],
+		CannotOverflow: len(groups["cannot_overflow"]) > 0,
+		ChildNodes:     []Node{},
 	}
 }
 
