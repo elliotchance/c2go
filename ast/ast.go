@@ -136,6 +136,8 @@ func Parse(fullline string) Node {
 		return parseFunctionDecl(line)
 	case "FullComment":
 		return parseFullComment(line)
+	case "FunctionNoProtoType":
+		return parseFunctionNoProtoType(line)
 	case "FunctionProtoType":
 		return parseFunctionProtoType(line)
 	case "ForStmt":
