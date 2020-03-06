@@ -24,7 +24,8 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
 	postStmts := []goast.Stmt{}
 	children := n.Children()
 
-	// There is always 4 or 5 children in an IfStmt. For example:
+	// With older versions of Clang there is always 4 or 5 children in an IfStmt.
+	// For example:
 	//
 	//     if (i == 0) {
 	//         return 0;
@@ -40,6 +41,12 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
 	//
 	// elseBody will be nil if there is no else clause.
 
+	// In Clang 9.0 (tested on Linux), an if-statement without an else has
+	// exactly 2 children.
+	//
+	// 1. conditional = BinaryOperator: i == 0
+	// 2. body = CompoundStmt: { return 0; }
+
 	// On linux I have seen only 4 children for an IfStmt with the same
 	// definitions above, but missing the first argument. Since we don't
 	// know what the first argument is for anyway we will just remove it on
@@ -51,19 +58,18 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
 		children = children[1:]
 	}
 
-	// From here on there must be 4 children.
-	if len(children) != 4 {
-		panic(fmt.Sprintf("Expected 4 children in IfStmt, got %#v", children))
-	}
 
 	// Maybe we will discover what the nil value is?
-	if children[0] != nil {
+	if len(children) == 4 && children[0] != nil {
 		panic("non-nil child 0 in IfStmt")
+	}
+	if len(children) == 4 {
+		children = children[1:]
 	}
 
 	// The last parameter must be false because we are transpiling an
 	// expression - assignment operators need to be wrapped in closures.
-	conditional, conditionalType, newPre, newPost, err := transpileToExpr(children[1], p, false)
+	conditional, conditionalType, newPre, newPost, err := transpileToExpr(children[0], p, false)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -83,7 +89,7 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
 		boolCondition = util.NewNil()
 	}
 
-	body, newPre, newPost, err := transpileToBlockStmt(children[2], p)
+	body, newPre, newPost, err := transpileToBlockStmt(children[1], p)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -101,8 +107,8 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
 		Body: body,
 	}
 
-	if children[3] != nil {
-		elseBody, newPre, newPost, err := transpileToBlockStmt(children[3], p)
+	if len(children) > 2 && children[2] != nil {
+		elseBody, newPre, newPost, err := transpileToBlockStmt(children[2], p)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -111,7 +117,7 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
 
 		if elseBody != nil {
 			r.Else = elseBody
-			if _, ok := children[3].(*ast.IfStmt); ok {
+			if _, ok := children[2].(*ast.IfStmt); ok {
 				if len(elseBody.List) == 1 {
 					r.Else = elseBody.List[0]
 				}
