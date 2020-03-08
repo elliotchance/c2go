@@ -17,7 +17,7 @@ type StringLiteral struct {
 
 func parseStringLiteral(line string) *StringLiteral {
 	groups := groupsFromRegex(
-		`<(?P<position>.*)> '(?P<type>.*)' lvalue (?P<value>".*")`,
+		`<(?P<position>.*)> '(?P<type>.*)'(?P<lvalue> lvalue)? (?P<value>".*")`,
 		line,
 	)
 
@@ -31,7 +31,7 @@ func parseStringLiteral(line string) *StringLiteral {
 		Pos:        NewPositionFromString(groups["position"]),
 		Type:       groups["type"],
 		Value:      s,
-		Lvalue:     true,
+		Lvalue:     len(groups["lvalue"]) > 0,
 		ChildNodes: []Node{},
 	}
 }

@@ -22,6 +22,14 @@ func TestStringLiteral(t *testing.T) {
 			Value:      "x\vx\x00xxx\axx\tx\n",
 			ChildNodes: []Node{},
 		},
+		`0x5632b5fa9818 <col:18> 'const char [4]' "foo"`: &StringLiteral{
+			Addr:       0x5632b5fa9818,
+			Pos:        NewPositionFromString("col:18"),
+			Type:       "const char [4]",
+			Lvalue:     false,
+			Value:      "foo",
+			ChildNodes: []Node{},
+		},
 	}
 
 	runNodeTests(t, nodes)
