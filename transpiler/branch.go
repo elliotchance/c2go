@@ -46,6 +46,7 @@ func transpileIfStmt(n *ast.IfStmt, p *program.Program) (
 	//
 	// 1. conditional = BinaryOperator: i == 0
 	// 2. body = CompoundStmt: { return 0; }
+	// 3. (optional) else-body = CompoundStmt: { return 1; }
 
 	// On linux I have seen only 4 children for an IfStmt with the same
 	// definitions above, but missing the first argument. Since we don't
