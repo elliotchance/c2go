@@ -439,17 +439,22 @@ func transpileForStmt(n *ast.ForStmt, p *program.Program) (
 //    |     `-DeclRefExpr 0x2530c78 <col:3> 'int' lvalue Var 0x25306f8 'i' 'int'
 func transpileWhileStmt(n *ast.WhileStmt, p *program.Program) (
 	goast.Stmt, []goast.Stmt, []goast.Stmt, error) {
+	// Skip first nil-child if present.
+	children := n.Children()
+	if len(children) == 3 && children[0] == nil {
+		children = children[1:]
+	}
 	var forOperator ast.ForStmt
 	forOperator.AddChild(nil)
 	forOperator.AddChild(nil)
-	forOperator.AddChild(n.Children()[1])
+	forOperator.AddChild(children[0])
 	forOperator.AddChild(nil)
-	if n.Children()[2] == nil {
+	if children[1] == nil {
 		// added for case if WHILE haven't body, for example:
 		// while(0);
-		n.Children()[2] = &ast.CompoundStmt{}
+		children[1] = &ast.CompoundStmt{}
 	}
-	forOperator.AddChild(n.Children()[2])
+	forOperator.AddChild(children[1])
 
 	return transpileForStmt(&forOperator, p)
 }
