@@ -90,6 +90,19 @@ func TestMemberExpr(t *testing.T) {
 			IsPointer:  false,
 			ChildNodes: []Node{},
 		},
+		`0x55dfff00bb30 <col:16, col:18> 'int' lvalue .x 0x55dfff00b7c8 non_odr_use_unevaluated`: &MemberExpr{
+			Addr:                 0x55dfff00bb30,
+			Pos:                  NewPositionFromString("col:16, col:18"),
+			Type:                 "int",
+			Type2:                "",
+			IsLvalue:             true,
+			IsBitfield:           false,
+			Name:                 "x",
+			Address2:             "0x55dfff00b7c8",
+			IsPointer:            false,
+			NonODRUseUnevaluated: true,
+			ChildNodes:           []Node{},
+		},
 	}
 
 	runNodeTests(t, nodes)

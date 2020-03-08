@@ -2,16 +2,17 @@ package ast
 
 // MemberExpr is expression.
 type MemberExpr struct {
-	Addr       Address
-	Pos        Position
-	Type       string
-	Type2      string
-	Name       string
-	IsLvalue   bool
-	IsBitfield bool
-	Address2   string
-	IsPointer  bool
-	ChildNodes []Node
+	Addr                 Address
+	Pos                  Position
+	Type                 string
+	Type2                string
+	Name                 string
+	IsLvalue             bool
+	IsBitfield           bool
+	Address2             string
+	IsPointer            bool
+	NonODRUseUnevaluated bool
+	ChildNodes           []Node
 }
 
 func parseMemberExpr(line string) *MemberExpr {
@@ -23,7 +24,8 @@ func parseMemberExpr(line string) *MemberExpr {
 		(?P<bitfield> bitfield)?
 		 (?P<pointer>[->.]+)
 		(?P<name>\w+)?
-		 (?P<address2>[0-9a-fx]+)`,
+		 (?P<address2>[0-9a-fx]+)
+		(?P<non_odr_use_unevaluated> non_odr_use_unevaluated)?`,
 		line,
 	)
 
@@ -33,16 +35,17 @@ func parseMemberExpr(line string) *MemberExpr {
 	}
 
 	return &MemberExpr{
-		Addr:       ParseAddress(groups["address"]),
-		Pos:        NewPositionFromString(groups["position"]),
-		Type:       groups["type"],
-		Type2:      type2,
-		IsPointer:  groups["pointer"] == "->",
-		Name:       groups["name"],
-		IsLvalue:   len(groups["lvalue"]) > 0,
-		IsBitfield: len(groups["bitfield"]) > 0,
-		Address2:   groups["address2"],
-		ChildNodes: []Node{},
+		Addr:                 ParseAddress(groups["address"]),
+		Pos:                  NewPositionFromString(groups["position"]),
+		Type:                 groups["type"],
+		Type2:                type2,
+		IsPointer:            groups["pointer"] == "->",
+		Name:                 groups["name"],
+		IsLvalue:             len(groups["lvalue"]) > 0,
+		IsBitfield:           len(groups["bitfield"]) > 0,
+		Address2:             groups["address2"],
+		NonODRUseUnevaluated: len(groups["non_odr_use_unevaluated"]) > 0,
+		ChildNodes:           []Node{},
 	}
 }
 
