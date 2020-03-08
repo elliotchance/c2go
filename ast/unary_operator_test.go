@@ -46,6 +46,17 @@ func TestUnaryOperator(t *testing.T) {
 			Operator:   "*",
 			ChildNodes: []Node{},
 		},
+		`0x55a7effc0878 <line:69:13, col:59> 'int' prefix '!' cannot overflow`: &UnaryOperator{
+			Addr:           0x55a7effc0878,
+			Pos:            NewPositionFromString("line:69:13, col:59"),
+			Type:           "int",
+			Type2:          "",
+			IsLvalue:       false,
+			IsPrefix:       true,
+			Operator:       "!",
+			CannotOverflow: true,
+			ChildNodes:     []Node{},
+		},
 	}
 
 	runNodeTests(t, nodes)
