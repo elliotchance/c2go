@@ -116,5 +116,8 @@ func transpileConstantExpr(n *ast.ConstantExpr, p *program.Program) (goast.Expr,
 	if len(children) != 1 {
 		p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("ConstantExpr has %d children, expected 1 child", len(children)), n))
 	}
+	if len(n.Type) > 0 {
+		t = n.Type
+	}
 	return expr, t, err
 }
