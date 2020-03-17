@@ -71,6 +71,20 @@ func TestDeclRefExpr(t *testing.T) {
 			Type3:      "T_ENUM",
 			ChildNodes: []Node{},
 		},
+		`0x55e2113b7970 <col:16> 'char [123]' lvalue Var 0x55e2113b7758 'a' 'char [123]' non_odr_use_unevaluated`: &DeclRefExpr{
+			Addr:                 0x55e2113b7970,
+			Pos:                  NewPositionFromString("col:16"),
+			Type:                 "char [123]",
+			Type1:                "",
+			Lvalue:               true,
+			For:                  "Var",
+			Address2:             "0x55e2113b7758",
+			Name:                 "a",
+			Type2:                "char [123]",
+			Type3:                "",
+			NonODRUseUnevaluated: true,
+			ChildNodes:           []Node{},
+		},
 	}
 
 	runNodeTests(t, nodes)

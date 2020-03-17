@@ -2,17 +2,18 @@ package ast
 
 // DeclRefExpr is expression.
 type DeclRefExpr struct {
-	Addr       Address
-	Pos        Position
-	Type       string
-	Type1      string
-	Lvalue     bool
-	For        string
-	Address2   string
-	Name       string
-	Type2      string
-	Type3      string
-	ChildNodes []Node
+	Addr                 Address
+	Pos                  Position
+	Type                 string
+	Type1                string
+	Lvalue               bool
+	For                  string
+	Address2             string
+	Name                 string
+	Type2                string
+	Type3                string
+	NonODRUseUnevaluated bool
+	ChildNodes           []Node
 }
 
 func parseDeclRefExpr(line string) *DeclRefExpr {
@@ -25,22 +26,24 @@ func parseDeclRefExpr(line string) *DeclRefExpr {
 		 (?P<address2>[0-9a-fx]+)
 		 '(?P<name>.*?)'
 		 '(?P<type2>.*?)'(:'(?P<type3>.*?)')?
+		(?P<non_odr_use_unevaluated> non_odr_use_unevaluated)?
 		`,
 		line,
 	)
 
 	return &DeclRefExpr{
-		Addr:       ParseAddress(groups["address"]),
-		Pos:        NewPositionFromString(groups["position"]),
-		Type:       groups["type"],
-		Type1:      groups["type1"],
-		Lvalue:     len(groups["lvalue"]) > 0,
-		For:        groups["for"],
-		Address2:   groups["address2"],
-		Name:       groups["name"],
-		Type2:      groups["type2"],
-		Type3:      groups["type3"],
-		ChildNodes: []Node{},
+		Addr:                 ParseAddress(groups["address"]),
+		Pos:                  NewPositionFromString(groups["position"]),
+		Type:                 groups["type"],
+		Type1:                groups["type1"],
+		Lvalue:               len(groups["lvalue"]) > 0,
+		For:                  groups["for"],
+		Address2:             groups["address2"],
+		Name:                 groups["name"],
+		Type2:                groups["type2"],
+		Type3:                groups["type3"],
+		NonODRUseUnevaluated: len(groups["non_odr_use_unevaluated"]) > 0,
+		ChildNodes:           []Node{},
 	}
 }
 
