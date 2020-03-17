@@ -36,6 +36,14 @@ func TestImplicitCastExpr(t *testing.T) {
 			Kind:       "LValueToRValue",
 			ChildNodes: []Node{},
 		},
+		`0x5600a8148b10 <col:16> 'unsigned int' <LValueToRValue> part_of_explicit_cast`: &ImplicitCastExpr{
+			Addr:               0x5600a8148b10,
+			Pos:                NewPositionFromString("col:16"),
+			Type:               "unsigned int",
+			Kind:               "LValueToRValue",
+			PartOfExplicitCast: true,
+			ChildNodes:         []Node{},
+		},
 	}
 
 	runNodeTests(t, nodes)

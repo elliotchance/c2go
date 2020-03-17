@@ -2,12 +2,13 @@ package ast
 
 // ImplicitCastExpr is expression.
 type ImplicitCastExpr struct {
-	Addr       Address
-	Pos        Position
-	Type       string
-	Type2      string
-	Kind       string
-	ChildNodes []Node
+	Addr               Address
+	Pos                Position
+	Type               string
+	Type2              string
+	Kind               string
+	PartOfExplicitCast bool
+	ChildNodes         []Node
 }
 
 // ImplicitCastExprArrayToPointerDecay - constant
@@ -18,17 +19,19 @@ func parseImplicitCastExpr(line string) *ImplicitCastExpr {
 		`<(?P<position>.*)>
 		 '(?P<type>.*?)'
 		(:'(?P<type2>.*?)')?
-		 <(?P<kind>.*)>`,
+		 <(?P<kind>.*)>
+		(?P<part_of_explicit_cast> part_of_explicit_cast)?`,
 		line,
 	)
 
 	return &ImplicitCastExpr{
-		Addr:       ParseAddress(groups["address"]),
-		Pos:        NewPositionFromString(groups["position"]),
-		Type:       groups["type"],
-		Type2:      groups["type2"],
-		Kind:       groups["kind"],
-		ChildNodes: []Node{},
+		Addr:               ParseAddress(groups["address"]),
+		Pos:                NewPositionFromString(groups["position"]),
+		Type:               groups["type"],
+		Type2:              groups["type2"],
+		Kind:               groups["kind"],
+		PartOfExplicitCast: len(groups["part_of_explicit_cast"]) > 0,
+		ChildNodes:         []Node{},
 	}
 }
 
