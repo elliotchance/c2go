@@ -39,8 +39,26 @@ func Parse(fullline string) Node {
 
 	// This is a special case. I'm not sure if it's a bug in the clang AST
 	// dumper. It should have children.
+	//
+	// TODO: remove this special case (including the ArrayFiller AST node)? Never
+	// versions of Clang (9.0+) use array_filler as a prefix of other nodes (e.g.
+	// ImplicitValueInitExpr).
 	if line == "array filler" {
 		return parseArrayFiller(line)
+	}
+
+	// In Clang 9.0, array_filler may be used as a prefix to a
+	// ImplicitValueInitExpr, when implicitly initializing one or more elements of
+	// an array.
+	//
+	// Example:
+	//
+	//    array_filler: ImplicitValueInitExpr 0x5652b1a1faf8 <<invalid sloc>> 'int'
+	const arrayFillerPrefix = "array_filler: "
+	isArrayFiller := false
+	if strings.HasPrefix(line, arrayFillerPrefix) {
+		line = strings.TrimPrefix(line, arrayFillerPrefix)
+		isArrayFiller = true
 	}
 
 	parts := strings.SplitN(line, " ", 2)
@@ -155,7 +173,9 @@ func Parse(fullline string) Node {
 	case "ImplicitCastExpr":
 		return parseImplicitCastExpr(line)
 	case "ImplicitValueInitExpr":
-		return parseImplicitValueInitExpr(line)
+		n := parseImplicitValueInitExpr(line)
+		n.IsArrayFiller = isArrayFiller
+		return n
 	case "IncompleteArrayType":
 		return parseIncompleteArrayType(line)
 	case "IndirectFieldDecl":

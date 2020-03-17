@@ -2,11 +2,12 @@ package ast
 
 // ImplicitValueInitExpr is expression
 type ImplicitValueInitExpr struct {
-	Addr       Address
-	Pos        Position
-	Type1      string
-	Type2      string
-	ChildNodes []Node
+	Addr          Address
+	Pos           Position
+	Type1         string
+	Type2         string
+	IsArrayFiller bool
+	ChildNodes    []Node
 }
 
 func parseImplicitValueInitExpr(line string) *ImplicitValueInitExpr {
