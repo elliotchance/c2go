@@ -15,10 +15,10 @@ const ImplicitCastExprArrayToPointerDecay = "ArrayToPointerDecay"
 
 func parseImplicitCastExpr(line string) *ImplicitCastExpr {
 	groups := groupsFromRegex(
-		`<(?P<position>.*)>
-		 '(?P<type>.*?)'
-		(:'(?P<type2>.*?)')?
-		 <(?P<kind>.*)>`,
+		`<(?P<position>[^>]*)>
+		 '(?P<type>[^']*?)'
+		(:'(?P<type2>[^']*?)')?
+		 <(?P<kind>[^>]*)>( part_of_explicit_cast)?`,
 		line,
 	)
 
