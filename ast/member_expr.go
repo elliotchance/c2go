@@ -19,8 +19,10 @@ func parseMemberExpr(line string) *MemberExpr {
 		`<(?P<position>.*)>
 		 '(?P<type>.*?)'
 		(?P<type2>:'.*?')?
-		(?P<lvalue> lvalue)?
-		(?P<bitfield> bitfield)?
+		(?:
+			(?P<lvalue> lvalue)?|
+			(?P<bitfield> bitfield)?
+		)*
 		 (?P<pointer>[->.]+)
 		(?P<name>\w+)?
 		 (?P<address2>[0-9a-fx]+)`,

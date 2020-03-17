@@ -21,8 +21,10 @@ func parseFieldDecl(line string) *FieldDecl {
 	groups := groupsFromRegex(
 		`<(?P<position>.*)>
 		(?P<position2> col:\d+| line:\d+:\d+)?
-		(?P<implicit> implicit)?
-		(?P<referenced> referenced)?
+		(?:
+			(?P<implicit> implicit)?|
+			(?P<referenced> referenced)?
+		)*
 		(?P<name> \w+?)?
 		 '(?P<type>.+?)'
 		(:'(?P<type2>.*?)')?

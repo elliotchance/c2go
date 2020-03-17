@@ -13,8 +13,10 @@ type ReturnsTwiceAttr struct {
 func parseReturnsTwiceAttr(line string) *ReturnsTwiceAttr {
 	groups := groupsFromRegex(
 		`<(?P<position>.*)>
-		(?P<inherited> Inherited)?
-		(?P<implicit> Implicit)?
+		(?:
+			(?P<inherited> Inherited)?|
+			(?P<implicit> Implicit)?
+		)*
 		`,
 		line,
 	)

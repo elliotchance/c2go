@@ -16,9 +16,11 @@ func parseUnaryOperator(line string) *UnaryOperator {
 	groups := groupsFromRegex(
 		`<(?P<position>.*)>
 		 '(?P<type>.*?)'(:'(?P<type2>.*)')?
-		(?P<lvalue> lvalue)?
-		(?P<prefix> prefix)?
-		(?P<postfix> postfix)?
+		(?:
+			(?P<lvalue> lvalue)?|
+			(?P<prefix> prefix)?|
+			(?P<postfix> postfix)?
+		)*
 		 '(?P<operator>.*?)'`,
 		line,
 	)

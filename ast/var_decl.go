@@ -27,15 +27,19 @@ func parseVarDecl(line string) *VarDecl {
 		`(?:prev (?P<prev>0x[0-9a-f]+) )?
 		(?:parent (?P<parent>0x[0-9a-f]+) )?
 		<(?P<position>.*)>(?P<position2> .+:\d+)?
-		(?P<used> used)?
-		(?P<referenced> referenced)?
+		(?:
+			(?P<used> used)?|
+			(?P<referenced> referenced)?
+		)*
 		(?P<name> \w+)?
 		 '(?P<type>.+?)'
 		(?P<type2>:'.*?')?
-		(?P<extern> extern)?
-		(?P<static> static)?
-		(?P<cinit> cinit)?
-		(?P<register> register)?
+		(?:
+			(?P<extern> extern)?|
+			(?P<static> static)?|
+			(?P<cinit> cinit)?|
+			(?P<register> register)?
+		)*
 		`,
 		line,
 	)

@@ -22,8 +22,10 @@ func parseTypedefDecl(line string) *TypedefDecl {
 		`(?:prev (?P<prev>0x[0-9a-f]+) )?
 		<(?P<position><invalid sloc>|.*?)>
 		(?P<position2> <invalid sloc>| col:\d+| line:\d+:\d+)?
-		(?P<implicit> implicit)?
-		(?P<referenced> referenced)?
+		(?:
+			(?P<implicit> implicit)?|
+			(?P<referenced> referenced)?
+		)*
 		(?P<name> \w+)?
 		(?P<type> '.*?')?
 		(?P<type2>:'.*?')?`,

@@ -166,6 +166,22 @@ func TestVarDecl(t *testing.T) {
 			Parent:       0x7f985e0246d0,
 			ChildNodes:   []Node{},
 		},
+		`0x7fb70e80ff30 <col:11, col:55> col:32 used c 'pcre_uint32':'unsigned int' register cinit`: &VarDecl{
+			Addr:         0x7fb70e80ff30,
+			Pos:          NewPositionFromString("col:11, col:55"),
+			Position2:    "col:32",
+			Name:         "c",
+			Type:         "pcre_uint32",
+			Type2:        "unsigned int",
+			IsExtern:     false,
+			IsUsed:       true,
+			IsCInit:      true,
+			IsReferenced: false,
+			IsStatic:     false,
+			IsRegister:   true,
+			Parent:       0,
+			ChildNodes:   []Node{},
+		},
 	}
 
 	runNodeTests(t, nodes)

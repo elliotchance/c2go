@@ -14,8 +14,10 @@ type ParenExpr struct {
 func parseParenExpr(line string) *ParenExpr {
 	groups := groupsFromRegex(
 		`<(?P<position>.*)> '(?P<type1>.*?)'(:'(?P<type2>.*)')?
-		(?P<lvalue> lvalue)?
-		(?P<bitfield> bitfield)?
+		(?:
+			(?P<lvalue> lvalue)?|
+			(?P<bitfield> bitfield)?
+		)*
 		`,
 		line,
 	)
