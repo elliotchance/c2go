@@ -109,3 +109,15 @@ func transpileCompoundLiteralExpr(n *ast.CompoundLiteralExpr, p *program.Program
 	expr, t, _, _, err := transpileToExpr(n.Children()[0], p, false)
 	return expr, t, err
 }
+
+func transpileConstantExpr(n *ast.ConstantExpr, p *program.Program) (goast.Expr, string, error) {
+	children := n.Children()
+	expr, t, _, _, err := transpileToExpr(children[0], p, false)
+	if len(children) != 1 {
+		p.AddMessage(p.GenerateWarningMessage(fmt.Errorf("ConstantExpr has %d children, expected 1 child", len(children)), n))
+	}
+	if len(n.Type) > 0 {
+		t = n.Type
+	}
+	return expr, t, err
+}

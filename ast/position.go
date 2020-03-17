@@ -263,6 +263,8 @@ func setPosition(node Node, position Position) {
 		n.Pos = position
 	case *ConstAttr:
 		n.Pos = position
+	case *ConstantExpr:
+		n.Pos = position
 	case *ContinueStmt:
 		n.Pos = position
 	case *CompoundAssignOperator:

@@ -110,6 +110,8 @@ func Parse(fullline string) Node {
 		return parseConstAttr(line)
 	case "ConstantArrayType":
 		return parseConstantArrayType(line)
+	case "ConstantExpr":
+		return parseConstantExpr(line)
 	case "ContinueStmt":
 		return parseContinueStmt(line)
 	case "CompoundAssignOperator":

@@ -152,6 +152,9 @@ func transpileToExpr(node ast.Node, p *program.Program, exprIsStmt bool) (
 		exprType = "double"
 		err = nil
 
+	case *ast.ConstantExpr:
+		expr, exprType, err = transpileConstantExpr(n, p)
+
 	case *ast.PredefinedExpr:
 		expr, exprType, err = transpilePredefinedExpr(n, p)
 
