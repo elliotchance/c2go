@@ -20,6 +20,14 @@ func TestEnumDecl(t *testing.T) {
 			Name:       "week",
 			ChildNodes: []Node{},
 		},
+		`0x5570ff477388 prev 0x5570ff445c40 <line:1030:1, line:1034:1> line:1030:6 cb_assign_type`: &EnumDecl{
+			Addr:       0x5570ff477388,
+			Prev:       0x5570ff445c40,
+			Pos:        NewPositionFromString("line:1030:1, line:1034:1"),
+			Position2:  " line:1030:6",
+			Name:       "cb_assign_type",
+			ChildNodes: []Node{},
+		},
 	}
 
 	runNodeTests(t, nodes)
