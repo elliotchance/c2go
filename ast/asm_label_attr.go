@@ -2,27 +2,30 @@ package ast
 
 // AsmLabelAttr is a type of attribute for assembler label
 type AsmLabelAttr struct {
-	Addr         Address
-	Pos          Position
-	Inherited    bool
-	FunctionName string
-	ChildNodes   []Node
+	Addr           Address
+	Pos            Position
+	Inherited      bool
+	FunctionName   string
+	ChildNodes     []Node
+	IsLiteralLabel bool
 }
 
 func parseAsmLabelAttr(line string) *AsmLabelAttr {
 	groups := groupsFromRegex(
 		`<(?P<position>.*)>
 		(?P<inherited> Inherited)?
-		 "(?P<function>.+)"`,
+		 "(?P<function>.+)"
+		(?P<literal> IsLiteralLabel)?`,
 		line,
 	)
 
 	return &AsmLabelAttr{
-		Addr:         ParseAddress(groups["address"]),
-		Pos:          NewPositionFromString(groups["position"]),
-		Inherited:    len(groups["inherited"]) > 0,
-		FunctionName: groups["function"],
-		ChildNodes:   []Node{},
+		Addr:           ParseAddress(groups["address"]),
+		Pos:            NewPositionFromString(groups["position"]),
+		Inherited:      len(groups["inherited"]) > 0,
+		FunctionName:   groups["function"],
+		ChildNodes:     []Node{},
+		IsLiteralLabel: len(groups["literal"]) > 0,
 	}
 }
 
