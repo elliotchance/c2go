@@ -10,7 +10,7 @@ type WarnUnusedResultAttr struct {
 }
 
 func parseWarnUnusedResultAttr(line string) *WarnUnusedResultAttr {
-	groups := groupsFromRegex(`<(?P<position>.*)>(?P<inherited> Inherited)?( warn_unused_result)?`, line)
+	groups := groupsFromRegex(`<(?P<position>.*)>(?P<inherited> Inherited)?( warn_unused_result)?( "")?`, line)
 
 	return &WarnUnusedResultAttr{
 		Addr:       ParseAddress(groups["address"]),
