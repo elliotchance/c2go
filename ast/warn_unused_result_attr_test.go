@@ -24,6 +24,12 @@ func TestWarnUnusedResultAttr(t *testing.T) {
 			Inherited:  true,
 			ChildNodes: []Node{},
 		},
+		`0x55c2df4f93b8 <col:53> warn_unused_result ""`: &WarnUnusedResultAttr{
+			Addr:       0x55c2df4f93b8,
+			Pos:        NewPositionFromString("col:53"),
+			Inherited:  false,
+			ChildNodes: []Node{},
+		},
 	}
 
 	runNodeTests(t, nodes)
