@@ -30,6 +30,14 @@ func TestStringLiteral(t *testing.T) {
 			Value:      "foo",
 			ChildNodes: []Node{},
 		},
+		`0x61b80c8 <col:19> 'wchar_t [21]' lvalue L"hello$$\x4F60\x597D\242\242\x4E16\x754C\x20AC\x20ACworld"`: &StringLiteral{
+			Addr:       0x61b80c8,
+			Pos:        NewPositionFromString("col:19"),
+			Type:       "wchar_t [21]",
+			Lvalue:     true,
+			Value:      "hello$$\x4F60\x597D\242\242\x4E16\x754C\x20AC\x20ACworld",
+			ChildNodes: []Node{},
+		},
 	}
 
 	runNodeTests(t, nodes)
