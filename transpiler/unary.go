@@ -729,6 +729,9 @@ func transpileUnaryExprOrTypeTraitExpr(n *ast.UnaryExprOrTypeTraitExpr, p *progr
 			case *ast.IntegerLiteral:
 				t = ty.Type
 
+			case *ast.StringLiteral:
+				t = ty.Type
+
 			default:
 				panic(fmt.Sprintf("cannot do unary on: %#v", ty))
 			}
