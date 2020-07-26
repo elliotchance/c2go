@@ -720,6 +720,9 @@ func transpileUnaryExprOrTypeTraitExpr(n *ast.UnaryExprOrTypeTraitExpr, p *progr
 			case *ast.CStyleCastExpr:
 				t = ty.Type
 
+			case *ast.ConditionalOperator:
+				t = ty.Type
+
 			default:
 				panic(fmt.Sprintf("cannot do unary on: %#v", ty))
 			}
