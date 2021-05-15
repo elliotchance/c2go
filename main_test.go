@@ -77,7 +77,7 @@ func TestIntegrationScripts(t *testing.T) {
 			cProgram := programOut{}
 			goProgram := programOut{}
 
-			// create subfolders for test
+			// create sub folders for test
 			subFolder := buildFolder + separator + strings.Split(file, ".")[0] + separator
 			cPath := subFolder + cFileName
 
@@ -340,7 +340,7 @@ func TestStartPreprocess(t *testing.T) {
 	}
 }
 
-func TestMultifileTranspilation(t *testing.T) {
+func TestMultiFileTranspilation(t *testing.T) {
 	tcs := []struct {
 		source         []string
 		expectedOutput string
@@ -396,7 +396,7 @@ func TestMultifileTranspilation(t *testing.T) {
 	}
 }
 
-func TestTrigraph(t *testing.T) {
+func TestTriGraph(t *testing.T) {
 	var args = DefaultProgramArgs()
 	args.inputFiles = []string{"./tests/trigraph/main.c"}
 	dir, err := ioutil.TempDir("", "c2go_trigraph")
