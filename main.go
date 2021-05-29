@@ -43,6 +43,7 @@ var stderr io.Writer = os.Stderr
 // modify any specific attributes.
 type ProgramArgs struct {
 	verbose     bool
+	keepWorkDir bool
 	ast         bool
 	inputFiles  []string
 	clangFlags  []string
@@ -57,6 +58,7 @@ type ProgramArgs struct {
 func DefaultProgramArgs() ProgramArgs {
 	return ProgramArgs{
 		verbose:      false,
+		keepWorkDir:  false,
 		ast:          false,
 		packageName:  "main",
 		clangFlags:   []string{},
@@ -190,7 +192,7 @@ func Start(args ProgramArgs) (err error) {
 		fmt.Println("Running clang preprocessor...")
 	}
 
-	pp, comments, includes, err := preprocessor.Analyze(args.inputFiles, args.clangFlags, args.verbose)
+	pp, comments, includes, err := preprocessor.Analyze(args.inputFiles, args.clangFlags, args.verbose, args.keepWorkDir)
 	if err != nil {
 		return fmt.Errorf("issue running preprocessor: %w", err)
 	}
@@ -341,6 +343,7 @@ var (
 	versionFlag       = flag.Bool("v", false, "print the version and exit")
 	transpileCommand  = flag.NewFlagSet("transpile", flag.ContinueOnError)
 	verboseFlag       = transpileCommand.Bool("V", false, "print progress as comments")
+	keepWorkDirFlag   = transpileCommand.Bool("keep-workdir", false, "keep working directory")
 	outputFlag        = transpileCommand.String("o", "", "output Go generated code to the specified file")
 	packageFlag       = transpileCommand.String("p", "main", "set the name of the generated package")
 	transpileHelpFlag = transpileCommand.Bool("h", false, "print help information")
@@ -420,6 +423,7 @@ func runCommand() int {
 		args.outputFile = *outputFlag
 		args.packageName = *packageFlag
 		args.verbose = *verboseFlag
+		args.keepWorkDir = *keepWorkDirFlag
 		args.clangFlags = clangFlags
 	default:
 		flag.Usage()
