@@ -81,12 +81,12 @@ func (e *entity) isSame(x *entity) bool {
 }
 
 // Analyze - separation preprocessor code to part
-func Analyze(inputFiles, clangFlags []string) (pp []byte,
+func Analyze(inputFiles, clangFlags []string, verbose bool) (pp []byte,
 	comments []program.Comment, includes []program.IncludeHeader, err error) {
 
 	var allItems []entity
 
-	allItems, err = analyzeFiles(inputFiles, clangFlags)
+	allItems, err = analyzeFiles(inputFiles, clangFlags, verbose)
 	if err != nil {
 		return
 	}
@@ -161,11 +161,11 @@ func Analyze(inputFiles, clangFlags []string) (pp []byte,
 }
 
 // analyzeFiles - analyze single file and separation preprocessor code to part
-func analyzeFiles(inputFiles, clangFlags []string) (items []entity, err error) {
+func analyzeFiles(inputFiles, clangFlags []string, verbose bool) (items []entity, err error) {
 	// See : https://clang.llvm.org/docs/CommandGuide/clang.html
 	// clang -E <file>    Run the preprocessor stage.
 	var out bytes.Buffer
-	out, err = getPreprocessSources(inputFiles, clangFlags)
+	out, err = getPreprocessSources(inputFiles, clangFlags, verbose)
 	if err != nil {
 		return
 	}
@@ -210,7 +210,7 @@ func analyzeFiles(inputFiles, clangFlags []string) (items []entity, err error) {
 
 // See : https://clang.llvm.org/docs/CommandGuide/clang.html
 // clang -E <file>    Run the preprocessor stage.
-func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, err error) {
+func getPreprocessSources(inputFiles, clangFlags []string, verbose bool) (out bytes.Buffer, err error) {
 	// get temp dir
 	dir, err := ioutil.TempDir("", "c2go-union")
 	if err != nil {
@@ -254,6 +254,10 @@ func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, er
 	args = append(args, unionFileName) // All inputFiles
 
 	var outFile bytes.Buffer
+	if verbose {
+		fmt.Println("executing clang:")
+		fmt.Println("clang", strings.Join(args, " "))
+	}
 	cmd := exec.Command("clang", args...)
 	cmd.Stdout = &outFile
 	cmd.Stderr = &stderr
