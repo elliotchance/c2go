@@ -220,10 +220,8 @@ func getPreprocessSources(inputFiles, clangFlags []string, verbose, keepWorkDir 
 	if !keepWorkDir {
 		defer func() { _ = os.RemoveAll(dir) }()
 	}
-
 	// file name union file
 	var unionFileName = dir + "/" + "unionFileName.c"
-
 	// create a body for union file
 	var unionBody string
 	for i := range inputFiles {
@@ -273,11 +271,7 @@ func getPreprocessSources(inputFiles, clangFlags []string, verbose, keepWorkDir 
 		io.Copy(os.Stderr, &stderr)
 	}
 	_, err = out.Write(outFile.Bytes())
-	if err != nil {
-		return
-	}
-
-	return
+	return out, err
 }
 
 func generateIncludeList(userList, allList []string) (
