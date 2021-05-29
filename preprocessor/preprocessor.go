@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -81,12 +82,12 @@ func (e *entity) isSame(x *entity) bool {
 }
 
 // Analyze - separation preprocessor code to part
-func Analyze(inputFiles, clangFlags []string) (pp []byte,
+func Analyze(inputFiles, clangFlags []string, verbose, keepWorkDir bool) (pp []byte,
 	comments []program.Comment, includes []program.IncludeHeader, err error) {
 
 	var allItems []entity
 
-	allItems, err = analyzeFiles(inputFiles, clangFlags)
+	allItems, err = analyzeFiles(inputFiles, clangFlags, verbose, keepWorkDir)
 	if err != nil {
 		return
 	}
@@ -161,11 +162,11 @@ func Analyze(inputFiles, clangFlags []string) (pp []byte,
 }
 
 // analyzeFiles - analyze single file and separation preprocessor code to part
-func analyzeFiles(inputFiles, clangFlags []string) (items []entity, err error) {
+func analyzeFiles(inputFiles, clangFlags []string, verbose, keepWorkDir bool) (items []entity, err error) {
 	// See : https://clang.llvm.org/docs/CommandGuide/clang.html
 	// clang -E <file>    Run the preprocessor stage.
 	var out bytes.Buffer
-	out, err = getPreprocessSources(inputFiles, clangFlags)
+	out, err = getPreprocessSources(inputFiles, clangFlags, verbose, keepWorkDir)
 	if err != nil {
 		return
 	}
@@ -210,17 +211,17 @@ func analyzeFiles(inputFiles, clangFlags []string) (items []entity, err error) {
 
 // See : https://clang.llvm.org/docs/CommandGuide/clang.html
 // clang -E <file>    Run the preprocessor stage.
-func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, err error) {
+func getPreprocessSources(inputFiles, clangFlags []string, verbose, keepWorkDir bool) (out bytes.Buffer, err error) {
 	// get temp dir
 	dir, err := ioutil.TempDir("", "c2go-union")
 	if err != nil {
 		return
 	}
-	defer func() { _ = os.RemoveAll(dir) }()
-
+	if !keepWorkDir {
+		defer func() { _ = os.RemoveAll(dir) }()
+	}
 	// file name union file
 	var unionFileName = dir + "/" + "unionFileName.c"
-
 	// create a body for union file
 	var unionBody string
 	for i := range inputFiles {
@@ -254,6 +255,10 @@ func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, er
 	args = append(args, unionFileName) // All inputFiles
 
 	var outFile bytes.Buffer
+	if verbose {
+		fmt.Println("executing clang:")
+		fmt.Println("clang", strings.Join(args, " "))
+	}
 	cmd := exec.Command("clang", args...)
 	cmd.Stdout = &outFile
 	cmd.Stderr = &stderr
@@ -262,12 +267,11 @@ func getPreprocessSources(inputFiles, clangFlags []string) (out bytes.Buffer, er
 		err = fmt.Errorf("preprocess for file: %v\nfailed: %v\nStdErr = %v", inputFiles, err, stderr.String())
 		return
 	}
-	_, err = out.Write(outFile.Bytes())
-	if err != nil {
-		return
+	if verbose {
+		io.Copy(os.Stderr, &stderr)
 	}
-
-	return
+	_, err = out.Write(outFile.Bytes())
+	return out, err
 }
 
 func generateIncludeList(userList, allList []string) (
