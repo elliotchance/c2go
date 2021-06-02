@@ -190,9 +190,9 @@ func Start(args ProgramArgs) (err error) {
 		fmt.Println("Running clang preprocessor...")
 	}
 
-	pp, comments, includes, err := preprocessor.Analyze(args.inputFiles, args.clangFlags)
+	pp, comments, includes, err := preprocessor.Analyze(args.inputFiles, args.clangFlags, args.verbose)
 	if err != nil {
-		return err
+		return fmt.Errorf("issue running preprocessor: %w", err)
 	}
 
 	if args.verbose {
