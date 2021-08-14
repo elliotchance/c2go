@@ -574,7 +574,7 @@ func ParseFunction(s string) (f []string, r []string, err error) {
 var (
 	rxconst      = regexp.MustCompile(`\bconst\b`)
 	rxvolatile   = regexp.MustCompile(`\bvolatile\b`)
-	rx__restrict = regexp.MustCompile(`\b__restrict\b`)
+	rxUUrestrict = regexp.MustCompile(`\b__restrict\b`)
 	rxrestrict   = regexp.MustCompile(`\brestrict\b`)
 )
 
@@ -593,7 +593,7 @@ func CleanCType(s string) (out string) {
 	// Remove any whitespace or attributes that are not relevant to Go.
 	out = rxconst.ReplaceAllLiteralString(out, "")
 	out = rxvolatile.ReplaceAllLiteralString(out, "")
-	out = rx__restrict.ReplaceAllLiteralString(out, "")
+	out = rxUUrestrict.ReplaceAllLiteralString(out, "")
 	out = rxrestrict.ReplaceAllLiteralString(out, "")
 	out = strings.Replace(out, "\t", "", -1)
 	out = strings.Replace(out, "\n", "", -1)
