@@ -638,9 +638,7 @@ func Fread(ptr unsafe.Pointer, size1, size2 int32, f *File) int32 {
 
 	// Despite any error we need to make sure the bytes read are copied to the
 	// destination buffer.
-	for i, b := range newBuffer {
-		ptrSlice[i] = b
-	}
+	copy(ptrSlice, newBuffer)
 
 	// Now we can handle the success or failure.
 	if err != nil {
