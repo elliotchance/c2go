@@ -392,14 +392,14 @@ func resolveFunction(p *program.Program, s string) (goType string, err error) {
 	f, r, err = SeparateFunction(p, s)
 	goType = "func("
 	for i := range f {
-		goType += fmt.Sprintf("%s", f[i])
+		goType += f[i]
 		if i < len(f)-1 {
 			goType += " , "
 		}
 	}
 	goType += ")("
 	for i := range r {
-		goType += fmt.Sprintf("%s", r[i])
+		goType += r[i]
 		if i < len(r)-1 {
 			goType += " , "
 		}
