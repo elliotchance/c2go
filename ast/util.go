@@ -50,16 +50,16 @@ func Atos(node Node) string {
 		panic(err)
 	}
 	var str string
-	str += fmt.Sprint("==== START OF AST tree ====\n")
+	str += "==== START OF AST tree ====\n"
 	str += out.String()
 	str += TypesTree(node)
-	str += fmt.Sprint("==== END OF AST tree ====\n")
+	str += "==== END OF AST tree ====\n"
 	return str
 }
 
 // TypesTree - return tree of types for AST node
 func TypesTree(node Node) (str string) {
-	str += fmt.Sprintf("\nTypes tree:\n")
+	str += "\nTypes tree:\n"
 	str += typesTree(node, 0)
 	return str
 }
