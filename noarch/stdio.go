@@ -3,7 +3,6 @@ package noarch
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"reflect"
 	"strings"
@@ -231,7 +230,7 @@ func Fputs(str *byte, stream *File) int32 {
 // abnormally, whether the file is deleted depends on the specific system and
 // library implementation.
 func Tmpfile() *File {
-	f, err := ioutil.TempFile("", "")
+	f, err := os.CreateTemp("", "")
 	if err != nil {
 		return nil
 	}
@@ -396,7 +395,7 @@ func Tmpnam(str *byte) *byte {
 	// great distinct Go temp file generation (that also checks for existing
 	// files), but unfortunately creates the file in the process; even if you
 	// don't intend to use it.
-	f, err := ioutil.TempFile("", "")
+	f, err := os.CreateTemp("", "")
 	if err != nil {
 		return nil
 	}
