@@ -11,7 +11,7 @@ unsigned long long ullmax = 18446744073709551615ull;
 
 int main()
 {
-  plan(359);
+  plan(372);
 
   // Note: There are some tests that must be disabled because they return
   // different values under different compilers. See the comment surrounding the
@@ -399,6 +399,21 @@ int main()
   is_nan(pow(INFINITY, NAN));
   is_nan(pow(-INFINITY, NAN));
   is_nan(pow(NAN, NAN));
+
+  diag("round");
+  is_eq(round(0), 0);
+  is_eq(round(1), 1);
+  is_eq(round(-1), -1);
+  is_eq(round(0.5), 1);
+  is_eq(round(-0.5), -1);
+  is_eq(round(0.4), 0);
+  is_negzero(round(-0.4));
+  is_eq(round(1.23e300), 1.23e300);
+  is_eq(round(-1.23e300), -1.23e300);
+  is_eq(round(M_PI), 3);
+  is_inf(round(INFINITY), 1);
+  is_inf(round(-INFINITY), -1);
+  is_nan(round(NAN));
 
   diag("sin");
   is_eq(sin(0), 0);

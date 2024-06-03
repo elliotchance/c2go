@@ -126,6 +126,7 @@ var builtInFunctionDefinitions = map[string][]string{
 		"double log(double) -> math.Log",
 		"double log10(double) -> math.Log10",
 		"double pow(double, double) -> math.Pow",
+		"double round(double) -> math.Round",
 		"double sin(double) -> math.Sin",
 		"double sinh(double) -> math.Sinh",
 		"double sqrt(double) -> math.Sqrt",
