@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -212,7 +211,7 @@ func analyzeFiles(inputFiles, clangFlags []string, verbose bool) (items []entity
 // clang -E <file>    Run the preprocessor stage.
 func getPreprocessSources(inputFiles, clangFlags []string, verbose bool) (out bytes.Buffer, err error) {
 	// get temp dir
-	dir, err := ioutil.TempDir("", "c2go-union")
+	dir, err := os.MkdirTemp("", "c2go-union")
 	if err != nil {
 		return
 	}
@@ -233,7 +232,7 @@ func getPreprocessSources(inputFiles, clangFlags []string, verbose bool) (out by
 	}
 
 	// write a union file
-	err = ioutil.WriteFile(unionFileName, []byte(unionBody), 0644)
+	err = os.WriteFile(unionFileName, []byte(unionBody), 0644)
 	if err != nil {
 		return
 	}

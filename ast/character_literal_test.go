@@ -3,7 +3,6 @@ package ast
 import (
 	"fmt"
 	"github.com/elliotchance/c2go/cc"
-	"io/ioutil"
 	"os"
 	"path"
 	"testing"
@@ -347,14 +346,14 @@ func TestCharacterLiteralRepairFromSource(t *testing.T) {
 
 func prepareRepairFromSourceTest(t *testing.T, fileContent string, test func(filePath string)) {
 	cc.ResetCache()
-	dir, err := ioutil.TempDir("", "c2go")
+	dir, err := os.MkdirTemp("", "c2go")
 	if err != nil {
 		t.Fatal(fmt.Errorf("Cannot create temp folder: %v", err))
 	}
 	defer os.RemoveAll(dir) // clean up
 
 	ppFilePath := path.Join(dir, "pp.c")
-	err = ioutil.WriteFile(ppFilePath, []byte(fileContent), 0644)
+	err = os.WriteFile(ppFilePath, []byte(fileContent), 0644)
 	if err != nil {
 		t.Fatal(fmt.Errorf("writing to %s failed: %v", ppFilePath, err))
 	}

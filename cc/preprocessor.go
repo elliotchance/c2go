@@ -2,7 +2,7 @@ package cc
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/elliotchance/c2go/util"
@@ -26,7 +26,7 @@ func GetLineFromPreprocessedFile(inputFilePath, filePath string, lineNumber int)
 	if fileCache == nil {
 		fileCache = map[string]map[int]string{}
 
-		inputFile, err := ioutil.ReadFile(inputFilePath)
+		inputFile, err := os.ReadFile(inputFilePath)
 		if err != nil {
 			return "", err
 		}

@@ -14,7 +14,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -198,14 +197,14 @@ func Start(args ProgramArgs) (err error) {
 	if args.verbose {
 		fmt.Println("Writing preprocessor ...")
 	}
-	dir, err := ioutil.TempDir("", "c2go")
+	dir, err := os.MkdirTemp("", "c2go")
 	if err != nil {
 		return fmt.Errorf("Cannot create temp folder: %v", err)
 	}
 	defer os.RemoveAll(dir) // clean up
 
 	ppFilePath := path.Join(dir, "pp.c")
-	err = ioutil.WriteFile(ppFilePath, pp, 0644)
+	err = os.WriteFile(ppFilePath, pp, 0644)
 	if err != nil {
 		return fmt.Errorf("writing to %s failed: %v", ppFilePath, err)
 	}
@@ -304,7 +303,7 @@ func Start(args ProgramArgs) (err error) {
 	if args.verbose {
 		fmt.Println("Writing the output Go code...")
 	}
-	err = ioutil.WriteFile(outputFilePath, []byte(p.String()), 0644)
+	err = os.WriteFile(outputFilePath, []byte(p.String()), 0644)
 	if err != nil {
 		return fmt.Errorf("writing Go output file failed: %v", err)
 	}
