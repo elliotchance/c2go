@@ -26,7 +26,7 @@ without modification. This will be the 1.0.0 release.
 `c2go` requires Go 1.9 or newer.
 
 ```bash
-go get -u github.com/elliotchance/c2go
+go install github.com/elliotchance/c2go@latest
 ```
 
 # Usage
