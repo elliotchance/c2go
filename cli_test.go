@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/bradleyjkemp/cupaloy"
+	"github.com/bradleyjkemp/cupaloy/v2"
 )
 
 func setupTest(args []string) (*bytes.Buffer, func()) {
